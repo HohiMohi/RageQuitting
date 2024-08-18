@@ -223,7 +223,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.8739577, y: -0.19479479, z: 3.1033945}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: -5.56, y: 1, z: 5.99}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -445,9 +445,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_NotificationBehavior: 2
-  m_MaxPlayerCount: -1
+  m_MaxPlayerCount: 3
   m_AllowJoining: 0
-  m_JoinBehavior: 0
+  m_JoinBehavior: 2
   m_PlayerJoinedEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -503,7 +503,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4f725e4bfa7ac14aa0cb5575655b097, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawningPoint: {fileID: 0}
+  playerPrefab: {fileID: 8762545278085019536, guid: b2b76e7d184c8bd4a940d3c2da2625a6, type: 3}
+  numberOfPlayers: 4
+  controlSchemes:
+  - Gamepad
+  - Gamepad
+  - Keyboard
+  - Arrows
+  activeDevices: 01010101
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
