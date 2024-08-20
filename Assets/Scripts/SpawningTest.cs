@@ -7,6 +7,8 @@ public class SpawningTest : MonoBehaviour
 {
     public GameObject playerPrefab;
     public int numberOfPlayers = 4;
+    public BuildingMaterialDetailsSO buildingMaterialDetailsSO;
+    public PoolManager pool;
 
     #region Header SpawnPlayerTest function variables
     [Space(10)]
@@ -26,12 +28,19 @@ public class SpawningTest : MonoBehaviour
     private void OnEnable()
     {
         // Spawning mechanic for test - uncomment when running TestScene2
-        //SpawnPlayersTest(); 
+        //SpawnPlayersTest();
 
-        InstantiatePlayersFromPlayerHolder();
+        //InstantiatePlayersFromPlayerHolder();
 
     }
 
+    private void Start()
+    {
+        // Pool Manager test
+        IPickable cube = (IPickable)PoolManager.Instance.ReuseComponent(buildingMaterialDetailsSO.buildingMaterialPrefab, gameObject.transform.position, Quaternion.identity);
+        cube.InitialiseBuildingMaterial(buildingMaterialDetailsSO.meshFilter, buildingMaterialDetailsSO.material);
+
+    }
     /// <summary>
     /// Instnantiate players from info collected in JoinMenuTest scene
     /// </summary>
