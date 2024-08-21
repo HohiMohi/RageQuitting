@@ -28,7 +28,7 @@ public class SpawningTest : MonoBehaviour
     private void OnEnable()
     {
         // Spawning mechanic for test - uncomment when running TestScene2
-        //SpawnPlayersTest();
+        SpawnPlayersTest();
 
         //InstantiatePlayersFromPlayerHolder();
 
