@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class WoodFactor : MonoBehaviour, IInteractable
 {
@@ -21,10 +22,14 @@ public class WoodFactor : MonoBehaviour, IInteractable
         
     }
 
-    public void Interact()
+    public void Interact(InputAction.CallbackContext callbackContext)
     {
         IPickable wood = (IPickable)PoolManager.Instance.ReuseComponent(buildingMaterialDetailsSO.buildingMaterialPrefab, spawnPoint.position, Quaternion.identity);
         wood.InitialiseBuildingMaterial(buildingMaterialDetailsSO.meshFilter, buildingMaterialDetailsSO.material);
     }
 
+    public GameObject GetGameObject()
+    {
+        return gameObject;
+    }
 }

@@ -1,23 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
 
 [DisallowMultipleComponent]
-public class BuildingMaterial : MonoBehaviour, IPickable
+public class BuildingMaterial : MonoBehaviour, IPickable, IInteractable
 {
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
 
+    private int maxHolders;
+    private GameObject[] playersHoldingMaterial;
 
     private void Awake()
     {
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
+        playersHoldingMaterial = new GameObject[maxHolders];
     }
 
+    #region IPickable
     public GameObject GetGameObject()
     {
         return gameObject;
@@ -31,17 +36,26 @@ public class BuildingMaterial : MonoBehaviour, IPickable
         gameObject.SetActive(true);
     }
 
-
-
-    // Start is called before the first frame update
-    void Start()
+    public void PickedUp()
     {
-        
+        throw new System.NotImplementedException();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void PuttedDown()
     {
-        
+        throw new System.NotImplementedException();
     }
+    #endregion
+
+    #region IInteractable
+    public void Interact(InputAction.CallbackContext callbackContext)
+    {
+           
+    }
+
+    public void Interact(InputAction.CallbackContext callbackContext, GameObject interactingPlayer)
+    {
+        Debug.Log("Dzia³a");
+    }
+    #endregion
 }

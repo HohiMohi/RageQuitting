@@ -29,4 +29,12 @@ public class Interactor : MonoBehaviour
         else
             return null;
     }
+
+    public IPickable GetPickableObject()
+    {
+        if (_numFound > 0)
+            return _colliders[0].GetComponent<IPickable>();
+        else
+            return null;
+    }
 }

@@ -10,14 +10,30 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private int playerID;
     private Vector2 movementVector;
+    #region Tooltip
+    [Tooltip("Movement speed in unit per second.")]
+    #endregion 
     [SerializeField]
-    private float movementSpeed = 5;
+    private float movementSpeed = 5.0f;
+
+    #region Tooltip
+    [Tooltip("Rotation speed in degrees per second.")]
+    #endregion
+    [SerializeField]
+    private float rotationSpeed = 360.0f;
 
 
     private void Awake()
     {
         playerRB = GetComponent<Rigidbody>();
     }
+
+    private void Update()
+    {
+        Move(movementVector);
+        RotateTowards(movementVector);
+    }
+
 
     public void OnMove(InputAction.CallbackContext callbackContext)
     {
@@ -30,8 +46,26 @@ public class PlayerMovement : MonoBehaviour
         Vector3 newPosition3 = new Vector3(newPosition.x, gameObject.transform.position.y, newPosition.y);
         playerRB.MovePosition(newPosition3);
     }
-    private void Update()
+
+    /// <summary>
+    /// Rotate gameObject towards movement direction.
+    /// </summary>
+    public void RotateTowards(Vector2 movementVector)
     {
-        Move(movementVector);
+        if (movementVector != Vector2.zero)
+        {
+            // Calculate max rotation step during frame
+            float step = rotationSpeed * Time.deltaTime;
+
+            // Calculating target angle from movement vector
+            float radians = Mathf.Atan2(-movementVector.y, movementVector.x);
+            var deg = radians * (180 / Mathf.PI);
+
+            // Transforming angle to Quaternion
+            Quaternion targetQuaternion = new Quaternion();
+            targetQuaternion = Quaternion.Euler(0, deg, 0);
+
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetQuaternion, step);
+        }
     }
 }
