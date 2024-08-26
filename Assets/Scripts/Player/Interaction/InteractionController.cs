@@ -9,7 +9,7 @@ public class InteractionController : MonoBehaviour
 
     private Interactor interactor;
     private Player player;
-
+    private bool isHolding = false; //handle it different - to change
 
     private void Awake()
     {
@@ -28,10 +28,21 @@ public class InteractionController : MonoBehaviour
                 Debug.Log("OnInteract - 1");
                 if (interactor.GetPickableObject() != null)
                 {
+
                     Debug.Log("OnInteract - 2");
                     // Temporary function - change needed
-                    objectToInteract.GetGameObject().GetComponent<BuildingMaterial>().Interact(callbackContext, gameObject);
-                    player.HoldObject(objectToInteract.GetGameObject());
+                    if (!isHolding)
+                    {
+                        objectToInteract.GetGameObject().GetComponent<BuildingMaterial>().Interact(callbackContext, gameObject, "PickUp");
+                        isHolding = !isHolding;
+                    }
+                    else
+                    {
+                        objectToInteract.GetGameObject().GetComponent<BuildingMaterial>().Interact(callbackContext, gameObject, "PutDown");
+                        isHolding = !isHolding;
+                    }
+                    Debug.Log("Holding status: " + isHolding);
+                    //player.HoldObject(objectToInteract.GetGameObject());
                 }
                 else
                 {

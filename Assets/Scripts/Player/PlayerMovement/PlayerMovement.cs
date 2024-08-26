@@ -14,7 +14,7 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("Movement speed in unit per second.")]
     #endregion 
     [SerializeField]
-    private float movementSpeed = 5.0f;
+    private float movementSpeed;
 
     #region Tooltip
     [Tooltip("Rotation speed in degrees per second.")]
