@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buildingMaterialPrefab: {fileID: 6936818331211368931, guid: 8cc8b37f61d420d47bd7e22fce8cde95, type: 3}
   meshFilter: {fileID: 6452359583915238040, guid: 8cc8b37f61d420d47bd7e22fce8cde95, type: 3}
-  material: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  material: {fileID: 2100000, guid: 966435d9d065fa541a54c12c76809cef, type: 2}

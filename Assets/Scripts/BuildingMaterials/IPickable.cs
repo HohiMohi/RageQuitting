@@ -4,7 +4,7 @@ using UnityEngine;
 
 public interface IPickable
 {
-    void InitialiseBuildingMaterial(MeshFilter meshFilter, Material material);
+    void InitialiseBuildingMaterial(MeshFilter meshFilter, Material material, BuildingMaterialDetailsSO buildingMaterial);
 
     public void PickedUp(GameObject pickerPlayer);
 

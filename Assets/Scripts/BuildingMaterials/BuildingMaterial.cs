@@ -16,6 +16,7 @@ public class BuildingMaterial : MonoBehaviour, IPickable, IInteractable
     private GameObject[] playersHoldingObject;
     private FixedJoint[] jointsArray;
 
+    public BuildingMaterialDetailsSO buildingMaterialSO;
     private void Awake()
     {
         meshFilter = GetComponent<MeshFilter>();
@@ -30,11 +31,12 @@ public class BuildingMaterial : MonoBehaviour, IPickable, IInteractable
         return gameObject;
     }
 
-    public void InitialiseBuildingMaterial(MeshFilter meshFilter, Material material)
+    public void InitialiseBuildingMaterial(MeshFilter meshFilter, Material material, BuildingMaterialDetailsSO buildingMaterial)
     {
         this.meshFilter = meshFilter;
         this.meshRenderer.material = material;
-
+        this.buildingMaterialSO = buildingMaterial;
+        
         gameObject.SetActive(true);
     }
 
@@ -75,6 +77,35 @@ public class BuildingMaterial : MonoBehaviour, IPickable, IInteractable
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Handle moving BuildingMaterial to storage - destroy all joints and disable this material gameObject.
+    /// </summary>
+    public void StorageMaterial()
+    {
+        DestroyAllJoints();
+        DisableMaterial();
+    }
+
+    /// <summary>
+    /// Destroy all FixedJoint object.
+    /// </summary>
+    public void DestroyAllJoints()
+    {
+        FixedJoint[] jointsToDestroy = gameObject.GetComponents<FixedJoint>();
+        foreach (FixedJoint jointToDestroy in jointsToDestroy)
+        {
+            Destroy(jointToDestroy);
+        }
+    }
+
+    /// <summary>
+    /// Disable BuildingMaterial - return it to the poolManager
+    /// </summary>
+    public void DisableMaterial()
+    {
+        gameObject.SetActive(false);
     }
 
     #endregion

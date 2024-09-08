@@ -38,7 +38,7 @@ public class SpawningTest : MonoBehaviour
     {
         // Pool Manager test
         IPickable cube = (IPickable)PoolManager.Instance.ReuseComponent(buildingMaterialDetailsSO.buildingMaterialPrefab, gameObject.transform.position, Quaternion.identity);
-        cube.InitialiseBuildingMaterial(buildingMaterialDetailsSO.meshFilter, buildingMaterialDetailsSO.material);
+        cube.InitialiseBuildingMaterial(buildingMaterialDetailsSO.meshFilter, buildingMaterialDetailsSO.material, buildingMaterialDetailsSO);
 
     }
     /// <summary>
