@@ -1,10 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+[Serializable]
 public struct MaterialContainer
 {
+    [SerializeField]
     private BuildingMaterialDetailsSO buildingMaterialDetailsSO;
+    [SerializeField]
     private int numOfHoldedMaterials;
 
      public MaterialContainer(BuildingMaterialDetailsSO buildingMaterialDetailsSO, int materialQuantity)

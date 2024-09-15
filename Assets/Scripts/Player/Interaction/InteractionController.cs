@@ -25,11 +25,9 @@ public class InteractionController : MonoBehaviour
             IInteractable objectToInteract = interactor.GetInteractableObject();
             if (objectToInteract != null)
             {
-                Debug.Log("OnInteract - 1");
                 if (interactor.GetPickableObject() != null)
                 {
 
-                    Debug.Log("OnInteract - 2");
                     // Temporary function - change needed
                     if (!isHolding)
                     {
@@ -46,7 +44,6 @@ public class InteractionController : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("OnInteract - 3");
                     objectToInteract.Interact(callbackContext); 
                 }
             }

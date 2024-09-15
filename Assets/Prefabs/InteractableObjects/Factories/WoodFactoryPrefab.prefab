@@ -121,8 +121,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buildingMaterialDetailsSO: {fileID: 11400000, guid: d706f08eb81c3ad4db2e77930e943e55, type: 2}
-  storagePrefab: {fileID: 4582182299717004107}
+  warehousePrefab: {fileID: 4582182299717004107}
+  numOfNeededMaterial: 0
   spawnPoint: {fileID: 932081149698189650}
+  requiredBuildingMaterials: []
 --- !u!1 &8391949774462964184
 GameObject:
   m_ObjectHideFlags: 0
@@ -164,7 +166,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 473393046969194948, guid: 28e43e2eeac909440994585f3bbae53b, type: 3}
       propertyPath: m_Name
-      value: StoragePrefab
+      value: WarehousePrefab
       objectReference: {fileID: 0}
     - target: {fileID: 4223341962285531222, guid: 28e43e2eeac909440994585f3bbae53b, type: 3}
       propertyPath: m_LocalScale.x

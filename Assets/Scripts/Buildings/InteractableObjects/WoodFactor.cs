@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,17 +8,17 @@ public class WoodFactor : MonoBehaviour, IInteractable
 {
     // Move to other class to inherit from -> Factory
     [SerializeField] public BuildingMaterialDetailsSO buildingMaterialDetailsSO;
-    [SerializeField] private GameObject storagePrefab;
+    [SerializeField] private GameObject warehousePrefab;
     [SerializeField] private int numOfNeededMaterial;
-    private Storage storage;
+    private Warehouse warehouse;
 
     [SerializeField] private Transform spawnPoint;
 
-
+    public MaterialContainer[] requiredBuildingMaterials;
 
     private void Awake()
     {
-        storage = storagePrefab.GetComponent<Storage>();
+        warehouse = warehousePrefab.GetComponent<Warehouse>();
     }
 
     // Start is called before the first frame update
@@ -38,7 +39,7 @@ public class WoodFactor : MonoBehaviour, IInteractable
         { 
             IPickable wood = (IPickable)PoolManager.Instance.ReuseComponent(buildingMaterialDetailsSO.buildingMaterialPrefab, spawnPoint.position, Quaternion.identity);
             wood.InitialiseBuildingMaterial(buildingMaterialDetailsSO.meshFilter, buildingMaterialDetailsSO.material, buildingMaterialDetailsSO);
-            storage.IncreaseMaterialQuantity(buildingMaterialDetailsSO, -numOfNeededMaterial);
+            warehouse.ReduceMaterialQuantity(requiredBuildingMaterials);
         }
         else
         {
@@ -51,15 +52,55 @@ public class WoodFactor : MonoBehaviour, IInteractable
         return gameObject;
     }
 
+    /// <summary>
+    /// Check if all needed materials are present in factoryWarehouse and there is enough materials to create new element
+    /// </summary>
     public bool IsEnoughMaterials()
     {
         bool isEnough = false;
-        
-        if (storage.GetQuantityOfMaterial(buildingMaterialDetailsSO) >= numOfNeededMaterial) // adjustment needed - nod it just take buildingMaterialDetailsSO of created material, need to add option to specify materials needed by factory to create material
+        int numOfRequirementsMet = 0;
+        // if no materials needed (list is empty) - return true
+        if (requiredBuildingMaterials.Length < 1) return true; 
+
+        // Check if factoryWarehouse contains enough materials
+        foreach(MaterialContainer materialContainerToCheck in requiredBuildingMaterials)
+        {
+            BuildingMaterialDetailsSO materialToCheck = materialContainerToCheck.GetBuidlingMaterialDetialsSO();
+            int numOfRequiredMaterials = materialContainerToCheck.GetHoldedMaterialQuantity();
+            if (warehouse.IsMaterialSupported(materialToCheck))
+            {
+                if (warehouse.GetQuantityOfMaterial(materialToCheck) >= numOfRequiredMaterials)
+                {
+                    numOfRequirementsMet++;
+                }
+            }
+        }
+
+        // Check if all requirements were met
+        if (numOfRequirementsMet == requiredBuildingMaterials.Length)
         {
             isEnough = true;
         }
 
         return isEnough;
     }
+
+    #region Validation
+#if UNITY_EDITOR
+    // Fix needed
+
+    private void OnValidate()
+    {
+        Warehouse warehouseTemp = warehousePrefab.GetComponent<Warehouse>();
+        foreach (MaterialContainer materialContainer in requiredBuildingMaterials)
+        {
+            BuildingMaterialDetailsSO materialToCheck = materialContainer.GetBuidlingMaterialDetialsSO();
+            if (!warehouseTemp.IsMaterialSupported(materialToCheck))
+            {
+                Debug.LogWarning(gameObject.name + " warehouse does not support material that was specified in requiredBuildingMaterials. Missing material: " + materialToCheck);
+            }
+        }
+    }
+#endif
+    #endregion
 }
