@@ -68,4 +68,9 @@ public class PlayerMovement : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetQuaternion, step);
         }
     }
+
+    public void Jump()
+    {
+        playerRB.AddForce(0, 100, 0);
+    }
 }
