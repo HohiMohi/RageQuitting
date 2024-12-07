@@ -153,6 +153,18 @@ public class BridgeNode : ScriptableObject
                         this.connectedConnectors--;
                     break;
                 }
+            case BridgeElementType.GroundMount:
+                {
+                    if (this.connectedGroundMounts > 0)
+                        this.connectedGroundMounts--;
+                    break;
+                }
+            case BridgeElementType.SideMount:
+                {
+                    if (this.connectedSideMounts > 0)
+                        this.connectedSideMounts--;
+                    break;
+                }
             case BridgeElementType.Span:
                 {
                     if(this.connectedSpans > 0)

@@ -16,9 +16,11 @@ MonoBehaviour:
   buildingElementSO: {fileID: 11400000, guid: 38e938fe91edd30438997cc87bffdbb8, type: 2}
   leftDownPosition: {x: 0, y: 0}
   rightTopPosition: {x: 0, y: 0}
-  connectedBridgeElementsList: []
+  connectedBridgeElementsList:
+  - dde7637b-3a24-446d-91c8-37ef0728e506
+  - 10dc2868-13ad-4f4a-b9d4-67428a1a83bc
   connectedSpans: 0
   connectedConnectors: 0
-  connectedSupports: 0
+  connectedSupports: 1
   connectedGroundMounts: 0
-  connectedSideMounts: 0
+  connectedSideMounts: 1

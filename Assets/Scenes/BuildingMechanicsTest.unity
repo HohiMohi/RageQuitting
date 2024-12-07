@@ -542,9 +542,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   graph: {fileID: 11400000, guid: 8be391208e1b8134d9226fe6c57fbcd7, type: 2}
-  node1: {fileID: 11400000, guid: 928a9a099a74592478454016c645e5ed, type: 2}
-  node2: {fileID: 11400000, guid: 969c05aa1019ea040a937ba07a612229, type: 2}
-  node3: {fileID: 11400000, guid: 965b720b2c20c494e880cd7c7c6f706e, type: 2}
+  groundMountNode: {fileID: 11400000, guid: 2e8339431a60b684d86b9b35a7a2a884, type: 2}
+  sideMount1Node: {fileID: 11400000, guid: 4c2b950a4eab4c549a742647492cd750, type: 2}
+  sideMount2Node: {fileID: 11400000, guid: 3394f618dcf8606499b3c5f17b291987, type: 2}
+  supportNode: {fileID: 11400000, guid: 965b720b2c20c494e880cd7c7c6f706e, type: 2}
+  span1Node: {fileID: 11400000, guid: 969c05aa1019ea040a937ba07a612229, type: 2}
+  span2Node: {fileID: 11400000, guid: d79ff04ba18ed4b488d3a85648b43b43, type: 2}
+  connector1Node: {fileID: 11400000, guid: 928a9a099a74592478454016c645e5ed, type: 2}
+  connector2Node: {fileID: 11400000, guid: 40c48ba06ab7e0742afc89667ab9cecd, type: 2}
 --- !u!4 &799396378
 Transform:
   m_ObjectHideFlags: 0

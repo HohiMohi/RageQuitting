@@ -144,4 +144,27 @@ public class BridgeGraph:ScriptableObject
 
         return isNotInList;
     }
+
+    /// <summary>
+    /// Check if every node added to graph is correctly connected - returns false, if any node IS NOT connected correctly.
+    /// </summary>
+    public bool ValidateBridge()
+    {
+        bool isCorrectlyConnected = true;
+
+        // Check if every node in bridgeNodeDictionary is connected properly
+        foreach (KeyValuePair<string, BridgeNode> nodeToCheck in bridgeNodeDictionary)
+        {
+            if(!nodeToCheck.Value.ValidateNode())
+            {
+                Debug.Log("Node " + nodeToCheck.Value.name + " is not connected properly.");
+                isCorrectlyConnected = false;
+            }
+        }
+
+        if (isCorrectlyConnected)
+            Debug.Log("Every node in bridge is connected properly.");
+
+        return isCorrectlyConnected;
+    }
 }
