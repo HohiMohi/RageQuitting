@@ -12,6 +12,8 @@ public class BridgeNode : ScriptableObject
     public BuildingElementSO buildingElementSO;
     public Vector2 leftDownPosition;
     public Vector2 rightTopPosition;
+    public Vector3 instantiationPosition;
+    public GameObject bridgeNodePrefab;
     public List<string> connectedBridgeElementsList = new List<string>();
     public int connectedSpans;
     public int connectedConnectors;
@@ -293,6 +295,15 @@ public class BridgeNode : ScriptableObject
             default:
                 break;
         }
+    }
+
+    /// <summary>
+    /// Instantiate BridgeNode object - do poprawy, nie dzia³a przypisywanie do parenta
+    /// </summary>
+    public void InstantiateBridgeNodeElement(Transform bridgeParentTransform)
+    {
+        Instantiate<GameObject>(bridgeNodePrefab, instantiationPosition, Quaternion.identity, bridgeParentTransform);
+        Debug.Log("Test?");
     }
 
     /// <summary>

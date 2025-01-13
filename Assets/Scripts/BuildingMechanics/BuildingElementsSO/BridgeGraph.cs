@@ -8,7 +8,7 @@ public class BridgeGraph:ScriptableObject
 {
     public List<BridgeNode> bridgeNodeList = new List<BridgeNode>();
     public Dictionary<string, BridgeNode> bridgeNodeDictionary = new Dictionary<string, BridgeNode>();
-
+    public GameObject bridgeParent;
 
     
 
@@ -146,6 +146,19 @@ public class BridgeGraph:ScriptableObject
     }
 
     /// <summary>
+    /// Instantiate bridge - create objects for every BridgeNode
+    /// </summary>
+    public void InstantiateBridge()
+    {
+        Debug.Log("?");
+        foreach (KeyValuePair<string, BridgeNode> bridgeNodeObject in bridgeNodeDictionary)
+        {
+            bridgeNodeObject.Value.InstantiateBridgeNodeElement(bridgeParent.transform);
+
+        }
+    }
+
+    /// <summary>
     /// Check if every node added to graph is correctly connected - returns false, if any node IS NOT connected correctly.
     /// </summary>
     public bool ValidateBridge()
@@ -167,4 +180,6 @@ public class BridgeGraph:ScriptableObject
 
         return isCorrectlyConnected;
     }
+
+
 }

@@ -16,12 +16,14 @@ MonoBehaviour:
   buildingElementSO: {fileID: 11400000, guid: 6c0b961fbf203864781750776d692d1c, type: 2}
   leftDownPosition: {x: 0, y: 0}
   rightTopPosition: {x: 0, y: 0}
+  instantiationPosition: {x: 8, y: 8, z: 8}
+  bridgeNodePrefab: {fileID: 3290639090297453807, guid: 55303665d556ea34eb4100998dc37082, type: 3}
   connectedBridgeElementsList:
+  - f3cf4c1a-6c83-422b-8bc2-be47f75b539c
+  - 19a19ce5-0bce-4345-8d63-f3c8f8b030bd
   - c5c7e63d-daa5-4363-8da2-829844429565
-  - db90bd63-65b8-41dc-b3c4-369ef007fb2e
-  - 83d551b0-5f27-496b-b36e-7782c9a3bffa
-  connectedSpans: 2
-  connectedConnectors: 0
+  connectedSpans: 0
+  connectedConnectors: 2
   connectedSupports: 0
   connectedGroundMounts: 1
   connectedSideMounts: 0
