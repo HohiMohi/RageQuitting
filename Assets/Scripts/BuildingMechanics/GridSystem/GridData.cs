@@ -22,7 +22,17 @@ public class GridData
         }
     }
 
-    private List<Vector3Int> CalculatePositions(Vector3Int gridPosition, Vector2Int objectSize)
+    public void RemoveObjectPlacedOnGridPosition(Vector3Int gridPosition)
+    {
+        List<Vector3Int> occupiedPositions = placedElements[gridPosition].occupiedPositions;
+
+        foreach (Vector3Int position in occupiedPositions)
+        {
+            placedElements.Remove(position);
+        }
+    }
+
+    public List<Vector3Int> CalculatePositions(Vector3Int gridPosition, Vector2Int objectSize)
     {
         List<Vector3Int> returnVal = new();
         for (int x = 0; x < objectSize.x; x++)
@@ -35,6 +45,7 @@ public class GridData
 
         return returnVal;
     }
+
 
     public bool CanPlaceObjectAt(Vector3Int gridPosition, Vector2Int objectSize, int elementID)
     {

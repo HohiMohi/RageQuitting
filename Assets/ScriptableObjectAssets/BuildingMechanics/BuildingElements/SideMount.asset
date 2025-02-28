@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: SideMount
   m_EditorClassIdentifier: 
   elementName: SideMount
-  elementType: 4
+  elementType: 2
   maxConnectorJoints: 0
   maxSpanJoints: 1
   maxSupportJoints: 0
   maxGroundMountJoints: 0
   maxSideMountJoints: 0
+  buildingElementPrefab: {fileID: 0}
+  constructionMaterialList:
+  - {fileID: 11400000, guid: 1008a6aa4c0c4bb42b3b88f4f9613f1a, type: 2}

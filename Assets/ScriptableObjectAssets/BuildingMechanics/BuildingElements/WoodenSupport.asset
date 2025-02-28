@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: WoodenSupport
   m_EditorClassIdentifier: 
   elementName: WoodenSupport
-  elementType: 0
+  elementType: 4
   maxConnectorJoints: 4
   maxSpanJoints: 3
   maxSupportJoints: 0
   maxGroundMountJoints: 1
   maxSideMountJoints: 0
+  buildingElementPrefab: {fileID: 0}
+  constructionMaterialList:
+  - {fileID: 11400000, guid: 867a4d7288ea0994f903877642d0de38, type: 2}

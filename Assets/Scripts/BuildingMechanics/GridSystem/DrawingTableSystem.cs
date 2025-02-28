@@ -13,6 +13,10 @@ public class DrawingTableSystem : MonoBehaviour
     private Grid grid;
 
     [SerializeField]
+    private LayerMask bridgeObjectsMask;
+    public BridgeGraph2 bridgeGraph2;
+
+    [SerializeField]
     private BridgeElementsDatabaseSO elementDatabase;
     private int selectedElementIndex = -1;
 
@@ -53,7 +57,7 @@ public class DrawingTableSystem : MonoBehaviour
 
         if (selectedElementIndex < 0)
         {
-            Debug.LogError($"No ID found{ID}");
+            Debug.LogError($"No ID found {ID}");
             return;
         }
 
@@ -73,6 +77,30 @@ public class DrawingTableSystem : MonoBehaviour
 
         switch (selectedElementIndex)
         {
+            case 0:
+                {
+                    Vector3 cursorPosition = buildingInputManager.GetSelectedMapPosition();
+                    Vector3Int gridPosition = grid.WorldToCell(cursorPosition);
+
+                    bool placementValidity = CheckPlacementValidity(gridPosition, selectedElementIndex);
+                    if (placementValidity == false)
+                        return;
+                    GameObject elementToSpawn = Instantiate(elementDatabase.objectsData[selectedElementIndex].Prefab);
+                    elementToSpawn.transform.position = grid.CellToWorld(gridPosition);
+                    placedGameObjects.Add(elementToSpawn);
+
+                    BridgeNodeDataHolder nodeToAdd = new BridgeNodeDataHolder();
+                    GridData selectedData = GetGridDataOfType(selectedElementIndex);
+
+                    nodeToAdd.buildingElementSO = elementDatabase.objectsData[0].buildingElementSO;
+                    nodeToAdd.occupiedCellVectorsList = selectedData.CalculatePositions(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size);
+                    bridgeGraph2.AddNode(nodeToAdd);
+
+                    nodeToAdd.ConnectNode(bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[3].buildingElementSO, gridPosition));
+
+                    selectedData.AddElementAt(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size, elementDatabase.objectsData[selectedElementIndex].ID, placedGameObjects.Count - 1);
+                    break;
+                }
             case 1:
                 {
                     Vector3 cursorPosition = buildingInputManager.GetSelectedMapPosition();
@@ -91,6 +119,21 @@ public class DrawingTableSystem : MonoBehaviour
                         else
                             elementSpawnPosition = selectedSecondGridPositionHolder;
 
+                        //Find bridgeNode, that element will be connected to
+                        BridgeNodeDataHolder firstElementHolder, secondElementHolder;
+                        firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[0].buildingElementSO, selectedFirstGridPositionHolder);
+                        if (firstElementHolder == null)
+                        {
+                            firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[4].buildingElementSO, selectedFirstGridPositionHolder); 
+                        }
+
+                        secondElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[0].buildingElementSO, selectedSecondGridPositionHolder);
+                        if (secondElementHolder == null)
+                        {
+                            secondElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[4].buildingElementSO, selectedSecondGridPositionHolder);
+                        }
+
+                        
                         float elementScale = MathF.Abs(selectedFirstGridPositionHolder.x - selectedSecondGridPositionHolder.x);
                         GameObject elementToSpawn = Instantiate(elementDatabase.objectsData[selectedElementIndex].Prefab);
                         elementToSpawn.transform.position = grid.CellToWorld(elementSpawnPosition);
@@ -99,7 +142,17 @@ public class DrawingTableSystem : MonoBehaviour
 
                         ModifyTransformPropertiesOfObject(elementRendererHolder, elementScale);
 
+                        //Create BridgeNode to add to BridgeGraph
+                        BridgeNodeDataHolder nodeToAdd = new BridgeNodeDataHolder();
                         GridData selectedData = GetGridDataOfType(selectedElementIndex);
+
+                        nodeToAdd.buildingElementSO = elementDatabase.objectsData[1].buildingElementSO;
+                        nodeToAdd.occupiedCellVectorsList = selectedData.CalculatePositions(elementSpawnPosition, new Vector2Int((int)elementScale + 1, elementDatabase.objectsData[selectedElementIndex].Size.y));
+                        bridgeGraph2.AddNode(nodeToAdd);
+
+                        nodeToAdd.ConnectNode(firstElementHolder);
+                        nodeToAdd.ConnectNode(secondElementHolder);
+
                         selectedData.AddElementAt(elementSpawnPosition, new Vector2Int((int)elementScale + 1, elementDatabase.objectsData[selectedElementIndex].Size.y), elementDatabase.objectsData[selectedElementIndex].ID, placedGameObjects.Count - 1);
                         ResetPositionHolders();
                         break;
@@ -138,6 +191,20 @@ public class DrawingTableSystem : MonoBehaviour
 
                         //}
 
+                        BridgeNodeDataHolder firstElementHolder, secondElementHolder;
+                        firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[0].buildingElementSO, selectedFirstGridPositionHolder);
+                        if (firstElementHolder == null)
+                        {
+                            firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[1].buildingElementSO, selectedFirstGridPositionHolder);
+                        }
+
+                        secondElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[0].buildingElementSO, selectedSecondGridPositionHolder);
+                        if (secondElementHolder == null)
+                        {
+                            secondElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[1].buildingElementSO, selectedSecondGridPositionHolder);
+                        }
+
+
                         GameObject elementToSpawn = Instantiate(elementDatabase.objectsData[selectedElementIndex].Prefab);
                         elementToSpawn.transform.position = grid.CellToWorld(selectedFirstGridPositionHolder);
                         GameObject cubeHolder = elementToSpawn.GetComponentInChildren<MeshRenderer>().gameObject;
@@ -147,7 +214,18 @@ public class DrawingTableSystem : MonoBehaviour
 
                         ModifyLineRendererPositions(elementToSpawn.GetComponentInChildren<LineRenderer>(), grid.CellToWorld(selectedFirstGridPositionHolder), grid.CellToWorld(selectedSecondGridPositionHolder));
 
+                        BridgeNodeDataHolder nodeToAdd = new BridgeNodeDataHolder();
                         GridData selectedData = GetGridDataOfType(selectedElementIndex);
+
+                        nodeToAdd.buildingElementSO = elementDatabase.objectsData[2].buildingElementSO;
+                        nodeToAdd.occupiedCellVectorsList.Add(selectedFirstGridPositionHolder);
+                        nodeToAdd.occupiedCellVectorsList.Add(selectedSecondGridPositionHolder);
+
+                        bridgeGraph2.AddNode(nodeToAdd);
+
+                        nodeToAdd.ConnectNode(firstElementHolder);
+                        nodeToAdd.ConnectNode(secondElementHolder);
+
                         selectedData.AddElementAt(selectedFirstGridPositionHolder, elementDatabase.objectsData[selectedElementIndex].Size, elementDatabase.objectsData[selectedElementIndex].ID, placedGameObjects.Count - 1);
                         selectedData.AddElementAt(selectedSecondGridPositionHolder, elementDatabase.objectsData[selectedElementIndex].Size, elementDatabase.objectsData[selectedElementIndex].ID, placedGameObjects.Count - 1);
                         ResetPositionHolders();
@@ -157,6 +235,136 @@ public class DrawingTableSystem : MonoBehaviour
                         ResetPositionHolders();
                     }
                         break;
+                }
+            case 3:
+                {
+                    Vector3 cursorPosition = buildingInputManager.GetSelectedMapPosition();
+                    Vector3Int gridPosition = grid.WorldToCell(cursorPosition);
+
+                    bool placementValidity = CheckPlacementValidity(gridPosition, selectedElementIndex);
+                    if (placementValidity == false)
+                        return;
+                    GameObject elementToSpawn = Instantiate(elementDatabase.objectsData[selectedElementIndex].Prefab);
+                    elementToSpawn.transform.position = grid.CellToWorld(gridPosition);
+                    placedGameObjects.Add(elementToSpawn);
+                    GridData selectedData = GetGridDataOfType(selectedElementIndex);
+
+                    BridgeNodeDataHolder nodeToAdd = new BridgeNodeDataHolder();
+                    nodeToAdd.buildingElementSO = elementDatabase.objectsData[3].buildingElementSO;
+                    nodeToAdd.occupiedCellVectorsList = selectedData.CalculatePositions(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size);
+                    bridgeGraph2.AddNode(nodeToAdd);
+
+                    selectedData.AddElementAt(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size, elementDatabase.objectsData[selectedElementIndex].ID, placedGameObjects.Count - 1);
+                    break;
+                }
+            case 4:
+                {
+                    Vector3 cursorPosition = buildingInputManager.GetSelectedMapPosition();
+                    Vector3Int gridPosition = grid.WorldToCell(cursorPosition);
+
+                    bool placementValidity = CheckPlacementValidity(gridPosition, selectedElementIndex);
+                    if (placementValidity == false)
+                        return;
+                    GameObject elementToSpawn = Instantiate(elementDatabase.objectsData[selectedElementIndex].Prefab);
+                    elementToSpawn.transform.position = grid.CellToWorld(gridPosition);
+                    placedGameObjects.Add(elementToSpawn);
+                    GridData selectedData = GetGridDataOfType(selectedElementIndex);
+
+                    BridgeNodeDataHolder nodeToAdd = new BridgeNodeDataHolder();
+                    nodeToAdd.buildingElementSO = elementDatabase.objectsData[4].buildingElementSO;
+                    nodeToAdd.occupiedCellVectorsList = selectedData.CalculatePositions(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size);
+                    bridgeGraph2.AddNode(nodeToAdd);
+
+                    selectedData.AddElementAt(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size, elementDatabase.objectsData[selectedElementIndex].ID, placedGameObjects.Count - 1);
+                    break;
+                }
+            case 5:
+                {
+                    Vector3 cursorPosition = buildingInputManager.GetSelectedMapPosition();
+                    Vector3Int gridPosition = grid.WorldToCell(cursorPosition);
+
+                    if (selectedFirstGridPositionHolder != gridPosition)
+                    {
+                        // Check, if there is any object on selected gridCell - encapsulate this in other method
+
+                        selectedFirstGridPositionHolder = gridPosition;
+                    }
+
+                    else if(selectedFirstGridPositionHolder == gridPosition)
+                    {
+                        Dictionary<string, bool> objectPresenceList = CheckObjectsPresence(gridPosition);
+                        if (objectPresenceList["Connector"] == true)
+                        {
+                            BridgeNodeDataHolder firstElementHolder;
+                            firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[2].buildingElementSO, selectedFirstGridPositionHolder);
+                            if (firstElementHolder != null)
+                            {
+                                ConnectorData.RemoveObjectPlacedOnGridPosition(gridPosition);
+                                bridgeGraph2.DeleteNode(firstElementHolder);
+                                Vector3 mousePos = Input.mousePosition;
+                                DestroyObject(mousePos, true);
+                            }
+                            
+                            selectedFirstGridPositionHolder = new Vector3Int(-100, -100, -100);
+                        }
+                        else if (objectPresenceList["Span"] == true)
+                        {
+                            BridgeNodeDataHolder firstElementHolder;
+                            firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[1].buildingElementSO, selectedFirstGridPositionHolder);
+                            if (firstElementHolder != null)
+                            {
+                                SpanData.RemoveObjectPlacedOnGridPosition(gridPosition);
+                                bridgeGraph2.DeleteNode(firstElementHolder);
+                                Vector3 mousePos = Input.mousePosition;
+                                DestroyObject(mousePos, false);
+                            }
+
+                            selectedFirstGridPositionHolder = new Vector3Int(-100, -100, -100);
+                        }
+                        else if (objectPresenceList["Support"] == true)
+                        {
+                            BridgeNodeDataHolder firstElementHolder;
+                            firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[0].buildingElementSO, selectedFirstGridPositionHolder);
+                            if (firstElementHolder != null)
+                            {
+                                SupportData.RemoveObjectPlacedOnGridPosition(gridPosition);
+                                bridgeGraph2.DeleteNode(firstElementHolder);
+                                Vector3 mousePos = Input.mousePosition;
+                                DestroyObject(mousePos, false);
+                            }
+
+                            selectedFirstGridPositionHolder = new Vector3Int(-100, -100, -100);
+                        }
+                        else if (objectPresenceList["SideMount"] == true)
+                        {
+                            BridgeNodeDataHolder firstElementHolder;
+                            firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[4].buildingElementSO, selectedFirstGridPositionHolder);
+                            if (firstElementHolder != null)
+                            {
+                                SideMountData.RemoveObjectPlacedOnGridPosition(gridPosition);
+                                bridgeGraph2.DeleteNode(firstElementHolder);
+                                Vector3 mousePos = Input.mousePosition;
+                                DestroyObject(mousePos, false);
+                            }
+
+                            selectedFirstGridPositionHolder = new Vector3Int(-100, -100, -100);
+                        }
+                        else if (objectPresenceList["GroundMount"] == true)
+                        {
+                            BridgeNodeDataHolder firstElementHolder;
+                            firstElementHolder = bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[3].buildingElementSO, selectedFirstGridPositionHolder);
+                            if (firstElementHolder != null)
+                            {
+                                GroundMountData.RemoveObjectPlacedOnGridPosition(gridPosition);
+                                bridgeGraph2.DeleteNode(firstElementHolder);
+                                Vector3 mousePos = Input.mousePosition;
+                                DestroyObject(mousePos, false);
+                            }
+
+                            selectedFirstGridPositionHolder = new Vector3Int(-100, -100, -100);
+                        }
+                    }
+                    break;
                 }
             default:
                 {
@@ -177,6 +385,39 @@ public class DrawingTableSystem : MonoBehaviour
         }
 
 
+    }
+
+    private Dictionary<string, bool> CheckObjectsPresence(Vector3Int gridPosition)
+    {
+        bool isConnectorPlaced = !ConnectorData.CanPlaceObjectAt(gridPosition, Vector2Int.one, -1);
+        bool isSpanPlaced = !SpanData.CanPlaceObjectAt(gridPosition, Vector2Int.one, -1);
+        bool isSupportPlaced = !SupportData.CanPlaceObjectAt(gridPosition, Vector2Int.one, -1);
+        bool isGroundMountPlaced = !GroundMountData.CanPlaceObjectAt(gridPosition, Vector2Int.one, -1);
+        bool isSideMountPlaced = !SideMountData.CanPlaceObjectAt(gridPosition, Vector2Int.one, -1);
+
+        Dictionary<string, bool> objectPresenceList = new Dictionary<string, bool>();
+        objectPresenceList.Add("Connector", isConnectorPlaced);
+        objectPresenceList.Add("Span", isSpanPlaced);
+        objectPresenceList.Add("Support", isSupportPlaced);
+        objectPresenceList.Add("GroundMount", isGroundMountPlaced);
+        objectPresenceList.Add("SideMount", isSideMountPlaced);
+
+        Debug.Log(isConnectorPlaced + " " + isSpanPlaced + " " + isSupportPlaced + " " + isGroundMountPlaced + " " + isSideMountPlaced);
+        return objectPresenceList;
+    }
+
+    public void DestroyObject(Vector3 mousePosition, bool isConnector)
+    {
+        mousePosition.z = Camera.main.nearClipPlane;
+        Ray ray = Camera.main.ScreenPointToRay(mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, 100, bridgeObjectsMask))
+        {
+            if(isConnector)
+                Destroy(hit.collider.transform.parent.gameObject.transform.parent.gameObject);
+            else
+                Destroy(hit.collider.transform.parent.gameObject);
+        }
     }
 
     private void ModifyLineRendererPositions(LineRenderer lineRenderer, Vector3 firstPoint, Vector3 secondPoint)
@@ -204,6 +445,7 @@ public class DrawingTableSystem : MonoBehaviour
     private void ModifyTransformPropertiesOfObject(GameObject objectToModify, Vector3 differenceVector)
     {
         objectToModify.transform.localPosition = differenceVector;
+        objectToModify.transform.localPosition = objectToModify.transform.localPosition + new Vector3(0, 0.2f, 0);
     }
 
     //Zmieniæ selectedElementIndex na BridgeElementType
@@ -364,6 +606,7 @@ public class DrawingTableSystem : MonoBehaviour
         cellIndicator.SetActive(false);
         buildingInputManager.OnClicked -= PlaceElement;
         buildingInputManager.OnExit -= StopPlacement;
+        bridgeGraph2.ValidateBridge();
     }
 
     private void Update()

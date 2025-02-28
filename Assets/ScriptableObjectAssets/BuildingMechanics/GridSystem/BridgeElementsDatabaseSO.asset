@@ -17,19 +17,29 @@ MonoBehaviour:
     <ID>k__BackingField: 0
     <Size>k__BackingField: {x: 2, y: 6}
     <Prefab>k__BackingField: {fileID: 3388868720302553148, guid: cf5b96952ead7b6489d496c86e7867b4, type: 3}
+    <buildingElementSO>k__BackingField: {fileID: 11400000, guid: 6c0b961fbf203864781750776d692d1c, type: 2}
   - <Name>k__BackingField: Span
     <ID>k__BackingField: 1
     <Size>k__BackingField: {x: 3, y: 1}
     <Prefab>k__BackingField: {fileID: 3388868720302553148, guid: 3605ad16133f23c49965c72a14da8537, type: 3}
+    <buildingElementSO>k__BackingField: {fileID: 11400000, guid: 38e938fe91edd30438997cc87bffdbb8, type: 2}
   - <Name>k__BackingField: Connector
     <ID>k__BackingField: 2
     <Size>k__BackingField: {x: 1, y: 1}
     <Prefab>k__BackingField: {fileID: 3388868720302553148, guid: 7a96d850b522a2c4e8e8c1a745c4a687, type: 3}
+    <buildingElementSO>k__BackingField: {fileID: 11400000, guid: a82894447e6f15e4dab2cbdf25a30cc3, type: 2}
   - <Name>k__BackingField: GroundMount
     <ID>k__BackingField: 3
     <Size>k__BackingField: {x: 2, y: 1}
     <Prefab>k__BackingField: {fileID: 3388868720302553148, guid: 3bb9e13880e218d42a8ecc9a3f97a16b, type: 3}
+    <buildingElementSO>k__BackingField: {fileID: 11400000, guid: 9a7028363968cee40b5ae753b654e446, type: 2}
   - <Name>k__BackingField: SideMount
     <ID>k__BackingField: 4
     <Size>k__BackingField: {x: 1, y: 1}
     <Prefab>k__BackingField: {fileID: 3388868720302553148, guid: 5f3f92048c19e254f80e23e373ce824b, type: 3}
+    <buildingElementSO>k__BackingField: {fileID: 11400000, guid: 7faff682c89073a40b56d720defda980, type: 2}
+  - <Name>k__BackingField: Delete
+    <ID>k__BackingField: 5
+    <Size>k__BackingField: {x: 1, y: 1}
+    <Prefab>k__BackingField: {fileID: 3388868720302553148, guid: 5f3f92048c19e254f80e23e373ce824b, type: 3}
+    <buildingElementSO>k__BackingField: {fileID: 0}

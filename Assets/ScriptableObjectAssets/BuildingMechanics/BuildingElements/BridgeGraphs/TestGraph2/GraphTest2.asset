@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: GraphTest2
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeGraph2
+  bridgeNodeList:
+  - nodeID: GroundMount
+    buildingElementSO: {fileID: 11400000, guid: 9a7028363968cee40b5ae753b654e446, type: 2}
+    connectedBridgeElementsList:
+    - Support
+    connectedSpans: 0
+    connectedConnectors: 0
+    connectedSupports: 1
+    connectedGroundMounts: 0
+    connectedSideMounts: 0
+    occupiedCellVectorsList: []
+  - nodeID: SideMount1
+    buildingElementSO: {fileID: 11400000, guid: 7faff682c89073a40b56d720defda980, type: 2}
+    connectedBridgeElementsList:
+    - Span1
+    connectedSpans: 1
+    connectedConnectors: 0
+    connectedSupports: 0
+    connectedGroundMounts: 0
+    connectedSideMounts: 0
+    occupiedCellVectorsList: []
+  - nodeID: SideMount2
+    buildingElementSO: {fileID: 11400000, guid: 7faff682c89073a40b56d720defda980, type: 2}
+    connectedBridgeElementsList:
+    - Span2
+    connectedSpans: 1
+    connectedConnectors: 0
+    connectedSupports: 0
+    connectedGroundMounts: 0
+    connectedSideMounts: 0
+    occupiedCellVectorsList: []
+  - nodeID: Support
+    buildingElementSO: {fileID: 11400000, guid: 6c0b961fbf203864781750776d692d1c, type: 2}
+    connectedBridgeElementsList:
+    - GroundMount
+    - Span1
+    - Span2
+    - Connector1
+    - Connector2
+    connectedSpans: 2
+    connectedConnectors: 2
+    connectedSupports: 0
+    connectedGroundMounts: 1
+    connectedSideMounts: 0
+    occupiedCellVectorsList: []
+  - nodeID: Span1
+    buildingElementSO: {fileID: 11400000, guid: 38e938fe91edd30438997cc87bffdbb8, type: 2}
+    connectedBridgeElementsList:
+    - Support
+    - Connector1
+    connectedSpans: 0
+    connectedConnectors: 1
+    connectedSupports: 1
+    connectedGroundMounts: 0
+    connectedSideMounts: 0
+    occupiedCellVectorsList: []
+  - nodeID: Span2
+    buildingElementSO: {fileID: 11400000, guid: 38e938fe91edd30438997cc87bffdbb8, type: 2}
+    connectedBridgeElementsList:
+    - Support
+    - Connector2
+    connectedSpans: 0
+    connectedConnectors: 1
+    connectedSupports: 1
+    connectedGroundMounts: 0
+    connectedSideMounts: 0
+    occupiedCellVectorsList: []
+  - nodeID: Connector1
+    buildingElementSO: {fileID: 11400000, guid: a82894447e6f15e4dab2cbdf25a30cc3, type: 2}
+    connectedBridgeElementsList:
+    - Support
+    - Span1
+    connectedSpans: 1
+    connectedConnectors: 0
+    connectedSupports: 1
+    connectedGroundMounts: 0
+    connectedSideMounts: 0
+    occupiedCellVectorsList: []
+  - nodeID: Connector2
+    buildingElementSO: {fileID: 11400000, guid: a82894447e6f15e4dab2cbdf25a30cc3, type: 2}
+    connectedBridgeElementsList:
+    - Support
+    - Span2
+    connectedSpans: 1
+    connectedConnectors: 0
+    connectedSupports: 1
+    connectedGroundMounts: 0
+    connectedSideMounts: 0
+    occupiedCellVectorsList: []
+  bridgeParent: {fileID: 0}

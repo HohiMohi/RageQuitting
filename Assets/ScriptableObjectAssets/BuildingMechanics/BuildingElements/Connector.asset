@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: Connector
   m_EditorClassIdentifier: 
   elementName: Connector
-  elementType: 2
+  elementType: 0
   maxConnectorJoints: 0
   maxSpanJoints: 1
   maxSupportJoints: 1
   maxGroundMountJoints: 0
   maxSideMountJoints: 0
+  buildingElementPrefab: {fileID: 0}
+  constructionMaterialList:
+  - {fileID: 11400000, guid: 752b207be8595bc4d8b13e4a0c0b6994, type: 2}

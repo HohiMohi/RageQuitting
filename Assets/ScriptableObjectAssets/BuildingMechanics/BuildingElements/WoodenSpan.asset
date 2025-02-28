@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: WoodenSpan
   m_EditorClassIdentifier: 
   elementName: WoodenSpan
-  elementType: 1
+  elementType: 3
   maxConnectorJoints: 2
   maxSpanJoints: 0
   maxSupportJoints: 2
   maxGroundMountJoints: 0
   maxSideMountJoints: 1
+  buildingElementPrefab: {fileID: 0}
+  constructionMaterialList:
+  - {fileID: 11400000, guid: 867a4d7288ea0994f903877642d0de38, type: 2}

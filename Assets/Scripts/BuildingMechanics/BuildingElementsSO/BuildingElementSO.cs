@@ -12,7 +12,8 @@ public class BuildingElementSO : ScriptableObject
     public int maxSupportJoints;
     public int maxGroundMountJoints;
     public int maxSideMountJoints;
-
+    public GameObject buildingElementPrefab;
+    public List<ConstructionMaterialSO> constructionMaterialList;
 
     #region Validation
 #if UNITY_EDITOR
@@ -24,6 +25,7 @@ public class BuildingElementSO : ScriptableObject
         HelperUtilities.ValidateCheckPositiveValue(this, nameof(maxSupportJoints), maxSupportJoints, true);
         HelperUtilities.ValidateCheckPositiveValue(this, nameof(maxGroundMountJoints), maxGroundMountJoints, true);
         HelperUtilities.ValidateCheckPositiveValue(this, nameof(maxSideMountJoints), maxSideMountJoints, true);
+        HelperUtilities.ValidateCheckNullValue(this, nameof(buildingElementPrefab), buildingElementPrefab);
 
     }
 
