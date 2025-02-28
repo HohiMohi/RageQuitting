@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66286efd2ba42a741b0c16c2c5c139f2, type: 3}
+  m_Name: Support
+  m_EditorClassIdentifier: 
+  nodeID: dde7637b-3a24-446d-91c8-37ef0728e506
+  buildingElementSO: {fileID: 11400000, guid: 6c0b961fbf203864781750776d692d1c, type: 2}
+  leftDownPosition: {x: 0, y: 0}
+  rightTopPosition: {x: 0, y: 0}
+  instantiationPosition: {x: 8, y: 8, z: 8}
+  bridgeNodePrefab: {fileID: 3290639090297453807, guid: 55303665d556ea34eb4100998dc37082, type: 3}
+  connectedBridgeElementsList:
+  - f3cf4c1a-6c83-422b-8bc2-be47f75b539c
+  - 19a19ce5-0bce-4345-8d63-f3c8f8b030bd
+  - c5c7e63d-daa5-4363-8da2-829844429565
+  connectedSpans: 0
+  connectedConnectors: 2
+  connectedSupports: 0
+  connectedGroundMounts: 1
+  connectedSideMounts: 0

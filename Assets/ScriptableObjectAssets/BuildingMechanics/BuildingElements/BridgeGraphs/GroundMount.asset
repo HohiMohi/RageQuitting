@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66286efd2ba42a741b0c16c2c5c139f2, type: 3}
+  m_Name: GroundMount
+  m_EditorClassIdentifier: 
+  nodeID: c5c7e63d-daa5-4363-8da2-829844429565
+  buildingElementSO: {fileID: 11400000, guid: 9a7028363968cee40b5ae753b654e446, type: 2}
+  leftDownPosition: {x: 0, y: 0}
+  rightTopPosition: {x: 0, y: 0}
+  instantiationPosition: {x: 3, y: 3, z: 3}
+  bridgeNodePrefab: {fileID: 3290639090297453807, guid: 55303665d556ea34eb4100998dc37082, type: 3}
+  connectedBridgeElementsList:
+  - dde7637b-3a24-446d-91c8-37ef0728e506
+  connectedSpans: 0
+  connectedConnectors: 0
+  connectedSupports: 1
+  connectedGroundMounts: 0
+  connectedSideMounts: 0

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13f46140bfbc72b408ef841bf88bfbe8, type: 3}
+  m_Name: SideMount
+  m_EditorClassIdentifier: 
+  elementName: SideMount
+  elementType: 2
+  maxConnectorJoints: 0
+  maxSpanJoints: 1
+  maxSupportJoints: 0
+  maxGroundMountJoints: 0
+  maxSideMountJoints: 0
+  buildingElementPrefab: {fileID: 0}
+  constructionMaterialList:
+  - {fileID: 11400000, guid: 1008a6aa4c0c4bb42b3b88f4f9613f1a, type: 2}
