@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class SpawningTest : MonoBehaviour
@@ -9,6 +10,7 @@ public class SpawningTest : MonoBehaviour
     public int numberOfPlayers = 4;
     public BuildingMaterialDetailsSO buildingMaterialDetailsSO;
     public PoolManager pool;
+    public Transform playersHolder;
 
     #region Header SpawnPlayerTest function variables
     [Space(10)]
@@ -27,7 +29,7 @@ public class SpawningTest : MonoBehaviour
 
     private void OnEnable()
     {
-        // Spawning mechanic for test - uncomment when running TestScene2
+        // Spawning mechanic for test - uncomment when running TestScene2 and DemoScene
         SpawnPlayersTest();
 
         //InstantiatePlayersFromPlayerHolder();
@@ -37,8 +39,8 @@ public class SpawningTest : MonoBehaviour
     private void Start()
     {
         // Pool Manager test
-        IPickable cube = (IPickable)PoolManager.Instance.ReuseComponent(buildingMaterialDetailsSO.buildingMaterialPrefab, gameObject.transform.position, Quaternion.identity);
-        cube.InitialiseBuildingMaterial(buildingMaterialDetailsSO.meshFilter, buildingMaterialDetailsSO.material, buildingMaterialDetailsSO);
+        //IPickable cube = (IPickable)PoolManager.Instance.ReuseComponent(buildingMaterialDetailsSO.buildingMaterialPrefab, gameObject.transform.position, Quaternion.identity);
+       // cube.InitialiseBuildingMaterial(buildingMaterialDetailsSO.meshFilter, buildingMaterialDetailsSO.material, buildingMaterialDetailsSO);
 
     }
     /// <summary>
@@ -52,7 +54,9 @@ public class SpawningTest : MonoBehaviour
         {
             if (playerInfo.inputDevice == null) continue;
 
-            PlayerInput.Instantiate(playerPrefab, playerIndex: playerInfo.playerID, controlScheme: playerInfo.controlScheme, pairWithDevice: playerInfo.inputDevice);
+            PlayerInput tempInputHolder = PlayerInput.Instantiate(playerPrefab, playerIndex: playerInfo.playerID, controlScheme: playerInfo.controlScheme, pairWithDevice: playerInfo.inputDevice);
+            tempInputHolder.transform.parent = playersHolder;
+
         }
 
     }
@@ -77,6 +81,7 @@ public class SpawningTest : MonoBehaviour
                 case "Keyboard":
                     temp = PlayerInput.Instantiate(playerPrefab, playerIndex: i, controlScheme: controlSchemes[i]);
                     temp.name = "KeyboardPlayer";
+                    temp.transform.parent = playersHolder;
                     break;
 
                 case "Arrows":

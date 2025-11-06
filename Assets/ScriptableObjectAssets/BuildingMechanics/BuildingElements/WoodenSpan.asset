@@ -19,6 +19,6 @@ MonoBehaviour:
   maxSupportJoints: 2
   maxGroundMountJoints: 0
   maxSideMountJoints: 1
-  buildingElementPrefab: {fileID: 0}
+  buildingElementPrefab: {fileID: 7334717729965226807, guid: a0d60cae23caf3c4983d224ebdc6c45e, type: 3}
   constructionMaterialList:
   - {fileID: 11400000, guid: 867a4d7288ea0994f903877642d0de38, type: 2}

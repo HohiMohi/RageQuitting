@@ -6,7 +6,7 @@ public interface IPickable
 {
     void InitialiseBuildingMaterial(MeshFilter meshFilter, Material material, BuildingMaterialDetailsSO buildingMaterial);
 
-    public void PickedUp(GameObject pickerPlayer);
+    public bool PickedUp(GameObject pickerPlayer);
 
     public void PuttedDown(GameObject puttingDownPlayer);
 

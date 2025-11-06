@@ -52,6 +52,30 @@ public class WoodFactor : MonoBehaviour, IInteractable
         return gameObject;
     }
 
+    public void OnTriggerEnter(Collider other)
+    {
+        if(other.gameObject.GetComponent<PlayerInput>() != null)
+        {
+            if (!other.gameObject.GetComponent<InteractionController>().interactableObjectInRangeList.Contains(gameObject))
+            {
+                other.gameObject.GetComponent<InteractionController>().interactableObjectInRangeList.Add(gameObject);
+                Debug.Log(other.gameObject.GetComponent<InteractionController>().interactableObjectInRangeList.Count);
+            }
+        }
+    }
+
+    public void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.GetComponent<PlayerInput>() != null)
+        {
+            if (other.gameObject.GetComponent<InteractionController>().interactableObjectInRangeList.Contains(gameObject))
+            {
+                other.gameObject.GetComponent<InteractionController>().interactableObjectInRangeList.Remove(gameObject);
+                Debug.Log(other.gameObject.GetComponent<InteractionController>().interactableObjectInRangeList.Count);
+            }
+        }
+    }
+
     /// <summary>
     /// Check if all needed materials are present in factoryWarehouse and there is enough materials to create new element
     /// </summary>

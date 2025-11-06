@@ -342,12 +342,12 @@ public class BridgeGraph2 : ScriptableObject
     /// <summary>
     /// Instantiate bridge - create objects for every BridgeNode
     /// </summary>
-    public void InstantiateBridge()
+    public void InstantiateBridge(GameObject bridgeParentObject)
     {
         Debug.Log("?");
         foreach (KeyValuePair<string, BridgeNodeDataHolder> bridgeNodeObject in bridgeNodeDictionary)
         {
-            bridgeNodeObject.Value.InstantiateBridgeNodeElement(bridgeParent.transform);
+            bridgeNodeObject.Value.InstantiateBridgeNodeElement(bridgeParentObject.transform);
 
         }
     }

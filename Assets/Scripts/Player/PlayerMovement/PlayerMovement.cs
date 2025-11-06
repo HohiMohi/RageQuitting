@@ -10,6 +10,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private int playerID;
     private Vector2 movementVector;
+    
+    private float movementSpeedMultiplier = 1f; //variable used for controlling movement speed, when player is holding object
     #region Tooltip
     [Tooltip("Movement speed in unit per second.")]
     #endregion 
@@ -42,9 +44,12 @@ public class PlayerMovement : MonoBehaviour
      public void Move(Vector2 movementVector)
     {
         // Temp version
-        Vector2 newPosition = new Vector2(gameObject.transform.position.x + movementVector.x * Time.deltaTime * movementSpeed, gameObject.transform.position.z + movementVector.y * Time.deltaTime * movementSpeed);
-        Vector3 newPosition3 = new Vector3(newPosition.x, gameObject.transform.position.y, newPosition.y);
-        playerRB.MovePosition(newPosition3);
+        if (movementVector != Vector2.zero)
+        {
+            Vector2 newPosition = new Vector2(gameObject.transform.position.x + movementVector.x * Time.deltaTime * movementSpeed * movementSpeedMultiplier, gameObject.transform.position.z + movementVector.y * Time.deltaTime * movementSpeed * movementSpeedMultiplier);
+            Vector3 newPosition3 = new Vector3(newPosition.x, gameObject.transform.position.y, newPosition.y);
+            playerRB.MovePosition(newPosition3);
+        }
     }
 
     /// <summary>

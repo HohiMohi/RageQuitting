@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 785b2f136447685439cfeb545376b87f, type: 3}
   m_Name: BuildingMaterialDetails_Wood
   m_EditorClassIdentifier: 
-  buildingMaterialPrefab: {fileID: 6936818331211368931, guid: 8cc8b37f61d420d47bd7e22fce8cde95, type: 3}
-  meshFilter: {fileID: 6452359583915238040, guid: 8cc8b37f61d420d47bd7e22fce8cde95, type: 3}
+  buildingMaterialPrefab: {fileID: 8692878905555767568, guid: aa6ddb03b1d2688458dbebd7f3cdfd23, type: 3}
+  meshFilter: {fileID: 8191589779368297619, guid: aa6ddb03b1d2688458dbebd7f3cdfd23, type: 3}
   material: {fileID: 2100000, guid: 966435d9d065fa541a54c12c76809cef, type: 2}

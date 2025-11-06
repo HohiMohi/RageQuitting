@@ -206,6 +206,8 @@ public class BridgeNodeDataHolder
     public string nodeID;
     public BuildingElementSO buildingElementSO;
     public List<string> connectedBridgeElementsList = new List<string>();
+    private Vector2 instaniationOffsetVector;
+    private Vector2 scaleVector;
     public int connectedSpans;
     public int connectedConnectors;
     public int connectedSupports;
@@ -222,6 +224,8 @@ public class BridgeNodeDataHolder
         this.connectedSupports = 0;
         this.connectedGroundMounts = 0;
         this.connectedSideMounts = 0;
+        this.instaniationOffsetVector = Vector2.zero;
+        this.scaleVector = Vector2.one;
     }
 
     public BridgeNodeDataHolder(Guid guid, string nodeID, BuildingElementSO buildingElementSO, List<string> connectedBridgeElementsList, int connectedSpans, int connectedConnectors, int connectedSupports, int connectedGroundMounts, int connectedSideMounts)
@@ -513,14 +517,47 @@ public class BridgeNodeDataHolder
     }
 
     /// <summary>
-    /// Instantiate BridgeNode object - do poprawy, nie dzia³a przypisywanie do parenta
+    /// Instantiate BridgeNode object - do modyfikacji, z gotowymi modelami elementów mostu
     /// </summary>
     public void InstantiateBridgeNodeElement(Transform bridgeParentTransform)
     {
-        // Instantiate<GameObject>(bridgeNodePrefab, instantiationPosition, Quaternion.identity, bridgeParentTransform);
-        //Instantiate<GameObject>(buildingElementSO.buildingElementPrefab, instantiationPosition, Quaternion.identity, bridgeParentTransform);
+        GameObject objectHolder = UnityEngine.Object.Instantiate(buildingElementSO.buildingElementPrefab, instaniationOffsetVector, Quaternion.identity, bridgeParentTransform);
 
+        objectHolder.transform.localScale = new Vector3(scaleVector.x, scaleVector.y, 1);
+        objectHolder.transform.localPosition += new Vector3(scaleVector.x / 2, scaleVector.y / 2, 0);
         Debug.Log("Test?");
+    }
+
+    /// <summary>
+    /// Calculate node offset
+    /// </summary>
+    public void CalculatePosition(Vector2 gridSize)
+    {
+        if (buildingElementSO.elementType == BridgeElementType.Connector)
+            return;
+        switch(buildingElementSO.elementType)
+        {
+            // Dodaæ wczytywanie/obs³ugê rozmiaru elementu
+            case BridgeElementType.GroundMount:
+                {
+                    scaleVector.x = 2;
+                    break;
+                }
+            case BridgeElementType.Span:
+                {
+                    scaleVector = new Vector2(occupiedCellVectorsList.Count, 1);
+                    break;
+                }
+            case BridgeElementType.Support:
+                {
+                    scaleVector = new Vector2(2, occupiedCellVectorsList.Count/2);
+                    break;
+                }
+            default:
+                break;
+        }
+        instaniationOffsetVector.x = gridSize.x / 2 + occupiedCellVectorsList[0].x;
+        instaniationOffsetVector.y = gridSize.y / 2 + occupiedCellVectorsList[0].y;
     }
 
     /// <summary>

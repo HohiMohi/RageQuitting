@@ -880,6 +880,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 801013406}
   m_CullTransparentMesh: 1
+--- !u!1 &939024263
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 939024264}
+  m_Layer: 0
+  m_Name: BridgeParentObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &939024264
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939024263}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &943123568
 GameObject:
   m_ObjectHideFlags: 0
@@ -1459,6 +1490,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a64d8fba92d3aa74786f9acc4f87e14b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bridgeParentObject: {fileID: 939024263}
   cursorIndicator: {fileID: 1714348231}
   cellIndicator: {fileID: 1426551880}
   buildingInputManager: {fileID: 279817068}
@@ -2882,3 +2914,4 @@ SceneRoots:
   - {fileID: 2079278645}
   - {fileID: 2088847763}
   - {fileID: 1956425462}
+  - {fileID: 939024264}

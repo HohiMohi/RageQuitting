@@ -6,6 +6,9 @@ using UnityEngine;
 public class DrawingTableSystem : MonoBehaviour
 {
     [SerializeField]
+    GameObject bridgeParentObject;
+
+    [SerializeField]
     GameObject cursorIndicator, cellIndicator;
     [SerializeField]
     private BuildingInputManager buildingInputManager;
@@ -95,6 +98,7 @@ public class DrawingTableSystem : MonoBehaviour
                     nodeToAdd.buildingElementSO = elementDatabase.objectsData[0].buildingElementSO;
                     nodeToAdd.occupiedCellVectorsList = selectedData.CalculatePositions(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size);
                     bridgeGraph2.AddNode(nodeToAdd);
+                    nodeToAdd.CalculatePosition(new Vector2(10, 10));
 
                     nodeToAdd.ConnectNode(bridgeGraph2.FindBridgeNode(elementDatabase.objectsData[3].buildingElementSO, gridPosition));
 
@@ -149,6 +153,7 @@ public class DrawingTableSystem : MonoBehaviour
                         nodeToAdd.buildingElementSO = elementDatabase.objectsData[1].buildingElementSO;
                         nodeToAdd.occupiedCellVectorsList = selectedData.CalculatePositions(elementSpawnPosition, new Vector2Int((int)elementScale + 1, elementDatabase.objectsData[selectedElementIndex].Size.y));
                         bridgeGraph2.AddNode(nodeToAdd);
+                        nodeToAdd.CalculatePosition(new Vector2(10, 10));
 
                         nodeToAdd.ConnectNode(firstElementHolder);
                         nodeToAdd.ConnectNode(secondElementHolder);
@@ -220,6 +225,7 @@ public class DrawingTableSystem : MonoBehaviour
                         nodeToAdd.buildingElementSO = elementDatabase.objectsData[2].buildingElementSO;
                         nodeToAdd.occupiedCellVectorsList.Add(selectedFirstGridPositionHolder);
                         nodeToAdd.occupiedCellVectorsList.Add(selectedSecondGridPositionHolder);
+                        nodeToAdd.CalculatePosition(new Vector2(10, 10));
 
                         bridgeGraph2.AddNode(nodeToAdd);
 
@@ -252,6 +258,8 @@ public class DrawingTableSystem : MonoBehaviour
                     BridgeNodeDataHolder nodeToAdd = new BridgeNodeDataHolder();
                     nodeToAdd.buildingElementSO = elementDatabase.objectsData[3].buildingElementSO;
                     nodeToAdd.occupiedCellVectorsList = selectedData.CalculatePositions(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size);
+                    nodeToAdd.CalculatePosition(new Vector2(10, 10));
+
                     bridgeGraph2.AddNode(nodeToAdd);
 
                     selectedData.AddElementAt(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size, elementDatabase.objectsData[selectedElementIndex].ID, placedGameObjects.Count - 1);
@@ -273,6 +281,8 @@ public class DrawingTableSystem : MonoBehaviour
                     BridgeNodeDataHolder nodeToAdd = new BridgeNodeDataHolder();
                     nodeToAdd.buildingElementSO = elementDatabase.objectsData[4].buildingElementSO;
                     nodeToAdd.occupiedCellVectorsList = selectedData.CalculatePositions(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size);
+                    nodeToAdd.CalculatePosition(new Vector2(10, 10));
+
                     bridgeGraph2.AddNode(nodeToAdd);
 
                     selectedData.AddElementAt(gridPosition, elementDatabase.objectsData[selectedElementIndex].Size, elementDatabase.objectsData[selectedElementIndex].ID, placedGameObjects.Count - 1);
@@ -611,6 +621,10 @@ public class DrawingTableSystem : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            bridgeGraph2.InstantiateBridge(bridgeParentObject);
+        }
         if (selectedElementIndex < 0)
             return;
         Vector3 cursorPosition = buildingInputManager.GetSelectedMapPosition();

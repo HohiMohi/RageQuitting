@@ -60,6 +60,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -118,6 +121,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9109bbc608b13a24d8ec9417664b0894, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  supportedBuildingMaterialsTypes:
-  - {fileID: 11400000, guid: d706f08eb81c3ad4db2e77930e943e55, type: 2}
-  numOfHolded: 0
+  holdedMaterials: []
