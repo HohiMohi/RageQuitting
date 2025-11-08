@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 785b2f136447685439cfeb545376b87f, type: 3}
   m_Name: BuildingMaterialDetails_Pickaxe
   m_EditorClassIdentifier: Assembly-CSharp::BuildingMaterialDetailsSO
-  buildingMaterialPrefab: {fileID: 0}
-  meshFilter: {fileID: 0}
-  material: {fileID: 0}
+  buildingMaterialPrefab: {fileID: 2708408809316635544, guid: cfe67920c0afe5647990746445d50e08, type: 3}
+  meshFilter: {fileID: 3214202034120017435, guid: cfe67920c0afe5647990746445d50e08, type: 3}
+  material: {fileID: 2100000, guid: 1f00d72b054ec0347a696b7c89144ca3, type: 2}

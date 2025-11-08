@@ -245,5 +245,11 @@ public class BuildingMaterial : MonoBehaviour, IPickable, IInteractable
             }
         }
     }
+
+    public bool CheckIntaractionConditions(GameObject interactionCallerObject)
+    {
+        print("Sprawdzanie warunków");
+        return true;
+    }
     #endregion
 }

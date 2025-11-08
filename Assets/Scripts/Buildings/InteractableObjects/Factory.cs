@@ -10,6 +10,7 @@ public class Factory : MonoBehaviour, IInteractable
     [SerializeField] private GameObject warehousePrefab;
     [SerializeField] private int numOfNeededMaterial;
     private Warehouse warehouse;
+    [SerializeField] private BuildingMaterialDetailsSO objectTypeNeededToInteraction;
 
     [SerializeField] private Transform spawnPoint;
 
@@ -108,6 +109,32 @@ public class Factory : MonoBehaviour, IInteractable
         return isEnough;
     }
 
+    public bool CheckIntaractionConditions(GameObject interactionCallerObject)
+    {
+        if (objectTypeNeededToInteraction == null)
+            return true;
+
+        BuildingMaterialDetailsSO holdedItemType = null;
+        try
+        {
+            // Do POPRAWY - temp solution
+            holdedItemType = interactionCallerObject.GetComponent<InteractionController>().GetHoldedObject().transform.parent.transform.parent.GetComponent<BuildingMaterial>().buildingMaterialSO;
+            print(holdedItemType);
+        }
+        catch
+        {
+
+        }
+        if (objectTypeNeededToInteraction == holdedItemType)
+            return true;
+        else
+        {
+            print(interactionCallerObject.GetComponent<InteractionController>().GetHoldedObject());
+            print("You need to hold object that contains " + objectTypeNeededToInteraction.ToString());
+            return false;
+        }
+    }
+
     #region Validation
 #if UNITY_EDITOR
     // Fix needed
@@ -124,6 +151,7 @@ public class Factory : MonoBehaviour, IInteractable
             }
         }
     }
+
 #endif
     #endregion
 }

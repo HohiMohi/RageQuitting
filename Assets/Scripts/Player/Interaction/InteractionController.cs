@@ -24,18 +24,17 @@ public class InteractionController : MonoBehaviour
         rigidbody = GetComponent<Rigidbody>();
     }
 
-    public void OnInteract(InputAction.CallbackContext callbackContext)
+    public void OnPickupAction(InputAction.CallbackContext callbackContext)
     {
         if (callbackContext.started)
         {
             IInteractable objectToInteract = interactor.GetInteractableObject();
             //if (objectToInteract != null)
-            if(interactableObjectInRangeList.Count > 0)
+            if (interactableObjectInRangeList.Count > 0)
             {
                 //if (interactor.GetPickableObject() != null)
                 if (interactableObjectInRangeList[0].GetComponent<IPickable>() != null)
                 {
-
                     // Temporary function - change needed
                     if (!isHolding)
                     {
@@ -50,11 +49,27 @@ public class InteractionController : MonoBehaviour
                     Debug.Log("Holding status: " + isHolding);
                     //player.HoldObject(objectToInteract.GetGameObject());
                 }
-                else
-                {
-                    //objectToInteract.Interact(callbackContext); 
-                    interactableObjectInRangeList[0].GetComponent<IInteractable>().Interact(callbackContext);
-                }
+            }
+            else
+            {
+                Debug.Log("No pickable objects in range.");
+            }
+        }
+    }
+
+    public void OnInteract(InputAction.CallbackContext callbackContext)
+    {
+        if (callbackContext.started)
+        {
+            IInteractable objectToInteract = interactor.GetInteractableObject();
+            //if (objectToInteract != null)
+            int tempCounter = 0;
+            if (isHolding) tempCounter++;
+            if(interactableObjectInRangeList.Count > tempCounter)
+            {
+                //objectToInterainteractableObjectInRangeList[0].GetComponent<IInteractable>().Interact(callbackContext);ct.Interact(callbackContext); 
+                if(interactableObjectInRangeList[tempCounter].GetComponent<IInteractable>().CheckIntaractionConditions(gameObject))
+                    interactableObjectInRangeList[tempCounter].GetComponent<IInteractable>().Interact(callbackContext);
             }
             else
             {
@@ -108,5 +123,13 @@ public class InteractionController : MonoBehaviour
                 rigidbodyToConnect.gameObject.GetComponent<InteractionController>().ConnectObject(rigidbody, false);
             }
         }
+    }
+    public GameObject GetHoldedObject()
+    {
+        foreach (KeyValuePair<GameObject, FixedJoint> keyValuePair in jointedObjectsDictionary)
+        {
+            return keyValuePair.Key;
+        }
+        return null;
     }
 }

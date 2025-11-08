@@ -644,6 +644,12 @@ MonoBehaviour:
   - poolSize: 100
     prefab: {fileID: 8692878905555767568, guid: aa6ddb03b1d2688458dbebd7f3cdfd23, type: 3}
     componentType: IPickable
+  - poolSize: 5
+    prefab: {fileID: 2708408809316635544, guid: 485011b6709b42948b913e1e4e17118d, type: 3}
+    componentType: IPickable
+  - poolSize: 5
+    prefab: {fileID: 2708408809316635544, guid: cfe67920c0afe5647990746445d50e08, type: 3}
+    componentType: IPickable
 --- !u!4 &860933961
 Transform:
   m_ObjectHideFlags: 0
@@ -1091,6 +1097,10 @@ PrefabInstance:
       propertyPath: buildingMaterialDetailsSO
       value: 
       objectReference: {fileID: 11400000, guid: d706f08eb81c3ad4db2e77930e943e55, type: 2}
+    - target: {fileID: 2571314733738695416, guid: da0e01992fc8d00498539722d14bab78, type: 3}
+      propertyPath: objectTypeNeededToInteraction
+      value: 
+      objectReference: {fileID: 11400000, guid: e9575aa9e9a654240a432545d49ed3ea, type: 2}
     - target: {fileID: 5438695153400583983, guid: da0e01992fc8d00498539722d14bab78, type: 3}
       propertyPath: m_Name
       value: WoodFactory_Prefab

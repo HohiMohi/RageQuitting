@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 785b2f136447685439cfeb545376b87f, type: 3}
   m_Name: BuildingMaterialDetails_Axe
   m_EditorClassIdentifier: Assembly-CSharp::BuildingMaterialDetailsSO
-  buildingMaterialPrefab: {fileID: 0}
-  meshFilter: {fileID: 0}
-  material: {fileID: 0}
+  buildingMaterialPrefab: {fileID: 2708408809316635544, guid: 485011b6709b42948b913e1e4e17118d, type: 3}
+  meshFilter: {fileID: 3214202034120017435, guid: 485011b6709b42948b913e1e4e17118d, type: 3}
+  material: {fileID: 2100000, guid: b4fd3acc17e8e1748b7872045b26764b, type: 2}

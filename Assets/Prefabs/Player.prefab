@@ -257,6 +257,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 79989079-87d7-4853-b725-d4358d04dd77
     m_ActionName: Player/Interact
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5668164629813688023}
+        m_TargetAssemblyTypeName: InteractionController, Assembly-CSharp
+        m_MethodName: OnPickupAction
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 06a3422a-dc05-4745-9c1f-809941bb9553
+    m_ActionName: Player/PickupAction
   m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player

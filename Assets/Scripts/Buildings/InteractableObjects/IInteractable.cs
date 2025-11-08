@@ -7,4 +7,6 @@ public interface IInteractable
 {
     public void Interact(InputAction.CallbackContext callbackContext);
     GameObject GetGameObject();
+
+    public bool CheckIntaractionConditions(GameObject interactionCallerObject);
 }
