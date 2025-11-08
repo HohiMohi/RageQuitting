@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "JoinMenuActions",
     "maps": [
         {
@@ -27,7 +28,7 @@
                     "name": "Fire",
                     "type": "Button",
                     "id": "533a9661-ef04-4a9e-85a4-6efb0c5dc3c4",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false

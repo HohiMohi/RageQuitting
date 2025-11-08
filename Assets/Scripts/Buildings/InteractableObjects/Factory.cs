@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class WoodFactor : MonoBehaviour, IInteractable
+public class Factory : MonoBehaviour, IInteractable
 {
-    // Move to other class to inherit from -> Factory
     [SerializeField] public BuildingMaterialDetailsSO buildingMaterialDetailsSO;
     [SerializeField] private GameObject warehousePrefab;
     [SerializeField] private int numOfNeededMaterial;

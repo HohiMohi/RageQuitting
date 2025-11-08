@@ -11,6 +11,7 @@ public class SpawningTest : MonoBehaviour
     public BuildingMaterialDetailsSO buildingMaterialDetailsSO;
     public PoolManager pool;
     public Transform playersHolder;
+    public UnityEvent playerJoinEvent;
 
     #region Header SpawnPlayerTest function variables
     [Space(10)]
@@ -76,12 +77,14 @@ public class SpawningTest : MonoBehaviour
             {
                 case "Gamepad":
                     var temp = PlayerInput.Instantiate(playerPrefab, playerIndex: i, controlScheme: controlSchemes[i], pairWithDevice: Gamepad.all[i]);
+                    temp.name = "GamepadPlayer";
+                    temp.transform.parent = playersHolder;
                     break;
 
                 case "Keyboard":
                     temp = PlayerInput.Instantiate(playerPrefab, playerIndex: i, controlScheme: controlSchemes[i]);
                     temp.name = "KeyboardPlayer";
-                    temp.transform.parent = playersHolder;
+                    //temp.transform.parent = playersHolder;
                     break;
 
                 case "Arrows":
@@ -102,5 +105,7 @@ public class SpawningTest : MonoBehaviour
         Debug.Log(playerInput.playerIndex);
         if (playerInput.devices.Count > 0) 
             Debug.Log(playerInput.devices[0]);
+        playerInput.transform.parent = playersHolder;
+        playerJoinEvent.Invoke();
     }
 }

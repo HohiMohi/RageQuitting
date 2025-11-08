@@ -99,6 +99,10 @@ PrefabInstance:
       propertyPath: warehousePrefab
       value: 
       objectReference: {fileID: 2032261263587649102}
+    - target: {fileID: 4490193561115541957, guid: 746c4a1bb06e26642a8eeb14af6ac153, type: 3}
+      propertyPath: buildingMaterialDetailsSO
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 4585440508063322018, guid: 746c4a1bb06e26642a8eeb14af6ac153, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -145,7 +149,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6234488274218667026, guid: 746c4a1bb06e26642a8eeb14af6ac153, type: 3}
       propertyPath: m_Name
-      value: WoodFactory_Prefab
+      value: Storage_factory_prefab
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -154,37 +158,8 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5314421366944090264, guid: 746c4a1bb06e26642a8eeb14af6ac153, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2322042726903152604}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 6234488274218667026, guid: 746c4a1bb06e26642a8eeb14af6ac153, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8315450137101244514}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 746c4a1bb06e26642a8eeb14af6ac153, type: 3}
---- !u!1 &5438695153400583983 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6234488274218667026, guid: 746c4a1bb06e26642a8eeb14af6ac153, type: 3}
-  m_PrefabInstance: {fileID: 2161580901198256957}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &8315450137101244514
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5438695153400583983}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2.5, y: 1, z: 2.5}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!4 &6070822005463192485 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5314421366944090264, guid: 746c4a1bb06e26642a8eeb14af6ac153, type: 3}
