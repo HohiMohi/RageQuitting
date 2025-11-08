@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 78af274e2e8a40b4487a223c82ab5048
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/SharedResources/Shaders/Deprecated/Dreamscape_WaterfallFoam.shader
+  uploadId: 720279

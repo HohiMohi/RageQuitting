@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1fc13005dd2c0ff4da74def9679cbb11
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 8574412962073106934
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/DreamscapeMeadows/Scenes/Layers/Layer_Dirt.terrainlayer
+  uploadId: 720279

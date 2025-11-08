@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 358604efb242bcb4a9f7671c2cdaf708
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/SharedResources/Shaders/ShaderFunctions/PA_SF_WindRustleBasic.asset
+  uploadId: 720279

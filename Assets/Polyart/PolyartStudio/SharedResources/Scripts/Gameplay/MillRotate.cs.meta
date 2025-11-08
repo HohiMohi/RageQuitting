@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: b7c5d466e5a9d064e8e47e36be7d078a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/SharedResources/Scripts/Gameplay/MillRotate.cs
+  uploadId: 720279

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b1ba21c96122aa44f8eac64c8d72c027
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/SharedResources/Shaders/ShaderFunctions/PA_SF_WindGrass.asset
+  uploadId: 720279

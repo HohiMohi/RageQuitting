@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 133ce7ddd2068bc4984102e5b32b1b0a
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  preprocessorOverride: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/SharedResources/Shaders/Props/PA_SurfaceORM_Cutout.shader
+  uploadId: 720279

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a52c1ccfba5ea9648acb65bb5108524e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 8574412962073106934
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/DreamscapeMeadows/Scenes/Layers/Layer_Grass.terrainlayer
+  uploadId: 720279

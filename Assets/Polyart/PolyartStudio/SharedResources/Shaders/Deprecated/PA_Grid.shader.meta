@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 2af97cff360013341a004a6336324130
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/SharedResources/Shaders/Deprecated/PA_Grid.shader
+  uploadId: 720279

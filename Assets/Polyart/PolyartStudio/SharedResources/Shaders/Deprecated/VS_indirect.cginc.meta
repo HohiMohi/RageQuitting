@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: bb9a521337c27c145a99d34c750ad74b
+timeCreated: 1491026195
+licenseType: Store
+ShaderImporter:
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 186894
+  packageName: 'Dreamscape Nature : Meadows : Stylized Open World Environment'
+  packageVersion: 2.0
+  assetPath: Assets/Polyart/PolyartStudio/SharedResources/Shaders/Deprecated/VS_indirect.cginc
+  uploadId: 720279
