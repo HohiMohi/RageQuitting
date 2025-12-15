@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(FixedJoint))]
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
     [SerializeField] private FixedJoint fixedJoinedObject;
     private GameObject holdedObject;
