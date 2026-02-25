@@ -6,8 +6,11 @@ using UnityEngine.InputSystem;
 public class PlayerInteractionNew : MonoBehaviour
 {
     private PlayerInputNew _playerInputNew;
+    [Header("Interaction Parameters")]
     private GameObject _currentInteractable = null;
     [SerializeField] private float interactDistance = 2f;
+    [SerializeField] private Transform pickUpHoldPositionHolder;
+    private GameObject _pickedUpObject = null;
 
     [Header("Action Parameters")]
     [SerializeField] private float actionRange = .9f; // to change for holded item action range
@@ -19,6 +22,7 @@ public class PlayerInteractionNew : MonoBehaviour
                                                        // If false, the action will only be performed once per button press.
                                                        // To change for holded item action repeatability
     private bool performAction = false;
+
 
 
 
@@ -44,7 +48,6 @@ public class PlayerInteractionNew : MonoBehaviour
     private void HandleAction(object sender, EventArgs e)
     {
         performAction = true;
-
     }
 
     public void PerformAction()
@@ -63,6 +66,10 @@ public class PlayerInteractionNew : MonoBehaviour
             {
                 damageable.DamageReceived(10f); // Example damage amount, can be changed or made variable
                 Debug.Log($"Action performed on {collider.transform.parent.gameObject.name}");
+            }
+            else
+            {
+                Debug.Log($"Collider {collider.gameObject.name} is in range but does not implement IDamageableNew");
             }
         }
     }
@@ -88,17 +95,48 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void HandleInteract(object sender, EventArgs e)
     {
+        if(DropObject())
+        {
+            return;
+        }
+
         RaycastHit[] raycasts = Physics.RaycastAll(transform.position, transform.forward, interactDistance);
         //Collider[] colliders = Physics.OverlapSphere(transform.position, interactDistance);
         foreach (RaycastHit raycastHit in raycasts)
         {
-            raycastHit.transform.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
+            raycastHit.transform.parent.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
             if (interactable != null)
             {
+                Debug.Log(raycastHit.transform.name);
+                raycastHit.transform.parent.TryGetComponent<IPIckableNew>(out IPIckableNew pickableObject);
+                if (pickableObject != null)
+                {
+                    pickableObject.PickedUp(transform);
+                    return;
+                }
                 interactable.Interact(transform);
             }
         }
 
+    }
+
+    public void PickUpObject(GameObject pickUpObject)
+    {
+        _pickedUpObject = pickUpObject;
+        _pickedUpObject.transform.SetParent(pickUpHoldPositionHolder);
+        _pickedUpObject.transform.localPosition = Vector3.zero;
+        _pickedUpObject.transform.localRotation = Quaternion.identity;
+    }
+
+    public bool DropObject()
+    {
+        if (_pickedUpObject != null)
+        {
+            _pickedUpObject.transform.SetParent(null);
+            _pickedUpObject = null;
+            return true;
+        }
+        return false;
     }
 
     private void CheckLookAtInteractable()
@@ -108,9 +146,13 @@ public class PlayerInteractionNew : MonoBehaviour
         BaseFactory newInteractableObject = null;
         foreach (RaycastHit raycastHit in raycasts)
         {
-            raycastHit.transform.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
+            raycastHit.transform.parent.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
             if (interactable != null)
-            {   raycastHit.transform.TryGetComponent<BaseFactory>(out BaseFactory baseFactory);
+            {   raycastHit.transform.parent.TryGetComponent<BaseFactory>(out BaseFactory baseFactory);
+                if (baseFactory == null)
+                {
+                    continue;
+                }
                 baseFactory.InteractionOutlineGameobject.SetActive(true);
                 newInteractableObject = baseFactory;
             }

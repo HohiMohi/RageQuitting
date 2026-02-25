@@ -16,6 +16,8 @@ public class PlayerInputNew : MonoBehaviour
     public EventHandler OnActionCanceled;
     public EventHandler OnActionAlt;
     public EventHandler OnActionAltCanceled;
+    public EventHandler OnSwapItems;
+    public EventHandler OnDropItem;
 
 
     [Header("Temp")]
@@ -39,8 +41,20 @@ public class PlayerInputNew : MonoBehaviour
         playerGameInputActions.Game.Action.canceled += Action_canceled;
         playerGameInputActions.Game.ActionAlt.performed += ActionAlt_performed;
         playerGameInputActions.Game.ActionAlt.canceled += ActionAlt_canceled;
+        playerGameInputActions.Game.SwapItems.performed += SwapItems_performed;
+        playerGameInputActions.Game.DropItem.performed += DropItem_performed;
         playerGameInputActions.Game.Enable();
 
+    }
+
+    private void DropItem_performed(InputAction.CallbackContext context)
+    {
+        OnDropItem?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void SwapItems_performed(InputAction.CallbackContext context)
+    {
+        OnSwapItems?.Invoke(this, EventArgs.Empty);
     }
 
     private void Action_canceled(InputAction.CallbackContext context)

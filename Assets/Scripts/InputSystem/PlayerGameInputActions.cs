@@ -154,6 +154,24 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SwapItems"",
+                    ""type"": ""Button"",
+                    ""id"": ""b745b259-b3a2-4a65-a3ba-96158f634b5d"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""DropItem"",
+                    ""type"": ""Button"",
+                    ""id"": ""ed8deafa-4ed0-4a04-98d9-978a5bb5abf3"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -277,6 +295,28 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""action"": ""ActionAlt"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d97fbb2c-5c5e-424f-af62-9357de19106d"",
+                    ""path"": ""<Keyboard>/z"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SwapItems"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d278b0cb-48cd-429c-85f9-7a32faa18700"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""DropItem"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -309,6 +349,8 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         m_Game_Interact = m_Game.FindAction("Interact", throwIfNotFound: true);
         m_Game_Action = m_Game.FindAction("Action", throwIfNotFound: true);
         m_Game_ActionAlt = m_Game.FindAction("ActionAlt", throwIfNotFound: true);
+        m_Game_SwapItems = m_Game.FindAction("SwapItems", throwIfNotFound: true);
+        m_Game_DropItem = m_Game.FindAction("DropItem", throwIfNotFound: true);
     }
 
     ~@PlayerGameInputActions()
@@ -396,6 +438,8 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
     private readonly InputAction m_Game_Interact;
     private readonly InputAction m_Game_Action;
     private readonly InputAction m_Game_ActionAlt;
+    private readonly InputAction m_Game_SwapItems;
+    private readonly InputAction m_Game_DropItem;
     /// <summary>
     /// Provides access to input actions defined in input action map "Game".
     /// </summary>
@@ -435,6 +479,14 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// Provides access to the underlying input action "Game/ActionAlt".
         /// </summary>
         public InputAction @ActionAlt => m_Wrapper.m_Game_ActionAlt;
+        /// <summary>
+        /// Provides access to the underlying input action "Game/SwapItems".
+        /// </summary>
+        public InputAction @SwapItems => m_Wrapper.m_Game_SwapItems;
+        /// <summary>
+        /// Provides access to the underlying input action "Game/DropItem".
+        /// </summary>
+        public InputAction @DropItem => m_Wrapper.m_Game_DropItem;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -482,6 +534,12 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @ActionAlt.started += instance.OnActionAlt;
             @ActionAlt.performed += instance.OnActionAlt;
             @ActionAlt.canceled += instance.OnActionAlt;
+            @SwapItems.started += instance.OnSwapItems;
+            @SwapItems.performed += instance.OnSwapItems;
+            @SwapItems.canceled += instance.OnSwapItems;
+            @DropItem.started += instance.OnDropItem;
+            @DropItem.performed += instance.OnDropItem;
+            @DropItem.canceled += instance.OnDropItem;
         }
 
         /// <summary>
@@ -514,6 +572,12 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @ActionAlt.started -= instance.OnActionAlt;
             @ActionAlt.performed -= instance.OnActionAlt;
             @ActionAlt.canceled -= instance.OnActionAlt;
+            @SwapItems.started -= instance.OnSwapItems;
+            @SwapItems.performed -= instance.OnSwapItems;
+            @SwapItems.canceled -= instance.OnSwapItems;
+            @DropItem.started -= instance.OnDropItem;
+            @DropItem.performed -= instance.OnDropItem;
+            @DropItem.canceled -= instance.OnDropItem;
         }
 
         /// <summary>
@@ -616,5 +680,19 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnActionAlt(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SwapItems" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSwapItems(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "DropItem" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDropItem(InputAction.CallbackContext context);
     }
 }
