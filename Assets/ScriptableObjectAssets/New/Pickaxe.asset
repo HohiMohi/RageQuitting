@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6022b08370b0baa42b8b2acf2ce498eb, type: 3}
+  m_Name: Pickaxe
+  m_EditorClassIdentifier: Assembly-CSharp::EquippableItemSO
+  itemName: Pickaxe
+  uiSprite: {fileID: 6991357674887153452, guid: ebd4285913526c149b0f170953a45087, type: 3}
+  equippableItemPrefab: {fileID: 2889472182152847982, guid: d14f305e42b6f474f9e3be5d6bd50377, type: 3}
+  inventorySlotsRequired: 1
+  actionRange: 0
+  actionCooldown: 0
+  damage: 0
