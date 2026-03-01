@@ -5,5 +5,6 @@ public class BaseResourceSO : ScriptableObject
 {
     public string resourceName;
     public GameObject resourcePrefab;
+    public Sprite icon;
 
 }

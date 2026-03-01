@@ -1,11 +1,11 @@
 using UnityEngine;
 
-public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew
+public class MountableBridgeComponent : MonoBehaviour, IPIckableNew, IInteractableNew
 {
-    [SerializeField] private BaseResourceSO BaseResourceSO;
+    [SerializeField] private MountableBridgeComponentSO mountableBridgeComponentSO;
+
     public void Interact(Transform interactor)
     {
-        Debug.Log("Interacted with Base Resource");
         PickedUp(interactor);
     }
 
@@ -14,10 +14,6 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew
         parent.GetComponent<PlayerInteractionNew>().PickUpObject(this.gameObject, this);
     }
 
-    private void Awake()
-    {
-
-    }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -29,8 +25,9 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew
     {
         
     }
-    public BaseResourceSO GetBaseResourceSO()
-    {
-        return BaseResourceSO;
+
+    public MountableBridgeComponentSO GetMountableBridgeComponentSO()
+        {
+            return mountableBridgeComponentSO;
     }
 }
