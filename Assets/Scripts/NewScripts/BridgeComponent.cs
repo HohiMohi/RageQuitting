@@ -7,11 +7,32 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew
     [SerializeField] private bool isMounted;
     [SerializeField] private bool canBeMounted;
     [SerializeField] private BridgeComponentSO bridgeComponentSO;
+    [SerializeField] private GameObject readyForMountingVisualsGameObject;
+    [SerializeField] private GameObject mountedComponentVisualsGameObject;
+
+    public EventHandler<ComponentMountedEventArgs> ComponentMounted;
+
+    public class ComponentMountedEventArgs: EventArgs
+    {
+        public int componentID;
+    }
 
 
     public void Interact(Transform interactor)
     {
-        Debug.Log("Interacted with bridge component: " + gameObject.name);
+        if (canBeMounted && !isMounted)
+        {
+            readyForMountingVisualsGameObject.SetActive(false);
+            mountedComponentVisualsGameObject.SetActive(true);
+            ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
+            isMounted = true;
+        }
+    }
+
+    private void Awake()
+    {
+        readyForMountingVisualsGameObject.SetActive(false);
+        mountedComponentVisualsGameObject.SetActive(false);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -31,10 +52,10 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew
 
     private void BridgeBuildingManager_OnBridgeComponentMountableStatusUpdate(object sender, BridgeBuildingManager.BridgeComponentMountableStatusUpdateEventArgs e)
     {
-        Debug.Log(e.componentID + " " + componentID);
-        if (e.componentID == componentID)
+        if (e.componentID == componentID && !isMounted)
         {
             canBeMounted = e.canBeMounted;
+            readyForMountingVisualsGameObject.SetActive(true);
         }
     }
 

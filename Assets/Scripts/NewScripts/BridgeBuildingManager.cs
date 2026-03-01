@@ -20,20 +20,31 @@ public class BridgeBuildingManager : MonoBehaviour
         public int componentID;
     }
 
+    [SerializeField] private Bridge bridge;
     [SerializeField] private MainStorageNew mainStorageNew;
     [SerializeField] private BridgeComponentData[] bridgeComponentDataArray;
     [SerializeField] private BridgeBuildingStage[] bridgeBuildingStages;
     [SerializeField] private int currentBridgeBuildingStageIndex;
+    [SerializeField] private bool isFullyAsembled;
     
 
     private void Awake()
     {
         Instance = this;
+        isFullyAsembled = false;
     }
 
     private void Start()
     {
         mainStorageNew.BridgeComponentStored += mainStorage_OnBridgeComponentStored;
+        bridge.ComponentMounted += Bridge_OnComponentMounted;
+    }
+
+    private void Bridge_OnComponentMounted(object sender, Bridge.ComponentMountedEventArgs e)
+    {
+        bridgeComponentDataArray[e.componentID].isMounted = true;
+        CheckCurrentStageMountingProgress();
+
     }
 
     private void mainStorage_OnBridgeComponentStored(object sender, MainStorageNew.BridgeComponentStoredEventArgs e)
@@ -63,6 +74,8 @@ public class BridgeBuildingManager : MonoBehaviour
 
     private void UpdateComponentsCanBeMountedProperty()
     {
+        if (isFullyAsembled)
+            return;
         foreach (int componentIndex in bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes)
         {
             BridgeComponentData bridgeComponentData = bridgeComponentDataArray[componentIndex];
@@ -71,6 +84,27 @@ public class BridgeBuildingManager : MonoBehaviour
                 BridgeComponentMountableStatusUpdate?.Invoke(this, new BridgeComponentMountableStatusUpdateEventArgs { canBeMounted = true, componentID = componentIndex });
             }
         }
+    }
+
+    private void CheckCurrentStageMountingProgress()
+    {
+        if (isFullyAsembled)
+            return;
+        foreach (int componentIndex in bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes)
+        {
+            if (!bridgeComponentDataArray[componentIndex].isMounted)
+            {
+                return;
+            }
+        }
+        currentBridgeBuildingStageIndex++;
+        if (currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
+        {
+            isFullyAsembled = true;
+            // Invoke event, that bridge has been fully asembled
+        }
+        UpdateComponentsCanBeMountedProperty();
+
     }
 
 }

@@ -14,10 +14,10 @@ public class BridgeComponentSO : ScriptableObject
 
 public enum BridgeComponentType
 {
+    NotSetted,
     Support,
     Roadway,
     Suspension,
     Barrier,
-    Base,
-    NotSetted
+    Base
 }
