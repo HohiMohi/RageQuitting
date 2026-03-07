@@ -16,6 +16,8 @@ MonoBehaviour:
   uiSprite: {fileID: 6991357674887153452, guid: ebd4285913526c149b0f170953a45087, type: 3}
   equippableItemPrefab: {fileID: 2889472182152847982, guid: d14f305e42b6f474f9e3be5d6bd50377, type: 3}
   inventorySlotsRequired: 1
-  actionRange: 0
-  actionCooldown: 0
-  damage: 0
+  actionRange: 0.9
+  actionCooldown: 0.5
+  damage: 10
+  actionRepeatability: 1
+  itemType: 2

@@ -19,6 +19,12 @@ public class PlayerInventory : MonoBehaviour
         public EquippableItemSO itemInSlot;
     };
 
+    public EventHandler<OnSelectedItemChangedEventArgs> OnSelectedItemChanged;
+    public class OnSelectedItemChangedEventArgs : EventArgs
+    {
+        public EquippableItemSO selectedItem;
+    }
+
     private void Awake()
     {
         playerInputNew = GetComponent<PlayerInputNew>();
@@ -52,6 +58,10 @@ public class PlayerInventory : MonoBehaviour
                 itemSlotIndex = _currentInventoryOccupiedSlots - item.inventorySlotsRequired,
                 itemInSlot = item
             });
+            OnSelectedItemChanged?.Invoke(this, new OnSelectedItemChangedEventArgs
+            {
+                selectedItem = GetCurrentSelectedItem()
+            });
             return true; // Item added successfully
         }
         else
@@ -83,6 +93,10 @@ public class PlayerInventory : MonoBehaviour
                     itemInSlot = null
                 });
             }
+            OnSelectedItemChanged?.Invoke(this, new OnSelectedItemChangedEventArgs
+            {
+                selectedItem = GetCurrentSelectedItem()
+            });
             return true; // Item removed successfully
         }
         else
@@ -110,6 +124,10 @@ public class PlayerInventory : MonoBehaviour
             {
                 itemSlotIndex = 1,
                 itemInSlot = inventoryItems[1]
+            });
+            OnSelectedItemChanged?.Invoke(this, new OnSelectedItemChangedEventArgs
+            {
+                selectedItem = GetCurrentSelectedItem()
             });
         }
         else

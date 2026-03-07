@@ -130,6 +130,8 @@ GameObject:
   - component: {fileID: 6151215208650658519}
   - component: {fileID: 8057224913680877428}
   - component: {fileID: 1047544986995738481}
+  - component: {fileID: 4354115525238422459}
+  - component: {fileID: 482533967712327051}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -356,6 +358,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4a43f0d4db722e46bf2b7c1261fc7e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInputNew
+  IsUIOpened: 0
   analogMovement: 0
   cursorInputForLook: 1
 --- !u!114 &1047544986995738481
@@ -371,7 +374,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractionNew
   interactDistance: 2
+  temp: 0
   pickUpHoldPositionHolder: {fileID: 8494466475874479498}
+  _pickedUpGameObject: {fileID: 0}
+--- !u!114 &4354115525238422459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7baeb9ab70de37c41a6364133253caad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
+  inventoryItems: []
+  _selectedItemIndex: 0
+  _inventorySlots: 2
+  _currentInventoryOccupiedSlots: 0
+--- !u!114 &482533967712327051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51e0a828757d080489bac090692b9b9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerActionController
   actionRange: 0.9
   actionCooldown: 1
   actionTransformHolder: {fileID: 1382537172534668702}

@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6c0995a3182a1464a89a990f501066fb, type: 3}
-  m_Name: WoodenLog
+  m_Name: WoodenShards
   m_EditorClassIdentifier: Assembly-CSharp::BaseResourceSO
-  resourceName: WoodenLog
-  resourcePrefab: {fileID: 3729975646768033361, guid: fd28a26cf2c57a34fbe45ee326f5e252, type: 3}
+  resourceName: Wooden Shards
+  resourcePrefab: {fileID: 3729975646768033361, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
   icon: {fileID: 21300000, guid: 751aa1b6637101946b2fdbb7aa27d6ad, type: 3}

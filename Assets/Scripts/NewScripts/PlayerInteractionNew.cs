@@ -6,21 +6,12 @@ using UnityEngine.InputSystem;
 public class PlayerInteractionNew : MonoBehaviour
 {
     private PlayerInputNew _playerInputNew;
+
     [Header("Interaction Parameters")]
     private GameObject _currentInteractable = null;
     [SerializeField] private float interactDistance = 2f;
     
-    [Header("Action Parameters")]
-    [SerializeField] private float actionRange = .9f; // to change for holded item action range
-    [SerializeField] private float actionCooldown = 1f; // Time in seconds between allowed actions, can be used to prevent spamming actions
-                                                        // To change for holded item action cooldown
-    private float actionCooldownTimer = 0f;
-    [SerializeField] private Transform actionTransformHolder;
-    [SerializeField] private bool repeatAction = true; // If true, the action will be performed repeatedly while the action button is held down.
-                                                       // If false, the action will only be performed once per button press.
-                                                       // To change for holded item action repeatability
-    private bool performAction = false;
-
+    
     [Header("PickUp Parameters")]
     public bool temp;
     [SerializeField] private IPIckableNew pickedUpObject = null;
@@ -28,67 +19,14 @@ public class PlayerInteractionNew : MonoBehaviour
     [SerializeField]private GameObject _pickedUpGameObject = null;
 
 
+
     private void Awake()
     {
         _playerInputNew = GetComponent<PlayerInputNew>();
         _playerInputNew.OnInteract += HandleInteract;
-        _playerInputNew.OnAction += HandleAction;
-        _playerInputNew.OnActionAlt += HandleActionAlt;
-        _playerInputNew.OnActionCanceled += HandleActionCanceled;
     }
 
-    private void HandleActionCanceled(object sender, EventArgs e)
-    {
-        performAction = false;
-    }
-
-    private void HandleActionAlt(object sender, EventArgs e)
-    {
-        Debug.Log("Action Alt");
-    }
-
-    private void HandleAction(object sender, EventArgs e)
-    {
-        performAction = true;
-    }
-
-    public void PerformAction()
-    {
-        // Add handling for action range depending on holded item
-        Collider[] colliders = Physics.OverlapBox(actionTransformHolder.position, new Vector3(actionRange, actionRange, actionRange), actionTransformHolder.rotation);
-        if (colliders.Length == 0)
-        {
-            Debug.Log("No 'Action' objects in range");
-            return;
-        }
-        foreach (Collider collider in colliders)
-        {
-            collider.transform.parent.TryGetComponent<IDamageableNew>(out IDamageableNew damageable);
-            if (damageable != null)
-            {
-                damageable.DamageReceived(10f); // Example damage amount, can be changed or made variable
-                Debug.Log($"Action performed on {collider.transform.parent.gameObject.name}");
-            }
-            else
-            {
-                Debug.Log($"Collider {collider.gameObject.name} is in range but does not implement IDamageableNew");
-            }
-        }
-    }
-
-    public void TryPerformAction()
-    {
-        actionCooldownTimer -= Time.deltaTime;
-        if(performAction && actionCooldownTimer <= 0)
-        {
-            PerformAction();
-            if (!repeatAction)
-            {
-                performAction = false;
-            }
-            actionCooldownTimer = actionCooldown;
-        }
-    }
+    
 
     private void OnDestroy()
     {
@@ -279,6 +217,5 @@ public class PlayerInteractionNew : MonoBehaviour
     private void FixedUpdate()
     {
         CheckLookAtInteractable();
-        TryPerformAction();
     }
 }
