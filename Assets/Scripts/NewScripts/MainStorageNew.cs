@@ -35,10 +35,6 @@ public class MainStorageNew : BaseStorageNew
         allRequiredResourcesStored = false;
         storedBaseResourceDictionary = new Dictionary<BaseResourceSO, int>();
         storedBridgeComponentDictionary = new Dictionary<BridgeComponentSO, int>();
-        foreach (BaseResourceSO baseResourceSO in storableBaseResourceSOList.baseResourceSOList)
-        {
-            storedBaseResourceDictionary.Add(baseResourceSO, 0);
-        }
     }
 
     private void CheckAllRequiredStoredResources()

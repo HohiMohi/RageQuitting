@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "MountableBridgeComponentSO", menuName = "Scriptable Objects/MountableBridgeComponentSO")]
@@ -10,6 +11,7 @@ public class MountableBridgeComponentSO : ScriptableObject
     public BridgeComponentSO bridgeComponentSO;
 }
 
+[Serializable]
 public struct RequiredResource
 {
     public BaseResourceSO resourceType;

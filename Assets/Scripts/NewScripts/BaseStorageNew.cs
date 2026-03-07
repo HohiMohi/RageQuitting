@@ -4,7 +4,7 @@ using UnityEngine;
 public class BaseStorageNew : MonoBehaviour, IInteractableNew
 {
     // To change for custom struct if we want to add more info about the storable resources in the future
-    [SerializeField] protected BaseResourceListSO storableBaseResourceSOList;
+    [SerializeField] protected List<BaseResourceSO> storableBaseResourcesSOList;
     protected Dictionary<BaseResourceSO, int> storedBaseResourceDictionary;
 
     public void Interact(Transform interactor)
@@ -15,10 +15,8 @@ public class BaseStorageNew : MonoBehaviour, IInteractableNew
     private void Awake()
     {
         storedBaseResourceDictionary = new Dictionary<BaseResourceSO, int>();
-        foreach (BaseResourceSO baseResourceSO in storableBaseResourceSOList.baseResourceSOList)
-        {
-            storedBaseResourceDictionary.Add(baseResourceSO, 0);
-        }
+        storableBaseResourcesSOList = new List<BaseResourceSO>();
+
     }
 
     public bool IsStorable(BaseResourceSO baseResourceSO)
@@ -36,6 +34,30 @@ public class BaseStorageNew : MonoBehaviour, IInteractableNew
         else
         {
             Debug.Log($"Cannot store {baseResourceSO.resourceName} in this storage.");
+        }
+    }
+
+    public int CheckBaseResourceAmount(BaseResourceSO baseResourceSO)
+    {
+        if (!IsStorable(baseResourceSO))
+        {
+            return -1;
+        }
+        return storedBaseResourceDictionary[baseResourceSO];
+    }
+
+    public void RemoveBaseResourceAmount(BaseResourceSO baseResourceSO, int amount)
+    {
+        storedBaseResourceDictionary[baseResourceSO] -= amount;
+        Debug.Log($"{baseResourceSO.resourceName} left in storage: {storedBaseResourceDictionary[baseResourceSO]}");
+    }
+
+    public void AddStorableBaseResource(BaseResourceSO baseResourceSO)
+    {
+        if (!IsStorable(baseResourceSO))
+        {
+            storableBaseResourcesSOList.Add(baseResourceSO);
+            storedBaseResourceDictionary.Add(baseResourceSO, 0);
         }
     }
 }

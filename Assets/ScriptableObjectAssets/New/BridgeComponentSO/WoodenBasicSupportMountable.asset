@@ -13,6 +13,11 @@ MonoBehaviour:
   m_Name: WoodenBasicSupportMountable
   m_EditorClassIdentifier: Assembly-CSharp::MountableBridgeComponentSO
   componentName: WoodenBasicSupportMountable
-  componentSprite: {fileID: 0}
-  inGameGameObjectPrefab: {fileID: 0}
+  componentSprite: {fileID: 21300000, guid: 4aaf890b27d202e4a81b0b2956ca6ba8, type: 3}
+  inGameGameObjectPrefab: {fileID: 7506650461565164450, guid: e7298032b7f0c80439dadb841fcfe388, type: 3}
+  requiredResources:
+  - resourceType: {fileID: 11400000, guid: c315a3ca10ef0ac4abd0d0ff876d0a5c, type: 2}
+    amount: 1
+  - resourceType: {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
+    amount: 1
   bridgeComponentSO: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
