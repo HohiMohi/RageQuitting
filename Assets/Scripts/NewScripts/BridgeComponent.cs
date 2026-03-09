@@ -64,4 +64,14 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew
     {
         
     }
+
+    public void LookedAt(Transform interactor)
+    {
+        Debug.Log("Looked at Bridge Component");
+    }
+
+    public void LookedAway(Transform interactor)
+    {
+        Debug.Log("Looked away from Bridge Component");
+    }
 }

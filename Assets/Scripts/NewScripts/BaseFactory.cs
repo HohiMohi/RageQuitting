@@ -115,4 +115,14 @@ public class BaseFactory : MonoBehaviour, IInteractableNew
             }
         }
     }
+
+    public void LookedAt(Transform interactor)
+    {
+        Debug.Log("Looked at Base Factory");
+    }
+
+    public void LookedAway(Transform interactor)
+    {
+        Debug.Log("Looked away from Base Factory");
+    }
 }

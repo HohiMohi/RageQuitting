@@ -30,4 +30,14 @@ public class MountableBridgeComponent : MonoBehaviour, IPIckableNew, IInteractab
         {
             return mountableBridgeComponentSO;
     }
+
+    public void LookedAt(Transform interactor)
+    {
+        Debug.Log("Looked at Mountable Bridge Component");
+    }
+
+    public void LookedAway(Transform interactor)
+    {
+        Debug.Log("Looked away from Mountable Bridge Component");
+    }
 }

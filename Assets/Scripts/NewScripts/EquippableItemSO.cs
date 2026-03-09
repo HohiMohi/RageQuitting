@@ -10,6 +10,7 @@ public class EquippableItemSO : ScriptableObject
     public float actionRange;
     public float actionCooldown;
     public float damage;
+    public float movementSpeedPenalty;
     public bool actionRepeatability;
     public EquippableItemType itemType;
 }

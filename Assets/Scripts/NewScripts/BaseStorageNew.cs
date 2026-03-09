@@ -60,4 +60,14 @@ public class BaseStorageNew : MonoBehaviour, IInteractableNew
             storedBaseResourceDictionary.Add(baseResourceSO, 0);
         }
     }
+
+    public void LookedAt(Transform interactor)
+    {
+        Debug.Log("Looked at Base Storage");
+    }
+
+    public void LookedAway(Transform interactor)
+    {
+        Debug.Log("Looked away from Base Storage");
+    }
 }

@@ -33,4 +33,14 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew
     {
         return BaseResourceSO;
     }
+
+    public void LookedAt(Transform interactor)
+    {
+        Debug.Log("Looked at Base Resource");
+    }
+
+    public void LookedAway(Transform interactor)
+    {
+        Debug.Log("Looked away from Base Resource");
+    }
 }

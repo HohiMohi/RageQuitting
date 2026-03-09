@@ -8,7 +8,7 @@ public class PlayerInteractionNew : MonoBehaviour
     private PlayerInputNew _playerInputNew;
 
     [Header("Interaction Parameters")]
-    private GameObject _currentInteractable = null;
+    private IInteractableNew _currentInteractable = null;
     [SerializeField] private float interactDistance = 2f;
     
     
@@ -165,37 +165,36 @@ public class PlayerInteractionNew : MonoBehaviour
     {
         RaycastHit[] raycasts = Physics.RaycastAll(transform.position, transform.forward, interactDistance);
         //Collider[] colliders = Physics.OverlapSphere(transform.position, interactDistance);
-        BaseFactory newInteractableObject = null;
+        IInteractableNew newInteractableObject = null;
         foreach (RaycastHit raycastHit in raycasts)
         {
             raycastHit.transform.parent.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
             if (interactable != null)
-            {   raycastHit.transform.parent.TryGetComponent<BaseFactory>(out BaseFactory baseFactory);
-                if (baseFactory == null)
-                {
-                    continue;
-                }
-                baseFactory.InteractionOutlineGameobject.SetActive(true);
-                newInteractableObject = baseFactory;
+            {
+                newInteractableObject = interactable;
+                if (interactable == _currentInteractable)
+                    break;
+                interactable.LookedAt(transform);
+                break;
             }
         }
         if (newInteractableObject != null)
         {
-            if (_currentInteractable != null && newInteractableObject.gameObject != _currentInteractable)
+            if (_currentInteractable != null && newInteractableObject != _currentInteractable)
             {
-                _currentInteractable.GetComponent<BaseFactory>().InteractionOutlineGameobject.SetActive(false);
-                _currentInteractable = newInteractableObject.gameObject;
-                _currentInteractable.GetComponent<BaseFactory>().InteractionOutlineGameobject.SetActive(true);
+                _currentInteractable.LookedAway(transform);
+                _currentInteractable = newInteractableObject;
             }
             else if (_currentInteractable == null)
             {
-                _currentInteractable = newInteractableObject.gameObject;
-                _currentInteractable.GetComponent<BaseFactory>().InteractionOutlineGameobject.SetActive(true);
+                _currentInteractable = newInteractableObject;
             }
         }
         else if (_currentInteractable != null)
         { 
-            _currentInteractable.GetComponent<BaseFactory>().InteractionOutlineGameobject.SetActive(false);
+            if(_currentInteractable == null)
+                _currentInteractable = null;
+            _currentInteractable.LookedAway(transform);
             _currentInteractable = null;
         }
     }
@@ -205,7 +204,12 @@ public class PlayerInteractionNew : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        EquippableItem.OnAnyItemEquipped += EquippableItem_OnAnyItemEquipped;
+    }
+
+    private void EquippableItem_OnAnyItemEquipped(object sender, EventArgs e)
+    {
+        _currentInteractable = null;
     }
 
     // Update is called once per frame
@@ -213,6 +217,7 @@ public class PlayerInteractionNew : MonoBehaviour
     {
         
     }
+
 
     private void FixedUpdate()
     {
