@@ -38,6 +38,13 @@ public class BridgeBuildingManager : MonoBehaviour
     {
         mainStorageNew.BridgeComponentStored += mainStorage_OnBridgeComponentStored;
         bridge.ComponentMounted += Bridge_OnComponentMounted;
+        bridge.ComponentAssembled += Bridge_OnComponentAssembled;
+    }
+
+    private void Bridge_OnComponentAssembled(object sender, Bridge.ComponentAssembledEventArgs e)
+    {
+        bridgeComponentDataArray[e.componentID].isAssembled = true;
+        CheckCurrentStageMountingProgress();
     }
 
     private void Bridge_OnComponentMounted(object sender, Bridge.ComponentMountedEventArgs e)
@@ -92,7 +99,7 @@ public class BridgeBuildingManager : MonoBehaviour
             return;
         foreach (int componentIndex in bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes)
         {
-            if (!bridgeComponentDataArray[componentIndex].isMounted)
+            if (!bridgeComponentDataArray[componentIndex].isMounted || !bridgeComponentDataArray[componentIndex].isAssembled)
             {
                 return;
             }
@@ -124,6 +131,7 @@ public struct BridgeComponentData
     public BridgeComponentSO bridgeComponentSO;
     public Vector3 position;
     public bool isMounted;
+    public bool isAssembled;
     [SerializeField] private bool canBeMounted;
 
     public BridgeComponentData( BridgeComponentType componentType)
@@ -133,6 +141,7 @@ public struct BridgeComponentData
         bridgeComponentSO = null;
         position = Vector3.zero;
         isMounted = false;
+        isAssembled = false;
         canBeMounted = false;
     }
     public bool CanBeMounted

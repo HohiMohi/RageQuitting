@@ -13,5 +13,7 @@ MonoBehaviour:
   m_Name: WoodenBoard
   m_EditorClassIdentifier: Assembly-CSharp::BaseResourceSO
   resourceName: Wooden Board
-  resourcePrefab: {fileID: 3729975646768033361, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+  resourcePrefab: {fileID: 3729975646768033361, guid: 469f098375234f545aaa5fe7ada8f47c, type: 3}
   icon: {fileID: 21300000, guid: 751aa1b6637101946b2fdbb7aa27d6ad, type: 3}
+  baseResourceDestructionRecipeArray: []
+  resourceDurability: 5

@@ -17,3 +17,6 @@ MonoBehaviour:
   componentPrefab: {fileID: 0}
   bridgeComponentType: 1
   componentAdvancementLevel: 0
+  supportedEquippableItemTypeList: 00000000
+  assemblingProgressNeeded: 5
+  needAssembling: 1

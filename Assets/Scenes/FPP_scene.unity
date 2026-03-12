@@ -352,6 +352,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: BridgeComponent_prefab (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.37000084
@@ -492,6 +512,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2851485675629169202, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2851485675629169202, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2851485675629169202, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2851485675629169202, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2851485675629169202, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3729975646768033361, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
       propertyPath: m_Name
       value: WoodenLogResource_prefab
@@ -536,22 +576,31 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6681065363616289896, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6681065363616289896, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6681065363616289896, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6681065363616289896, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6681065363616289896, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
---- !u!114 &433550029 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
-  m_PrefabInstance: {fileID: 7389460046024270466}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7f62e55383e8b6a40a20d283ef8e5295, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BridgeComponent
 --- !u!4 &526828017 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 639136070856975893, guid: ec7d14fcee4207b4a95f1aa2d367d1d7, type: 3}
@@ -1799,6 +1848,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: BridgeComponent_prefab (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_LocalScale.y
       value: 0.5
@@ -2301,18 +2370,21 @@ MonoBehaviour:
     bridgeComponentSO: {fileID: 0}
     position: {x: 0, y: 0, z: 0}
     isMounted: 0
+    isAssembled: 0
     canBeMounted: 0
   - bridgeComponentType: 1
     componentAdvancementLevel: 0
     bridgeComponentSO: {fileID: 0}
     position: {x: 0, y: 0, z: 0}
     isMounted: 0
+    isAssembled: 0
     canBeMounted: 0
   - bridgeComponentType: 2
     componentAdvancementLevel: 0
     bridgeComponentSO: {fileID: 0}
     position: {x: 0, y: 0, z: 0}
     isMounted: 0
+    isAssembled: 0
     canBeMounted: 0
   bridgeBuildingStages:
   - bridgeComponentDataIndexes: 0000000001000000
@@ -3315,7 +3387,7 @@ PrefabInstance:
     - target: {fileID: -5919395542314838684, guid: ec7d14fcee4207b4a95f1aa2d367d1d7, type: 3}
       propertyPath: 'bridgeComponentArray.Array.data[0]'
       value: 
-      objectReference: {fileID: 433550029}
+      objectReference: {fileID: 0}
     - target: {fileID: 989420046957149754, guid: ec7d14fcee4207b4a95f1aa2d367d1d7, type: 3}
       propertyPath: m_Name
       value: Bridge_prefab
@@ -3454,6 +3526,26 @@ PrefabInstance:
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
       value: BridgeComponent_prefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_LocalPosition.x
