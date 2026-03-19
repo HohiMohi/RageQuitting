@@ -3554,6 +3554,14 @@ PrefabInstance:
       propertyPath: m_UIInputModule
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 8036448780592137977, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: MaxStamina
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8036448780592137977, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: StaminaRegenerationTimeout
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 8436876622116572697, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

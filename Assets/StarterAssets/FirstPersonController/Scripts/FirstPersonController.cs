@@ -64,6 +64,15 @@ namespace StarterAssets
 		private float _terminalVelocity = 53.0f;
 		private float _holdedItemMovementSpeedPenaltyMultiplier = 0f;
 		private float _inventoryItemMovementSpeedPenaltyMultiplier = 0f;
+		private float _currentStamina;
+		private float _staminaRegenerationTimeoutCounter = 0f;
+		private bool _countStaminaTimeout = false;
+		private bool _canRegenerateStamina = true;
+		[Header("Sprint")]
+		[Tooltip("Sprint Stamina in seconds")]
+		public float MaxStamina;
+		[Tooltip("Stamina regeneration timeout")]
+		public float StaminaRegenerationTimeout;
 		#region
 		[Tooltip("Temp value - you can check current base movement speed with penalties")]
         #endregion
@@ -108,6 +117,7 @@ namespace StarterAssets
             _playerInputNew = GetComponent<PlayerInputNew>();
 			_playerInputNew.OnSprint += PlayerInputNew_OnSprint;
 			_playerInputNew.OnJump += PlayerInputNew_OnJump;
+			_currentStamina = MaxStamina;
         }
 
         private void PlayerInputNew_OnJump(object sender, EventArgs e)
@@ -118,6 +128,15 @@ namespace StarterAssets
         private void PlayerInputNew_OnSprint(object sender, PlayerInputNew.OnSprintArgs e)
         {
             _isSprinting = e.IsSprinting;
+			if (_isSprinting)
+			{
+				_canRegenerateStamina = false;
+				_countStaminaTimeout = false;
+			} else if (_holdedItemMovementSpeedPenaltyMultiplier <= 0) 
+			{
+				_countStaminaTimeout = true;
+			}
+			
         }
 
         private void Start()
@@ -150,6 +169,15 @@ namespace StarterAssets
         {
 			_holdedItemMovementSpeedPenaltyMultiplier = e.currentMovementSpeedPenaltyMultiplier;
             currentMovementSpeed = MoveSpeed * (1 - _inventoryItemMovementSpeedPenaltyMultiplier) * (1 - _holdedItemMovementSpeedPenaltyMultiplier);
+			if(_holdedItemMovementSpeedPenaltyMultiplier > 0 )
+			{
+				_canRegenerateStamina = false;
+				_countStaminaTimeout = false;
+			}
+			else if(!_isSprinting)
+			{
+				_countStaminaTimeout = true;
+			}
 
         }
 
@@ -158,6 +186,8 @@ namespace StarterAssets
 			JumpAndGravity();
 			GroundedCheck();
 			Move();
+			HandleStaminaRegeneration();
+			HandleCarryingStaminaUsage();
 		}
 
 		private void LateUpdate()
@@ -204,7 +234,15 @@ namespace StarterAssets
 		private void Move()
 		{
 			// set target speed based on move speed, sprint speed and if sprint is pressed
-			float targetSpeed = _isSprinting ? SprintSpeed : MoveSpeed;
+			float targetSpeed = 0f;
+			if (_isSprinting && _currentStamina > 0)
+			{
+				targetSpeed = SprintSpeed;
+			}
+			else
+			{
+				targetSpeed = MoveSpeed;
+			}
 			// apply movement speed penalties from holded item and inventory items
 			targetSpeed *= (1- _holdedItemMovementSpeedPenaltyMultiplier);
 			targetSpeed *= (1 - _inventoryItemMovementSpeedPenaltyMultiplier);
@@ -252,6 +290,14 @@ namespace StarterAssets
                 // Prefab setup - StarterAssetsInputs handling
                 //inputDirection = transform.right * _input.move.x + transform.forward * _input.move.y;
                 inputDirection = transform.right * _playerInputNew.GetMoveVectorValue().x + transform.forward * _playerInputNew.GetMoveVectorValue().y;
+                if (_isSprinting && _currentStamina > 0)
+                {
+                    _currentStamina -= Time.deltaTime;
+                    if (_currentStamina < 0)
+                    {
+                        _currentStamina = 0;
+                    }
+                }
             }
 
 			// move the player
@@ -306,7 +352,46 @@ namespace StarterAssets
 			}
 		}
 
-		private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
+        #region Stamina
+
+        private void HandleStaminaRegeneration()
+		{
+			if (_canRegenerateStamina)
+			{
+				_currentStamina += Time.deltaTime;
+				if (_currentStamina >= MaxStamina)
+				{
+					_canRegenerateStamina = false;
+					_currentStamina = MaxStamina;
+				}
+			}
+			if (_countStaminaTimeout)
+			{
+				_staminaRegenerationTimeoutCounter += Time.deltaTime;
+				if(_staminaRegenerationTimeoutCounter >= StaminaRegenerationTimeout)
+				{
+					_canRegenerateStamina = true;
+					_countStaminaTimeout = false;
+					_staminaRegenerationTimeoutCounter = 0;
+				}
+			}
+        }
+
+		private void HandleCarryingStaminaUsage()
+		{
+			if (_holdedItemMovementSpeedPenaltyMultiplier > 0)
+			{
+				_currentStamina -= Time.deltaTime;
+				if (_currentStamina < 0 )
+				{
+					_currentStamina = 0;
+					Debug.Log("You have been crashed by Holded Item.");
+				}
+			}
+		}
+        #endregion
+
+        private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
 		{
 			if (lfAngle < -360f) lfAngle += 360f;
 			if (lfAngle > 360f) lfAngle -= 360f;
