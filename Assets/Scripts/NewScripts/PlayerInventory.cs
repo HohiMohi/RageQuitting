@@ -11,6 +11,8 @@ public class PlayerInventory : MonoBehaviour
     [SerializeField] private int _selectedItemIndex;
     [SerializeField] private int _inventorySlots = 2;
     [SerializeField] private int _currentInventoryOccupiedSlots = 0;
+    private float inventoryMovementSpeedPenalty = 0;
+
 
     public EventHandler<OnInventoryUpdateArgs> OnInventoryUpdated;
     public class OnInventoryUpdateArgs : EventArgs
@@ -23,6 +25,12 @@ public class PlayerInventory : MonoBehaviour
     public class OnSelectedItemChangedEventArgs : EventArgs
     {
         public EquippableItemSO selectedItem;
+    }
+
+    public EventHandler<MovementSpeedPenaltyUpdatedEventArgs> MovementSpeedPenaltyUpdated;
+    public class MovementSpeedPenaltyUpdatedEventArgs : EventArgs
+    {
+        public float currentMovementSpeedPenaltyMultiplier;
     }
 
     private void Awake()
@@ -62,6 +70,11 @@ public class PlayerInventory : MonoBehaviour
             {
                 selectedItem = GetCurrentSelectedItem()
             });
+            CalculateInventoryMovementSpeedPenalty();
+            MovementSpeedPenaltyUpdated?.Invoke(this, new MovementSpeedPenaltyUpdatedEventArgs
+            {
+                currentMovementSpeedPenaltyMultiplier = inventoryMovementSpeedPenalty
+            });
             return true; // Item added successfully
         }
         else
@@ -96,6 +109,11 @@ public class PlayerInventory : MonoBehaviour
             OnSelectedItemChanged?.Invoke(this, new OnSelectedItemChangedEventArgs
             {
                 selectedItem = GetCurrentSelectedItem()
+            });
+            CalculateInventoryMovementSpeedPenalty();
+            MovementSpeedPenaltyUpdated?.Invoke(this, new MovementSpeedPenaltyUpdatedEventArgs
+            {
+                currentMovementSpeedPenaltyMultiplier = inventoryMovementSpeedPenalty
             });
             return true; // Item removed successfully
         }
@@ -134,6 +152,18 @@ public class PlayerInventory : MonoBehaviour
         {
             Debug.Log("Not enough items to swap.");
         }
+    }
+    public void CalculateInventoryMovementSpeedPenalty()
+    {
+        float movementSpeedPenalty = 0;
+        for (int i = 0; i < inventoryItems.Length; i++)
+        {
+            if (inventoryItems[i] != null)
+            {
+                movementSpeedPenalty += inventoryItems[i].movementSpeedPenalty;
+            }
+        }
+        inventoryMovementSpeedPenalty = movementSpeedPenalty;
     }
 
     public EquippableItemSO GetCurrentSelectedItem()

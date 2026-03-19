@@ -91,11 +91,11 @@ public class PlayerActionController : MonoBehaviour
                 Debug.Log("Trying to interact with self. Continue");
                 continue;
             }
-            collider.transform.parent.TryGetComponent<IDamageable>(out IDamageable damageable);
+            collider.transform.TryGetComponent<IDamageable>(out IDamageable damageable);
             if (damageable != null)
             {
                 damageable.DamageReceived(_inventory.GetCurrentSelectedItem(), actionDamage); // Example damage amount, can be changed or made variable
-                Debug.Log($"Action performed on {collider.transform.parent.gameObject.name}");
+                Debug.Log($"Action performed on {collider.transform.gameObject.name}");
             }
             else
             {

@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6c0995a3182a1464a89a990f501066fb, type: 3}
-  m_Name: WoodenShards
+  m_Name: CoalLumps
   m_EditorClassIdentifier: Assembly-CSharp::BaseResourceSO
-  resourceName: Wooden Shards
-  resourcePrefab: {fileID: 3729975646768033361, guid: 6bcf02a6eaedf114bbe0b3325fe4019b, type: 3}
-  icon: {fileID: 21300000, guid: 751aa1b6637101946b2fdbb7aa27d6ad, type: 3}
+  resourceName: Coal Lumps
+  resourcePrefab: {fileID: 3729975646768033361, guid: 512b6e18e66ec1c41b30c2d304decf26, type: 3}
+  icon: {fileID: 6991357674887153452, guid: ebd4285913526c149b0f170953a45087, type: 3}
   baseResourceDestructionRecipeArray: []
-  resourceDurability: 5
+  resourceDurability: 0
   movementSpeedPenalty: 0
   minAmountOfPlayersNeeded: 0
-  furnaceFuelAmount: 1
+  furnaceFuelAmount: 2

@@ -19,5 +19,6 @@ MonoBehaviour:
   actionRange: 0.9
   actionCooldown: 0.5
   damage: 10
+  movementSpeedPenalty: -0.2
   actionRepeatability: 1
   itemType: 0

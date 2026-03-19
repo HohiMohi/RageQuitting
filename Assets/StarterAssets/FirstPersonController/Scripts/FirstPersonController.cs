@@ -62,6 +62,12 @@ namespace StarterAssets
         private float _rotationVelocity;
 		private float _verticalVelocity;
 		private float _terminalVelocity = 53.0f;
+		private float _holdedItemMovementSpeedPenaltyMultiplier = 0f;
+		private float _inventoryItemMovementSpeedPenaltyMultiplier = 0f;
+		#region
+		[Tooltip("Temp value - you can check current base movement speed with penalties")]
+        #endregion
+        [SerializeField] private float currentMovementSpeed = 0f;
 
 		// timeout deltatime
 		private float _jumpTimeoutDelta;
@@ -75,7 +81,9 @@ namespace StarterAssets
 		private StarterAssetsInputs _input;
 		private GameObject _mainCamera;
 		private PlayerInputNew _playerInputNew;
-
+		private PlayerInteractionNew _playerInteractionNew;
+		private PlayerInventory _playerInventory;
+		
 		private const float _threshold = 0.01f;
 
 		private bool IsCurrentDeviceMouse
@@ -119,6 +127,8 @@ namespace StarterAssets
             _input = GetComponent<StarterAssetsInputs>();
 #if ENABLE_INPUT_SYSTEM
             _playerInput = GetComponent<PlayerInput>();
+			_playerInteractionNew = GetComponent<PlayerInteractionNew>();
+			_playerInventory = GetComponent<PlayerInventory>();
 
 #else
 			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
@@ -126,9 +136,24 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
+			_playerInteractionNew.UpdateHoldedItemMovementSpeedPenalty += PlayerInteraction_OnHoldedItemMovementSpeedPenaltyUpdate;
+			_playerInventory.MovementSpeedPenaltyUpdated += PlayerInventory_OnInventoryItemMovementSpeedPenaltyUpdate;
 		}
 
-		private void Update()
+        private void PlayerInventory_OnInventoryItemMovementSpeedPenaltyUpdate(object sender, PlayerInventory.MovementSpeedPenaltyUpdatedEventArgs e)
+        {
+			_inventoryItemMovementSpeedPenaltyMultiplier = e.currentMovementSpeedPenaltyMultiplier;
+			currentMovementSpeed = MoveSpeed * (1 - _inventoryItemMovementSpeedPenaltyMultiplier) * (1 - _holdedItemMovementSpeedPenaltyMultiplier);
+        }
+
+        private void PlayerInteraction_OnHoldedItemMovementSpeedPenaltyUpdate(object sender, PlayerInteractionNew.UpdateHoldedItemMovementSpeedPenaltyEventArgs e)
+        {
+			_holdedItemMovementSpeedPenaltyMultiplier = e.currentMovementSpeedPenaltyMultiplier;
+            currentMovementSpeed = MoveSpeed * (1 - _inventoryItemMovementSpeedPenaltyMultiplier) * (1 - _holdedItemMovementSpeedPenaltyMultiplier);
+
+        }
+
+        private void Update()
 		{
 			JumpAndGravity();
 			GroundedCheck();
@@ -180,7 +205,9 @@ namespace StarterAssets
 		{
 			// set target speed based on move speed, sprint speed and if sprint is pressed
 			float targetSpeed = _isSprinting ? SprintSpeed : MoveSpeed;
-
+			// apply movement speed penalties from holded item and inventory items
+			targetSpeed *= (1- _holdedItemMovementSpeedPenaltyMultiplier);
+			targetSpeed *= (1 - _inventoryItemMovementSpeedPenaltyMultiplier);
             // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
             // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude

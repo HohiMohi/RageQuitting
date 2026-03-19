@@ -19,3 +19,9 @@ MonoBehaviour:
   - resourceType: {fileID: 11400000, guid: c315a3ca10ef0ac4abd0d0ff876d0a5c, type: 2}
     amount: 1
   bridgeComponentSO: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
+  movementSpeedPenalty: 0
+  minAmountOfPlayersNeeded: 0
+  meltingPoint: 900
+  combustionTemperature: 950
+  neededProgress: 800
+  neededCombustionProgress: 1000

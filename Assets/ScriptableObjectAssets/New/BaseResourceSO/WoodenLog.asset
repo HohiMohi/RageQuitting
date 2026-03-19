@@ -21,3 +21,5 @@ MonoBehaviour:
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 0
   resourceDurability: 5
+  movementSpeedPenalty: 0.4
+  minAmountOfPlayersNeeded: 2

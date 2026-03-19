@@ -15,11 +15,14 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew, ID
     public void PickedUp(Transform parent)
     {
         parent.GetComponent<PlayerInteractionNew>().PickUpObject(this.gameObject, this);
-    }
 
-    private void Awake()
+    }
+    public void DroppedDown()
     {
 
+    }
+    private void Awake()
+    {
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -95,4 +98,16 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew, ID
         }
 
     }
+
+    public float GetMovementSpeedPenalty()
+    {
+        return baseResourceSO.movementSpeedPenalty;
+    }
+
+    public int GetMinAmountOfPlayersNeeded()
+    {
+        return baseResourceSO.minAmountOfPlayersNeeded;
+    }
+
+
 }

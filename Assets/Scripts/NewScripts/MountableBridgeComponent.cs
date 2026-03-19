@@ -12,6 +12,11 @@ public class MountableBridgeComponent : MonoBehaviour, IPIckableNew, IInteractab
     public void PickedUp(Transform parent)
     {
         parent.GetComponent<PlayerInteractionNew>().PickUpObject(this.gameObject, this);
+
+    }
+
+    public void DroppedDown()
+    {
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -40,4 +45,16 @@ public class MountableBridgeComponent : MonoBehaviour, IPIckableNew, IInteractab
     {
         Debug.Log("Looked away from Mountable Bridge Component");
     }
+
+    public float GetMovementSpeedPenalty()
+    {
+        return mountableBridgeComponentSO.movementSpeedPenalty;
+    }
+
+    public int GetMinAmountOfPlayersNeeded()
+    {
+        return mountableBridgeComponentSO.minAmountOfPlayersNeeded;
+    }
+
+
 }

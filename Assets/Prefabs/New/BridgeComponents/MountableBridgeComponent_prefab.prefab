@@ -193,6 +193,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2845036072808415268}
   - component: {fileID: 4637332815183956525}
+  - component: {fileID: 336505790147575727}
   m_Layer: 0
   m_Name: MountableBridgeComponent_prefab
   m_TagString: Untagged
@@ -230,6 +231,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MountableBridgeComponent
   mountableBridgeComponentSO: {fileID: 0}
+--- !u!65 &336505790147575727
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3619494238778981573}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &4588742661471918253
 GameObject:
   m_ObjectHideFlags: 0
@@ -241,7 +263,6 @@ GameObject:
   - component: {fileID: 2661960933669650755}
   - component: {fileID: 6724983848565221785}
   - component: {fileID: 2944903068767746877}
-  - component: {fileID: 4414582519479139769}
   m_Layer: 0
   m_Name: BridgeComponent_visuals
   m_TagString: Untagged
@@ -321,24 +342,3 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &4414582519479139769
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4588742661471918253}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}

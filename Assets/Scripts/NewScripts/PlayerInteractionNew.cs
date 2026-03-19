@@ -16,9 +16,16 @@ public class PlayerInteractionNew : MonoBehaviour
     public bool temp;
     [SerializeField] private IPIckableNew pickedUpObject = null;
     [SerializeField] private Transform pickUpHoldPositionHolder;
-    [SerializeField]private GameObject _pickedUpGameObject = null;
+    [SerializeField] private GameObject _pickedUpGameObject = null;
+    private int minAmountOfPlayersNeeded = 0;
+    private int currentAmountOfPlayersSupporting = 0;
+    private float holdedItemMovementSpeedPenalty = 0;
 
-
+    public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
+    public class UpdateHoldedItemMovementSpeedPenaltyEventArgs : EventArgs
+    {
+        public float currentMovementSpeedPenaltyMultiplier;
+    }
 
     private void Awake()
     {
@@ -37,19 +44,23 @@ public class PlayerInteractionNew : MonoBehaviour
     {
 
 
-        RaycastHit[] raycasts = Physics.RaycastAll(transform.position, transform.forward, interactDistance);
+        RaycastHit[] raycasts = Physics.RaycastAll(Camera.main.transform.position, Camera.main.transform.forward, interactDistance);
         //Collider[] colliders = Physics.OverlapSphere(transform.position, interactDistance);
         foreach (RaycastHit raycastHit in raycasts)
         {
-            raycastHit.transform.parent.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
+            Debug.Log(raycastHit);
+            raycastHit.transform.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
             if (interactable != null)
             {
+                // If raycast hit object is same as currently holded object, continue
+                if (_pickedUpGameObject == raycastHit.transform.gameObject)
+                    continue;
                 // Check if looking at storage and have object to store, if yes try to store object
-                raycastHit.transform.parent.TryGetComponent<BaseStorageNew>(out BaseStorageNew baseStorage);
+                raycastHit.transform.TryGetComponent<BaseStorageNew>(out BaseStorageNew baseStorage);
                 if (baseStorage != null && pickedUpObject != null)
                 {
                     //Check if the storage is instance of MainStorageNew, if yes try to store object in main storage, if no try to store object in normal storage
-                    raycastHit.transform.parent.TryGetComponent<MainStorageNew>(out MainStorageNew mainStorage);
+                    raycastHit.transform.TryGetComponent<MainStorageNew>(out MainStorageNew mainStorage);
                     if (mainStorage != null)
                     {
                         if (TryStoreObject(mainStorage))
@@ -76,15 +87,14 @@ public class PlayerInteractionNew : MonoBehaviour
                         return;
                     }
                 }
-
                 // If looking at pickable object, pick it up
-                Debug.Log(raycastHit.transform.name);
-                raycastHit.transform.parent.TryGetComponent<IPIckableNew>(out IPIckableNew pickableObject);
-                if (pickableObject != null)
+                raycastHit.transform.TryGetComponent<IPIckableNew>(out IPIckableNew pickableObject);
+                if (pickableObject != null && _pickedUpGameObject == null)
                 {
                     pickableObject.PickedUp(transform);
                     return;
                 }
+
                 // If looking at interactable object, interact with it
                 interactable.Interact(transform);
                 return;
@@ -101,7 +111,7 @@ public class PlayerInteractionNew : MonoBehaviour
     public void PickUpObject(GameObject pickUpObject, IPIckableNew pIckableObject)
     {
         _pickedUpGameObject = pickUpObject;
-        pickedUpObject = pIckableObject;
+        SetHoldedItemProperties(pIckableObject);
         _pickedUpGameObject.transform.SetParent(pickUpHoldPositionHolder);
         _pickedUpGameObject.transform.localPosition = Vector3.zero;
         _pickedUpGameObject.transform.localRotation = Quaternion.identity;
@@ -113,7 +123,8 @@ public class PlayerInteractionNew : MonoBehaviour
         {
             _pickedUpGameObject.transform.SetParent(null);
             _pickedUpGameObject = null;
-            pickedUpObject = null;
+            pickedUpObject.DroppedDown();
+            SetHoldedItemProperties(null);
             return true;
         }
         return false;
@@ -125,7 +136,7 @@ public class PlayerInteractionNew : MonoBehaviour
         {
             Destroy(_pickedUpGameObject);
             _pickedUpGameObject = null;
-            pickedUpObject = null;
+            SetHoldedItemProperties(null);
         }
     }
 
@@ -163,12 +174,12 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void CheckLookAtInteractable()
     {
-        RaycastHit[] raycasts = Physics.RaycastAll(transform.position, transform.forward, interactDistance);
+        RaycastHit[] raycasts = Physics.RaycastAll(Camera.main.transform.position, Camera.main.transform.forward, interactDistance);
         //Collider[] colliders = Physics.OverlapSphere(transform.position, interactDistance);
         IInteractableNew newInteractableObject = null;
         foreach (RaycastHit raycastHit in raycasts)
         {
-            raycastHit.transform.parent.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
+            raycastHit.transform.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
             if (interactable != null)
             {
                 newInteractableObject = interactable;
@@ -200,7 +211,40 @@ public class PlayerInteractionNew : MonoBehaviour
     }
 
 
+    private void SetHoldedItemProperties(IPIckableNew iPIckableNew)
+    {
+        if (iPIckableNew != null)
+        {
+            minAmountOfPlayersNeeded = iPIckableNew.GetMinAmountOfPlayersNeeded();
+            holdedItemMovementSpeedPenalty = iPIckableNew.GetMovementSpeedPenalty();
+            pickedUpObject = iPIckableNew;
+            Debug.Log("Properties setted");
+        }
+        else
+        {
+            minAmountOfPlayersNeeded = 0;
+            holdedItemMovementSpeedPenalty = 0;
+            pickedUpObject = null;
+            Debug.Log("Properties resetted");
+        }
 
+        float movementSpeedPenalty = CalculateMovementSpeedPenalty();
+        UpdateHoldedItemMovementSpeedPenalty?.Invoke(this, new UpdateHoldedItemMovementSpeedPenaltyEventArgs
+        {
+            currentMovementSpeedPenaltyMultiplier = movementSpeedPenalty,
+        });
+    }
+
+    private float CalculateMovementSpeedPenalty()
+    {
+        if (minAmountOfPlayersNeeded > currentAmountOfPlayersSupporting && minAmountOfPlayersNeeded > 0)
+        {
+            return holdedItemMovementSpeedPenalty * (minAmountOfPlayersNeeded - currentAmountOfPlayersSupporting);
+        }
+        else
+            // If there is enough supporting players, movement speed penalty == 0
+            return 0;
+    }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {

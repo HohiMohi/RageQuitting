@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Services.Matchmaker.Models;
 using UnityEngine;
 
 public class BaseStorageNew : MonoBehaviour, IInteractableNew

@@ -9,6 +9,13 @@ public class MountableBridgeComponentSO : ScriptableObject
     public GameObject inGameGameObjectPrefab;
     public RequiredResource[] requiredResources;
     public BridgeComponentSO bridgeComponentSO;
+    public float movementSpeedPenalty;
+    public int minAmountOfPlayersNeeded;
+    [Header("Blast Furnace Factory properties")]
+    public float meltingPoint;
+    public float combustionTemperature;
+    public float neededProgress;
+    public float neededCombustionProgress;
 }
 
 [Serializable]

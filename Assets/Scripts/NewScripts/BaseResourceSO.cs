@@ -10,7 +10,9 @@ public class BaseResourceSO : ScriptableObject
     public Sprite icon;
     public BaseResourceDestructionRecipe[] baseResourceDestructionRecipeArray;
     public float resourceDurability;
-
+    public float movementSpeedPenalty;
+    public int minAmountOfPlayersNeeded;
+    public float furnaceFuelAmount;
 }
 
 [Serializable]

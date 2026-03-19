@@ -52,7 +52,7 @@ public class BaseFactory : MonoBehaviour, IInteractableNew
         InitializeStorageStorableResourcesList();
     }
 
-    private void FactoryInteractionUI_OnBridgeComponentSelectionConfirm(object sender, FactoryInteractionUI.OnConfirmButtonClickEventArgs e)
+    protected virtual void FactoryInteractionUI_OnBridgeComponentSelectionConfirm(object sender, FactoryInteractionUI.OnConfirmButtonClickEventArgs e)
     {
         bridgeComponentSpriteRenderer.sprite = e.mountableBridgeComponentSO.componentSprite;
         currentlySelectedMountableBridgeComponentSO = e.mountableBridgeComponentSO;
