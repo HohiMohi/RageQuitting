@@ -389,6 +389,12 @@ namespace StarterAssets
 				}
 			}
 		}
+
+		public float GetStaminaNormalized()
+		{
+			return _currentStamina / MaxStamina;
+		}
+
         #endregion
 
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
