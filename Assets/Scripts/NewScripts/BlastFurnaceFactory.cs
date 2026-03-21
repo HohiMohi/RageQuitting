@@ -9,6 +9,26 @@ public class BlastFurnaceFactory : BaseFactory
     {
         public MountableBridgeComponentSO mountableBridgeComponentSO;
     }
+    private void Start()
+    {
+        furnaceStorage.ProductionStarted += FurnaceStorage_OnProductionStarted;
+        furnaceStorage.ProductionFinished += FurnaceStorage_OnProductionFinished;
+        factoryInteractionUI.OnConfirmButtonClick += FactoryInteractionUI_OnBridgeComponentSelectionConfirm;
+        InitializeStorageStorableResourcesList();
+
+
+    }
+
+    private void FurnaceStorage_OnProductionFinished(object sender, EventArgs e)
+    {
+        SpawnMountableBridgeComponent(currentlySelectedMountableBridgeComponentSO);
+    }
+
+    private void FurnaceStorage_OnProductionStarted(object sender, EventArgs e)
+    {
+        RemoveBaseResourcesFromStorage(currentlySelectedMountableBridgeComponentSO);
+
+    }
 
     protected override void FactoryInteractionUI_OnBridgeComponentSelectionConfirm(object sender, FactoryInteractionUI.OnConfirmButtonClickEventArgs e)
     {
@@ -19,4 +39,5 @@ public class BlastFurnaceFactory : BaseFactory
             mountableBridgeComponentSO = currentlySelectedMountableBridgeComponentSO
         });
     }
+
 }

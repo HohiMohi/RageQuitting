@@ -3,11 +3,21 @@ using UnityEngine;
 
 public class FurnaceSwitch : MonoBehaviour, IInteractableNew
 {
-    public EventHandler FurnaceSwitchPressed;
+    [SerializeField] private FurnaceStorage furnaceStorage;
+    public EventHandler<FurnaceSwitchPressedEventArgs> FurnaceSwitchPressed;
+    public class FurnaceSwitchPressedEventArgs : EventArgs
+    {
+        public Transform interactor;
+    }
+
 
     public void Interact(Transform interactor)
     {
-        FurnaceSwitchPressed?.Invoke(this, EventArgs.Empty);
+        // If ProgressNormalized == 1 -> invoke event to open minigame ui
+        FurnaceSwitchPressed?.Invoke(this, new FurnaceSwitchPressedEventArgs
+        {
+            interactor = interactor
+        });
     }
 
     public void LookedAt(Transform interactor)

@@ -178,7 +178,11 @@ public class PlayerInputNew : MonoBehaviour
         return new Vector2(inputVector.x, -inputVector.y);
     }
 
-
+    public Vector2 GetLookDeltaValueForMinigames()
+    {
+        Vector2 inputVector = playerGameInputActions.Game.Look.ReadValue<Vector2>();
+        return new Vector2(inputVector.x, inputVector.y);
+    }
 
     public Vector2 GetMoveVectorValue()
     {

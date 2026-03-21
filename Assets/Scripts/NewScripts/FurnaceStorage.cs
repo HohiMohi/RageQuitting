@@ -12,11 +12,13 @@ public class FurnaceStorage : BaseStorageNew
     [SerializeField] private VentilationGrille ventilationGrille;
     [SerializeField] private Kindling kindling;
     [SerializeField] private FurnaceSwitch furnaceSwitch;
+    [SerializeField] private BlastFurnaceMinigame minigame;
     private bool furnaceIsOn;
     private bool furnaceIsOnFire;
     private float furnaceTemperature;
     private float furnacePressure;
     private float furnaceReferencePressureHolder;
+    private MountableBridgeComponentSO selectedMountableBridgeComponentSO;
 
     #region Furnace Production Parameters
     private float productionProgress;
@@ -58,6 +60,12 @@ public class FurnaceStorage : BaseStorageNew
     #region Events
     public EventHandler ProductionStarted;
     public EventHandler ProductionFinished;
+    public EventHandler<TryEndProductionEventArgs> TryEndProduction;
+
+    public class TryEndProductionEventArgs : EventArgs
+    {
+        public Transform interactor;
+    }
 
     #endregion
     private void Awake()
@@ -80,12 +88,21 @@ public class FurnaceStorage : BaseStorageNew
         ventilationGrille.VentilationGrilleClosed += VentilationGrille_OnVentilationGrilleClosed;
         kindling.SetFurnaceOnFire += Kindling_OnFurnaceSettedOnFire;
         furnaceSwitch.FurnaceSwitchPressed += FurnaceSwitch_OnFurnaceSwitchPressed;
+        minigame.MinigameCompletedEvent += BlastFurnaceMinigame_OnMinigameCompleted;
         productionProgress = 0;
         combustionProgress = 0;
     }
 
+    private void BlastFurnaceMinigame_OnMinigameCompleted(object sender, EventArgs e)
+    {
+        Debug.Log("Minigame completed succesfully.");
+        ProductionFinished?.Invoke(this, EventArgs.Empty);
+        Debug.Log("Production finished. Furnace has been stopped");
+    }
+
     private void BlastFurnaceFactory_OnBridgeComponentSelectionConfirm(object sender, BlastFurnaceFactory.BridgeComponentSelectionConfirmEventArgs e)
     {
+        
         furnaceIsOn = false;
         productionProgress = 0;
         combustionProgress = 0;
@@ -95,8 +112,7 @@ public class FurnaceStorage : BaseStorageNew
             meltingPoint = e.mountableBridgeComponentSO.meltingPoint;
             combustionTemperature = e.mountableBridgeComponentSO.combustionTemperature;
             neededCombustionProgress = e.mountableBridgeComponentSO.neededCombustionProgress;
-            Debug.Log(neededCombustionProgress);
-            Debug.Log(neededProgress);
+            selectedMountableBridgeComponentSO = e.mountableBridgeComponentSO;
         }
     }
 
@@ -118,19 +134,33 @@ public class FurnaceStorage : BaseStorageNew
         }
     }
 
-    private void FurnaceSwitch_OnFurnaceSwitchPressed(object sender, EventArgs e)
+    private void FurnaceSwitch_OnFurnaceSwitchPressed(object sender, FurnaceSwitch.FurnaceSwitchPressedEventArgs e)
     {
         if (furnaceIsOn)
         {
             furnaceIsOn = false;
-            ProductionFinished?.Invoke(this, EventArgs.Empty);
-            Debug.Log("Production finished. Furnace has been stopped");
+            if (GetProductionProgressNormalized() == 1)
+            {
+                TryEndProduction?.Invoke(this, new TryEndProductionEventArgs
+                {
+                    interactor = e.interactor
+                });
+            }
+
         }
         else if (!furnaceIsOn && neededProgress != 0)
         {
-            furnaceIsOn = true;
-            ProductionStarted?.Invoke(this, EventArgs.Empty);
-            Debug.Log("Furnace turned on. Starting production");
+            if (blastFurnaceFactory.CheckRequiredBaseResources(selectedMountableBridgeComponentSO))
+            {
+                furnaceIsOn = true;
+                ProductionStarted?.Invoke(this, EventArgs.Empty);
+                Debug.Log("Furnace turned on. Starting production");
+            }
+            else
+            {
+                Debug.Log("Missing Base Resources in Base Storage. Cannot start production");
+            }
+
         }
 
     }
@@ -190,11 +220,10 @@ public class FurnaceStorage : BaseStorageNew
             furnaceTemperature = Math.Clamp(furnaceTemperature, furnaceMaxTemperature, 3000);
         }
         furnaceTemperature = math.clamp(furnaceTemperature, 30, 3000);
-        Debug.Log($"Current Temperature is: {furnaceTemperature}");
+        //Debug.Log($"Current Temperature is: {furnaceTemperature}");
         if (math.abs(furnacePressure) > 0.1)
         {
             furnacePressure -= Time.deltaTime * furnaceReferencePressureHolder / furnacePressureChangeSpeed;
-            Debug.Log($"Current Pressure is: {furnacePressure}");
         }
         else
         {
@@ -212,7 +241,7 @@ public class FurnaceStorage : BaseStorageNew
         {
             float fuelUsage = (furnaceTemperature / furnaceFuelNormalizedTemperature) * Time.deltaTime / 60;
             furnaceFuel -= fuelUsage;
-            Debug.Log($"Current fuel usage: {fuelUsage}");
+            //Debug.Log($"Current fuel usage: {fuelUsage}");
         }
         if (furnaceFuel <= 0 && furnaceTemperature <= 30 && furnaceIsOnFire)
         {
@@ -223,29 +252,32 @@ public class FurnaceStorage : BaseStorageNew
 
     private void HandleProductionProgress()
     {
+        if (furnaceIsOn) { 
         float temperatureDelta = furnaceTemperature - meltingPoint;
-        if ((temperatureDelta > 0 && productionProgress < neededProgress) || (temperatureDelta < 0 && productionProgress > 0 && combustionProgress == 0))
-        {
-            productionProgress += temperatureDelta * Time.deltaTime;
-            productionProgress = math.clamp(productionProgress, 0, neededProgress);
+            if ((temperatureDelta > 0 && productionProgress < neededProgress) || (temperatureDelta < 0 && productionProgress > 0 && combustionProgress == 0))
+            {
+                productionProgress += temperatureDelta * Time.deltaTime;
+                productionProgress = math.clamp(productionProgress, 0, neededProgress);
+            }
         }
     }
 
     private void HandleCombustionProgress()
     {
+        if (furnaceIsOn) {
         float temperatureDelta = furnaceTemperature - combustionTemperature;
-        Debug.Log(temperatureDelta);
-        if((temperatureDelta > 0 && combustionProgress < neededCombustionProgress && neededProgress == productionProgress ) || (temperatureDelta < 0 && combustionProgress > 0 ))
-        {
-            combustionProgress += temperatureDelta * Time.deltaTime;
-            combustionProgress = math.clamp(combustionProgress, 0, neededCombustionProgress);
-            if (combustionProgress == neededCombustionProgress)
+            //Debug.Log(temperatureDelta);
+            if ((temperatureDelta > 0 && combustionProgress < neededCombustionProgress && neededProgress == productionProgress) || (temperatureDelta < 0 && combustionProgress > 0))
             {
-                Debug.Log("Spalone");
-                // Handle there production failed event
-                //ProductionFinished?.Invoke(this, EventArgs.Empty);
+                combustionProgress += temperatureDelta * Time.deltaTime;
+                combustionProgress = math.clamp(combustionProgress, 0, neededCombustionProgress);
+                if (combustionProgress == neededCombustionProgress)
+                {
+                    Debug.Log("Spalone");
+                    // Handle there production failed event
+                    //ProductionFinished?.Invoke(this, EventArgs.Empty);
+                }
             }
-
         }
     }
     private void TryRefuelFurnace()

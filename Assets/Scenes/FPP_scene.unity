@@ -1828,7 +1828,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1226735101515080394, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: furnaceFuel
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1226735101515080394, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: furnaceFuelTemp
@@ -1875,6 +1875,14 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3452474835842826213, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3506122036869318252, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3506122036869318252, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
@@ -1982,9 +1990,33 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6880865513306801203, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7041611797032729485, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: m_Name
       value: BlastFurnace_prefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 7461202528316383959, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: minigameFailureTime
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7461202528316383959, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: minigameCriticalFailureTime
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504941551840715490, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: backgroundNeutralColor.a
+      value: 0.7058824
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504941551840715490, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: backgroundNegativeColor.a
+      value: 0.7058824
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504941551840715490, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: backgroundPositiveColor.a
+      value: 0.7058824
       objectReference: {fileID: 0}
     - target: {fileID: 8158199800839550247, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: m_AnchorMax.x
@@ -1996,6 +2028,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8158199800839550247, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8535257874571548672, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8535257874571548672, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8637713793391671985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
