@@ -3149,15 +3149,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: mountableBridgeComponentSOArray.Array.size
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[0]'
       value: 
       objectReference: {fileID: 11400000, guid: 9c1e7fcbba447974193389a1230b761b, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'mountableBridgeComponentSOArray.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 9fa6cb6c61419394fae67d6286faa6de, type: 2}
     - target: {fileID: 1729528994032473016, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4135540500050236898, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: m_Value
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4975687527736979738, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: m_AnchorMax.y
