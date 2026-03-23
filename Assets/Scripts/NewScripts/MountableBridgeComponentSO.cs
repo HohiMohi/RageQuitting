@@ -16,6 +16,9 @@ public class MountableBridgeComponentSO : ScriptableObject
     public float combustionTemperature;
     public float neededProgress;
     public float neededCombustionProgress;
+    [Header("Carpenter Table Factory properties")]
+    public float componentWidth;
+    public float componentLength;
 }
 
 [Serializable]

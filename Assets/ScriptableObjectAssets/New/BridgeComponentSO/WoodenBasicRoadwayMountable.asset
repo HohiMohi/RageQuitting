@@ -25,3 +25,5 @@ MonoBehaviour:
   combustionTemperature: 950
   neededProgress: 800
   neededCombustionProgress: 1000
+  componentWidth: 65
+  componentLength: 130

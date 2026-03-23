@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class ProductionMinigameUI : MonoBehaviour
 {
-    [SerializeField] private BlastFurnaceMinigame minigame;
+    [SerializeField] private Minigame minigame;
     [SerializeField] private Image background;
     [SerializeField] private Color backgroundNeutralColor;
     [SerializeField] private Color backgroundPositiveColor;

@@ -1,11 +1,10 @@
 using System;
-using Unity.Mathematics;
 using UnityEngine;
 
-public class BlastFurnaceMinigame : Minigame
+public class CarpenterTableMinigame : Minigame
 {
     [SerializeField] private ProductionMinigameUI productionMinigameUI;
-    [SerializeField] private FurnaceStorage furnaceStorage;
+    [SerializeField] private CarpenterTableFactory carpenterTableFactory;
     private float playerValuePositionUpperBound;
     private float playerValuePositionLowerBound;
     private float currentRequiredValuePositionUpperBound;
@@ -43,14 +42,14 @@ public class BlastFurnaceMinigame : Minigame
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        furnaceStorage.TryEndProduction += FurnaceStorage_OnTryEndProduction;
+        carpenterTableFactory.TryEndProduction += CarpenterTableFactory_OnTryEndProduction;
         isGameOn = false;
         CalculateObjectsBounds();
         minigameCalculateValueStep = Mathf.Abs(currentRequiredValuePositionLowerBound - currentRequiredValuePositionUpperBound) / minigameCompleteTime;
 
     }
 
-    private void FurnaceStorage_OnTryEndProduction(object sender, FurnaceStorage.TryEndProductionEventArgs e)
+    private void CarpenterTableFactory_OnTryEndProduction(object sender, CarpenterTableFactory.TryEndProductionEventArgs e)
     {
         interactor = e.interactor;
         playerInputNew = interactor.GetComponent<PlayerInputNew>();
@@ -101,7 +100,7 @@ public class BlastFurnaceMinigame : Minigame
         // invoke event - minigame completed
         Debug.Log("Minigame completed");
         MinigameCompletedEvent?.Invoke(this, EventArgs.Empty);
-        EndMinigameEvent?.Invoke(this, EventArgs.Empty );
+        EndMinigameEvent?.Invoke(this, EventArgs.Empty);
         isGameOn = false;
 
 
@@ -116,17 +115,17 @@ public class BlastFurnaceMinigame : Minigame
     private void UpdatePlayerValue()
     {
         float yDelta = playerInputNew.GetLookDeltaValueForMinigames().y;
-        playerValue += yDelta;
+        playerValue -= yDelta;
         playerValue = Mathf.Clamp(playerValue, playerValuePositionLowerBound, playerValuePositionUpperBound);
     }
     private void CalculateCurrentValues()
     {
         float normalizedProgress = CalculateNormalizedProgress();
-        if (CalculateValueDifference() < requiredValueObjectHeight/2)
+        if (CalculateValueDifference() < requiredValueObjectHeight / 2)
         {
             currentRequiredValue = Mathf.Clamp(currentRequiredValue - (Time.deltaTime * (minigameCalculateValueStep * (0.5f + normalizedProgress))), currentRequiredValuePositionLowerBound, currentRequiredValuePositionUpperBound);
-        } 
-        else if(CalculatePerfectValueDifference() < perfectValueObjectHeight / 2)
+        }
+        else if (CalculatePerfectValueDifference() < perfectValueObjectHeight / 2)
         {
             currentRequiredValue = Mathf.Clamp(currentRequiredValue - (Time.deltaTime * (minigameCalculateValueStep * (0.5f + normalizedProgress)) * perfectValueProgressMultiplier), currentRequiredValuePositionLowerBound, currentRequiredValuePositionUpperBound);
         }
@@ -151,7 +150,7 @@ public class BlastFurnaceMinigame : Minigame
                 Debug.Log("Critical Failure");
                 // invoke critical failure event
                 MinigameFailed(); //temp
-            } 
+            }
         }
         else
         {
@@ -169,7 +168,7 @@ public class BlastFurnaceMinigame : Minigame
 
     private float CalculateNormalizedProgress()
     {
-        return Mathf.Abs(currentRequiredValue /currentRequiredValuePositionLowerBound);
+        return Mathf.Abs(currentRequiredValue / currentRequiredValuePositionLowerBound);
     }
 
     public override float GetPlayerValue()
@@ -204,7 +203,7 @@ public class BlastFurnaceMinigame : Minigame
 
     private float CalculateCriticalFailureDifference()
     {
-        return Mathf.Abs (currentCriticalFailureValue - playerValue);
+        return Mathf.Abs(currentCriticalFailureValue - playerValue);
     }
 
     private void CalculateObjectsBounds()
@@ -219,5 +218,3 @@ public class BlastFurnaceMinigame : Minigame
         criticalFailureValuePositionLowerBound = -(minigamePanelHeight - criticalFailureObjectHeight / 2);
     }
 }
-
-
