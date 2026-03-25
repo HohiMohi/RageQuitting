@@ -20,6 +20,9 @@ MonoBehaviour:
     neededEquippableItemType: 1
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 0
-  resourceDurability: 5
+  - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+    neededEquippableItemType: 7
+  resourceDurability: 50
   movementSpeedPenalty: 0.4
   minAmountOfPlayersNeeded: 2
+  furnaceFuelAmount: 0

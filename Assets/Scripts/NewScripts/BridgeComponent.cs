@@ -139,4 +139,9 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         return bridgeComponentSO;
     }
+
+    public void DamageReceived(float damage)
+    {
+        throw new NotImplementedException();
+    }
 }

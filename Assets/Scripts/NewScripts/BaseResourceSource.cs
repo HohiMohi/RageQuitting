@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,14 @@ public class BaseResourceSource : MonoBehaviour, IDamageable
     [SerializeField] private BaseResourceSO spawnedResourceType;
     [SerializeField] private Transform baseResourceSpawnPoint;
     [SerializeField] private List<EquippableItemType> supportedEquippableItemTypeList;
+    [SerializeField] private Vector3[] spawnedResourcesPositionVectorArray;
+
+    public EventHandler<ResourceSourceDurabilityChangedEventArgs> ResourceSourceDurabilityChanged;
+    public class ResourceSourceDurabilityChangedEventArgs : EventArgs
+    {
+        public float resourceDurability;
+        public float resourceDurabilityNormalized;
+    }
 
     private void Awake()
     {
@@ -39,7 +48,7 @@ public class BaseResourceSource : MonoBehaviour, IDamageable
         {
             Debug.Log($"{spawnedResourceType.name} resource source destroyed. Resource spawned");
             // Here you would implement the logic to spawn the resource, e.g.:
-            Instantiate(spawnedResourceType.resourcePrefab, transform.position, Quaternion.identity);
+            HandleSpawningResources();
 
             //Destroy the resource source object after spawning the resource
             Destroy(gameObject);
@@ -62,5 +71,19 @@ public class BaseResourceSource : MonoBehaviour, IDamageable
     void Update()
     {
         
+    }
+
+    public void DamageReceived(float damage)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    private void HandleSpawningResources()
+    {
+        foreach(Vector3 positionVector in spawnedResourcesPositionVectorArray)
+        {
+            GameObject spawnedResource = Instantiate(spawnedResourceType.resourcePrefab, transform.position + positionVector, Quaternion.identity);
+            spawnedResource.transform.Rotate(new Vector3(0, UnityEngine.Random.Range(0f, 360f), UnityEngine.Random.Range(0f, 1f)));
+        }
     }
 }

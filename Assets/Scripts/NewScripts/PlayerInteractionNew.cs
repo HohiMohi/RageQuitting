@@ -89,9 +89,10 @@ public class PlayerInteractionNew : MonoBehaviour
                 }
                 // If looking at pickable object, pick it up
                 raycastHit.transform.TryGetComponent<IPIckableNew>(out IPIckableNew pickableObject);
-                if (pickableObject != null && _pickedUpGameObject == null)
+                if (pickableObject != null)
                 {
-                    pickableObject.PickedUp(transform);
+                    if (_pickedUpGameObject == null)
+                        pickableObject.PickedUp(transform);
                     return;
                 }
 

@@ -6,6 +6,16 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew, ID
     [SerializeField] private BaseResourceSO baseResourceSO;
     [SerializeField] private float resourceDurability;
     public EventHandler EquippableItemNeeded;
+    [SerializeField] private bool isPickedUp = false;
+    private Rigidbody _rigidbody;
+
+    public EventHandler<ResourceDurabilityChangedEventArgs> ResourceDurabilityChanged;
+    public class ResourceDurabilityChangedEventArgs : EventArgs
+    {
+        public float resourceDurability;
+        public float resourceDurabilityNormalized;
+    }
+
     public void Interact(Transform interactor)
     {
         Debug.Log("Interacted with Base Resource");
@@ -15,11 +25,14 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew, ID
     public void PickedUp(Transform parent)
     {
         parent.GetComponent<PlayerInteractionNew>().PickUpObject(this.gameObject, this);
+        isPickedUp=true;
+        UpdatePickedUpProperties();
 
     }
     public void DroppedDown()
     {
-
+        isPickedUp = false;
+        UpdatePickedUpProperties();
     }
     private void Awake()
     {
@@ -27,13 +40,13 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew, ID
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        _rigidbody = GetComponent<Rigidbody>();
         resourceDurability = baseResourceSO.resourceDurability;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
     }
     public BaseResourceSO GetBaseResourceSO()
     {
@@ -94,9 +107,40 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew, ID
         }
         else
         {
-            Debug.Log($"Resource source damaged! Current durability: {resourceDurability}");
+            ResourceDurabilityChanged?.Invoke(this, new ResourceDurabilityChangedEventArgs
+            {
+                resourceDurability = resourceDurability,
+                resourceDurabilityNormalized = GetCurrentResourceDurabilityNormalized()
+            });
         }
 
+    }
+
+    public void DamageReceived(float damage)
+    {
+        resourceDurability -= damage;
+        Debug.Log($"Current resource durability: {resourceDurability}");
+        if (resourceDurability <= 0f)
+        {
+            foreach (BaseResourceDestructionRecipe recipe in baseResourceSO.baseResourceDestructionRecipeArray)
+            {
+                if (recipe.neededEquippableItemType == EquippableItemType.None)
+                {
+                    Debug.Log(recipe.finalProductBaseResourceSO.resourcePrefab);
+                    Instantiate(recipe.finalProductBaseResourceSO.resourcePrefab, transform.position, Quaternion.identity);
+                    break;
+                }
+            }
+                Destroy(gameObject);
+        }
+        else
+        {
+            ResourceDurabilityChanged?.Invoke(this, new ResourceDurabilityChangedEventArgs
+            {
+                resourceDurability = resourceDurability,
+                resourceDurabilityNormalized = GetCurrentResourceDurabilityNormalized()
+            });
+        }
     }
 
     public float GetMovementSpeedPenalty()
@@ -109,5 +153,36 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew, ID
         return baseResourceSO.minAmountOfPlayersNeeded;
     }
 
+    public float GetCurrentResourceDurabilityNormalized()
+    {
+        return resourceDurability / baseResourceSO.resourceDurability;
+    }
+
+    private void UpdatePickedUpProperties()
+    {
+        if (isPickedUp)
+        {
+            _rigidbody.useGravity = false;           
+            _rigidbody.isKinematic = true;
+        }
+        else
+        {
+            _rigidbody.useGravity = true;
+            _rigidbody.isKinematic = false;
+        }
+    }
+
+
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.TryGetComponent<IDamageable>(out IDamageable damageableObject))
+        {
+            if(collision.relativeVelocity.magnitude > 1)
+            {
+                damageableObject.DamageReceived(collision.relativeVelocity.magnitude);
+            }
+        }
+    }
 
 }
