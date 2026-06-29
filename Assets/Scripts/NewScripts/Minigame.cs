@@ -11,6 +11,7 @@ public abstract class Minigame : MonoBehaviour
     public abstract void MinigameCompleted();
 
     public abstract void UpdateMinigame();
+    public abstract bool IsActive();
     public abstract float GetPlayerValue();
     public abstract float GetCurrentRequiredValue();
     public abstract float GetCurrentPerfectValue();

@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &247003509258641123
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675652720901343578, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3411051970943589608, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      propertyPath: m_Name
+      value: Goblin_AI2_Animated
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3411051970943589608, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 555065888102965812}
+    - targetCorrespondingSourceObject: {fileID: 3411051970943589608, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6300659201682335317}
+  m_SourcePrefab: {fileID: 100100000, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+--- !u!1 &3187411451738309131 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3411051970943589608, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+  m_PrefabInstance: {fileID: 247003509258641123}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &555065888102965812
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3187411451738309131}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: 999f83ae0e3de56408eb791dce59b068, type: 3}
+  m_Controller: {fileID: 9100000, guid: c3c14956cea8c0c4b8ec51bcf60b0192, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!143 &6300659201682335317
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3187411451738309131}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 0.7906066
+  m_Radius: 0.50000024
+  m_SlopeLimit: 45
+  m_StepOffset: 0.23718199
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: -0.00000038743025, y: 0.3953033, z: 0.5000002}

@@ -18,5 +18,5 @@ MonoBehaviour:
   bridgeComponentType: 1
   componentAdvancementLevel: 0
   supportedEquippableItemTypeList: 00000000
-  assemblingProgressNeeded: 5
+  assemblingProgressNeeded: 100
   needAssembling: 1

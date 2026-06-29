@@ -10,6 +10,7 @@ public class PlayerInteractionNew : MonoBehaviour
     [Header("Interaction Parameters")]
     private IInteractableNew _currentInteractable = null;
     [SerializeField] private float interactDistance = 2f;
+    [SerializeField] private float interactSphereRadius = 0.25f;
     
     
     [Header("PickUp Parameters")]
@@ -42,13 +43,16 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void HandleInteract(object sender, EventArgs e)
     {
+        RaycastHit[] raycasts = Physics.SphereCastAll(Camera.main.transform.position, interactSphereRadius, Camera.main.transform.forward, interactDistance);
+        
+        // Sort hits by ascending distance so we prioritize the closest target
+        Array.Sort(raycasts, (a, b) => a.distance.CompareTo(b.distance));
 
-
-        RaycastHit[] raycasts = Physics.RaycastAll(Camera.main.transform.position, Camera.main.transform.forward, interactDistance);
-        //Collider[] colliders = Physics.OverlapSphere(transform.position, interactDistance);
         foreach (RaycastHit raycastHit in raycasts)
         {
-            Debug.Log(raycastHit);
+            if (raycastHit.transform.gameObject == gameObject || raycastHit.transform.IsChildOf(transform))
+                continue;
+
             raycastHit.transform.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
             if (interactable != null)
             {
@@ -100,6 +104,12 @@ public class PlayerInteractionNew : MonoBehaviour
                 interactable.Interact(transform);
                 return;
             }
+
+            // Block interaction if we hit a solid, non-trigger physical obstacle closer than any interactable
+            if (raycastHit.collider != null && !raycastHit.collider.isTrigger)
+            {
+                break;
+            }
         }
         // Try to drop object - objects need to be affected by gravity - now Objects are just dropped and stay in the air, player has to jump to pick them up again - to change
         if (DropObject())
@@ -122,9 +132,25 @@ public class PlayerInteractionNew : MonoBehaviour
     {
         if (_pickedUpGameObject != null)
         {
-            _pickedUpGameObject.transform.SetParent(null);
+            GameObject droppedGo = _pickedUpGameObject;
             _pickedUpGameObject = null;
+
+            droppedGo.transform.SetParent(null);
+
+            // Position it slightly in front of the player to avoid physics clipping/stuck
+            Vector3 dropPosition = transform.position + transform.forward * 1.0f + Vector3.up * 0.5f;
+            droppedGo.transform.position = dropPosition;
+
             pickedUpObject.DroppedDown();
+
+            // Add a gentle forward nudge
+            if (droppedGo.TryGetComponent<Rigidbody>(out Rigidbody rb))
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.AddForce(transform.forward * 1.5f, ForceMode.Impulse);
+            }
+
             SetHoldedItemProperties(null);
             return true;
         }
@@ -139,6 +165,16 @@ public class PlayerInteractionNew : MonoBehaviour
             _pickedUpGameObject = null;
             SetHoldedItemProperties(null);
         }
+    }
+
+    public GameObject GetPickedUpGameObject()
+    {
+        return _pickedUpGameObject;
+    }
+
+    public IInteractableNew GetCurrentInteractable()
+    {
+        return _currentInteractable;
     }
 
     public bool TryStoreObject(BaseStorageNew storage)
@@ -175,11 +211,17 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void CheckLookAtInteractable()
     {
-        RaycastHit[] raycasts = Physics.RaycastAll(Camera.main.transform.position, Camera.main.transform.forward, interactDistance);
-        //Collider[] colliders = Physics.OverlapSphere(transform.position, interactDistance);
+        RaycastHit[] raycasts = Physics.SphereCastAll(Camera.main.transform.position, interactSphereRadius, Camera.main.transform.forward, interactDistance);
+        
+        // Sort hits by ascending distance so we prioritize the closest target
+        Array.Sort(raycasts, (a, b) => a.distance.CompareTo(b.distance));
+
         IInteractableNew newInteractableObject = null;
         foreach (RaycastHit raycastHit in raycasts)
         {
+            if (raycastHit.transform.gameObject == gameObject || raycastHit.transform.IsChildOf(transform))
+                continue;
+
             raycastHit.transform.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
             if (interactable != null)
             {
@@ -187,6 +229,12 @@ public class PlayerInteractionNew : MonoBehaviour
                 if (interactable == _currentInteractable)
                     break;
                 interactable.LookedAt(transform);
+                break;
+            }
+
+            // Block sight if we hit a solid, non-trigger physical obstacle closer than any interactable
+            if (raycastHit.collider != null && !raycastHit.collider.isTrigger)
+            {
                 break;
             }
         }

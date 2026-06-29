@@ -70,6 +70,8 @@ public class CarpenterTableMinigame : Minigame
         }
     }
 
+    public override bool IsActive() => isGameOn;
+
     public override void StartMinigame()
     {
         currentRequiredValue = currentRequiredValuePositionUpperBound;

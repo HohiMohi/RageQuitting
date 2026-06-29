@@ -411,6 +411,7 @@ MonoBehaviour:
   bridgeComponentSO: {fileID: 0}
   readyForMountingVisualsGameObject: {fileID: 8173735385419580166}
   mountedComponentVisualsGameObject: {fileID: 139243499724766407}
+  ghostMaterial: {fileID: 2100000, guid: e4086445596654d47bd5f343fe066ba1, type: 2}
 --- !u!65 &6444265382821226239
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -431,7 +432,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1 &4661047192164836728
 GameObject:
   m_ObjectHideFlags: 0

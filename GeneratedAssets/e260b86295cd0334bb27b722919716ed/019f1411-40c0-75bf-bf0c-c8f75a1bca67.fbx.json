@@ -1,0 +1,23 @@
+{
+    "asset": "e260b86295cd0334bb27b722919716ed",
+    "fileName": "019f1411-40c0-75bf-bf0c-c8f75a1bca67.fbx",
+    "prompt": "Goblin, should wear shorts",
+    "negativePrompt": "",
+    "model": "model3d-tripo3-texturing",
+    "modelName": "Tripo 3.0 Texturing",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Texturing",
+    "promptImageReferenceGuid": "add43a3b6b52b0e498bc351c1eb486b8",
+    "modelReferenceGuid": "36078ab0369161e49a29d349ae3e0739",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "unity-mcp-gateway": {
+      "command": "D:\\Programy\\UnityProjects\\RageQuitting\\Library\\PackageCache\\com.unity.ai.assistant@6fee27370e6a\\RelayApp~\\relay_win.exe",
+      "args": [
+        "--mcp",
+        "--log-dir",
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Logs"
+      ],
+      "env": {
+        "UNITY_ACP_SESSION_TOKEN": "62f977c1bebcaeacfbbf6ac1db608ced7bb467277b2acd65f27cb5eb603edfe3",
+        "UNITY_INSTANCE_ID": "13100"
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+    "asset": "5ec47c0b621b3e547ac7be22d6263cfd",
+    "fileName": "019f13f9-5b04-7ce6-a1d5-532fa9dc1cd9.glb",
+    "prompt": "Low poly goblin with tool belt and safety helmet. Use image reference but goblin should not have diaper and should not hold any item. Goblin should be in T-pose",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "bb0d1a6a7ac0be3499be9cfeca350ce6",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

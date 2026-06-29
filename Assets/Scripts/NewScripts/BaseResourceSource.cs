@@ -75,7 +75,7 @@ public class BaseResourceSource : MonoBehaviour, IDamageable
 
     public void DamageReceived(float damage)
     {
-        throw new System.NotImplementedException();
+        Debug.Log($"Damage received: {damage}");
     }
 
     private void HandleSpawningResources()

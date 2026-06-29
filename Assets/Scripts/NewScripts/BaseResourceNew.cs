@@ -7,6 +7,7 @@ public class BaseResourceNew : MonoBehaviour, IInteractableNew, IPIckableNew, ID
     [SerializeField] private float resourceDurability;
     public EventHandler EquippableItemNeeded;
     [SerializeField] private bool isPickedUp = false;
+    public bool IsPickedUp => isPickedUp;
     private Rigidbody _rigidbody;
 
     public EventHandler<ResourceDurabilityChangedEventArgs> ResourceDurabilityChanged;

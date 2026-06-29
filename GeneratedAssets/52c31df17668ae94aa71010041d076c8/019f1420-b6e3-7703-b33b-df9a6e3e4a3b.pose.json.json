@@ -1,0 +1,12 @@
+{
+    "asset": "52c31df17668ae94aa71010041d076c8",
+    "fileName": "019f1420-b6e3-7703-b33b-df9a6e3e4a3b.pose.json",
+    "prompt": "Humanoid sprint loop, loopable, in-place, fast aggressive sprint.",
+    "negativePrompt": "",
+    "model": "unity-text-to-motion",
+    "modelName": "Text to Motion",
+    "customSeed": 496724382,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "isTrimmed": false
+}

@@ -18,6 +18,10 @@ public class BridgeComponentNeededEquippableItemUI : MonoBehaviour
     {
         bridgeComponent.BridgeComponentSOAssigned += BridgeComponent_OnBridgeComponentSOAssigned;
         bridgeComponent.EquippedItemTypeNeeded += BridgeComponent_OnEquippableItemTypeNeeded;
+        if (bridgeComponent.GetBridgeComponentSO() != null)
+        {
+            PrepareUI(bridgeComponent.GetBridgeComponentSO());
+        }
         Hide();
     }
 

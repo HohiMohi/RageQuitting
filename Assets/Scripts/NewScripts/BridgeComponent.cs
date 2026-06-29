@@ -10,6 +10,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     [SerializeField] private BridgeComponentSO bridgeComponentSO;
     [SerializeField] private GameObject readyForMountingVisualsGameObject;
     [SerializeField] private GameObject mountedComponentVisualsGameObject;
+    [SerializeField] private Material ghostMaterial;
     private float assemblingProgressNeeded;
     private float currentAssemblingProgress;
     private bool needAssembling;
@@ -36,14 +37,34 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         if (canBeMounted && !isMounted)
         {
-            readyForMountingVisualsGameObject.SetActive(false);
-            mountedComponentVisualsGameObject.SetActive(true);
-            ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
-            isMounted = true;
-            if (!needAssembling)
+            if (interactor.TryGetComponent<PlayerInteractionNew>(out PlayerInteractionNew playerInteraction))
             {
-                ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
-                isAssembled = true;
+                GameObject heldGo = playerInteraction.GetPickedUpGameObject();
+                if (heldGo != null && heldGo.TryGetComponent<MountableBridgeComponent>(out MountableBridgeComponent heldComponent))
+                {
+                    if (heldComponent.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponentSO)
+                    {
+                        playerInteraction.RemovePickedUpObject();
+
+                        readyForMountingVisualsGameObject.SetActive(false);
+                        mountedComponentVisualsGameObject.SetActive(true);
+                        ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
+                        isMounted = true;
+                        if (!needAssembling)
+                        {
+                            ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
+                            isAssembled = true;
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("Holding wrong bridge component type!");
+                    }
+                }
+                else
+                {
+                    Debug.Log("Not holding any mountable bridge component!");
+                }
             }
         }
     }
@@ -73,6 +94,15 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         readyForMountingVisualsGameObject.SetActive(false);
         mountedComponentVisualsGameObject.SetActive(false);
+
+        // Ensure all colliders in readyForMountingVisualsGameObject are triggers so players can walk through them
+        if (readyForMountingVisualsGameObject != null)
+        {
+            foreach (Collider col in readyForMountingVisualsGameObject.GetComponentsInChildren<Collider>(true))
+            {
+                col.isTrigger = true;
+            }
+        }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -80,8 +110,29 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
 
         currentAssemblingProgress = 0;
-        BridgeBuildingManager.Instance.BridgeComponentMountableStatusUpdate += BridgeBuildingManager_OnBridgeComponentMountableStatusUpdate;
-        BridgeBuildingManager.Instance.BridgeComponentStored += BridgeBuildingManager_OnBridgeComponentStored;
+
+        if (bridgeComponentSO != null)
+        {
+            assemblingProgressNeeded = bridgeComponentSO.assemblingProgressNeeded;
+            needAssembling = bridgeComponentSO.needAssembling;
+            BridgeComponentSOAssigned?.Invoke(this, new BridgeComponentSOAssignedEventArgs
+            {
+                bridgeComponentSO = bridgeComponentSO
+            });
+        }
+
+        // Apply translucent ghost material to the ready visuals if assigned
+        if (readyForMountingVisualsGameObject != null && ghostMaterial != null)
+        {
+            foreach (Renderer r in readyForMountingVisualsGameObject.GetComponentsInChildren<Renderer>(true))
+            {
+                r.material = ghostMaterial;
+            }
+        }
+
+        GameplayManager.Instance.BridgeComponentMountableStatusUpdate += GameplayManager_OnBridgeComponentMountableStatusUpdate;
+        //BridgeBuildingManager.Instance.BridgeComponentMountableStatusUpdate += BridgeBuildingManager_OnBridgeComponentMountableStatusUpdate;
+        //BridgeBuildingManager.Instance.BridgeComponentStored += BridgeBuildingManager_OnBridgeComponentStored;
     }
 
     private void BridgeBuildingManager_OnBridgeComponentStored(object sender, BridgeBuildingManager.BridgeComponentStoredEventArgs e)
@@ -95,6 +146,16 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
             {
                 bridgeComponentSO = bridgeComponentSO
             });
+        }
+    }
+
+    private void GameplayManager_OnBridgeComponentMountableStatusUpdate(object sender, GameplayManager.BridgeComponentMountableStatusUpdateEventArgs e)
+    {
+        Debug.Log("Received BridgeComponentMountableStatusUpdate event in BridgeComponent with componentID: " + componentID);
+        if (e.componentID == componentID && !isMounted)
+        {
+            canBeMounted = e.canBeMounted;
+            readyForMountingVisualsGameObject.SetActive(true);
         }
     }
 
@@ -115,7 +176,26 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void LookedAt(Transform interactor)
     {
-        Debug.Log("Looked at Bridge Component");
+        if (canBeMounted && !isMounted)
+        {
+            if (interactor.TryGetComponent<PlayerInteractionNew>(out PlayerInteractionNew playerInteraction))
+            {
+                GameObject heldGo = playerInteraction.GetPickedUpGameObject();
+                if (heldGo != null && heldGo.TryGetComponent<MountableBridgeComponent>(out MountableBridgeComponent heldComponent))
+                {
+                    if (heldComponent.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponentSO)
+                    {
+                        Debug.Log("Looked at Bridge Component (Holding matching component)");
+                        return;
+                    }
+                }
+            }
+            // Do not log "Looked at Bridge Component" if we don't have the matching component
+        }
+        else if (isMounted && !isAssembled)
+        {
+            Debug.Log("Looked at Bridge Component (Needs assembly)");
+        }
     }
 
     public void LookedAway(Transform interactor)
@@ -138,6 +218,17 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     public BridgeComponentSO GetBridgeComponentSO()
     {
         return bridgeComponentSO;
+    }
+
+    public bool IsMounted => isMounted;
+    public bool CanBeMounted => canBeMounted;
+    public bool IsAssembled => isAssembled;
+    public bool NeedAssembling => needAssembling;
+
+    public float GetAssemblingProgressNormalized()
+    {
+        if (assemblingProgressNeeded <= 0f) return 0f;
+        return Mathf.Clamp01(currentAssemblingProgress / assemblingProgressNeeded);
     }
 
     public void DamageReceived(float damage)
