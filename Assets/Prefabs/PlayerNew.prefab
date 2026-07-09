@@ -697,6 +697,7 @@ MonoBehaviour:
   maxHealth: 100
   healthRegenerationPerSecond: 5
   regenerationDelayAfterDamage: 5
+  respawnAvailableDelay: 15
 --- !u!114 &3720368351117420130
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1321,6 +1322,7 @@ GameObject:
   - component: {fileID: 3427085242935962454}
   - component: {fileID: 1911057960335705787}
   - component: {fileID: 4961064496022948310}
+  - component: {fileID: 2198425372698904513}
   m_Layer: 5
   m_Name: PlayerStaminaUI
   m_TagString: Untagged
@@ -1379,6 +1381,23 @@ MonoBehaviour:
   playerHealth: {fileID: 6339126401750945372}
   anchoredPosition: {x: 20, y: 48}
   size: {x: 180, y: 14}
+--- !u!114 &2198425372698904513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5097042778840174810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55a376a11b6e44c8a20a8aa9a8dd0dcf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerRespawnPromptUI
+  playerHealth: {fileID: 6339126401750945372}
+  respawnAvailableText: Press Interact to respawn
+  respawnCountdownFormat: Respawn available in {0:0}s
+  anchoredPosition: {x: 0, y: 140}
+  size: {x: 420, y: 54}
 --- !u!1 &5724807883155745863
 GameObject:
   m_ObjectHideFlags: 0

@@ -162,4 +162,16 @@ public class PlayerSpawnManager : MonoBehaviour
             .Select(point => point.transform)
             .ToArray();
     }
+
+    public static Transform GetSpawnPointForClient(ulong clientId)
+    {
+        var spawnPoints = FindSpawnPoints();
+        if (spawnPoints.Length == 0)
+        {
+            return null;
+        }
+
+        int spawnIndex = (int)(clientId % (ulong)spawnPoints.Length);
+        return spawnPoints[spawnIndex];
+    }
 }

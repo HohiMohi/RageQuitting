@@ -128,6 +128,11 @@ public class PlayerNetworkSetup : NetworkBehaviour
             healthUi.gameObject.SetActive(false);
         }
 
+        foreach (var respawnPromptUi in GetComponentsInChildren<PlayerRespawnPromptUI>(true))
+        {
+            respawnPromptUi.gameObject.SetActive(false);
+        }
+
         foreach (var inventoryUi in GetComponentsInChildren<PlayerInventoryUI>(true))
         {
             inventoryUi.gameObject.SetActive(false);

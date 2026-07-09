@@ -2,12 +2,13 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerHealth : NetworkBehaviour, IDamageable
+public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 {
     [Header("Health")]
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float healthRegenerationPerSecond = 5f;
     [SerializeField] private float regenerationDelayAfterDamage = 5f;
+    [SerializeField] private float respawnAvailableDelay = 15f;
 
     private readonly NetworkVariable<float> currentHealthNetwork = new NetworkVariable<float>(
         0f,
@@ -19,8 +20,14 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<float> downedAtTimeNetwork = new NetworkVariable<float>(
+        -1f,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     private float currentHealthLocal;
     private bool isDownedLocal;
+    private float downedAtTimeLocal = -1f;
     private float lastDamageTime = float.NegativeInfinity;
     private PlayerInteractionNew playerInteraction;
 
@@ -30,6 +37,8 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     public float CurrentHealth => IsNetworkStateActive ? currentHealthNetwork.Value : currentHealthLocal;
     public float MaxHealth => maxHealth;
     public bool IsDowned => IsNetworkStateActive ? isDownedNetwork.Value : isDownedLocal;
+    public bool CanBeRevived => IsDowned;
+    public bool CanRespawn => IsDowned && GetRespawnTimeRemaining() <= 0f;
 
     private bool IsNetworkStateActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
 
@@ -48,6 +57,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         {
             currentHealthNetwork.Value = maxHealth;
             isDownedNetwork.Value = false;
+            downedAtTimeNetwork.Value = -1f;
         }
     }
 
@@ -122,6 +132,114 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         return Mathf.Clamp01(CurrentHealth / maxHealth);
     }
 
+    public float GetRespawnTimeRemaining()
+    {
+        if (!IsDowned)
+        {
+            return respawnAvailableDelay;
+        }
+
+        float downedAtTime = IsNetworkStateActive ? downedAtTimeNetwork.Value : downedAtTimeLocal;
+        if (downedAtTime < 0f)
+        {
+            return respawnAvailableDelay;
+        }
+
+        return Mathf.Max(0f, respawnAvailableDelay - (GetCurrentStateTime() - downedAtTime));
+    }
+
+    public void RequestRevive(NetworkObject reviver)
+    {
+        if (!CanBeRevived)
+        {
+            return;
+        }
+
+        if (IsNetworkStateActive)
+        {
+            ulong reviverNetworkObjectId = reviver != null ? reviver.NetworkObjectId : 0;
+            if (IsServer)
+            {
+                TryReviveNetwork(reviverNetworkObjectId);
+            }
+            else
+            {
+                RequestReviveRpc(reviverNetworkObjectId);
+            }
+
+            return;
+        }
+
+        RestoreFullHealth();
+    }
+
+    public void RequestRespawn()
+    {
+        if (!CanRespawn)
+        {
+            return;
+        }
+
+        if (IsNetworkStateActive)
+        {
+            if (IsServer)
+            {
+                RespawnNetwork();
+            }
+            else
+            {
+                RequestRespawnRpc();
+            }
+
+            return;
+        }
+
+        RespawnLocal();
+    }
+
+    public void RestoreFullHealth()
+    {
+        if (IsNetworkStateActive)
+        {
+            if (!IsServer)
+            {
+                return;
+            }
+
+            currentHealthNetwork.Value = maxHealth;
+            isDownedNetwork.Value = false;
+            downedAtTimeNetwork.Value = -1f;
+        }
+        else
+        {
+            currentHealthLocal = maxHealth;
+            isDownedLocal = false;
+            downedAtTimeLocal = -1f;
+        }
+
+        OnDownedStateChanged?.Invoke(this, EventArgs.Empty);
+        OnHealthChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Interact(Transform interactor)
+    {
+        if (!CanBeRevived || interactor == null || interactor.root == transform.root)
+        {
+            return;
+        }
+
+        NetworkObject reviverNetworkObject = interactor.GetComponentInParent<NetworkObject>();
+        RequestRevive(reviverNetworkObject);
+    }
+
+    public void LookedAt(Transform interactor)
+    {
+    }
+
+    public void LookedAway(Transform interactor)
+    {
+    }
+
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     private void RequestDamageRpc(float damage, ulong attackerNetworkObjectId)
     {
@@ -131,6 +249,18 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         }
 
         ApplyDamageNetwork(damage);
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void RequestReviveRpc(ulong reviverNetworkObjectId)
+    {
+        TryReviveNetwork(reviverNetworkObjectId);
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+    private void RequestRespawnRpc()
+    {
+        RespawnNetwork();
     }
 
     private void ApplyDamageNetwork(float damage)
@@ -201,6 +331,11 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         if (isDowned)
         {
             currentHealthNetwork.Value = 0f;
+            downedAtTimeNetwork.Value = GetCurrentStateTime();
+        }
+        else
+        {
+            downedAtTimeNetwork.Value = -1f;
         }
 
         OnDownedStateChanged?.Invoke(this, EventArgs.Empty);
@@ -218,7 +353,12 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         if (isDownedLocal)
         {
             currentHealthLocal = 0f;
+            downedAtTimeLocal = GetCurrentStateTime();
             DropHeldObjectBecauseDowned();
+        }
+        else
+        {
+            downedAtTimeLocal = -1f;
         }
 
         OnDownedStateChanged?.Invoke(this, EventArgs.Empty);
@@ -251,5 +391,90 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
         {
             playerInteraction.DropHeldObjectForStateChange();
         }
+    }
+
+    private void TryReviveNetwork(ulong reviverNetworkObjectId)
+    {
+        if (!IsServer || !CanBeRevived || reviverNetworkObjectId == NetworkObject.NetworkObjectId)
+        {
+            return;
+        }
+
+        RestoreFullHealth();
+    }
+
+    private void RespawnNetwork()
+    {
+        if (!IsServer || !CanRespawn)
+        {
+            return;
+        }
+
+        Transform spawnPoint = PlayerSpawnManager.GetSpawnPointForClient(OwnerClientId);
+        if (spawnPoint == null)
+        {
+            Debug.LogWarning($"PlayerHealth: Could not find respawn point for client {OwnerClientId}.");
+            return;
+        }
+
+        Transform playerTransform = transform;
+        playerTransform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
+        RestoreFullHealth();
+        TeleportOwnerClientRpc(spawnPoint.position, spawnPoint.rotation, CreateTargetClientRpcParams(OwnerClientId));
+    }
+
+    private void RespawnLocal()
+    {
+        Transform spawnPoint = PlayerSpawnManager.GetSpawnPointForClient(0);
+        if (spawnPoint != null)
+        {
+            TeleportLocally(spawnPoint.position, spawnPoint.rotation);
+        }
+
+        RestoreFullHealth();
+    }
+
+    [ClientRpc]
+    private void TeleportOwnerClientRpc(Vector3 position, Quaternion rotation, ClientRpcParams clientRpcParams = default)
+    {
+        TeleportLocally(position, rotation);
+    }
+
+    private void TeleportLocally(Vector3 position, Quaternion rotation)
+    {
+        CharacterController characterController = GetComponent<CharacterController>();
+        bool wasCharacterControllerEnabled = characterController != null && characterController.enabled;
+        if (wasCharacterControllerEnabled)
+        {
+            characterController.enabled = false;
+        }
+
+        transform.SetPositionAndRotation(position, rotation);
+
+        if (wasCharacterControllerEnabled)
+        {
+            characterController.enabled = true;
+        }
+    }
+
+    private ClientRpcParams CreateTargetClientRpcParams(ulong clientId)
+    {
+        return new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { clientId }
+            }
+        };
+    }
+
+    private float GetCurrentStateTime()
+    {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            return (float)NetworkManager.Singleton.ServerTime.Time;
+        }
+
+        return Time.time;
     }
 }

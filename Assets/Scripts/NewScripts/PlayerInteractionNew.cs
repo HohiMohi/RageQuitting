@@ -59,6 +59,7 @@ public class PlayerInteractionNew : MonoBehaviour
     {
         if (_playerHealth != null && _playerHealth.IsDowned)
         {
+            _playerHealth.RequestRespawn();
             return;
         }
 
@@ -69,10 +70,11 @@ public class PlayerInteractionNew : MonoBehaviour
 
         foreach (RaycastHit raycastHit in raycasts)
         {
-            if (raycastHit.transform.gameObject == gameObject || raycastHit.transform.IsChildOf(transform))
+            if (raycastHit.transform.root == transform.root)
                 continue;
 
-            raycastHit.transform.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
+            IInteractableNew interactable = raycastHit.transform.GetComponent<IInteractableNew>();
+            interactable ??= raycastHit.transform.GetComponentInParent<IInteractableNew>();
             if (interactable != null)
             {
                 // If raycast hit object is same as currently holded object, continue
@@ -372,10 +374,11 @@ public class PlayerInteractionNew : MonoBehaviour
         IInteractableNew newInteractableObject = null;
         foreach (RaycastHit raycastHit in raycasts)
         {
-            if (raycastHit.transform.gameObject == gameObject || raycastHit.transform.IsChildOf(transform))
+            if (raycastHit.transform.root == transform.root)
                 continue;
 
-            raycastHit.transform.TryGetComponent<IInteractableNew>(out IInteractableNew interactable);
+            IInteractableNew interactable = raycastHit.transform.GetComponent<IInteractableNew>();
+            interactable ??= raycastHit.transform.GetComponentInParent<IInteractableNew>();
             if (interactable != null)
             {
                 newInteractableObject = interactable;
