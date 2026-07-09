@@ -359,6 +359,7 @@ GameObject:
   - component: {fileID: 4354115525238422459}
   - component: {fileID: 482533967712327051}
   - component: {fileID: 6339126401750945372}
+  - component: {fileID: 4730679781642105471}
   - component: {fileID: 3720368351117420130}
   - component: {fileID: 7382414467715117638}
   m_Layer: 8
@@ -643,6 +644,8 @@ MonoBehaviour:
   pickUpHoldPositionHolder: {fileID: 8494466475874479498}
   carryBodyAnchor: {fileID: 0}
   defaultCarryBodyAnchorLocalPosition: {x: 0, y: 1.4, z: 0}
+  carriedPlayerAnchor: {fileID: 0}
+  defaultCarriedPlayerAnchorLocalPosition: {x: 0, y: 1, z: 1}
   _pickedUpGameObject: {fileID: 0}
 --- !u!114 &4354115525238422459
 MonoBehaviour:
@@ -698,6 +701,21 @@ MonoBehaviour:
   healthRegenerationPerSecond: 5
   regenerationDelayAfterDamage: 5
   respawnAvailableDelay: 15
+--- !u!114 &4730679781642105471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09f01f6d61354d7cb81ba8b7a5d3128d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DownedPlayerCarryable
+  movementSpeedPenalty: 0.35
+  carriedPlayerLocalOffset: {x: 0, y: 0, z: 0.25}
+  dropOffset: {x: 0, y: 0, z: 1}
 --- !u!114 &3720368351117420130
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -100,6 +100,7 @@ namespace StarterAssets
 		private PlayerInteractionNew _playerInteractionNew;
 		private PlayerInventory _playerInventory;
 		private PlayerHealth _playerHealth;
+		private DownedPlayerCarryable _downedPlayerCarryable;
 		
 		private const float _threshold = 0.01f;
 
@@ -126,6 +127,7 @@ namespace StarterAssets
 			_playerInputNew.OnSprint += PlayerInputNew_OnSprint;
 			_playerInputNew.OnJump += PlayerInputNew_OnJump;
 			_playerHealth = GetComponent<PlayerHealth>();
+			_downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
 			_currentStamina = MaxStamina;
         }
 
@@ -254,6 +256,22 @@ namespace StarterAssets
 
 		private void Move()
 		{
+			if (_controller == null || !_controller.enabled)
+			{
+				_isSprinting = false;
+				_isJumpPerformed = false;
+				_speed = 0f;
+				return;
+			}
+
+			if (IsBeingCarried())
+			{
+				_isSprinting = false;
+				_isJumpPerformed = false;
+				_speed = 0f;
+				return;
+			}
+
 			if (IsDowned())
 			{
 				MoveWhileDowned();
@@ -395,6 +413,13 @@ namespace StarterAssets
 
 		private void JumpAndGravity()
 		{
+			if (IsBeingCarried())
+			{
+				_isJumpPerformed = false;
+				_verticalVelocity = 0f;
+				return;
+			}
+
 			bool canJump = !IsDowned() && (_playerInteractionNew == null || !_playerInteractionNew.IsSharedCarryMovementActive);
 			if (!canJump)
 			{
@@ -505,6 +530,11 @@ namespace StarterAssets
 		private bool IsDowned()
 		{
 			return _playerHealth != null && _playerHealth.IsDowned;
+		}
+
+		private bool IsBeingCarried()
+		{
+			return _downedPlayerCarryable != null && _downedPlayerCarryable.IsCarried;
 		}
 
         #endregion

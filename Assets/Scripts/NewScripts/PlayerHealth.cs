@@ -30,6 +30,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     private float downedAtTimeLocal = -1f;
     private float lastDamageTime = float.NegativeInfinity;
     private PlayerInteractionNew playerInteraction;
+    private DownedPlayerCarryable downedPlayerCarryable;
 
     public event EventHandler OnHealthChanged;
     public event EventHandler OnDownedStateChanged;
@@ -45,6 +46,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     private void Awake()
     {
         playerInteraction = GetComponent<PlayerInteractionNew>();
+        downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
         currentHealthLocal = maxHealth;
     }
 
@@ -199,6 +201,8 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 
     public void RestoreFullHealth()
     {
+        ForceDropIfCarried();
+
         if (IsNetworkStateActive)
         {
             if (!IsServer)
@@ -223,13 +227,6 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 
     public void Interact(Transform interactor)
     {
-        if (!CanBeRevived || interactor == null || interactor.root == transform.root)
-        {
-            return;
-        }
-
-        NetworkObject reviverNetworkObject = interactor.GetComponentInParent<NetworkObject>();
-        RequestRevive(reviverNetworkObject);
     }
 
     public void LookedAt(Transform interactor)
@@ -335,6 +332,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         }
         else
         {
+            ForceDropIfCarried();
             downedAtTimeNetwork.Value = -1f;
         }
 
@@ -358,6 +356,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         }
         else
         {
+            ForceDropIfCarried();
             downedAtTimeLocal = -1f;
         }
 
@@ -418,6 +417,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         }
 
         Transform playerTransform = transform;
+        ForceDropIfCarried();
         playerTransform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
         RestoreFullHealth();
         TeleportOwnerClientRpc(spawnPoint.position, spawnPoint.rotation, CreateTargetClientRpcParams(OwnerClientId));
@@ -428,10 +428,21 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         Transform spawnPoint = PlayerSpawnManager.GetSpawnPointForClient(0);
         if (spawnPoint != null)
         {
+            ForceDropIfCarried();
             TeleportLocally(spawnPoint.position, spawnPoint.rotation);
         }
 
         RestoreFullHealth();
+    }
+
+    private void ForceDropIfCarried()
+    {
+        if (downedPlayerCarryable == null || !downedPlayerCarryable.IsCarried)
+        {
+            return;
+        }
+
+        downedPlayerCarryable.ForceDrop();
     }
 
     [ClientRpc]
