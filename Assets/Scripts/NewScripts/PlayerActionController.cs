@@ -9,6 +9,7 @@ public class PlayerActionController : MonoBehaviour
     private PlayerInventory _inventory;
     private PlayerInputNew _playerInputNew;
     private NetworkObject _networkObject;
+    private PlayerHealth _playerHealth;
     [Header("Action Parameters")]
     #region Tooltip
     [Tooltip("Base action range - when player has NOT equipped item.")]
@@ -43,6 +44,7 @@ public class PlayerActionController : MonoBehaviour
         _inventory = GetComponent<PlayerInventory>();
         _playerInputNew = GetComponent<PlayerInputNew>();
         _networkObject = GetComponent<NetworkObject>();
+        _playerHealth = GetComponent<PlayerHealth>();
         _playerInputNew.OnAction += HandleAction;
         _playerInputNew.OnActionAlt += HandleActionAlt;
         _playerInputNew.OnActionCanceled += HandleActionCanceled;
@@ -71,11 +73,22 @@ public class PlayerActionController : MonoBehaviour
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (IsDowned())
+        {
+            return;
+        }
+
         Debug.Log("Action Alt");
     }
 
     private void HandleAction(object sender, EventArgs e)
     {
+        if (IsDowned())
+        {
+            performAction = false;
+            return;
+        }
+
         performAction = true;
     }
 
@@ -139,6 +152,12 @@ public class PlayerActionController : MonoBehaviour
 
     public void TryPerformAction()
     {
+        if (IsDowned())
+        {
+            performAction = false;
+            return;
+        }
+
         actionCooldownTimer -= Time.deltaTime;
         if (performAction && actionCooldownTimer <= 0)
         {
@@ -167,5 +186,10 @@ public class PlayerActionController : MonoBehaviour
             repeatAction = baseRepeatAction;
             actionDamage = baseActionDamage;
         }
+    }
+
+    private bool IsDowned()
+    {
+        return _playerHealth != null && _playerHealth.IsDowned;
     }
 }

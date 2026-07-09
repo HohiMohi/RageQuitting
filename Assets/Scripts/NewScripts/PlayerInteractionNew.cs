@@ -36,6 +36,9 @@ public class PlayerInteractionNew : MonoBehaviour
 
     public bool IsSharedCarryMovementActive => sharedCarryMovementActive && _pickedUpGameObject != null;
     public bool HasPickedUpObject => _pickedUpGameObject != null;
+    public bool IsHoldingObject => _pickedUpGameObject != null;
+    public bool IsHoldingDownedPlayer => _pickedUpGameObject != null && _pickedUpGameObject.TryGetComponent(out DownedPlayerCarryable _);
+    public bool IsHoldingSelfPositionedObject => _pickedUpGameObject != null && pickedUpObjectSelfPositioned;
     public Vector3 CarryBodyAnchorLocalOffset => defaultCarryBodyAnchorLocalPosition;
 
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;

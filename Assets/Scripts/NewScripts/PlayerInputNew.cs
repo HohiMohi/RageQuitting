@@ -266,6 +266,17 @@ public class PlayerInputNew : NetworkBehaviour
         return playerGameInputActions.Game.Move.ReadValue<Vector2>();
     }
 
+    public string GetInputDisplayName(PlayerInputActionKind actionKind)
+    {
+        return actionKind switch
+        {
+            PlayerInputActionKind.Interact => "E",
+            PlayerInputActionKind.Action => "LMB",
+            PlayerInputActionKind.ActionAlt => "RMB",
+            _ => string.Empty
+        };
+    }
+
     private void OnEnable()
     {
         if (inputInitialized && playerGameInputActions != null)
