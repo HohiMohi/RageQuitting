@@ -358,9 +358,11 @@ GameObject:
   - component: {fileID: 1047544986995738481}
   - component: {fileID: 4354115525238422459}
   - component: {fileID: 482533967712327051}
+  - component: {fileID: 5297249238941053112}
   - component: {fileID: 6339126401750945372}
   - component: {fileID: 4730679781642105471}
   - component: {fileID: 3720368351117420130}
+  - component: {fileID: 4186271902374816054}
   - component: {fileID: 7382414467715117638}
   m_Layer: 8
   m_Name: PlayerNew
@@ -684,6 +686,20 @@ MonoBehaviour:
   baseRepeatAction: 0
   baseActionDamage: 5
   actionTransformHolder: {fileID: 1382537172534668702}
+--- !u!114 &5297249238941053112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f47e0b5366c4d1f9bbf7d2c0e77a911, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ActionImpactEffectSpawner
+  defaultImpactEffectPrefab: {fileID: 0}
+  fallbackEffectLifetime: 1.5
 --- !u!114 &6339126401750945372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -730,6 +746,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerNetworkSetup
   ShowTopMostFoldoutHeaderGroup: 1
   playerBodyVisual: {fileID: 281519065286084417}
+--- !u!114 &4186271902374816054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18f3a735e4b04ce8b73d59dd4d4863ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDamageFeedback
+  playerHealth: {fileID: 6339126401750945372}
+  firstPersonController: {fileID: 8036448780592137977}
+  damageOverlay: {fileID: 0}
+  audioSource: {fileID: 0}
+  flashColor: {r: 0.9, g: 0, b: 0, a: 1}
+  flashFadeDuration: 0.35
+  minFlashAlpha: 0.18
+  maxFlashAlpha: 0.62
+  shakeDuration: 0.18
+  shakeAmplitude: 0.055
+  shakeFrequency: 42
+  downedFeedbackMultiplier: 1.45
+  damageClip: {fileID: 0}
+  audioVolume: 0.75
+  audioPitchVariance: 0.08
 --- !u!114 &7382414467715117638
 MonoBehaviour:
   m_ObjectHideFlags: 0

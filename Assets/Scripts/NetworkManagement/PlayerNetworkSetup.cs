@@ -128,6 +128,11 @@ public class PlayerNetworkSetup : NetworkBehaviour
             healthUi.gameObject.SetActive(false);
         }
 
+        foreach (var damageFeedback in GetComponentsInChildren<PlayerDamageFeedback>(true))
+        {
+            damageFeedback.enabled = false;
+        }
+
         foreach (var respawnPromptUi in GetComponentsInChildren<PlayerRespawnPromptUI>(true))
         {
             respawnPromptUi.gameObject.SetActive(false);

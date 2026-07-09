@@ -10,6 +10,7 @@ public class PlayerActionController : MonoBehaviour
     private PlayerInputNew _playerInputNew;
     private NetworkObject _networkObject;
     private PlayerHealth _playerHealth;
+    private ActionImpactEffectSpawner _impactEffectSpawner;
     [Header("Action Parameters")]
     #region Tooltip
     [Tooltip("Base action range - when player has NOT equipped item.")]
@@ -45,6 +46,7 @@ public class PlayerActionController : MonoBehaviour
         _playerInputNew = GetComponent<PlayerInputNew>();
         _networkObject = GetComponent<NetworkObject>();
         _playerHealth = GetComponent<PlayerHealth>();
+        _impactEffectSpawner = GetComponent<ActionImpactEffectSpawner>();
         _playerInputNew.OnAction += HandleAction;
         _playerInputNew.OnActionAlt += HandleActionAlt;
         _playerInputNew.OnActionCanceled += HandleActionCanceled;
@@ -127,12 +129,30 @@ public class PlayerActionController : MonoBehaviour
                 }
 
                 Debug.Log($"Action performed on {collider.transform.gameObject.name}");
+                SpawnImpactEffect(collider);
             }
             else if (damageable == null)
             {
                 Debug.Log($"Collider {collider.gameObject.name} is in range but does not implement IDamageableNew");
             }
         }
+    }
+
+    private void SpawnImpactEffect(Collider hitCollider)
+    {
+        if (_impactEffectSpawner == null || hitCollider == null || actionTransformHolder == null)
+        {
+            return;
+        }
+
+        Vector3 impactPoint = hitCollider.ClosestPoint(actionTransformHolder.position);
+        Vector3 impactNormal = actionTransformHolder.position - impactPoint;
+        if (impactNormal.sqrMagnitude < 0.0001f)
+        {
+            impactNormal = -transform.forward;
+        }
+
+        _impactEffectSpawner.SpawnImpact(impactPoint, impactNormal.normalized);
     }
 
     private bool ShouldRequestPlayerDamageOnServer(PlayerHealth playerHealth)
