@@ -1,13 +1,15 @@
 using NUnit.Framework;
 using System;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class PlayerInventory : MonoBehaviour
+public class PlayerInventory : NetworkBehaviour
 {
     private PlayerInputNew playerInputNew;
     [Header("Inventory Settings")]
     [SerializeField] private EquippableItemSO[] inventoryItems;
+    [SerializeField] private EquippableItemSO[] equippableItemCatalog;
     [SerializeField] private int _selectedItemIndex;
     [SerializeField] private int _inventorySlots = 2;
     [SerializeField] private int _currentInventoryOccupiedSlots = 0;
@@ -57,7 +59,7 @@ public class PlayerInventory : MonoBehaviour
 
     public bool AddItem(EquippableItemSO item)
     {
-        if (_inventorySlots - _currentInventoryOccupiedSlots >= item.inventorySlotsRequired)
+        if (CanAddItem(item))
         {
             inventoryItems[_currentInventoryOccupiedSlots] = item;
             _currentInventoryOccupiedSlots += item.inventorySlotsRequired;
@@ -91,7 +93,7 @@ public class PlayerInventory : MonoBehaviour
             _currentInventoryOccupiedSlots -= inventoryItems[_selectedItemIndex].inventorySlotsRequired;
             EquippableItemSO itemToRemove = inventoryItems[_selectedItemIndex];
             inventoryItems[_selectedItemIndex] = inventoryItems[1]; // Assign the second item to the first slot
-            EquippableItem.DropItem(itemToRemove, transform.position + transform.forward); // Drop the item in front of the player
+            DropItemInWorld(itemToRemove, transform.position + transform.forward, transform.rotation);
             OnInventoryUpdated?.Invoke(this, new OnInventoryUpdateArgs
             {
                 itemSlotIndex = 0,
@@ -166,6 +168,11 @@ public class PlayerInventory : MonoBehaviour
         inventoryMovementSpeedPenalty = movementSpeedPenalty;
     }
 
+    public bool CanAddItem(EquippableItemSO item)
+    {
+        return item != null && _inventorySlots - _currentInventoryOccupiedSlots >= item.inventorySlotsRequired;
+    }
+
     public EquippableItemSO GetCurrentSelectedItem()
     {
         if (_currentInventoryOccupiedSlots > 0)
@@ -177,5 +184,50 @@ public class PlayerInventory : MonoBehaviour
             Debug.Log("No items in inventory.");
             return null; // No items in inventory
         }
+    }
+
+    private void DropItemInWorld(EquippableItemSO itemToDrop, Vector3 dropPosition, Quaternion dropRotation)
+    {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            if (IsServer)
+            {
+                EquippableItem.SpawnNetworkedDrop(itemToDrop, dropPosition, dropRotation);
+            }
+            else
+            {
+                DropItemServerRpc((int)itemToDrop.itemType, dropPosition, dropRotation);
+            }
+
+            return;
+        }
+
+        EquippableItem.DropItem(itemToDrop, dropPosition);
+    }
+
+    [ServerRpc]
+    private void DropItemServerRpc(int itemTypeValue, Vector3 dropPosition, Quaternion dropRotation)
+    {
+        EquippableItemSO itemToDrop = GetEquippableItemSO((EquippableItemType)itemTypeValue);
+        if (itemToDrop == null)
+        {
+            Debug.LogWarning($"PlayerInventory: Could not find equippable item for type {(EquippableItemType)itemTypeValue}.");
+            return;
+        }
+
+        EquippableItem.SpawnNetworkedDrop(itemToDrop, dropPosition, dropRotation);
+    }
+
+    private EquippableItemSO GetEquippableItemSO(EquippableItemType itemType)
+    {
+        foreach (EquippableItemSO item in equippableItemCatalog)
+        {
+            if (item != null && item.itemType == itemType)
+            {
+                return item;
+            }
+        }
+
+        return null;
     }
 }

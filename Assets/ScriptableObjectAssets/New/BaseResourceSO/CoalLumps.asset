@@ -19,4 +19,9 @@ MonoBehaviour:
   resourceDurability: 0
   movementSpeedPenalty: 0
   minAmountOfPlayersNeeded: 0
+  allowMultipleCarriers: 0
+  recommendedCarriers: 1
+  maxCarriers: 1
+  underStaffedPenaltyMultiplier: 1
+  carryMoveSpeed: 4
   furnaceFuelAmount: 2

@@ -1,7 +1,8 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
-public class BaseFactory : MonoBehaviour, IInteractableNew
+public class BaseFactory : NetworkBehaviour, IInteractableNew
 {
     [SerializeField] protected FactoryInteractionUI factoryInteractionUI;
 
@@ -75,8 +76,67 @@ public class BaseFactory : MonoBehaviour, IInteractableNew
 
     public GameObject SpawnMountableBridgeComponent(MountableBridgeComponentSO mountableBridgeComponentSO)
     {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            if (IsServer)
+            {
+                return SpawnNetworkMountableBridgeComponent(mountableBridgeComponentSO);
+            }
+
+            int mountableBridgeComponentSOIndex = GetMountableBridgeComponentSOIndex(mountableBridgeComponentSO);
+            if (mountableBridgeComponentSOIndex >= 0)
+            {
+                RequestSpawnMountableBridgeComponentServerRpc(mountableBridgeComponentSOIndex);
+            }
+            else
+            {
+                Debug.LogWarning($"{mountableBridgeComponentSO.name} is not registered in this factory.");
+            }
+
+            return null;
+        }
+
         GameObject spawnedGameObject = Instantiate<GameObject>(mountableBridgeComponentSO.inGameGameObjectPrefab, mountableBridgeComponentSpawnPoint.position, Quaternion.identity);
         return spawnedGameObject;
+    }
+
+    private GameObject SpawnNetworkMountableBridgeComponent(MountableBridgeComponentSO mountableBridgeComponentSO)
+    {
+        GameObject networkSpawnedGameObject = Instantiate(mountableBridgeComponentSO.inGameGameObjectPrefab, mountableBridgeComponentSpawnPoint.position, Quaternion.identity);
+        if (networkSpawnedGameObject.TryGetComponent(out NetworkObject networkObject))
+        {
+            networkObject.Spawn(true);
+        }
+        else
+        {
+            Debug.LogError($"{networkSpawnedGameObject.name} is missing NetworkObject and cannot be synchronized.");
+        }
+
+        return networkSpawnedGameObject;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestSpawnMountableBridgeComponentServerRpc(int mountableBridgeComponentSOIndex)
+    {
+        if (mountableBridgeComponentSOIndex < 0 || mountableBridgeComponentSOIndex >= mountableBridgeComponentSOArray.Length)
+        {
+            return;
+        }
+
+        SpawnNetworkMountableBridgeComponent(mountableBridgeComponentSOArray[mountableBridgeComponentSOIndex]);
+    }
+
+    private int GetMountableBridgeComponentSOIndex(MountableBridgeComponentSO mountableBridgeComponentSO)
+    {
+        for (int i = 0; i < mountableBridgeComponentSOArray.Length; i++)
+        {
+            if (mountableBridgeComponentSOArray[i] == mountableBridgeComponentSO)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     public bool CheckRequiredBaseResources(MountableBridgeComponentSO mountableBridgeComponentSO)

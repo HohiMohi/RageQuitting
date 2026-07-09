@@ -269,6 +269,9 @@ MonoBehaviour:
   CinemachineCameraTarget: {fileID: 4135013735270702863}
   TopClamp: 89
   BottomClamp: -89
+  MaxStamina: 5
+  StaminaRegenerationTimeout: 2
+  currentMovementSpeed: 0
 --- !u!114 &1978471637655604388
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -77,6 +77,13 @@ namespace StarterAssets
 		[Tooltip("Temp value - you can check current base movement speed with penalties")]
         #endregion
         [SerializeField] private float currentMovementSpeed = 0f;
+        [Header("Shared Carry")]
+        [SerializeField] private float sharedCarryAttachCorrectionSpeed = 12f;
+        [SerializeField] private float sharedCarryAttachSnapDistance = 1.5f;
+        [SerializeField] private float sharedCarryInputSendInterval = 0.05f;
+        [SerializeField] private float sharedCarryInputChangeThreshold = 0.01f;
+        private float _sharedCarryInputSendTimer;
+        private Vector3 _lastSentSharedCarryInput;
 
 		// timeout deltatime
 		private float _jumpTimeoutDelta;
@@ -92,6 +99,7 @@ namespace StarterAssets
 		private PlayerInputNew _playerInputNew;
 		private PlayerInteractionNew _playerInteractionNew;
 		private PlayerInventory _playerInventory;
+		private PlayerHealth _playerHealth;
 		
 		private const float _threshold = 0.01f;
 
@@ -117,16 +125,29 @@ namespace StarterAssets
             _playerInputNew = GetComponent<PlayerInputNew>();
 			_playerInputNew.OnSprint += PlayerInputNew_OnSprint;
 			_playerInputNew.OnJump += PlayerInputNew_OnJump;
+			_playerHealth = GetComponent<PlayerHealth>();
 			_currentStamina = MaxStamina;
         }
 
         private void PlayerInputNew_OnJump(object sender, EventArgs e)
         {
+			if (IsDowned())
+			{
+				_isJumpPerformed = false;
+				return;
+			}
+
             _isJumpPerformed = true;
         }
 
         private void PlayerInputNew_OnSprint(object sender, PlayerInputNew.OnSprintArgs e)
         {
+			if (IsDowned())
+			{
+				_isSprinting = false;
+				return;
+			}
+
             _isSprinting = e.IsSprinting;
 			if (_isSprinting)
 			{
@@ -233,6 +254,18 @@ namespace StarterAssets
 
 		private void Move()
 		{
+			if (IsDowned())
+			{
+				MoveWhileDowned();
+				return;
+			}
+
+			if (_playerInteractionNew != null && _playerInteractionNew.IsSharedCarryMovementActive)
+			{
+				MoveDuringSharedCarry();
+				return;
+			}
+
 			// set target speed based on move speed, sprint speed and if sprint is pressed
 			float targetSpeed = 0f;
 			if (_isSprinting && _currentStamina > 0)
@@ -305,8 +338,69 @@ namespace StarterAssets
 			_controller.Move(inputDirection.normalized * (_speed * Time.deltaTime) + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 		}
 
+		private void MoveWhileDowned()
+		{
+			_isSprinting = false;
+			_isJumpPerformed = false;
+			_speed = 0f;
+			_controller.Move(new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+		}
+
+		private void MoveDuringSharedCarry()
+		{
+			Vector3 worldMoveInput = GetWorldMoveInput();
+			SendSharedCarryInputIfNeeded(worldMoveInput);
+
+			Vector3 attachCorrection = _playerInteractionNew.GetSharedCarryAnchorCorrection();
+			if (attachCorrection.magnitude > sharedCarryAttachSnapDistance)
+			{
+				_controller.Move(attachCorrection);
+			}
+			else
+			{
+				Vector3 correctionDelta = Vector3.MoveTowards(Vector3.zero, attachCorrection, sharedCarryAttachCorrectionSpeed * Time.deltaTime);
+				_controller.Move(correctionDelta);
+			}
+
+			_controller.Move(new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+			_speed = 0f;
+		}
+
+		private Vector3 GetWorldMoveInput()
+		{
+			Vector2 moveInput = _playerInputNew.GetMoveVectorValue();
+			if (moveInput == Vector2.zero)
+			{
+				return Vector3.zero;
+			}
+
+			Vector3 worldMoveInput = transform.right * moveInput.x + transform.forward * moveInput.y;
+			worldMoveInput.y = 0f;
+			return Vector3.ClampMagnitude(worldMoveInput, 1f);
+		}
+
+		private void SendSharedCarryInputIfNeeded(Vector3 worldMoveInput)
+		{
+			_sharedCarryInputSendTimer += Time.deltaTime;
+			bool inputChanged = Vector3.Distance(_lastSentSharedCarryInput, worldMoveInput) >= sharedCarryInputChangeThreshold;
+			if (_sharedCarryInputSendTimer < sharedCarryInputSendInterval && !inputChanged)
+			{
+				return;
+			}
+
+			_sharedCarryInputSendTimer = 0f;
+			_lastSentSharedCarryInput = worldMoveInput;
+			_playerInteractionNew.SubmitSharedCarryInput(worldMoveInput);
+		}
+
 		private void JumpAndGravity()
 		{
+			bool canJump = !IsDowned() && (_playerInteractionNew == null || !_playerInteractionNew.IsSharedCarryMovementActive);
+			if (!canJump)
+			{
+				_isJumpPerformed = false;
+			}
+
 			if (Grounded)
 			{
 				// reset the fall timeout timer
@@ -319,7 +413,7 @@ namespace StarterAssets
 				}
 
 				// Jump
-				if (_isJumpPerformed && _jumpTimeoutDelta <= 0.0f)
+				if (canJump && _isJumpPerformed && _jumpTimeoutDelta <= 0.0f)
 				{
 					// the square root of H * -2 * G = how much velocity needed to reach desired height
 					_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
@@ -357,6 +451,13 @@ namespace StarterAssets
 
         private void HandleStaminaRegeneration()
 		{
+			if (IsDowned())
+			{
+				_countStaminaTimeout = false;
+				_canRegenerateStamina = false;
+				return;
+			}
+
 			if (_canRegenerateStamina)
 			{
 				_currentStamina += Time.deltaTime;
@@ -380,13 +481,18 @@ namespace StarterAssets
 
 		private void HandleCarryingStaminaUsage()
 		{
+			if (IsDowned())
+			{
+				return;
+			}
+
 			if (_holdedItemMovementSpeedPenaltyMultiplier > 0)
 			{
 				_currentStamina -= Time.deltaTime;
 				if (_currentStamina < 0 )
 				{
 					_currentStamina = 0;
-					Debug.Log("You have been crashed by Holded Item.");
+					Debug.Log("You have been crushed by Holded Item.");
 				}
 			}
 		}
@@ -394,6 +500,11 @@ namespace StarterAssets
 		public float GetStaminaNormalized()
 		{
 			return _currentStamina / MaxStamina;
+		}
+
+		private bool IsDowned()
+		{
+			return _playerHealth != null && _playerHealth.IsDowned;
 		}
 
         #endregion

@@ -1,17 +1,20 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerInputNew : MonoBehaviour
+public class PlayerInputNew : NetworkBehaviour
 {
     private PlayerGameInputActions playerGameInputActions;
+    private bool inputInitialized;
+
     public EventHandler<OnSprintArgs> OnSprint;
-    
 
     public class OnSprintArgs : EventArgs
-    { 
+    {
         public bool IsSprinting;
-    };
+    }
+
     public EventHandler OnInteract;
     public EventHandler OnJump;
     public EventHandler OnAction;
@@ -36,11 +39,57 @@ public class PlayerInputNew : MonoBehaviour
     public bool cursorInputForLook = true;
     private bool cursorLocked = true;
 
+    public override void OnNetworkSpawn()
+    {
+        if (!IsOwner)
+        {
+            enabled = false;
+            return;
+        }
+
+        InitializeInput();
+        SetCursorState(cursorLocked);
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        DisposeInput();
+    }
 
     private void Awake()
     {
-        playerGameInputActions = new PlayerGameInputActions();
+        IsUIOpened = false;
+    }
 
+    private void Start()
+    {
+        if (ShouldRunAsLocalPlayer() && !inputInitialized)
+        {
+            InitializeInput();
+            SetCursorState(cursorLocked);
+        }
+
+        BaseFactory.OnInteractBaseFactory += BaseFactory_OnInteract;
+        FactoryInteractionUI.OnAnyUIClosed += FactoryInteractionUI_OnInteract;
+    }
+
+    public override void OnDestroy()
+    {
+        BaseFactory.OnInteractBaseFactory -= BaseFactory_OnInteract;
+        FactoryInteractionUI.OnAnyUIClosed -= FactoryInteractionUI_OnInteract;
+        DisposeInput();
+        base.OnDestroy();
+    }
+
+    private void InitializeInput()
+    {
+        if (inputInitialized)
+        {
+            return;
+        }
+
+        inputInitialized = true;
+        playerGameInputActions = new PlayerGameInputActions();
 
         playerGameInputActions.Game.Jump.performed += Jump_performed;
         playerGameInputActions.Game.Sprint.performed += Sprint_performed;
@@ -59,18 +108,40 @@ public class PlayerInputNew : MonoBehaviour
         playerGameInputActions.UI.Back.performed += UI_Back_performed;
         playerGameInputActions.Game.Enable();
         playerGameInputActions.UI.Enable();
+    }
 
-        IsUIOpened = false;
+    private void DisposeInput()
+    {
+        if (!inputInitialized || playerGameInputActions == null)
+        {
+            return;
+        }
 
+        playerGameInputActions.Game.Disable();
+        playerGameInputActions.UI.Disable();
+        playerGameInputActions.Dispose();
+        playerGameInputActions = null;
+        inputInitialized = false;
+    }
+
+    private bool ShouldRunAsLocalPlayer()
+    {
+        if (IsSpawned)
+        {
+            return IsOwner;
+        }
+
+        return NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening;
+    }
+
+    private bool IsInputActive()
+    {
+        return inputInitialized && ShouldRunAsLocalPlayer();
     }
 
     private void UI_Back_performed(InputAction.CallbackContext context)
     {
-        //playerGameInputActions.UI.Disable();
-        //playerGameInputActions.Game.Enable();
-        //OnUI_Back?.Invoke(this, EventArgs.Empty);
     }
-
 
     private void UI_Right_performed(InputAction.CallbackContext context)
     {
@@ -92,12 +163,6 @@ public class PlayerInputNew : MonoBehaviour
         OnUI_Up?.Invoke(this, EventArgs.Empty);
     }
 
-    public void Start()
-    {
-        BaseFactory.OnInteractBaseFactory += BaseFactory_OnInteract;
-        FactoryInteractionUI.OnAnyUIClosed += FactoryInteractionUI_OnInteract;
-    }
-
     private void FactoryInteractionUI_OnInteract(object sender, EventArgs e)
     {
         IsUIOpened = false;
@@ -105,8 +170,6 @@ public class PlayerInputNew : MonoBehaviour
 
     private void BaseFactory_OnInteract(object sender, EventArgs e)
     {
-        //playerGameInputActions.Game.Disable();
-        //playerGameInputActions.UI.Enable();
         IsUIOpened = true;
     }
 
@@ -144,6 +207,7 @@ public class PlayerInputNew : MonoBehaviour
     {
         OnInteract?.Invoke(this, EventArgs.Empty);
     }
+
     private void Sprint_canceled(InputAction.CallbackContext context)
     {
         OnSprint?.Invoke(this, new OnSprintArgs
@@ -167,38 +231,55 @@ public class PlayerInputNew : MonoBehaviour
 
     public Vector2 GetLookDeltaValue()
     {
-        if (IsUIOpened)
+        if (!IsInputActive() || IsUIOpened)
+        {
             return Vector2.zero;
+        }
 
         if (!cursorInputForLook)
         {
             return Vector2.zero;
         }
+
         Vector2 inputVector = playerGameInputActions.Game.Look.ReadValue<Vector2>();
         return new Vector2(inputVector.x, -inputVector.y);
     }
 
     public Vector2 GetLookDeltaValueForMinigames()
     {
+        if (!IsInputActive())
+        {
+            return Vector2.zero;
+        }
+
         Vector2 inputVector = playerGameInputActions.Game.Look.ReadValue<Vector2>();
         return new Vector2(inputVector.x, inputVector.y);
     }
 
     public Vector2 GetMoveVectorValue()
     {
-        if (IsUIOpened)
+        if (!IsInputActive() || IsUIOpened)
+        {
             return Vector2.zero;
+        }
+
         return playerGameInputActions.Game.Move.ReadValue<Vector2>();
     }
 
     private void OnEnable()
     {
-        playerGameInputActions.Game.Enable();
+        if (inputInitialized && playerGameInputActions != null)
+        {
+            playerGameInputActions.Game.Enable();
+        }
     }
 
     private void OnApplicationFocus(bool hasFocus)
     {
-        SetCursorState(cursorLocked);
+        if (IsInputActive())
+        {
+            SetCursorState(cursorLocked);
+        }
     }
 
     private void SetCursorState(bool newState)

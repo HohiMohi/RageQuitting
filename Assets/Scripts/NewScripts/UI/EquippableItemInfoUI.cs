@@ -23,6 +23,17 @@ public class EquippableItemInfoUI : MonoBehaviour
         Hide();
     }
 
+    private void OnDestroy()
+    {
+        if (equippableItemUI == null)
+        {
+            return;
+        }
+
+        equippableItemUI.EquippableItemUI_ShowUI -= ShowUI;
+        equippableItemUI.EquippableItemUI_HideUI -= HideUI;
+    }
+
     private void ShowUI(object sender, EquippableItemUI.ShowUIEventArgs e)
     {
         if (!isTextSetted)

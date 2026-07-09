@@ -22,6 +22,17 @@ public class EquippableItemUI : MonoBehaviour
         equippableItem.OnLookAway += EquippableItem_OnLookAway;
     }
 
+    private void OnDestroy()
+    {
+        if (equippableItem == null)
+        {
+            return;
+        }
+
+        equippableItem.OnLookAt -= EquippableItem_OnLookAt;
+        equippableItem.OnLookAway -= EquippableItem_OnLookAway;
+    }
+
     private void EquippableItem_OnLookAway(object sender, EventArgs e)
     {
         EquippableItemUI_HideUI?.Invoke(this, e);

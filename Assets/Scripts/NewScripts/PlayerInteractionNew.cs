@@ -1,14 +1,17 @@
 using StarterAssets;
 using System;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerInteractionNew : MonoBehaviour
 {
     private PlayerInputNew _playerInputNew;
+    private PlayerHealth _playerHealth;
 
     [Header("Interaction Parameters")]
     private IInteractableNew _currentInteractable = null;
+    [SerializeField] private Transform interactionOrigin;
     [SerializeField] private float interactDistance = 2f;
     [SerializeField] private float interactSphereRadius = 0.25f;
     
@@ -17,10 +20,19 @@ public class PlayerInteractionNew : MonoBehaviour
     public bool temp;
     [SerializeField] private IPIckableNew pickedUpObject = null;
     [SerializeField] private Transform pickUpHoldPositionHolder;
+    [SerializeField] private Transform carryBodyAnchor;
+    [SerializeField] private Vector3 defaultCarryBodyAnchorLocalPosition = new Vector3(0f, 1.4f, 0f);
     [SerializeField] private GameObject _pickedUpGameObject = null;
+    private bool pickedUpObjectParented = false;
+    private bool pickedUpObjectFollowsHoldPosition = true;
+    private bool sharedCarryMovementActive = false;
+    private Vector3 sharedCarryAttachLocalPoint = Vector3.zero;
     private int minAmountOfPlayersNeeded = 0;
     private int currentAmountOfPlayersSupporting = 0;
     private float holdedItemMovementSpeedPenalty = 0;
+
+    public bool IsSharedCarryMovementActive => sharedCarryMovementActive && _pickedUpGameObject != null;
+    public Vector3 CarryBodyAnchorLocalOffset => defaultCarryBodyAnchorLocalPosition;
 
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
     public class UpdateHoldedItemMovementSpeedPenaltyEventArgs : EventArgs
@@ -32,6 +44,8 @@ public class PlayerInteractionNew : MonoBehaviour
     {
         _playerInputNew = GetComponent<PlayerInputNew>();
         _playerInputNew.OnInteract += HandleInteract;
+        _playerHealth = GetComponent<PlayerHealth>();
+        EnsureCarryBodyAnchor();
     }
 
     
@@ -43,10 +57,15 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void HandleInteract(object sender, EventArgs e)
     {
-        RaycastHit[] raycasts = Physics.SphereCastAll(Camera.main.transform.position, interactSphereRadius, Camera.main.transform.forward, interactDistance);
-        
-        // Sort hits by ascending distance so we prioritize the closest target
-        Array.Sort(raycasts, (a, b) => a.distance.CompareTo(b.distance));
+        if (_playerHealth != null && _playerHealth.IsDowned)
+        {
+            return;
+        }
+
+        if (!TryGetInteractionHits(out RaycastHit[] raycasts))
+        {
+            return;
+        }
 
         foreach (RaycastHit raycastHit in raycasts)
         {
@@ -121,11 +140,66 @@ public class PlayerInteractionNew : MonoBehaviour
 
     public void PickUpObject(GameObject pickUpObject, IPIckableNew pIckableObject)
     {
+        PickUpObject(pickUpObject, pIckableObject, true);
+    }
+
+    public void PickUpObject(GameObject pickUpObject, IPIckableNew pIckableObject, bool followHoldPosition)
+    {
+        PickUpObject(pickUpObject, pIckableObject, followHoldPosition, false, Vector3.zero);
+    }
+
+    private void PickUpObject(GameObject pickUpObject, IPIckableNew pIckableObject, bool followHoldPosition, bool useSharedCarryMovement, Vector3 attachLocalPoint)
+    {
         _pickedUpGameObject = pickUpObject;
+        pickedUpObjectFollowsHoldPosition = followHoldPosition;
+        sharedCarryMovementActive = useSharedCarryMovement;
+        sharedCarryAttachLocalPoint = attachLocalPoint;
         SetHoldedItemProperties(pIckableObject);
-        _pickedUpGameObject.transform.SetParent(pickUpHoldPositionHolder);
-        _pickedUpGameObject.transform.localPosition = Vector3.zero;
-        _pickedUpGameObject.transform.localRotation = Quaternion.identity;
+
+        if (ShouldParentPickedUpObject(_pickedUpGameObject))
+        {
+            _pickedUpGameObject.transform.SetParent(pickUpHoldPositionHolder);
+            _pickedUpGameObject.transform.localPosition = Vector3.zero;
+            _pickedUpGameObject.transform.localRotation = Quaternion.identity;
+            pickedUpObjectParented = true;
+        }
+        else
+        {
+            pickedUpObjectParented = false;
+            MovePickedUpObjectToHoldPosition();
+        }
+    }
+
+    public void ConfirmPickedUpObject(GameObject pickUpObject, IPIckableNew pIckableObject)
+    {
+        PickUpObject(pickUpObject, pIckableObject);
+    }
+
+    public void ConfirmPickedUpObject(GameObject pickUpObject, IPIckableNew pIckableObject, bool followHoldPosition, float movementSpeedPenalty)
+    {
+        PickUpObject(pickUpObject, pIckableObject, followHoldPosition);
+        SetHoldedItemMovementSpeedPenalty(movementSpeedPenalty);
+    }
+
+    public void ConfirmPickedUpObject(GameObject pickUpObject, IPIckableNew pIckableObject, bool followHoldPosition, float movementSpeedPenalty, bool useSharedCarryMovement, Vector3 attachLocalPoint)
+    {
+        PickUpObject(pickUpObject, pIckableObject, followHoldPosition, useSharedCarryMovement, attachLocalPoint);
+        SetHoldedItemMovementSpeedPenalty(movementSpeedPenalty);
+    }
+
+    public void ForceReleasePickedUpObject(GameObject pickUpObject)
+    {
+        if (_pickedUpGameObject != pickUpObject)
+        {
+            return;
+        }
+
+        _pickedUpGameObject = null;
+        pickedUpObjectParented = false;
+        pickedUpObjectFollowsHoldPosition = true;
+        sharedCarryMovementActive = false;
+        sharedCarryAttachLocalPoint = Vector3.zero;
+        SetHoldedItemProperties(null);
     }
 
     public bool DropObject()
@@ -133,18 +207,30 @@ public class PlayerInteractionNew : MonoBehaviour
         if (_pickedUpGameObject != null)
         {
             GameObject droppedGo = _pickedUpGameObject;
+            bool wasSharedCarryMovementActive = sharedCarryMovementActive;
             _pickedUpGameObject = null;
 
-            droppedGo.transform.SetParent(null);
+            if (pickedUpObjectParented)
+            {
+                droppedGo.transform.SetParent(null);
+            }
+
+            pickedUpObjectParented = false;
+            pickedUpObjectFollowsHoldPosition = true;
+            sharedCarryMovementActive = false;
+            sharedCarryAttachLocalPoint = Vector3.zero;
 
             // Position it slightly in front of the player to avoid physics clipping/stuck
             Vector3 dropPosition = transform.position + transform.forward * 1.0f + Vector3.up * 0.5f;
-            droppedGo.transform.position = dropPosition;
+            if (!wasSharedCarryMovementActive)
+            {
+                droppedGo.transform.position = dropPosition;
+            }
 
             pickedUpObject.DroppedDown();
 
             // Add a gentle forward nudge
-            if (droppedGo.TryGetComponent<Rigidbody>(out Rigidbody rb))
+            if (!wasSharedCarryMovementActive && droppedGo.TryGetComponent<Rigidbody>(out Rigidbody rb))
             {
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
@@ -157,12 +243,33 @@ public class PlayerInteractionNew : MonoBehaviour
         return false;
     }
 
+    public void DropHeldObjectForStateChange()
+    {
+        DropObject();
+    }
+
     public void RemovePickedUpObject()
     {
         if (_pickedUpGameObject != null)
         {
-            Destroy(_pickedUpGameObject);
+            if (_pickedUpGameObject.TryGetComponent(out BaseResourceNew baseResourceNew))
+            {
+                baseResourceNew.RemoveFromWorld();
+            }
+            else if (_pickedUpGameObject.TryGetComponent(out MountableBridgeComponent mountableBridgeComponent))
+            {
+                mountableBridgeComponent.RemoveFromWorld();
+            }
+            else
+            {
+                Destroy(_pickedUpGameObject);
+            }
+
             _pickedUpGameObject = null;
+            pickedUpObjectParented = false;
+            pickedUpObjectFollowsHoldPosition = true;
+            sharedCarryMovementActive = false;
+            sharedCarryAttachLocalPoint = Vector3.zero;
             SetHoldedItemProperties(null);
         }
     }
@@ -172,9 +279,54 @@ public class PlayerInteractionNew : MonoBehaviour
         return _pickedUpGameObject;
     }
 
+    public Transform GetPickUpHoldPositionHolder()
+    {
+        return pickUpHoldPositionHolder;
+    }
+
+    public Transform GetCarryBodyAnchor()
+    {
+        EnsureCarryBodyAnchor();
+        return carryBodyAnchor;
+    }
+
+    public float GetCharacterControllerRadius()
+    {
+        return TryGetComponent(out CharacterController characterController) ? characterController.radius : 0.5f;
+    }
+
+    public void SubmitSharedCarryInput(Vector3 worldMoveInput)
+    {
+        if (!IsSharedCarryMovementActive || !_pickedUpGameObject.TryGetComponent(out ISharedCarryObject sharedCarryObject))
+        {
+            return;
+        }
+
+        sharedCarryObject.SubmitSharedCarryInput(worldMoveInput);
+    }
+
+    public Vector3 GetSharedCarryAnchorCorrection()
+    {
+        if (!IsSharedCarryMovementActive || _pickedUpGameObject == null)
+        {
+            return Vector3.zero;
+        }
+
+        EnsureCarryBodyAnchor();
+        Vector3 targetAnchorPosition = _pickedUpGameObject.transform.TransformPoint(sharedCarryAttachLocalPoint);
+        Vector3 correction = targetAnchorPosition - carryBodyAnchor.position;
+        correction.y = 0f;
+        return correction;
+    }
+
     public IInteractableNew GetCurrentInteractable()
     {
         return _currentInteractable;
+    }
+
+    public void SetInteractionOrigin(Transform origin)
+    {
+        interactionOrigin = origin;
     }
 
     public bool TryStoreObject(BaseStorageNew storage)
@@ -211,10 +363,11 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void CheckLookAtInteractable()
     {
-        RaycastHit[] raycasts = Physics.SphereCastAll(Camera.main.transform.position, interactSphereRadius, Camera.main.transform.forward, interactDistance);
-        
-        // Sort hits by ascending distance so we prioritize the closest target
-        Array.Sort(raycasts, (a, b) => a.distance.CompareTo(b.distance));
+        if (!TryGetInteractionHits(out RaycastHit[] raycasts))
+        {
+            ClearCurrentInteractable();
+            return;
+        }
 
         IInteractableNew newInteractableObject = null;
         foreach (RaycastHit raycastHit in raycasts)
@@ -251,12 +404,34 @@ public class PlayerInteractionNew : MonoBehaviour
             }
         }
         else if (_currentInteractable != null)
-        { 
-            if(_currentInteractable == null)
-                _currentInteractable = null;
-            _currentInteractable.LookedAway(transform);
-            _currentInteractable = null;
+        {
+            ClearCurrentInteractable();
         }
+    }
+
+    private bool TryGetInteractionHits(out RaycastHit[] raycasts)
+    {
+        raycasts = Array.Empty<RaycastHit>();
+
+        if (interactionOrigin == null)
+        {
+            return false;
+        }
+
+        raycasts = Physics.SphereCastAll(interactionOrigin.position, interactSphereRadius, interactionOrigin.forward, interactDistance);
+        Array.Sort(raycasts, (a, b) => a.distance.CompareTo(b.distance));
+        return true;
+    }
+
+    private void ClearCurrentInteractable()
+    {
+        if (_currentInteractable == null)
+        {
+            return;
+        }
+
+        _currentInteractable.LookedAway(transform);
+        _currentInteractable = null;
     }
 
 
@@ -284,6 +459,18 @@ public class PlayerInteractionNew : MonoBehaviour
         });
     }
 
+    public void SetHoldedItemMovementSpeedPenalty(float movementSpeedPenalty)
+    {
+        holdedItemMovementSpeedPenalty = movementSpeedPenalty;
+        minAmountOfPlayersNeeded = 1;
+        currentAmountOfPlayersSupporting = 0;
+
+        UpdateHoldedItemMovementSpeedPenalty?.Invoke(this, new UpdateHoldedItemMovementSpeedPenaltyEventArgs
+        {
+            currentMovementSpeedPenaltyMultiplier = movementSpeedPenalty,
+        });
+    }
+
     private float CalculateMovementSpeedPenalty()
     {
         if (minAmountOfPlayersNeeded > currentAmountOfPlayersSupporting && minAmountOfPlayersNeeded > 0)
@@ -305,15 +492,44 @@ public class PlayerInteractionNew : MonoBehaviour
         _currentInteractable = null;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        if (_playerHealth != null && _playerHealth.IsDowned)
+        {
+            ClearCurrentInteractable();
+            return;
+        }
+
+        MovePickedUpObjectToHoldPosition();
+        CheckLookAtInteractable();
     }
 
-
-    private void FixedUpdate()
+    private bool ShouldParentPickedUpObject(GameObject pickUpObject)
     {
-        CheckLookAtInteractable();
+        return !pickUpObject.TryGetComponent(out NetworkObject _);
+    }
+
+    private void MovePickedUpObjectToHoldPosition()
+    {
+        if (_pickedUpGameObject == null || pickedUpObjectParented || !pickedUpObjectFollowsHoldPosition || pickUpHoldPositionHolder == null)
+        {
+            return;
+        }
+
+        _pickedUpGameObject.transform.SetPositionAndRotation(pickUpHoldPositionHolder.position, pickUpHoldPositionHolder.rotation);
+    }
+
+    private void EnsureCarryBodyAnchor()
+    {
+        if (carryBodyAnchor != null)
+        {
+            return;
+        }
+
+        GameObject anchorGameObject = new GameObject("CarryBodyAnchor");
+        carryBodyAnchor = anchorGameObject.transform;
+        carryBodyAnchor.SetParent(transform);
+        carryBodyAnchor.localPosition = defaultCarryBodyAnchorLocalPosition;
+        carryBodyAnchor.localRotation = Quaternion.identity;
     }
 }

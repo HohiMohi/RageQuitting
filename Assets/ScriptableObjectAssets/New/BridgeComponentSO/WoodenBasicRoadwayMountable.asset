@@ -21,6 +21,11 @@ MonoBehaviour:
   bridgeComponentSO: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
   movementSpeedPenalty: 0
   minAmountOfPlayersNeeded: 0
+  allowMultipleCarriers: 1
+  recommendedCarriers: 2
+  maxCarriers: 2
+  underStaffedPenaltyMultiplier: 0.4
+  carryMoveSpeed: 4
   meltingPoint: 900
   combustionTemperature: 950
   neededProgress: 800

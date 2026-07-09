@@ -44,16 +44,10 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
                 {
                     if (heldComponent.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponentSO)
                     {
-                        playerInteraction.RemovePickedUpObject();
-
-                        readyForMountingVisualsGameObject.SetActive(false);
-                        mountedComponentVisualsGameObject.SetActive(true);
-                        ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
-                        isMounted = true;
-                        if (!needAssembling)
+                        GameplayManager.Instance.RequestMountBridgeComponent(this, heldComponent);
+                        if (Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsListening)
                         {
-                            ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
-                            isAssembled = true;
+                            playerInteraction.ForceReleasePickedUpObject(heldGo);
                         }
                     }
                     else
@@ -71,8 +65,13 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void HandleAssembling(EquippableItemSO equippableItemSO, float damage)
     {
+        GameplayManager.Instance.RequestAssembleBridgeComponent(this, equippableItemSO, damage);
+    }
 
-        if (bridgeComponentSO.supportedEquippableItemTypeList.Contains(equippableItemSO.itemType))
+    public void HandleAssemblingLocal(EquippableItemSO equippableItemSO, float damage)
+    {
+
+        if (equippableItemSO != null && bridgeComponentSO.supportedEquippableItemTypeList.Contains(equippableItemSO.itemType))
         {
             currentAssemblingProgress += damage;
             if (currentAssemblingProgress >= assemblingProgressNeeded)
@@ -155,7 +154,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         if (e.componentID == componentID && !isMounted)
         {
             canBeMounted = e.canBeMounted;
-            readyForMountingVisualsGameObject.SetActive(true);
+            readyForMountingVisualsGameObject.SetActive(e.canBeMounted);
         }
     }
 
@@ -164,7 +163,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         if (e.componentID == componentID && !isMounted)
         {
             canBeMounted = e.canBeMounted;
-            readyForMountingVisualsGameObject.SetActive(true);
+            readyForMountingVisualsGameObject.SetActive(e.canBeMounted);
         }
     }
 
@@ -224,11 +223,68 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     public bool CanBeMounted => canBeMounted;
     public bool IsAssembled => isAssembled;
     public bool NeedAssembling => needAssembling;
+    public int ComponentID => componentID;
 
     public float GetAssemblingProgressNormalized()
     {
         if (assemblingProgressNeeded <= 0f) return 0f;
         return Mathf.Clamp01(currentAssemblingProgress / assemblingProgressNeeded);
+    }
+
+    public float GetAssemblingProgressNeeded()
+    {
+        return assemblingProgressNeeded;
+    }
+
+    public bool SupportsEquippableItemType(EquippableItemType equippableItemType)
+    {
+        return bridgeComponentSO != null && bridgeComponentSO.supportedEquippableItemTypeList.Contains(equippableItemType);
+    }
+
+    public void NotifyEquippedItemTypeNeeded()
+    {
+        EquippedItemTypeNeeded?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ApplyMountedState()
+    {
+        readyForMountingVisualsGameObject.SetActive(false);
+        mountedComponentVisualsGameObject.SetActive(true);
+        ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
+        isMounted = true;
+        if (!needAssembling)
+        {
+            ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
+            isAssembled = true;
+        }
+    }
+
+    public void ApplyNetworkState(BridgeComponentNetworkState state)
+    {
+        if (state.componentID != componentID)
+        {
+            return;
+        }
+
+        bool wasMounted = isMounted;
+        bool wasAssembled = isAssembled;
+        isMounted = state.isMounted;
+        isAssembled = state.isAssembled;
+        canBeMounted = state.canBeMounted;
+        currentAssemblingProgress = state.currentAssemblingProgress;
+
+        readyForMountingVisualsGameObject.SetActive(canBeMounted && !isMounted);
+        mountedComponentVisualsGameObject.SetActive(isMounted);
+
+        if (!wasMounted && isMounted)
+        {
+            ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
+        }
+
+        if (!wasAssembled && isAssembled)
+        {
+            ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
+        }
     }
 
     public void DamageReceived(float damage)

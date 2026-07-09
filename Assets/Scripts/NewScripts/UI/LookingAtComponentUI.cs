@@ -13,7 +13,7 @@ public class LookingAtComponentUI : MonoBehaviour
     {
         if (playerInteraction == null)
         {
-            playerInteraction = Object.FindFirstObjectByType<PlayerInteractionNew>();
+            playerInteraction = GetComponentInParent<PlayerInteractionNew>();
         }
         Hide();
     }

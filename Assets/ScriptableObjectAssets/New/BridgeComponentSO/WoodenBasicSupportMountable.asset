@@ -21,3 +21,16 @@ MonoBehaviour:
   - resourceType: {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
     amount: 1
   bridgeComponentSO: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
+  movementSpeedPenalty: 0
+  minAmountOfPlayersNeeded: 0
+  allowMultipleCarriers: 1
+  recommendedCarriers: 2
+  maxCarriers: 2
+  underStaffedPenaltyMultiplier: 0.4
+  carryMoveSpeed: 4
+  meltingPoint: 0
+  combustionTemperature: 0
+  neededProgress: 0
+  neededCombustionProgress: 0
+  componentWidth: 0
+  componentLength: 0

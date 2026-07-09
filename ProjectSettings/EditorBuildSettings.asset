@@ -6,17 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/JoinMenuTest.unity
-    guid: bc597ef136b90da41a42db775df24612
-  - enabled: 1
-    path: Assets/Scenes/TestScene2.unity
-    guid: 7ed43c5ee0431d54ba25c993765ded3f
+    path: Assets/Scenes/MultiplayerStartScene.unity
+    guid: 87b51b1c8a6545d429358bde85583abf
   - enabled: 1
     path: Assets/NGO_Minimal_Setup/NGO_Setup.unity
     guid: 98c57a5736dfaa64684758e75620997f
   - enabled: 1
     path: Assets/Scenes/MainMenuScene.unity
     guid: 9ea51dc67f1d8ac4e912fd02c578b2a2
+  - enabled: 1
+    path: Assets/Scenes/FPP_scene.unity
+    guid: a6af70dd2ab13c14fab7d63f31669dbd
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 166c57c7b53cb3b4aa21c767612dd950, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 018521a9a178ed44292beb48f7c1fd0c, type: 3}

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class PlayerActionController : MonoBehaviour
@@ -6,6 +8,7 @@ public class PlayerActionController : MonoBehaviour
 
     private PlayerInventory _inventory;
     private PlayerInputNew _playerInputNew;
+    private NetworkObject _networkObject;
     [Header("Action Parameters")]
     #region Tooltip
     [Tooltip("Base action range - when player has NOT equipped item.")]
@@ -39,6 +42,7 @@ public class PlayerActionController : MonoBehaviour
     {
         _inventory = GetComponent<PlayerInventory>();
         _playerInputNew = GetComponent<PlayerInputNew>();
+        _networkObject = GetComponent<NetworkObject>();
         _playerInputNew.OnAction += HandleAction;
         _playerInputNew.OnActionAlt += HandleActionAlt;
         _playerInputNew.OnActionCanceled += HandleActionCanceled;
@@ -84,24 +88,53 @@ public class PlayerActionController : MonoBehaviour
             Debug.Log("No 'Action' objects in range");
             return;
         }
+
+        HashSet<IDamageable> damagedObjects = new HashSet<IDamageable>();
         foreach (Collider collider in colliders)
         {
-            if (collider.gameObject == gameObject)
+            if (collider.transform.root == transform.root)
             {
                 Debug.Log("Trying to interact with self. Continue");
                 continue;
             }
-            collider.transform.TryGetComponent<IDamageable>(out IDamageable damageable);
-            if (damageable != null)
+
+            IDamageable damageable = collider.GetComponent<IDamageable>();
+            damageable ??= collider.GetComponentInParent<IDamageable>();
+            print(damageable);
+
+            if (damageable != null && damagedObjects.Add(damageable))
             {
-                damageable.DamageReceived(_inventory.GetCurrentSelectedItem(), actionDamage); // Example damage amount, can be changed or made variable
+                if (damageable is PlayerHealth playerHealth && ShouldRequestPlayerDamageOnServer(playerHealth))
+                {
+                    playerHealth.DamageReceived(actionDamage, _networkObject);
+                }
+                else
+                {
+                    damageable.DamageReceived(_inventory.GetCurrentSelectedItem(), actionDamage); // Example damage amount, can be changed or made variable
+                }
+
                 Debug.Log($"Action performed on {collider.transform.gameObject.name}");
             }
-            else
+            else if (damageable == null)
             {
                 Debug.Log($"Collider {collider.gameObject.name} is in range but does not implement IDamageableNew");
             }
         }
+    }
+
+    private bool ShouldRequestPlayerDamageOnServer(PlayerHealth playerHealth)
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer)
+        {
+            return false;
+        }
+
+        if (!playerHealth.TryGetComponent(out NetworkObject targetNetworkObject))
+        {
+            return false;
+        }
+
+        return _networkObject != null && targetNetworkObject != _networkObject;
     }
 
     public void TryPerformAction()

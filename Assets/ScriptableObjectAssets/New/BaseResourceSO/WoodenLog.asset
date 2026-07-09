@@ -23,6 +23,11 @@ MonoBehaviour:
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 7
   resourceDurability: 50
-  movementSpeedPenalty: 0.4
+  movementSpeedPenalty: 0
   minAmountOfPlayersNeeded: 2
+  allowMultipleCarriers: 1
+  recommendedCarriers: 2
+  maxCarriers: 2
+  underStaffedPenaltyMultiplier: 0
+  carryMoveSpeed: 4
   furnaceFuelAmount: 0
