@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class PlayerActionController : MonoBehaviour
 {
+    public event EventHandler OnActionPerformed;
+    public event EventHandler OnActionAltPerformed;
 
     private PlayerInventory _inventory;
     private PlayerInputNew _playerInputNew;
@@ -81,6 +83,7 @@ public class PlayerActionController : MonoBehaviour
         }
 
         Debug.Log("Action Alt");
+        OnActionAltPerformed?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleAction(object sender, EventArgs e)
@@ -105,6 +108,7 @@ public class PlayerActionController : MonoBehaviour
         }
 
         HashSet<IDamageable> damagedObjects = new HashSet<IDamageable>();
+        bool actionPerformed = false;
         foreach (Collider collider in colliders)
         {
             if (collider.transform.root == transform.root)
@@ -130,11 +134,17 @@ public class PlayerActionController : MonoBehaviour
 
                 Debug.Log($"Action performed on {collider.transform.gameObject.name}");
                 SpawnImpactEffect(collider);
+                actionPerformed = true;
             }
             else if (damageable == null)
             {
                 Debug.Log($"Collider {collider.gameObject.name} is in range but does not implement IDamageableNew");
             }
+        }
+
+        if (actionPerformed)
+        {
+            OnActionPerformed?.Invoke(this, EventArgs.Empty);
         }
     }
 

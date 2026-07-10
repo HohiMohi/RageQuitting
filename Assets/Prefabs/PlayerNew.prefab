@@ -361,6 +361,10 @@ GameObject:
   - component: {fileID: 5297249238941053112}
   - component: {fileID: 6339126401750945372}
   - component: {fileID: 4730679781642105471}
+  - component: {fileID: 8127641093237516442}
+  - component: {fileID: 8127641093237516443}
+  - component: {fileID: 8127641093237516444}
+  - component: {fileID: 8127641093237516445}
   - component: {fileID: 3720368351117420130}
   - component: {fileID: 4186271902374816054}
   - component: {fileID: 7382414467715117638}
@@ -598,7 +602,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3629775205
+  GlobalObjectIdHash: 4249334050
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -698,6 +702,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f47e0b5366c4d1f9bbf7d2c0e77a911, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActionImpactEffectSpawner
+  ShowTopMostFoldoutHeaderGroup: 1
   defaultImpactEffectPrefab: {fileID: 0}
   fallbackEffectLifetime: 1.5
 --- !u!114 &6339126401750945372
@@ -729,9 +734,129 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09f01f6d61354d7cb81ba8b7a5d3128d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DownedPlayerCarryable
+  ShowTopMostFoldoutHeaderGroup: 1
   movementSpeedPenalty: 0.35
   carriedPlayerLocalOffset: {x: 0, y: 0, z: 0.25}
   dropOffset: {x: 0, y: 0, z: 1}
+--- !u!114 &8127641093237516442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e75340d80ff4b17a00a4dc5b4a5c71d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
+  ShowTopMostFoldoutHeaderGroup: 1
+  animator: {fileID: 0}
+  firstPersonController: {fileID: 8036448780592137977}
+  playerInput: {fileID: 8057224913680877428}
+  playerActionController: {fileID: 482533967712327051}
+  playerInteraction: {fileID: 1047544986995738481}
+  playerHealth: {fileID: 6339126401750945372}
+  moveSpeedReference: 4
+  sprintSpeedReference: 6
+  speedDampTime: 0.12
+  idleSpeedThreshold: 0.05
+  airVelocityThreshold: 0.15
+  turnInPlaceAngularSpeedThreshold: 35
+  turnInPlaceMoveSpeedThreshold: 0.2
+  actionAnimationDuration: 0.75
+  hitReactionDuration: 0.35
+  jumpStartAnimationDuration: 0.18
+  landingAnimationDuration: 0.28
+  minimumAirTimeForLandingAnimation: 0.12
+  landingRunSpeedThreshold: 3.5
+  backwardMoveSpeedThreshold: 0.2
+  stateCrossFadeDuration: 0.08
+--- !u!114 &8127641093237516443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85bd3532243a43be85cb6932da67cab4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerGoblinVisualSetup
+  goblinVisualPrefab: {fileID: 3411051970943589608, guid: e260b86295cd0334bb27b722919716ed, type: 3}
+  animatorController: {fileID: 9100000, guid: d37ba9c35fde4e2c86e5f97fa710df61, type: 2}
+  animatorAvatar: {fileID: 9000000, guid: 999f83ae0e3de56408eb791dce59b068, type: 3}
+  fallbackVisual: {fileID: 281519065286084417}
+  localPosition: {x: 0, y: 0, z: 0}
+  localEulerAngles: {x: 0, y: 0, z: 0}
+  localScale: {x: 1, y: 1, z: 1}
+  hideFallbackVisual: 1
+--- !u!114 &8127641093237516444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f2a0dfd7c0f4f4499f17ff0d9615d7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFirstPersonArms
+  ShowTopMostFoldoutHeaderGroup: 1
+  cameraRoot: {fileID: 365638902093576632}
+  firstPersonController: {fileID: 8036448780592137977}
+  playerInput: {fileID: 8057224913680877428}
+  playerInteraction: {fileID: 1047544986995738481}
+  playerHealth: {fileID: 6339126401750945372}
+  rootLocalPosition: {x: 0, y: -0.24, z: 0.95}
+  rootLocalEulerAngles: {x: -4, y: 0, z: 0}
+  armSpacing: 0.24
+  skinColor: {r: 0.45, g: 0.78, b: 0.32, a: 1}
+  forearmColor: {r: 0.35, g: 0.55, b: 0.24, a: 1}
+  idleBobAmplitude: 0.012
+  moveBobAmplitude: 0.045
+  sprintBobAmplitude: 0.07
+  bobFrequency: 7
+  sprintBobFrequency: 10
+  actionDuration: 0.32
+  actionSwingAngle: 36
+  hitReactionDuration: 0.22
+  poseLerpSpeed: 14
+--- !u!114 &8127641093237516445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e86d07f045f4a8589f2b8848487a10c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEquippableItemVisuals
+  ShowTopMostFoldoutHeaderGroup: 1
+  playerInventory: {fileID: 4354115525238422459}
+  goblinVisualSetup: {fileID: 8127641093237516443}
+  toolVisualMaterials:
+    axeMaterial: {fileID: 2100000, guid: b4fd3acc17e8e1748b7872045b26764b, type: 2}
+    pickaxeMaterial: {fileID: 2100000, guid: 1f00d72b054ec0347a696b7c89144ca3, type: 2}
+    handleMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  rightHandBoneName: R_Hand
+  backBoneName: Spine02
+  backBoneFallbackName: Spine01
+  defaultHandPose:
+    localPosition: {x: 0.04, y: 0.02, z: 0.18}
+    localEulerAngles: {x: 90, y: 20, z: 0}
+    localScale: {x: 0.55, y: 0.55, z: 0.55}
+  defaultBackPose:
+    localPosition: {x: 0, y: -0.02, z: 0.22}
+    localEulerAngles: {x: -18, y: 0, z: -14}
+    localScale: {x: 0.65, y: 0.65, z: 0.65}
+  handToolLocalEulerAngles: {x: 0, y: 90, z: 0}
+  backToolLocalEulerAngles: {x: 0, y: 0, z: 0}
+  attachmentOverrides: []
 --- !u!114 &3720368351117420130
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1513,6 +1638,7 @@ MonoBehaviour:
   playerInteraction: {fileID: 1047544986995738481}
   assemblingProgressBar: {fileID: 6098042331898421179}
   progressCircleHolder: {fileID: 4961565375688202897}
+  maxPromptLines: 3
 --- !u!1 &7215962172038660868
 GameObject:
   m_ObjectHideFlags: 0

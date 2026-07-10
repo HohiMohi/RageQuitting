@@ -12,6 +12,8 @@ namespace StarterAssets
 #endif
 	public class FirstPersonController : MonoBehaviour
 	{
+		public event EventHandler OnJumpStarted;
+
 		[Header("Player")]
 		[Tooltip("Move speed of the character in m/s")]
 		public float MoveSpeed = 4.0f;
@@ -103,6 +105,9 @@ namespace StarterAssets
 		private DownedPlayerCarryable _downedPlayerCarryable;
 		
 		private const float _threshold = 0.01f;
+
+		public float VerticalVelocity => _verticalVelocity;
+		public bool IsSprinting => _isSprinting && _currentStamina > 0f && !IsDowned();
 
 		private bool IsCurrentDeviceMouse
 		{
@@ -442,6 +447,7 @@ namespace StarterAssets
 				{
 					// the square root of H * -2 * G = how much velocity needed to reach desired height
 					_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+					OnJumpStarted?.Invoke(this, EventArgs.Empty);
 				}
 
 				// jump timeout

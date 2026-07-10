@@ -6,6 +6,8 @@ using UnityEngine.EventSystems;
 
 public class PlayerInventory : NetworkBehaviour
 {
+    private const int EmptySlotItemTypeValue = -1;
+
     private PlayerInputNew playerInputNew;
     [Header("Inventory Settings")]
     [SerializeField] private EquippableItemSO[] inventoryItems;
@@ -15,7 +17,17 @@ public class PlayerInventory : NetworkBehaviour
     [SerializeField] private int _currentInventoryOccupiedSlots = 0;
     private float inventoryMovementSpeedPenalty = 0;
 
+    private readonly NetworkVariable<int> slot0ItemType = new NetworkVariable<int>(
+        EmptySlotItemTypeValue,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<int> slot1ItemType = new NetworkVariable<int>(
+        EmptySlotItemTypeValue,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
+    public event EventHandler OnInventorySlotsChanged;
     public EventHandler<OnInventoryUpdateArgs> OnInventoryUpdated;
     public class OnInventoryUpdateArgs : EventArgs
     {
@@ -45,6 +57,36 @@ public class PlayerInventory : NetworkBehaviour
     {
         playerInputNew.OnSwapItems += PlayerInputNew_OnSwapItems;
         playerInputNew.OnDropItem += PlayerInputNew_OnDropItem;
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        slot0ItemType.OnValueChanged += InventorySlotNetworkValue_OnValueChanged;
+        slot1ItemType.OnValueChanged += InventorySlotNetworkValue_OnValueChanged;
+
+        if (IsServer)
+        {
+            SetNetworkSlotValues(GetSlotItemTypeValue(0), GetSlotItemTypeValue(1));
+        }
+
+        NotifyInventorySlotsChanged();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        slot0ItemType.OnValueChanged -= InventorySlotNetworkValue_OnValueChanged;
+        slot1ItemType.OnValueChanged -= InventorySlotNetworkValue_OnValueChanged;
+    }
+
+    private void OnDestroy()
+    {
+        if (playerInputNew == null)
+        {
+            return;
+        }
+
+        playerInputNew.OnSwapItems -= PlayerInputNew_OnSwapItems;
+        playerInputNew.OnDropItem -= PlayerInputNew_OnDropItem;
     }
 
     private void PlayerInputNew_OnDropItem(object sender, EventArgs e)
@@ -77,6 +119,7 @@ public class PlayerInventory : NetworkBehaviour
             {
                 currentMovementSpeedPenaltyMultiplier = inventoryMovementSpeedPenalty
             });
+            PublishInventorySlotsChanged();
             return true; // Item added successfully
         }
         else
@@ -117,6 +160,7 @@ public class PlayerInventory : NetworkBehaviour
             {
                 currentMovementSpeedPenaltyMultiplier = inventoryMovementSpeedPenalty
             });
+            PublishInventorySlotsChanged();
             return true; // Item removed successfully
         }
         else
@@ -149,6 +193,7 @@ public class PlayerInventory : NetworkBehaviour
             {
                 selectedItem = GetCurrentSelectedItem()
             });
+            PublishInventorySlotsChanged();
         }
         else
         {
@@ -186,6 +231,31 @@ public class PlayerInventory : NetworkBehaviour
         }
     }
 
+    public EquippableItemSO GetItemInSlot(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= inventoryItems.Length)
+        {
+            return null;
+        }
+
+        return inventoryItems[slotIndex];
+    }
+
+    public int GetNetworkSlotItemTypeValue(int slotIndex)
+    {
+        if (IsNetworkStateActive())
+        {
+            return slotIndex == 0 ? slot0ItemType.Value : slot1ItemType.Value;
+        }
+
+        return GetSlotItemTypeValue(slotIndex);
+    }
+
+    public bool IsNetworkStateActive()
+    {
+        return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
+    }
+
     private void DropItemInWorld(EquippableItemSO itemToDrop, Vector3 dropPosition, Quaternion dropRotation)
     {
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
@@ -218,7 +288,7 @@ public class PlayerInventory : NetworkBehaviour
         EquippableItem.SpawnNetworkedDrop(itemToDrop, dropPosition, dropRotation);
     }
 
-    private EquippableItemSO GetEquippableItemSO(EquippableItemType itemType)
+    public EquippableItemSO GetEquippableItemSO(EquippableItemType itemType)
     {
         foreach (EquippableItemSO item in equippableItemCatalog)
         {
@@ -229,5 +299,55 @@ public class PlayerInventory : NetworkBehaviour
         }
 
         return null;
+    }
+
+    private void InventorySlotNetworkValue_OnValueChanged(int previousValue, int newValue)
+    {
+        NotifyInventorySlotsChanged();
+    }
+
+    private void PublishInventorySlotsChanged()
+    {
+        NotifyInventorySlotsChanged();
+
+        if (!IsNetworkStateActive())
+        {
+            return;
+        }
+
+        int slot0Value = GetSlotItemTypeValue(0);
+        int slot1Value = GetSlotItemTypeValue(1);
+
+        if (IsServer)
+        {
+            SetNetworkSlotValues(slot0Value, slot1Value);
+        }
+        else if (IsOwner)
+        {
+            PublishInventorySlotsServerRpc(slot0Value, slot1Value);
+        }
+    }
+
+    private void NotifyInventorySlotsChanged()
+    {
+        OnInventorySlotsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private int GetSlotItemTypeValue(int slotIndex)
+    {
+        EquippableItemSO item = GetItemInSlot(slotIndex);
+        return item != null ? (int)item.itemType : EmptySlotItemTypeValue;
+    }
+
+    private void SetNetworkSlotValues(int slot0Value, int slot1Value)
+    {
+        slot0ItemType.Value = slot0Value;
+        slot1ItemType.Value = slot1Value;
+    }
+
+    [ServerRpc]
+    private void PublishInventorySlotsServerRpc(int slot0Value, int slot1Value)
+    {
+        SetNetworkSlotValues(slot0Value, slot1Value);
     }
 }

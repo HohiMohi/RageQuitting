@@ -1722,6 +1722,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4656286221749303649}
   - component: {fileID: 5422416365525227335}
+  - component: {fileID: 5674413288067453901}
   - component: {fileID: 9003798267001640751}
   - component: {fileID: 612345907341246910}
   m_Layer: 0
@@ -1761,6 +1762,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EquippableItem
   equippableItemSO: {fileID: 0}
+--- !u!114 &5674413288067453901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8084630677208283775}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8f32f23f08b4b8a966f5e98f5a53d51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EquippableToolVisualBuilder
+  visualRoot: {fileID: 7661985954886723755}
+  axeMaterial: {fileID: 2100000, guid: b4fd3acc17e8e1748b7872045b26764b, type: 2}
+  pickaxeMaterial: {fileID: 2100000, guid: 1f00d72b054ec0347a696b7c89144ca3, type: 2}
+  handleMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  rebuildOnAwake: 1
 --- !u!65 &9003798267001640751
 BoxCollider:
   m_ObjectHideFlags: 0

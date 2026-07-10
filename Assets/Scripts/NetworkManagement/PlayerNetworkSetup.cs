@@ -13,6 +13,11 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
     public GameObject PlayerBodyVisual => playerBodyVisual;
 
+    public void SetPlayerBodyVisual(GameObject visual)
+    {
+        playerBodyVisual = visual;
+    }
+
     public override void OnNetworkSpawn()
     {
         DisableScenePlacedPlayers();

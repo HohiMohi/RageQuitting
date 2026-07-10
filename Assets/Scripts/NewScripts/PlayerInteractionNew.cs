@@ -42,6 +42,8 @@ public class PlayerInteractionNew : MonoBehaviour
     public Vector3 CarryBodyAnchorLocalOffset => defaultCarryBodyAnchorLocalPosition;
 
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
+    public event EventHandler OnInteractionPerformed;
+    public event EventHandler OnHeldObjectChanged;
     public class UpdateHoldedItemMovementSpeedPenaltyEventArgs : EventArgs
     {
         public float currentMovementSpeedPenaltyMultiplier;
@@ -75,6 +77,7 @@ public class PlayerInteractionNew : MonoBehaviour
         if (_currentInteractable is DownedPlayerCarryable downedPlayerCarryable)
         {
             downedPlayerCarryable.RequestRevive(transform);
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
             return;
         }
 
@@ -82,6 +85,7 @@ public class PlayerInteractionNew : MonoBehaviour
         {
             NetworkObject reviverNetworkObject = GetComponent<NetworkObject>();
             playerHealth.RequestRevive(reviverNetworkObject);
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -90,12 +94,14 @@ public class PlayerInteractionNew : MonoBehaviour
         if (_playerHealth != null && _playerHealth.IsDowned)
         {
             _playerHealth.RequestRespawn();
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
             return;
         }
 
         if (_pickedUpGameObject != null && _pickedUpGameObject.TryGetComponent(out DownedPlayerCarryable _))
         {
             DropObject();
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
             return;
         }
 
@@ -154,12 +160,16 @@ public class PlayerInteractionNew : MonoBehaviour
                 if (pickableObject != null)
                 {
                     if (_pickedUpGameObject == null)
+                    {
                         pickableObject.PickedUp(transform);
+                        OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+                    }
                     return;
                 }
 
                 // If looking at interactable object, interact with it
                 interactable.Interact(transform);
+                OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
@@ -172,6 +182,7 @@ public class PlayerInteractionNew : MonoBehaviour
         // Try to drop object - objects need to be affected by gravity - now Objects are just dropped and stay in the air, player has to jump to pick them up again - to change
         if (DropObject())
         {
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
             return;
         }
 
@@ -213,6 +224,8 @@ public class PlayerInteractionNew : MonoBehaviour
             pickedUpObjectParented = false;
             MovePickedUpObjectToHoldPosition();
         }
+
+        OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void ConfirmPickedUpObject(GameObject pickUpObject, IPIckableNew pIckableObject)
@@ -252,6 +265,7 @@ public class PlayerInteractionNew : MonoBehaviour
         sharedCarryMovementActive = false;
         sharedCarryAttachLocalPoint = Vector3.zero;
         SetHoldedItemProperties(null);
+        OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public bool DropObject()
@@ -292,6 +306,7 @@ public class PlayerInteractionNew : MonoBehaviour
             }
 
             SetHoldedItemProperties(null);
+            OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
             return true;
         }
         return false;
@@ -326,6 +341,7 @@ public class PlayerInteractionNew : MonoBehaviour
             sharedCarryMovementActive = false;
             sharedCarryAttachLocalPoint = Vector3.zero;
             SetHoldedItemProperties(null);
+            OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -401,6 +417,7 @@ public class PlayerInteractionNew : MonoBehaviour
             {
                 storage.StoreBaseResource(baseResourceSO, 1); // Example amount, can be changed or made variable
                 RemovePickedUpObject();
+                OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
                 return true;
             }
         }
@@ -417,6 +434,7 @@ public class PlayerInteractionNew : MonoBehaviour
             // Rework this to not directly invoke storage method from player interaction, maybe add event - to handle later
             storage.StoreBridgeComponent(mountableBridgeComponent.GetMountableBridgeComponentSO().bridgeComponentSO);
             RemovePickedUpObject();
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
             return true;
         }
         return false;
