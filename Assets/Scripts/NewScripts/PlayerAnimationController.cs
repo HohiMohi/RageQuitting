@@ -59,11 +59,27 @@ public class PlayerAnimationController : NetworkBehaviour
     private int currentStateHash;
     private bool hasLastPosition;
     private bool wasGrounded = true;
+    private SharedCarryPlayerVisualOverride sharedCarryVisualOverride;
+    private Vector3 externalSharedCarryAnimationInput;
+    private float lastExternalSharedCarryAnimationInputTime = -1f;
+    private const float ExternalSharedCarryAnimationInputStaleTime = 0.25f;
     private bool IsNetworkAnimationActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
 
     public void SetAnimator(Animator targetAnimator)
     {
         animator = targetAnimator;
+    }
+
+    public void SetExternalSharedCarryAnimationInput(Vector3 worldMoveInput)
+    {
+        externalSharedCarryAnimationInput = Vector3.ClampMagnitude(new Vector3(worldMoveInput.x, 0f, worldMoveInput.z), 1f);
+        lastExternalSharedCarryAnimationInputTime = Time.time;
+    }
+
+    public void ClearExternalSharedCarryAnimationInput()
+    {
+        externalSharedCarryAnimationInput = Vector3.zero;
+        lastExternalSharedCarryAnimationInputTime = -1f;
     }
 
     private void Awake()
@@ -92,6 +108,8 @@ public class PlayerAnimationController : NetworkBehaviour
         {
             playerHealth = GetComponent<PlayerHealth>();
         }
+
+        sharedCarryVisualOverride = GetComponent<SharedCarryPlayerVisualOverride>();
 
         previousHealth = playerHealth != null ? playerHealth.CurrentHealth : 0f;
     }
@@ -147,10 +165,11 @@ public class PlayerAnimationController : NetworkBehaviour
         float yawDelta = Mathf.DeltaAngle(lastYaw, currentYaw);
         lastYaw = currentYaw;
 
-        float horizontalSpeed = new Vector2(delta.x, delta.z).magnitude / deltaTime;
+        Vector3 animationVelocity = GetAnimationVelocity(delta, deltaTime);
+        float horizontalSpeed = new Vector2(animationVelocity.x, animationVelocity.z).magnitude;
         float verticalVelocity = GetVerticalVelocity(delta.y / deltaTime);
         float angularSpeed = yawDelta / deltaTime;
-        float signedForwardSpeed = Vector3.Dot(new Vector3(delta.x, 0f, delta.z) / deltaTime, transform.forward);
+        float signedForwardSpeed = Vector3.Dot(new Vector3(animationVelocity.x, 0f, animationVelocity.z), transform.forward);
         float targetSpeedNormalized = GetSpeedNormalized(horizontalSpeed);
 
         if (playerHealth != null && playerHealth.IsDowned)
@@ -221,6 +240,61 @@ public class PlayerAnimationController : NetworkBehaviour
         return Mathf.Lerp(0.5f, 1f, Mathf.Clamp01((horizontalSpeed - moveSpeedReference) / sprintRange));
     }
 
+    private Vector3 GetAnimationVelocity(Vector3 rootDelta, float deltaTime)
+    {
+        Vector3 rootVelocity = rootDelta / deltaTime;
+
+        if (sharedCarryVisualOverride == null)
+        {
+            sharedCarryVisualOverride = GetComponent<SharedCarryPlayerVisualOverride>();
+        }
+
+        if (sharedCarryVisualOverride != null && sharedCarryVisualOverride.IsOverriding)
+        {
+            Vector3 externalVelocity = GetExternalSharedCarryAnimationVelocity();
+            if (new Vector2(externalVelocity.x, externalVelocity.z).sqrMagnitude > 0f)
+            {
+                return externalVelocity;
+            }
+
+            return sharedCarryVisualOverride.VisualVelocity;
+        }
+
+        if (playerInteraction != null && playerInteraction.IsSharedCarryMovementActive && playerInput != null)
+        {
+            Vector3 inputVelocity = GetInputAnimationVelocity();
+            if (new Vector2(rootVelocity.x, rootVelocity.z).sqrMagnitude < new Vector2(inputVelocity.x, inputVelocity.z).sqrMagnitude)
+            {
+                return inputVelocity;
+            }
+        }
+
+        return rootVelocity;
+    }
+
+    private Vector3 GetExternalSharedCarryAnimationVelocity()
+    {
+        if (lastExternalSharedCarryAnimationInputTime < 0f || Time.time - lastExternalSharedCarryAnimationInputTime > ExternalSharedCarryAnimationInputStaleTime)
+        {
+            return Vector3.zero;
+        }
+
+        return externalSharedCarryAnimationInput * moveSpeedReference;
+    }
+
+    private Vector3 GetInputAnimationVelocity()
+    {
+        Vector2 moveInput = playerInput.GetMoveVectorValue();
+        if (moveInput == Vector2.zero)
+        {
+            return Vector3.zero;
+        }
+
+        Vector3 worldInput = transform.right * moveInput.x + transform.forward * moveInput.y;
+        worldInput.y = 0f;
+        return Vector3.ClampMagnitude(worldInput, 1f) * moveSpeedReference;
+    }
+
     private void UpdateAnimationState(float horizontalSpeed, float signedForwardSpeed, float verticalVelocity, float angularSpeed, bool isGrounded)
     {
         if (playerHealth != null && playerHealth.IsDowned)
@@ -253,12 +327,6 @@ public class PlayerAnimationController : NetworkBehaviour
             return;
         }
 
-        if (IsCarryingObject())
-        {
-            CrossFadeToState(CarryStateHash);
-            return;
-        }
-
         if (horizontalSpeed > backwardMoveSpeedThreshold && signedForwardSpeed < -backwardMoveSpeedThreshold)
         {
             CrossFadeToState(BackwardMoveStateHash);
@@ -268,6 +336,12 @@ public class PlayerAnimationController : NetworkBehaviour
         if (horizontalSpeed <= turnInPlaceMoveSpeedThreshold && Mathf.Abs(angularSpeed) >= turnInPlaceAngularSpeedThreshold)
         {
             CrossFadeToState(angularSpeed < 0f ? TurnLeftStateHash : TurnRightStateHash);
+            return;
+        }
+
+        if (ShouldUseCarryIdleState(horizontalSpeed))
+        {
+            CrossFadeToState(CarryStateHash);
             return;
         }
 
@@ -332,7 +406,22 @@ public class PlayerAnimationController : NetworkBehaviour
 
     private bool IsCarryingObject()
     {
-        return playerInteraction != null && playerInteraction.IsHoldingObject;
+        if (playerInteraction != null && playerInteraction.IsHoldingObject)
+        {
+            return true;
+        }
+
+        if (sharedCarryVisualOverride == null)
+        {
+            sharedCarryVisualOverride = GetComponent<SharedCarryPlayerVisualOverride>();
+        }
+
+        return sharedCarryVisualOverride != null && sharedCarryVisualOverride.IsOverriding;
+    }
+
+    private bool ShouldUseCarryIdleState(float horizontalSpeed)
+    {
+        return IsCarryingObject() && horizontalSpeed <= idleSpeedThreshold;
     }
 
     private void SubscribeEvents()

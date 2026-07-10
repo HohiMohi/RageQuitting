@@ -9,8 +9,10 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private Transform cameraRoot;
     [SerializeField] private FirstPersonController firstPersonController;
     [SerializeField] private PlayerInputNew playerInput;
+    [SerializeField] private PlayerActionController playerActionController;
     [SerializeField] private PlayerInteractionNew playerInteraction;
     [SerializeField] private PlayerHealth playerHealth;
+    [SerializeField] private PlayerInventory playerInventory;
 
     [Header("Pose")]
     [SerializeField] private Vector3 rootLocalPosition = new Vector3(0f, -0.24f, 0.95f);
@@ -30,15 +32,26 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private float hitReactionDuration = 0.22f;
     [SerializeField] private float poseLerpSpeed = 14f;
 
+    [Header("Tool Visual")]
+    [SerializeField] private EquippableToolVisualBuilder.ToolVisualMaterials toolVisualMaterials;
+    [SerializeField] private Vector3 toolLocalPosition = new Vector3(0.02f, -0.06f, 0.38f);
+    [SerializeField] private Vector3 toolLocalEulerAngles = new Vector3(0f, 90f, 0f);
+    [SerializeField] private Vector3 toolLocalScale = new Vector3(0.5f, 0.5f, 0.5f);
+    [SerializeField] private Vector3 toolSwingPositionOffset = new Vector3(0f, 0.02f, 0.08f);
+    [SerializeField] private Vector3 toolSwingEulerOffset = new Vector3(24f, -8f, -14f);
+
     private Transform armsRoot;
     private Transform leftArmRoot;
     private Transform rightArmRoot;
+    private Transform rightToolAnchor;
+    private GameObject rightToolVisual;
     private Material skinMaterial;
     private Material forearmMaterial;
     private float bobTimer;
     private float actionTimer;
     private float hitReactionTimer;
     private float previousHealth;
+    private int currentToolItemTypeValue = -2;
     private bool setupCompleted;
 
     private bool ShouldShowLocalArms
@@ -120,6 +133,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             playerInput = GetComponent<PlayerInputNew>();
         }
 
+        if (playerActionController == null)
+        {
+            playerActionController = GetComponent<PlayerActionController>();
+        }
+
         if (playerInteraction == null)
         {
             playerInteraction = GetComponent<PlayerInteractionNew>();
@@ -128,6 +146,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         if (playerHealth == null)
         {
             playerHealth = GetComponent<PlayerHealth>();
+        }
+
+        if (playerInventory == null)
+        {
+            playerInventory = GetComponent<PlayerInventory>();
         }
 
         if (cameraRoot == null && firstPersonController != null && firstPersonController.CinemachineCameraTarget != null)
@@ -180,6 +203,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
         leftArmRoot = CreateArm("Left", -armSpacing);
         rightArmRoot = CreateArm("Right", armSpacing);
+        rightToolAnchor = CreateToolAnchor(rightArmRoot);
+        RefreshToolVisual();
     }
 
     private Shader GetDefaultShader()
@@ -212,6 +237,21 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         CreateHand($"{sideName}_Hand", armRoot, new Vector3(0f, -0.14f, 0.31f), new Vector3(0.082f, 0.055f, 0.072f), skinMaterial);
 
         return armRoot;
+    }
+
+    private Transform CreateToolAnchor(Transform parent)
+    {
+        if (parent == null)
+        {
+            return null;
+        }
+
+        GameObject anchorObject = new GameObject("FPP_RightHandToolAnchor");
+        Transform anchor = anchorObject.transform;
+        anchor.SetParent(parent, false);
+        rightToolAnchor = anchor;
+        ApplyToolAnchorPose(0f, false);
+        return anchor;
     }
 
     private void CreateArmSegment(string objectName, Transform parent, Vector3 localPosition, Vector3 localScale, Material material, Vector3 eulerAngles)
@@ -301,6 +341,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
         UpdateArmPose(leftArmRoot, true, actionCurve, moveAmount, isCarrying, isDowned);
         UpdateArmPose(rightArmRoot, false, actionCurve, moveAmount, isCarrying, isDowned);
+        UpdateToolPose(actionCurve, isDowned);
     }
 
     private void UpdateArmPose(Transform armRoot, bool isLeft, float actionCurve, float moveAmount, bool isCarrying, bool isDowned)
@@ -334,37 +375,156 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         armRoot.localRotation = Quaternion.Slerp(armRoot.localRotation, Quaternion.Euler(targetEuler), Time.deltaTime * poseLerpSpeed);
     }
 
+    private void UpdateToolPose(float actionCurve, bool isDowned)
+    {
+        if (rightToolAnchor == null)
+        {
+            return;
+        }
+
+        ApplyToolAnchorPose(actionCurve, isDowned);
+
+        if (rightToolVisual != null && rightToolVisual.activeSelf == isDowned)
+        {
+            rightToolVisual.SetActive(!isDowned);
+        }
+    }
+
+    private void ApplyToolAnchorPose(float actionCurve, bool isDowned)
+    {
+        if (rightToolAnchor == null)
+        {
+            return;
+        }
+
+        Vector3 targetPosition = toolLocalPosition + toolSwingPositionOffset * actionCurve;
+        Vector3 targetEuler = toolLocalEulerAngles + toolSwingEulerOffset * actionCurve;
+
+        if (isDowned)
+        {
+            targetPosition += new Vector3(0f, -0.08f, -0.08f);
+            targetEuler += new Vector3(18f, 0f, 0f);
+        }
+
+        rightToolAnchor.localPosition = targetPosition;
+        rightToolAnchor.localRotation = Quaternion.Euler(targetEuler);
+        rightToolAnchor.localScale = toolLocalScale;
+    }
+
+    private void RefreshToolVisual()
+    {
+        if (rightToolAnchor == null || playerInventory == null)
+        {
+            return;
+        }
+
+        int slotItemTypeValue = GetSlot0ItemTypeValue();
+        if (slotItemTypeValue == currentToolItemTypeValue)
+        {
+            return;
+        }
+
+        currentToolItemTypeValue = slotItemTypeValue;
+        ClearToolVisual();
+
+        if (slotItemTypeValue < 0)
+        {
+            return;
+        }
+
+        EquippableItemType itemType = (EquippableItemType)slotItemTypeValue;
+        if (!IsSupportedToolType(itemType))
+        {
+            return;
+        }
+
+        rightToolVisual = EquippableToolVisualBuilder.BuildVisual(itemType, rightToolAnchor, toolVisualMaterials);
+        if (rightToolVisual != null && playerHealth != null)
+        {
+            rightToolVisual.SetActive(!playerHealth.IsDowned);
+        }
+    }
+
+    private int GetSlot0ItemTypeValue()
+    {
+        EquippableItemSO item = playerInventory.GetItemInSlot(0);
+        return item != null ? (int)item.itemType : -1;
+    }
+
+    private static bool IsSupportedToolType(EquippableItemType itemType)
+    {
+        return itemType == EquippableItemType.Axe || itemType == EquippableItemType.Pickaxe;
+    }
+
+    private void ClearToolVisual()
+    {
+        if (rightToolVisual == null)
+        {
+            return;
+        }
+
+        Destroy(rightToolVisual);
+        rightToolVisual = null;
+    }
+
     private void SubscribeEvents()
     {
-        if (playerInput != null)
+        if (playerActionController != null)
         {
-            playerInput.OnAction += PlayerInput_OnAction;
-            playerInput.OnActionAlt += PlayerInput_OnAction;
-            playerInput.OnInteract += PlayerInput_OnAction;
+            playerActionController.OnActionPerformed -= Gameplay_OnActionAnimation;
+            playerActionController.OnActionAltPerformed -= Gameplay_OnActionAnimation;
+            playerActionController.OnActionPerformed += Gameplay_OnActionAnimation;
+            playerActionController.OnActionAltPerformed += Gameplay_OnActionAnimation;
+        }
+
+        if (playerInteraction != null)
+        {
+            playerInteraction.OnInteractionPerformed -= Gameplay_OnActionAnimation;
+            playerInteraction.OnInteractionPerformed += Gameplay_OnActionAnimation;
         }
 
         if (playerHealth != null)
         {
             playerHealth.OnHealthChanged += PlayerHealth_OnHealthChanged;
         }
+
+        if (playerInventory != null)
+        {
+            playerInventory.OnInventorySlotsChanged -= PlayerInventory_OnInventorySlotsChanged;
+            playerInventory.OnInventorySlotsChanged += PlayerInventory_OnInventorySlotsChanged;
+        }
     }
 
     private void UnsubscribeEvents()
     {
-        if (playerInput != null)
+        if (playerActionController != null)
         {
-            playerInput.OnAction -= PlayerInput_OnAction;
-            playerInput.OnActionAlt -= PlayerInput_OnAction;
-            playerInput.OnInteract -= PlayerInput_OnAction;
+            playerActionController.OnActionPerformed -= Gameplay_OnActionAnimation;
+            playerActionController.OnActionAltPerformed -= Gameplay_OnActionAnimation;
+        }
+
+        if (playerInteraction != null)
+        {
+            playerInteraction.OnInteractionPerformed -= Gameplay_OnActionAnimation;
         }
 
         if (playerHealth != null)
         {
             playerHealth.OnHealthChanged -= PlayerHealth_OnHealthChanged;
         }
+
+        if (playerInventory != null)
+        {
+            playerInventory.OnInventorySlotsChanged -= PlayerInventory_OnInventorySlotsChanged;
+        }
     }
 
-    private void PlayerInput_OnAction(object sender, EventArgs e)
+    private void PlayerInventory_OnInventorySlotsChanged(object sender, EventArgs e)
+    {
+        RefreshToolVisual();
+    }
+
+    private void Gameplay_OnActionAnimation(object sender, EventArgs e)
     {
         if (playerHealth != null && playerHealth.IsDowned)
         {
@@ -398,6 +558,9 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             armsRoot = null;
             leftArmRoot = null;
             rightArmRoot = null;
+            rightToolAnchor = null;
+            rightToolVisual = null;
+            currentToolItemTypeValue = -2;
         }
 
         if (skinMaterial != null)

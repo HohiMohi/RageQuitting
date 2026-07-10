@@ -486,6 +486,11 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
         holderMoveInputs[clientId] = worldMoveInput;
         holderLastInputTimes[clientId] = Time.time;
+
+        if (IsServer && clientId != NoHolderClientId)
+        {
+            UpdateHolderSharedCarryAnimationInputClientRpc(clientId, worldMoveInput);
+        }
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -664,9 +669,28 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             return;
         }
 
+        if (playerNetworkObject.TryGetComponent(out PlayerAnimationController animationController))
+        {
+            animationController.ClearExternalSharedCarryAnimationInput();
+        }
+
         if (playerNetworkObject.TryGetComponent(out SharedCarryPlayerVisualOverride visualOverride))
         {
             visualOverride.StopOverride();
+        }
+    }
+
+    [ClientRpc]
+    private void UpdateHolderSharedCarryAnimationInputClientRpc(ulong holderClientId, Vector3 worldMoveInput)
+    {
+        if (!TryGetPlayerObject(holderClientId, out NetworkObject playerNetworkObject))
+        {
+            return;
+        }
+
+        if (playerNetworkObject.TryGetComponent(out PlayerAnimationController animationController))
+        {
+            animationController.SetExternalSharedCarryAnimationInput(worldMoveInput);
         }
     }
 

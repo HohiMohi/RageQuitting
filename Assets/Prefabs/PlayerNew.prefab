@@ -808,8 +808,10 @@ MonoBehaviour:
   cameraRoot: {fileID: 365638902093576632}
   firstPersonController: {fileID: 8036448780592137977}
   playerInput: {fileID: 8057224913680877428}
+  playerActionController: {fileID: 482533967712327051}
   playerInteraction: {fileID: 1047544986995738481}
   playerHealth: {fileID: 6339126401750945372}
+  playerInventory: {fileID: 4354115525238422459}
   rootLocalPosition: {x: 0, y: -0.24, z: 0.95}
   rootLocalEulerAngles: {x: -4, y: 0, z: 0}
   armSpacing: 0.24
@@ -824,6 +826,15 @@ MonoBehaviour:
   actionSwingAngle: 36
   hitReactionDuration: 0.22
   poseLerpSpeed: 14
+  toolVisualMaterials:
+    axeMaterial: {fileID: 2100000, guid: b4fd3acc17e8e1748b7872045b26764b, type: 2}
+    pickaxeMaterial: {fileID: 2100000, guid: 1f00d72b054ec0347a696b7c89144ca3, type: 2}
+    handleMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  toolLocalPosition: {x: 0.02, y: -0.06, z: 0.38}
+  toolLocalEulerAngles: {x: 0, y: 90, z: 0}
+  toolLocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  toolSwingPositionOffset: {x: 0, y: 0.02, z: 0.08}
+  toolSwingEulerOffset: {x: 24, y: -8, z: -14}
 --- !u!114 &8127641093237516445
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1695,7 +1706,7 @@ Transform:
   m_GameObject: {fileID: 8301098796299706282}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.375, z: 0}
+  m_LocalPosition: {x: 0, y: 1.1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

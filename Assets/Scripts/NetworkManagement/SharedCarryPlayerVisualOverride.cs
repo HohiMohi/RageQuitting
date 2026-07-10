@@ -11,7 +11,12 @@ public class SharedCarryPlayerVisualOverride : MonoBehaviour
     private Vector3 bodyAnchorLocalOffset;
     private Vector3 originalLocalPosition;
     private Quaternion originalLocalRotation;
+    private Vector3 lastVisualPosition;
+    private Vector3 visualVelocity;
     private bool isOverriding;
+
+    public bool IsOverriding => isOverriding;
+    public Vector3 VisualVelocity => visualVelocity;
 
     private void Awake()
     {
@@ -48,6 +53,8 @@ public class SharedCarryPlayerVisualOverride : MonoBehaviour
         carriedObjectTransform = carriedObjectNetworkObject.transform;
         attachLocalPoint = newAttachLocalPoint;
         bodyAnchorLocalOffset = newBodyAnchorLocalOffset;
+        lastVisualPosition = playerBodyVisual.position;
+        visualVelocity = Vector3.zero;
         isOverriding = true;
     }
 
@@ -60,6 +67,7 @@ public class SharedCarryPlayerVisualOverride : MonoBehaviour
         }
 
         carriedObjectTransform = null;
+        visualVelocity = Vector3.zero;
         isOverriding = false;
     }
 
@@ -75,9 +83,16 @@ public class SharedCarryPlayerVisualOverride : MonoBehaviour
         Vector3 targetRootPosition = targetAnchorPosition - targetRotation * bodyAnchorLocalOffset;
         targetRootPosition.y = transform.position.y;
         Vector3 targetVisualPosition = targetRootPosition + targetRotation * originalLocalPosition;
+        Vector3 newVisualPosition = Vector3.Lerp(playerBodyVisual.position, targetVisualPosition, DefaultVisualFollowSpeed * Time.deltaTime);
+
+        if (Time.deltaTime > 0f)
+        {
+            visualVelocity = (newVisualPosition - lastVisualPosition) / Time.deltaTime;
+        }
 
         playerBodyVisual.SetPositionAndRotation(
-            Vector3.Lerp(playerBodyVisual.position, targetVisualPosition, DefaultVisualFollowSpeed * Time.deltaTime),
+            newVisualPosition,
             targetRotation * originalLocalRotation);
+        lastVisualPosition = newVisualPosition;
     }
 }
