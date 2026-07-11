@@ -18,3 +18,9 @@ MonoBehaviour:
   patrolArrivalDistance: 0.75
   deliveryDistance: 1.5
   hitReactionLockDuration: 0.75
+  playerFaction: {fileID: 11400000, guid: 4bae5ec511184baa8a3d2ff9e76710bd, type: 2}
+  noticePlayerLockDuration: 1.25
+  followDurationMin: 15
+  followDurationMax: 30
+  followRefreshInterval: 0.25
+  followStoppingDistance: 1.5

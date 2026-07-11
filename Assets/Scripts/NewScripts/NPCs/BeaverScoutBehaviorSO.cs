@@ -1,6 +1,7 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
-using Unity.Netcode;
+using System.Collections.Generic;
 
 [CreateAssetMenu(fileName = "BeaverScoutBehavior", menuName = "Scriptable Objects/NPC/Behaviors/Beaver Scout")]
 public class BeaverScoutBehaviorSO : NPCBehaviorSO
@@ -17,6 +18,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private float patrolArrivalDistance = 0.75f;
     [SerializeField] private float deliveryDistance = 1.5f;
     [SerializeField] private float hitReactionLockDuration = 0.75f;
+    [SerializeField] private NPCFactionSO playerFaction;
+    [SerializeField] private float noticePlayerLockDuration = 1.25f;
+    [SerializeField] private float followDurationMin = 15f;
+    [SerializeField] private float followDurationMax = 30f;
+    [SerializeField] private float followRefreshInterval = 0.25f;
+    [SerializeField] private float followStoppingDistance = 1.5f;
 
     public DeliveryMode Delivery => deliveryMode;
     public float IdleSearchDuration => Mathf.Max(0.1f, idleSearchDuration);
@@ -24,6 +31,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     public float PatrolArrivalDistance => Mathf.Max(0.1f, patrolArrivalDistance);
     public float DeliveryDistance => Mathf.Max(0.1f, deliveryDistance);
     public float HitReactionLockDuration => Mathf.Max(0f, hitReactionLockDuration);
+    public NPCFactionSO PlayerFaction => playerFaction;
+    public float NoticePlayerLockDuration => Mathf.Max(0f, noticePlayerLockDuration);
+    public float FollowDurationMin => Mathf.Max(0.1f, Mathf.Min(followDurationMin, followDurationMax));
+    public float FollowDurationMax => Mathf.Max(FollowDurationMin, followDurationMax);
+    public float FollowRefreshInterval => Mathf.Max(0.05f, followRefreshInterval);
+    public float FollowStoppingDistance => Mathf.Max(0.1f, followStoppingDistance);
 
     public override NPCBehaviorController CreateController(NPCBrain brain)
     {
@@ -33,6 +46,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     private enum ScoutState
     {
         IdleSearching,
+        NoticingPlayer,
+        FollowingPlayer,
         MovingToPatrolPoint,
         MovingToTarget,
         Delivering
@@ -44,9 +59,17 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private Vector3 homePosition;
         private Vector3 patrolTarget;
         private GameObject targetObject;
+        private PlayerHealth followTargetPlayerHealth;
+        private Transform followTargetTransform;
+        private readonly HashSet<ulong> encounteredPlayerIds = new HashSet<ulong>();
         private ScoutState state;
         private float idleSearchEndTime;
         private float nextTargetRefreshTime;
+        private float noticeEndTime;
+        private float followEndTime;
+        private float nextFollowRefreshTime;
+        private float previousStoppingDistance;
+        private bool hasPreviousStoppingDistance;
         private float reactionLockEndTime;
         private float previousHealth;
         private NPCAnimationController animationController;
@@ -96,6 +119,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             {
                 case ScoutState.IdleSearching:
                     UpdateIdleSearching();
+                    break;
+                case ScoutState.NoticingPlayer:
+                    UpdateNoticingPlayer();
+                    break;
+                case ScoutState.FollowingPlayer:
+                    UpdateFollowingPlayer();
                     break;
                 case ScoutState.MovingToPatrolPoint:
                     UpdateMovingToPatrolPoint();
@@ -153,6 +182,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             targetObject = null;
+            ClearFollowTarget();
             reactionLockEndTime = Time.time + config.HitReactionLockDuration;
             EnterIdleSearching();
             idleSearchEndTime = reactionLockEndTime + config.IdleSearchDuration;
@@ -162,6 +192,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         {
             state = ScoutState.IdleSearching;
             targetObject = null;
+            ClearFollowTarget();
+            RestoreAgentStoppingDistance();
             idleSearchEndTime = Time.time + config.IdleSearchDuration;
             nextTargetRefreshTime = 0f;
             StopAgent();
@@ -172,6 +204,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             if (Time.time >= nextTargetRefreshTime)
             {
                 nextTargetRefreshTime = Time.time + config.TargetRefreshInterval;
+                if (TryFindClosestUnencounteredPlayer(out PlayerHealth playerHealth, out Transform playerTransform, out ulong playerId))
+                {
+                    EnterNoticingPlayer(playerHealth, playerTransform, playerId);
+                    return;
+                }
+
                 targetObject = FindClosestStealableObject();
             }
 
@@ -187,8 +225,81 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
         }
 
+        private void EnterNoticingPlayer(PlayerHealth playerHealth, Transform playerTransform, ulong playerId)
+        {
+            StopAgent();
+            RestoreAgentStoppingDistance();
+            targetObject = null;
+            followTargetPlayerHealth = playerHealth;
+            followTargetTransform = playerTransform;
+            encounteredPlayerIds.Add(playerId);
+            noticeEndTime = Time.time + config.NoticePlayerLockDuration;
+            state = ScoutState.NoticingPlayer;
+
+            if (animationController == null)
+            {
+                animationController = Brain.GetComponent<NPCAnimationController>();
+            }
+
+            if (animationController != null)
+            {
+                animationController.PlayNotice();
+            }
+        }
+
+        private void UpdateNoticingPlayer()
+        {
+            StopAgent();
+            if (!IsFollowTargetAvailable())
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            if (Time.time >= noticeEndTime)
+            {
+                EnterFollowingPlayer();
+            }
+        }
+
+        private void EnterFollowingPlayer()
+        {
+            if (!IsFollowTargetAvailable())
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            state = ScoutState.FollowingPlayer;
+            followEndTime = Time.time + Random.Range(config.FollowDurationMin, config.FollowDurationMax);
+            nextFollowRefreshTime = 0f;
+            ResumeAgent();
+            SetFollowStoppingDistance();
+            Brain.Agent.SetDestination(followTargetTransform.position);
+        }
+
+        private void UpdateFollowingPlayer()
+        {
+            if (Time.time >= followEndTime || !IsFollowTargetAvailable())
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            if (Time.time < nextFollowRefreshTime)
+            {
+                return;
+            }
+
+            nextFollowRefreshTime = Time.time + config.FollowRefreshInterval;
+            ResumeAgent();
+            SetFollowStoppingDistance();
+            Brain.Agent.SetDestination(followTargetTransform.position);
+        }
+
         private void EnterMovingToPatrolPoint()
         {
+            RestoreAgentStoppingDistance();
             ResumeAgent();
             if (!TrySelectPatrolTarget(out patrolTarget))
             {
@@ -210,6 +321,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         private void EnterMovingToTarget()
         {
+            RestoreAgentStoppingDistance();
             if (!IsStealable(targetObject))
             {
                 EnterIdleSearching();
@@ -247,6 +359,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         private void EnterDelivering()
         {
+            RestoreAgentStoppingDistance();
             if (Brain.Carrier.CarriedObject == null)
             {
                 EnterIdleSearching();
@@ -359,6 +472,34 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             Brain.Agent.isStopped = false;
         }
 
+        private void SetFollowStoppingDistance()
+        {
+            if (Brain.Agent == null)
+            {
+                return;
+            }
+
+            if (!hasPreviousStoppingDistance)
+            {
+                previousStoppingDistance = Brain.Agent.stoppingDistance;
+                hasPreviousStoppingDistance = true;
+            }
+
+            Brain.Agent.stoppingDistance = config.FollowStoppingDistance;
+        }
+
+        private void RestoreAgentStoppingDistance()
+        {
+            if (Brain.Agent == null || !hasPreviousStoppingDistance)
+            {
+                return;
+            }
+
+            Brain.Agent.stoppingDistance = previousStoppingDistance;
+            previousStoppingDistance = 0f;
+            hasPreviousStoppingDistance = false;
+        }
+
         private GameObject FindClosestStealableObject()
         {
             Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
@@ -382,6 +523,125 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             return closestObject;
+        }
+
+        private bool TryFindClosestUnencounteredPlayer(out PlayerHealth playerHealth, out Transform playerTransform, out ulong playerId)
+        {
+            playerHealth = null;
+            playerTransform = null;
+            playerId = 0;
+
+            Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
+            float closestDistance = float.MaxValue;
+
+            foreach (Collider collider in colliders)
+            {
+                GameObject candidate = collider.attachedRigidbody != null ? collider.attachedRigidbody.gameObject : collider.gameObject;
+                if (!TryGetPlayerTarget(candidate, out PlayerHealth candidateHealth, out Transform candidateTransform, out ulong candidateId))
+                {
+                    continue;
+                }
+
+                if (encounteredPlayerIds.Contains(candidateId))
+                {
+                    continue;
+                }
+
+                float distance = Vector3.Distance(Brain.transform.position, candidateTransform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    playerHealth = candidateHealth;
+                    playerTransform = candidateTransform;
+                    playerId = candidateId;
+                }
+            }
+
+            return playerHealth != null && playerTransform != null;
+        }
+
+        private bool TryGetPlayerTarget(GameObject candidate, out PlayerHealth playerHealth, out Transform playerTransform, out ulong playerId)
+        {
+            playerHealth = null;
+            playerTransform = null;
+            playerId = 0;
+
+            if (candidate == null || candidate.transform.root == Brain.transform.root)
+            {
+                return false;
+            }
+
+            NPCFactionMember factionMember = candidate.GetComponent<NPCFactionMember>();
+            factionMember ??= candidate.GetComponentInParent<NPCFactionMember>();
+            if (!IsPlayerFaction(factionMember))
+            {
+                return false;
+            }
+
+            playerHealth = candidate.GetComponent<PlayerHealth>();
+            playerHealth ??= candidate.GetComponentInParent<PlayerHealth>();
+            if (playerHealth == null || playerHealth.IsDowned)
+            {
+                return false;
+            }
+
+            if (factionMember != null && !factionMember.IsTargetAvailable)
+            {
+                return false;
+            }
+
+            playerTransform = factionMember != null ? factionMember.TargetTransform : playerHealth.transform;
+            if (playerTransform == null)
+            {
+                return false;
+            }
+
+            if (playerHealth.NetworkObject != null && playerHealth.NetworkObject.IsSpawned)
+            {
+                playerId = playerHealth.NetworkObject.NetworkObjectId;
+            }
+            else
+            {
+                playerId = (ulong)playerHealth.GetInstanceID();
+            }
+
+            return true;
+        }
+
+        private bool IsPlayerFaction(NPCFactionMember factionMember)
+        {
+            if (factionMember == null)
+            {
+                return config.PlayerFaction == null;
+            }
+
+            if (config.PlayerFaction != null)
+            {
+                return factionMember.Faction == config.PlayerFaction;
+            }
+
+            return factionMember.Faction != null && factionMember.Faction.FactionId == "Player";
+        }
+
+        private bool IsFollowTargetAvailable()
+        {
+            if (followTargetPlayerHealth == null || followTargetTransform == null)
+            {
+                return false;
+            }
+
+            if (followTargetPlayerHealth.IsDowned)
+            {
+                return false;
+            }
+
+            return followTargetPlayerHealth.gameObject.activeInHierarchy;
+        }
+
+        private void ClearFollowTarget()
+        {
+            followTargetPlayerHealth = null;
+            followTargetTransform = null;
         }
 
         private bool IsStealable(GameObject candidate)
