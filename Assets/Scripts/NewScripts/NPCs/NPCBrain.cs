@@ -6,6 +6,7 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NPCCarrier))]
 [RequireComponent(typeof(NPCHealth))]
 [RequireComponent(typeof(NPCFactionMember))]
+[RequireComponent(typeof(NPCAttackController))]
 public class NPCBrain : NetworkBehaviour
 {
     [SerializeField] private NPCDefinitionSO definition;
@@ -17,6 +18,7 @@ public class NPCBrain : NetworkBehaviour
     private NPCCarrier carrier;
     private NPCHealth health;
     private NPCFactionMember factionMember;
+    private NPCAttackController attackController;
     private NPCBehaviorController behaviorController;
     private float tickTimer;
 
@@ -26,6 +28,7 @@ public class NPCBrain : NetworkBehaviour
     public NPCCarrier Carrier => carrier;
     public NPCHealth Health => health;
     public NPCFactionMember FactionMember => factionMember;
+    public NPCAttackController AttackController => attackController;
     public float DetectionRadius => definition != null ? definition.detectionRadius : 12f;
     public float InteractionDistance => definition != null ? definition.interactionDistance : 1.4f;
     public float PatrolRadius => definition != null ? definition.patrolRadius : 8f;
@@ -36,6 +39,7 @@ public class NPCBrain : NetworkBehaviour
         carrier = GetComponent<NPCCarrier>();
         health = GetComponent<NPCHealth>();
         factionMember = GetComponent<NPCFactionMember>();
+        attackController = GetComponent<NPCAttackController>();
         ApplyDefinition();
     }
 

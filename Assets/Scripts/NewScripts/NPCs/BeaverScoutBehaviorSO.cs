@@ -24,6 +24,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private float followDurationMax = 30f;
     [SerializeField] private float followRefreshInterval = 0.25f;
     [SerializeField] private float followStoppingDistance = 1.5f;
+    [SerializeField] private float attackPrepareDuration = 1.5f;
+    [SerializeField] private float attackRecoveryDuration = 0.5f;
 
     public DeliveryMode Delivery => deliveryMode;
     public float IdleSearchDuration => Mathf.Max(0.1f, idleSearchDuration);
@@ -37,6 +39,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     public float FollowDurationMax => Mathf.Max(FollowDurationMin, followDurationMax);
     public float FollowRefreshInterval => Mathf.Max(0.05f, followRefreshInterval);
     public float FollowStoppingDistance => Mathf.Max(0.1f, followStoppingDistance);
+    public float AttackPrepareDuration => Mathf.Max(0f, attackPrepareDuration);
+    public float AttackRecoveryDuration => Mathf.Max(0f, attackRecoveryDuration);
 
     public override NPCBehaviorController CreateController(NPCBrain brain)
     {
@@ -50,7 +54,10 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         FollowingPlayer,
         MovingToPatrolPoint,
         MovingToTarget,
-        Delivering
+        Delivering,
+        PreparingAttack,
+        Attacking,
+        AttackRecovery
     }
 
     private class BeaverScoutController : NPCBehaviorController
@@ -71,7 +78,10 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private float previousStoppingDistance;
         private bool hasPreviousStoppingDistance;
         private float reactionLockEndTime;
+        private float attackPrepareEndTime;
+        private float attackRecoveryEndTime;
         private float previousHealth;
+        private NetworkObject lastAttacker;
         private NPCAnimationController animationController;
 
         public BeaverScoutController(NPCBrain brain, BeaverScoutBehaviorSO config) : base(brain)
@@ -86,7 +96,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             animationController = Brain.GetComponent<NPCAnimationController>();
             if (Brain.Health != null)
             {
-                Brain.Health.OnHealthChanged += BrainHealth_OnHealthChanged;
+                Brain.Health.OnDamaged += BrainHealth_OnDamaged;
             }
 
             EnterIdleSearching();
@@ -96,10 +106,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         {
             if (Brain.Health != null)
             {
-                Brain.Health.OnHealthChanged -= BrainHealth_OnHealthChanged;
+                Brain.Health.OnDamaged -= BrainHealth_OnDamaged;
             }
 
             targetObject = null;
+            lastAttacker = null;
             if (Brain.Agent != null && Brain.Agent.isOnNavMesh)
             {
                 Brain.Agent.ResetPath();
@@ -135,10 +146,19 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 case ScoutState.Delivering:
                     UpdateDelivering();
                     break;
+                case ScoutState.PreparingAttack:
+                    UpdatePreparingAttack();
+                    break;
+                case ScoutState.Attacking:
+                    UpdateAttacking();
+                    break;
+                case ScoutState.AttackRecovery:
+                    UpdateAttackRecovery();
+                    break;
             }
         }
 
-        private void BrainHealth_OnHealthChanged(object sender, System.EventArgs e)
+        private void BrainHealth_OnDamaged(object sender, NPCHealth.DamageEventArgs e)
         {
             if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && Brain.IsSpawned && !Brain.IsServer)
             {
@@ -150,11 +170,15 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 return;
             }
 
-            float currentHealth = Brain.Health.CurrentHealth;
-            bool receivedDamage = currentHealth < previousHealth;
-            previousHealth = currentHealth;
+            previousHealth = e.CurrentHealth;
 
-            if (!receivedDamage || Brain.Health.IsDead)
+            if (e.CurrentHealth >= e.PreviousHealth || Brain.Health.IsDead)
+            {
+                return;
+            }
+
+            lastAttacker = e.Attacker;
+            if (IsAttackCommitted())
             {
                 return;
             }
@@ -184,8 +208,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             targetObject = null;
             ClearFollowTarget();
             reactionLockEndTime = Time.time + config.HitReactionLockDuration;
-            EnterIdleSearching();
-            idleSearchEndTime = reactionLockEndTime + config.IdleSearchDuration;
+            state = ScoutState.PreparingAttack;
+            attackPrepareEndTime = reactionLockEndTime + config.AttackPrepareDuration;
         }
 
         private void EnterIdleSearching()
@@ -197,6 +221,55 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             idleSearchEndTime = Time.time + config.IdleSearchDuration;
             nextTargetRefreshTime = 0f;
             StopAgent();
+        }
+
+        private void UpdatePreparingAttack()
+        {
+            StopAgent();
+            FaceLastAttacker();
+            if (Time.time >= attackPrepareEndTime)
+            {
+                EnterAttacking();
+            }
+        }
+
+        private void EnterAttacking()
+        {
+            state = ScoutState.Attacking;
+            StopAgent();
+            FaceLastAttacker();
+
+            if (animationController == null)
+            {
+                animationController = Brain.GetComponent<NPCAnimationController>();
+            }
+
+            if (animationController != null)
+            {
+                animationController.PlayAction();
+            }
+
+            Brain.AttackController?.PerformAttack();
+            attackRecoveryEndTime = Time.time + config.AttackRecoveryDuration;
+        }
+
+        private void UpdateAttacking()
+        {
+            StopAgent();
+            if (Time.time >= attackRecoveryEndTime)
+            {
+                state = ScoutState.AttackRecovery;
+            }
+        }
+
+        private void UpdateAttackRecovery()
+        {
+            StopAgent();
+            if (Time.time >= attackRecoveryEndTime)
+            {
+                lastAttacker = null;
+                EnterIdleSearching();
+            }
         }
 
         private void UpdateIdleSearching()
@@ -642,6 +715,28 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         {
             followTargetPlayerHealth = null;
             followTargetTransform = null;
+        }
+
+        private bool IsAttackCommitted()
+        {
+            return state == ScoutState.PreparingAttack || state == ScoutState.Attacking || state == ScoutState.AttackRecovery;
+        }
+
+        private void FaceLastAttacker()
+        {
+            if (lastAttacker == null)
+            {
+                return;
+            }
+
+            Vector3 direction = lastAttacker.transform.position - Brain.transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+            {
+                return;
+            }
+
+            Brain.transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
         }
 
         private bool IsStealable(GameObject candidate)

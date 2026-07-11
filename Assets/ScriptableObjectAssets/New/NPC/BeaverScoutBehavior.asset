@@ -24,3 +24,5 @@ MonoBehaviour:
   followDurationMax: 30
   followRefreshInterval: 0.25
   followStoppingDistance: 1.5
+  attackPrepareDuration: 1.5
+  attackRecoveryDuration: 0.5

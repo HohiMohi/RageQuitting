@@ -127,6 +127,10 @@ public class PlayerActionController : MonoBehaviour
                 {
                     playerHealth.DamageReceived(actionDamage, _networkObject);
                 }
+                else if (damageable is NPCHealth npcHealth)
+                {
+                    npcHealth.DamageReceived(actionDamage, _networkObject);
+                }
                 else
                 {
                     damageable.DamageReceived(_inventory.GetCurrentSelectedItem(), actionDamage); // Example damage amount, can be changed or made variable

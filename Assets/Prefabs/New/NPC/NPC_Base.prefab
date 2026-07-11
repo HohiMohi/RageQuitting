@@ -18,6 +18,8 @@ GameObject:
   - component: {fileID: 100008}
   - component: {fileID: 100009}
   - component: {fileID: 3098827496799528937}
+  - component: {fileID: 4819304511543750011}
+  - component: {fileID: 6213901842837744107}
   m_Layer: 0
   m_Name: NPC_Base
   m_TagString: Untagged
@@ -239,6 +241,50 @@ MonoBehaviour:
   walkSpeedReference: 3.5
   idleSpeedThreshold: 0.05
   speedDampTime: 0.12
+--- !u!114 &4819304511543750011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ef516c8aa5083247a87d42548c98156, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCAttackController
+  ShowTopMostFoldoutHeaderGroup: 1
+  attackOrigin: {fileID: 0}
+  attackDamage: 10
+  attackRange: 1.6
+  attackAngle: 90
+  attackTargetLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  requireLineOfSight: 1
+  attackOriginHeight: 0.6
+--- !u!114 &6213901842837744107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 867902ef00358e2489a8e9c9fd30ab73, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCHealthUI
+  ShowTopMostFoldoutHeaderGroup: 1
+  npcHealth: {fileID: 100008}
+  worldSpaceCanvas: {fileID: 0}
+  healthFillImage: {fileID: 0}
+  localOffset: {x: 0, y: 1.35, z: 0}
+  size: {x: 96, y: 10}
+  canvasScale: 0.01
+  visibleAfterDamageDuration: 2
+  backgroundColor: {r: 0.12, g: 0.02, b: 0.02, a: 0.78}
+  fillColor: {r: 0.86, g: 0.08, b: 0.08, a: 0.95}
 --- !u!1 &100010
 GameObject:
   m_ObjectHideFlags: 0
