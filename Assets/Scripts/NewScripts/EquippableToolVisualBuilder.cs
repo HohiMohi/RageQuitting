@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class EquippableToolVisualBuilder : MonoBehaviour
 {
@@ -8,15 +11,25 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         public Material axeMaterial;
         public Material pickaxeMaterial;
         public Material handleMaterial;
+        public GameObject axeModelPrefab;
+        public GameObject pickaxeModelPrefab;
     }
 
     [SerializeField] private Transform visualRoot;
     [SerializeField] private Material axeMaterial;
     [SerializeField] private Material pickaxeMaterial;
     [SerializeField] private Material handleMaterial;
+    [SerializeField] private GameObject axeModelPrefab;
+    [SerializeField] private GameObject pickaxeModelPrefab;
     [SerializeField] private bool rebuildOnAwake = true;
 
     public const string GeneratedRootName = "GeneratedToolModel";
+
+#if UNITY_EDITOR
+    private const string AxeModelAssetPath = "Assets/AI_assets/Models/Tools/Axe_LowPoly.fbx";
+    private const string PickaxeModelAssetPath = "Assets/AI_assets/Models/Tools/Pickaxe_LowPoly.fbx";
+#endif
+    private static readonly Quaternion ImportedModelLocalRotation = Quaternion.Euler(-90f, 0f, 0f);
 
     private void Awake()
     {
@@ -63,9 +76,19 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         switch (itemType)
         {
             case EquippableItemType.Axe:
+                if (TryBuildPrefabVisual(generatedRoot.transform, GetModelPrefab(itemType, materials.axeModelPrefab)))
+                {
+                    break;
+                }
+
                 BuildAxe(generatedRoot.transform, materials);
                 break;
             case EquippableItemType.Pickaxe:
+                if (TryBuildPrefabVisual(generatedRoot.transform, GetModelPrefab(itemType, materials.pickaxeModelPrefab)))
+                {
+                    break;
+                }
+
                 BuildPickaxe(generatedRoot.transform, materials);
                 break;
             default:
@@ -75,6 +98,21 @@ public class EquippableToolVisualBuilder : MonoBehaviour
 
         return generatedRoot;
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (axeModelPrefab == null)
+        {
+            axeModelPrefab = LoadEditorDefaultModel(EquippableItemType.Axe);
+        }
+
+        if (pickaxeModelPrefab == null)
+        {
+            pickaxeModelPrefab = LoadEditorDefaultModel(EquippableItemType.Pickaxe);
+        }
+    }
+#endif
 
     private EquippableItemSO GetEquippableItemSO()
     {
@@ -118,9 +156,60 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         {
             axeMaterial = axeMaterial,
             pickaxeMaterial = pickaxeMaterial,
-            handleMaterial = handleMaterial
+            handleMaterial = handleMaterial,
+            axeModelPrefab = axeModelPrefab,
+            pickaxeModelPrefab = pickaxeModelPrefab
         };
     }
+
+    private static bool TryBuildPrefabVisual(Transform root, GameObject modelPrefab)
+    {
+        if (root == null || modelPrefab == null)
+        {
+            return false;
+        }
+
+        GameObject model = Instantiate(modelPrefab, root, false);
+        model.name = modelPrefab.name;
+        model.transform.localPosition = Vector3.zero;
+        model.transform.localRotation = ImportedModelLocalRotation;
+        model.transform.localScale = Vector3.one;
+
+        foreach (Collider collider in model.GetComponentsInChildren<Collider>())
+        {
+            Destroy(collider);
+        }
+
+        return true;
+    }
+
+    private static GameObject GetModelPrefab(EquippableItemType itemType, GameObject configuredModelPrefab)
+    {
+        if (configuredModelPrefab != null)
+        {
+            return configuredModelPrefab;
+        }
+
+#if UNITY_EDITOR
+        return LoadEditorDefaultModel(itemType);
+#else
+        return null;
+#endif
+    }
+
+#if UNITY_EDITOR
+    private static GameObject LoadEditorDefaultModel(EquippableItemType itemType)
+    {
+        string assetPath = itemType switch
+        {
+            EquippableItemType.Axe => AxeModelAssetPath,
+            EquippableItemType.Pickaxe => PickaxeModelAssetPath,
+            _ => null
+        };
+
+        return string.IsNullOrEmpty(assetPath) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+    }
+#endif
 
     private static void BuildAxe(Transform root, ToolVisualMaterials materials)
     {

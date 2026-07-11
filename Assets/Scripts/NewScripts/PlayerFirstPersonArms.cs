@@ -35,7 +35,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [Header("Tool Visual")]
     [SerializeField] private EquippableToolVisualBuilder.ToolVisualMaterials toolVisualMaterials;
     [SerializeField] private Vector3 toolLocalPosition = new Vector3(0.02f, -0.06f, 0.38f);
-    [SerializeField] private Vector3 toolLocalEulerAngles = new Vector3(0f, 90f, 0f);
+    [SerializeField] private Vector3 toolLocalEulerAngles = new Vector3(0f, 270f, 0f);
     [SerializeField] private Vector3 toolLocalScale = new Vector3(0.5f, 0.5f, 0.5f);
     [SerializeField] private Vector3 toolSwingPositionOffset = new Vector3(0f, 0.02f, 0.08f);
     [SerializeField] private Vector3 toolSwingEulerOffset = new Vector3(24f, -8f, -14f);

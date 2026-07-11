@@ -368,6 +368,7 @@ GameObject:
   - component: {fileID: 3720368351117420130}
   - component: {fileID: 4186271902374816054}
   - component: {fileID: 7382414467715117638}
+  - component: {fileID: 6243819655438720123}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -615,6 +616,20 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &6243819655438720123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a95aa8d44045d94aa5d3f24dbfdaf60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCFactionMember
+  ShowTopMostFoldoutHeaderGroup: 1
+  faction: {fileID: 11400000, guid: 4bae5ec511184baa8a3d2ff9e76710bd, type: 2}
 --- !u!114 &8057224913680877428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -830,8 +845,10 @@ MonoBehaviour:
     axeMaterial: {fileID: 2100000, guid: b4fd3acc17e8e1748b7872045b26764b, type: 2}
     pickaxeMaterial: {fileID: 2100000, guid: 1f00d72b054ec0347a696b7c89144ca3, type: 2}
     handleMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+    axeModelPrefab: {fileID: 100000, guid: 64411a0f80fab254f9712fe3ffb11984, type: 3}
+    pickaxeModelPrefab: {fileID: 100000, guid: 040401f82f26aae4c8b7877a7aef06d6, type: 3}
   toolLocalPosition: {x: 0.02, y: -0.06, z: 0.38}
-  toolLocalEulerAngles: {x: 0, y: 90, z: 0}
+  toolLocalEulerAngles: {x: 0, y: 270, z: 0}
   toolLocalScale: {x: 0.5, y: 0.5, z: 0.5}
   toolSwingPositionOffset: {x: 0, y: 0.02, z: 0.08}
   toolSwingEulerOffset: {x: 24, y: -8, z: -14}
@@ -854,6 +871,8 @@ MonoBehaviour:
     axeMaterial: {fileID: 2100000, guid: b4fd3acc17e8e1748b7872045b26764b, type: 2}
     pickaxeMaterial: {fileID: 2100000, guid: 1f00d72b054ec0347a696b7c89144ca3, type: 2}
     handleMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+    axeModelPrefab: {fileID: 100000, guid: 64411a0f80fab254f9712fe3ffb11984, type: 3}
+    pickaxeModelPrefab: {fileID: 100000, guid: 040401f82f26aae4c8b7877a7aef06d6, type: 3}
   rightHandBoneName: R_Hand
   backBoneName: Spine02
   backBoneFallbackName: Spine01

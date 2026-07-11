@@ -10,6 +10,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     [SerializeField] private MountableBridgeComponentSO mountableBridgeComponentSO;
     [SerializeField] private bool isPickedUp = false;
+    public bool IsPickedUp => isPickedUp;
 
     private Rigidbody _rigidbody;
     private readonly List<ulong> holderClientIds = new List<ulong>();
@@ -19,6 +20,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     private readonly Dictionary<ulong, float> holderLastInputTimes = new Dictionary<ulong, float>();
     private readonly Dictionary<ulong, Vector3> holderBodyAnchorLocalOffsets = new Dictionary<ulong, Vector3>();
     private readonly Dictionary<ulong, float> holderControllerRadii = new Dictionary<ulong, float>();
+    private ICarryActor externalCarryActor;
 
     public void Interact(Transform interactor)
     {
@@ -121,6 +123,63 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         return mountableBridgeComponentSO != null ? mountableBridgeComponentSO.movementSpeedPenalty : 0f;
     }
 
+    public bool CanBeCarriedBy(ICarryActor carryActor)
+    {
+        return carryActor != null
+            && carryActor.CanCarryObject
+            && !isPickedUp
+            && externalCarryActor == null
+            && !AllowsMultipleCarriers();
+    }
+
+    public bool TryPickupByCarrier(ICarryActor carryActor)
+    {
+        if (!CanBeCarriedBy(carryActor))
+        {
+            return false;
+        }
+
+        if (IsNetworkSessionActive() && !IsServer)
+        {
+            return false;
+        }
+
+        externalCarryActor = carryActor;
+        if (IsSpawned && NetworkObject != null && NetworkObject.OwnerClientId != NetworkManager.ServerClientId)
+        {
+            NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
+        }
+
+        SetPickedUpState(true);
+        if (IsNetworkSessionActive())
+        {
+            SetPickedUpStateClientRpc(true);
+        }
+
+        carryActor.ConfirmCarry(gameObject);
+        return true;
+    }
+
+    public bool DropByCarrier(ICarryActor carryActor, Vector3 dropPosition, Quaternion dropRotation)
+    {
+        if (externalCarryActor != carryActor)
+        {
+            return false;
+        }
+
+        externalCarryActor = null;
+        carryActor.ForceRelease(gameObject);
+        transform.SetPositionAndRotation(dropPosition, dropRotation);
+        SetPickedUpState(false);
+
+        if (IsNetworkSessionActive())
+        {
+            CompleteDropClientRpc(dropPosition, dropRotation);
+        }
+
+        return true;
+    }
+
     public int GetMinAmountOfPlayersNeeded()
     {
         return mountableBridgeComponentSO != null ? mountableBridgeComponentSO.minAmountOfPlayersNeeded : 0;
@@ -174,6 +233,12 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     private bool TryCompleteNetworkPickup(ulong ownerClientId, Vector3 bodyAnchorLocalOffset, float playerControllerRadius)
     {
+        if (externalCarryActor != null)
+        {
+            RejectPickupClientRpc(CreateTargetClientRpcParams(ownerClientId));
+            return false;
+        }
+
         if (holderClientIds.Contains(ownerClientId))
         {
             RejectPickupClientRpc(CreateTargetClientRpcParams(ownerClientId));
@@ -267,6 +332,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         if (IsSpawned && NetworkObject != null)
         {
             ForceReleaseCurrentHolders();
+            ForceReleaseExternalCarryActor();
             NetworkObject.Despawn(true);
             return;
         }
@@ -324,6 +390,18 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             StopHolderVisualOverrideClientRpc(holderClientId);
             ConfirmReleaseClientRpc(CreateTargetClientRpcParams(holderClientId));
         }
+    }
+
+    private void ForceReleaseExternalCarryActor()
+    {
+        if (externalCarryActor == null)
+        {
+            return;
+        }
+
+        ICarryActor previousCarryActor = externalCarryActor;
+        externalCarryActor = null;
+        previousCarryActor.ForceRelease(gameObject);
     }
 
     private void ClearHeldComponent(ulong clientId)

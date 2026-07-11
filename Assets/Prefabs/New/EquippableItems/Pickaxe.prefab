@@ -162,6 +162,10 @@ PrefabInstance:
       propertyPath: equippableItemSO
       value: 
       objectReference: {fileID: 11400000, guid: 8c972ed286bf3644abad02b530c1f6c2, type: 2}
+    - target: {fileID: 5674413288067453901, guid: e2d90d314c8e7274c80975b5c53332d9, type: 3}
+      propertyPath: pickaxeModelPrefab
+      value: 
+      objectReference: {fileID: 100000, guid: 040401f82f26aae4c8b7877a7aef06d6, type: 3}
     - target: {fileID: 7958297063004264045, guid: e2d90d314c8e7274c80975b5c53332d9, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
