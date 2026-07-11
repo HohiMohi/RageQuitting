@@ -16,6 +16,8 @@ public class NPCAttackController : NetworkBehaviour
     private NPCBrain brain;
     private NPCFactionMember factionMember;
 
+    public float AttackRange => Mathf.Max(0.1f, attackRange);
+
     private void Awake()
     {
         brain = GetComponent<NPCBrain>();

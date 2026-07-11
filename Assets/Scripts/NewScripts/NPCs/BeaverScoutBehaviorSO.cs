@@ -26,6 +26,9 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private float followStoppingDistance = 1.5f;
     [SerializeField] private float attackPrepareDuration = 1.5f;
     [SerializeField] private float attackRecoveryDuration = 0.5f;
+    [SerializeField] private float rageHealthThresholdNormalized = 0.5f;
+    [SerializeField] private float rageApproachRefreshInterval = 0.25f;
+    [SerializeField] private float rageApproachStoppingDistance = 1.3f;
 
     public DeliveryMode Delivery => deliveryMode;
     public float IdleSearchDuration => Mathf.Max(0.1f, idleSearchDuration);
@@ -41,6 +44,9 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     public float FollowStoppingDistance => Mathf.Max(0.1f, followStoppingDistance);
     public float AttackPrepareDuration => Mathf.Max(0f, attackPrepareDuration);
     public float AttackRecoveryDuration => Mathf.Max(0f, attackRecoveryDuration);
+    public float RageHealthThresholdNormalized => Mathf.Clamp01(rageHealthThresholdNormalized);
+    public float RageApproachRefreshInterval => Mathf.Max(0.05f, rageApproachRefreshInterval);
+    public float RageApproachStoppingDistance => Mathf.Max(0.1f, rageApproachStoppingDistance);
 
     public override NPCBehaviorController CreateController(NPCBrain brain)
     {
@@ -57,7 +63,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         Delivering,
         PreparingAttack,
         Attacking,
-        AttackRecovery
+        AttackRecovery,
+        RagePreparingAttack,
+        RageAttacking,
+        RageAttackRecovery,
+        RageApproachingTarget
     }
 
     private class BeaverScoutController : NPCBehaviorController
@@ -80,8 +90,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private float reactionLockEndTime;
         private float attackPrepareEndTime;
         private float attackRecoveryEndTime;
+        private float nextRageApproachRefreshTime;
         private float previousHealth;
         private NetworkObject lastAttacker;
+        private NetworkObject rageTargetNetworkObject;
+        private bool pendingRageAfterCommittedAttack;
         private NPCAnimationController animationController;
 
         public BeaverScoutController(NPCBrain brain, BeaverScoutBehaviorSO config) : base(brain)
@@ -111,6 +124,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
             targetObject = null;
             lastAttacker = null;
+            rageTargetNetworkObject = null;
+            pendingRageAfterCommittedAttack = false;
             if (Brain.Agent != null && Brain.Agent.isOnNavMesh)
             {
                 Brain.Agent.ResetPath();
@@ -155,6 +170,18 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 case ScoutState.AttackRecovery:
                     UpdateAttackRecovery();
                     break;
+                case ScoutState.RagePreparingAttack:
+                    UpdateRagePreparingAttack();
+                    break;
+                case ScoutState.RageAttacking:
+                    UpdateRageAttacking();
+                    break;
+                case ScoutState.RageAttackRecovery:
+                    UpdateRageAttackRecovery();
+                    break;
+                case ScoutState.RageApproachingTarget:
+                    UpdateRageApproachingTarget();
+                    break;
             }
         }
 
@@ -170,10 +197,29 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 return;
             }
 
-            previousHealth = e.CurrentHealth;
-
             if (e.CurrentHealth >= e.PreviousHealth || Brain.Health.IsDead)
             {
+                previousHealth = e.CurrentHealth;
+                return;
+            }
+
+            bool shouldEnterRage = ShouldEnterRage(e) && TrySetRageTarget(e.Attacker);
+            previousHealth = e.CurrentHealth;
+
+            if (IsRageActive())
+            {
+                return;
+            }
+
+            if (shouldEnterRage)
+            {
+                if (IsAttackCommitted())
+                {
+                    pendingRageAfterCommittedAttack = true;
+                    return;
+                }
+
+                HandleDamageReaction(true);
                 return;
             }
 
@@ -183,10 +229,10 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 return;
             }
 
-            HandleDamageReaction();
+            HandleDamageReaction(false);
         }
 
-        private void HandleDamageReaction()
+        private void HandleDamageReaction(bool enterRage)
         {
             StopAgent();
 
@@ -208,7 +254,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             targetObject = null;
             ClearFollowTarget();
             reactionLockEndTime = Time.time + config.HitReactionLockDuration;
-            state = ScoutState.PreparingAttack;
+            state = enterRage ? ScoutState.RagePreparingAttack : ScoutState.PreparingAttack;
             attackPrepareEndTime = reactionLockEndTime + config.AttackPrepareDuration;
         }
 
@@ -267,9 +313,142 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             StopAgent();
             if (Time.time >= attackRecoveryEndTime)
             {
-                lastAttacker = null;
+                if (pendingRageAfterCommittedAttack && IsRageTargetAvailable())
+                {
+                    pendingRageAfterCommittedAttack = false;
+                    EnterRageApproachingOrPreparing();
+                    return;
+                }
+
+                ClearRageState();
                 EnterIdleSearching();
             }
+        }
+
+        private void UpdateRagePreparingAttack()
+        {
+            StopAgent();
+            if (!IsRageTargetAvailable())
+            {
+                ExitRageToIdle();
+                return;
+            }
+
+            FaceRageTarget();
+            if (Time.time >= attackPrepareEndTime)
+            {
+                EnterRageAttacking();
+            }
+        }
+
+        private void EnterRageAttacking()
+        {
+            if (!IsRageTargetAvailable())
+            {
+                ExitRageToIdle();
+                return;
+            }
+
+            state = ScoutState.RageAttacking;
+            StopAgent();
+            FaceRageTarget();
+
+            if (animationController == null)
+            {
+                animationController = Brain.GetComponent<NPCAnimationController>();
+            }
+
+            if (animationController != null)
+            {
+                animationController.PlayAction();
+            }
+
+            Brain.AttackController?.PerformAttack();
+            attackRecoveryEndTime = Time.time + config.AttackRecoveryDuration;
+        }
+
+        private void UpdateRageAttacking()
+        {
+            StopAgent();
+            if (Time.time >= attackRecoveryEndTime)
+            {
+                state = ScoutState.RageAttackRecovery;
+            }
+        }
+
+        private void UpdateRageAttackRecovery()
+        {
+            StopAgent();
+            if (!IsRageTargetAvailable())
+            {
+                ExitRageToIdle();
+                return;
+            }
+
+            FaceRageTarget();
+            if (Time.time < attackRecoveryEndTime)
+            {
+                return;
+            }
+
+            EnterRageApproachingOrPreparing();
+        }
+
+        private void EnterRageApproachingOrPreparing()
+        {
+            if (!IsRageTargetAvailable())
+            {
+                ExitRageToIdle();
+                return;
+            }
+
+            if (IsRageTargetInAttackRange())
+            {
+                EnterRagePreparingAttack();
+                return;
+            }
+
+            EnterRageApproachingTarget();
+        }
+
+        private void EnterRagePreparingAttack()
+        {
+            state = ScoutState.RagePreparingAttack;
+            RestoreAgentStoppingDistance();
+            StopAgent();
+            FaceRageTarget();
+            attackPrepareEndTime = Time.time + config.AttackPrepareDuration;
+        }
+
+        private void EnterRageApproachingTarget()
+        {
+            state = ScoutState.RageApproachingTarget;
+            nextRageApproachRefreshTime = 0f;
+            ResumeAgent();
+            SetRageApproachStoppingDistance();
+            UpdateRageApproachDestination();
+        }
+
+        private void UpdateRageApproachingTarget()
+        {
+            if (!IsRageTargetAvailable())
+            {
+                ExitRageToIdle();
+                return;
+            }
+
+            if (IsRageTargetInAttackRange())
+            {
+                EnterRagePreparingAttack();
+                return;
+            }
+
+            if (Time.time < nextRageApproachRefreshTime)
+            {
+                return;
+            }
+
+            UpdateRageApproachDestination();
         }
 
         private void UpdateIdleSearching()
@@ -573,6 +752,22 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             hasPreviousStoppingDistance = false;
         }
 
+        private void SetRageApproachStoppingDistance()
+        {
+            if (Brain.Agent == null)
+            {
+                return;
+            }
+
+            if (!hasPreviousStoppingDistance)
+            {
+                previousStoppingDistance = Brain.Agent.stoppingDistance;
+                hasPreviousStoppingDistance = true;
+            }
+
+            Brain.Agent.stoppingDistance = config.RageApproachStoppingDistance;
+        }
+
         private GameObject FindClosestStealableObject()
         {
             Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
@@ -722,6 +917,104 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             return state == ScoutState.PreparingAttack || state == ScoutState.Attacking || state == ScoutState.AttackRecovery;
         }
 
+        private bool IsRageActive()
+        {
+            return state == ScoutState.RagePreparingAttack
+                || state == ScoutState.RageAttacking
+                || state == ScoutState.RageAttackRecovery
+                || state == ScoutState.RageApproachingTarget;
+        }
+
+        private bool ShouldEnterRage(NPCHealth.DamageEventArgs damageEventArgs)
+        {
+            if (Brain.Health == null || Brain.Health.MaxHealth <= 0f || damageEventArgs.Attacker == null)
+            {
+                return false;
+            }
+
+            float threshold = config.RageHealthThresholdNormalized;
+            float previousNormalized = damageEventArgs.PreviousHealth / Brain.Health.MaxHealth;
+            float currentNormalized = damageEventArgs.CurrentHealth / Brain.Health.MaxHealth;
+            bool crossedThreshold = previousNormalized >= threshold && currentNormalized < threshold;
+            bool canRestartRageBelowThreshold = currentNormalized < threshold && !IsRageActive() && !IsRageTargetAvailable();
+            return crossedThreshold || canRestartRageBelowThreshold;
+        }
+
+        private bool TrySetRageTarget(NetworkObject targetNetworkObject)
+        {
+            if (!IsValidRageTarget(targetNetworkObject))
+            {
+                return false;
+            }
+
+            rageTargetNetworkObject = targetNetworkObject;
+            lastAttacker = targetNetworkObject;
+            return true;
+        }
+
+        private bool IsRageTargetAvailable()
+        {
+            return IsValidRageTarget(rageTargetNetworkObject);
+        }
+
+        private bool IsValidRageTarget(NetworkObject targetNetworkObject)
+        {
+            if (targetNetworkObject == null || targetNetworkObject.transform.root == Brain.transform.root)
+            {
+                return false;
+            }
+
+            if (targetNetworkObject.TryGetComponent(out PlayerHealth playerHealth))
+            {
+                return !playerHealth.IsDowned && playerHealth.gameObject.activeInHierarchy;
+            }
+
+            if (targetNetworkObject.TryGetComponent(out NPCHealth npcHealth))
+            {
+                return !npcHealth.IsDead && npcHealth.gameObject.activeInHierarchy;
+            }
+
+            return false;
+        }
+
+        private bool IsRageTargetInAttackRange()
+        {
+            if (rageTargetNetworkObject == null)
+            {
+                return false;
+            }
+
+            float attackRange = Brain.AttackController != null ? Brain.AttackController.AttackRange : Brain.InteractionDistance;
+            return Vector3.Distance(Brain.transform.position, rageTargetNetworkObject.transform.position) <= attackRange;
+        }
+
+        private void UpdateRageApproachDestination()
+        {
+            if (Brain.Agent == null || !Brain.Agent.isOnNavMesh || rageTargetNetworkObject == null)
+            {
+                return;
+            }
+
+            nextRageApproachRefreshTime = Time.time + config.RageApproachRefreshInterval;
+            ResumeAgent();
+            SetRageApproachStoppingDistance();
+            Brain.Agent.SetDestination(rageTargetNetworkObject.transform.position);
+        }
+
+        private void ExitRageToIdle()
+        {
+            ClearRageState();
+            EnterIdleSearching();
+        }
+
+        private void ClearRageState()
+        {
+            lastAttacker = null;
+            rageTargetNetworkObject = null;
+            pendingRageAfterCommittedAttack = false;
+            RestoreAgentStoppingDistance();
+        }
+
         private void FaceLastAttacker()
         {
             if (lastAttacker == null)
@@ -730,6 +1023,23 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             Vector3 direction = lastAttacker.transform.position - Brain.transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+            {
+                return;
+            }
+
+            Brain.transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+        }
+
+        private void FaceRageTarget()
+        {
+            if (rageTargetNetworkObject == null)
+            {
+                return;
+            }
+
+            Vector3 direction = rageTargetNetworkObject.transform.position - Brain.transform.position;
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.0001f)
             {
