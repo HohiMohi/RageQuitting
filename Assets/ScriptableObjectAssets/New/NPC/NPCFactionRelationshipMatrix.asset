@@ -22,3 +22,11 @@ MonoBehaviour:
     targetFaction: {fileID: 11400000, guid: 814791ef17834b2080182c198e79dada, type: 2}
     relation: 0
     customBehaviorOverride: {fileID: 0}
+  - sourceFaction: {fileID: 11400000, guid: 34d6c4b2bbadb67479d43cab310d4ad7, type: 2}
+    targetFaction: {fileID: 11400000, guid: 34d6c4b2bbadb67479d43cab310d4ad7, type: 2}
+    relation: 0
+    customBehaviorOverride: {fileID: 0}
+  - sourceFaction: {fileID: 11400000, guid: 34d6c4b2bbadb67479d43cab310d4ad7, type: 2}
+    targetFaction: {fileID: 11400000, guid: 4bae5ec511184baa8a3d2ff9e76710bd, type: 2}
+    relation: 2
+    customBehaviorOverride: {fileID: 0}

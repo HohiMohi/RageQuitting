@@ -7,6 +7,7 @@ public class NPCDefinitionSO : ScriptableObject
     public string npcName = "NPC";
     public NPCFactionSO faction;
     public NPCBehaviorSO behavior;
+    public GameObject npcPrefabOverride;
     public GameObject visualPrefab;
 
     [Header("Stats")]

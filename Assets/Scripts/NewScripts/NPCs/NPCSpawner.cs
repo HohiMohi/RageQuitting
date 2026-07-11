@@ -59,7 +59,8 @@ public class NPCSpawner : MonoBehaviour
             ? spawnPoints[Random.Range(0, spawnPoints.Count)]
             : transform;
         NPCDefinitionSO definition = npcDefinitions[Random.Range(0, npcDefinitions.Count)];
-        GameObject npcInstance = Instantiate(npcBasePrefab, spawnPoint.position, spawnPoint.rotation);
+        GameObject prefabToSpawn = definition.npcPrefabOverride != null ? definition.npcPrefabOverride : npcBasePrefab;
+        GameObject npcInstance = Instantiate(prefabToSpawn, spawnPoint.position, spawnPoint.rotation);
 
         if (npcInstance.TryGetComponent(out NPCBrain brain))
         {
@@ -74,7 +75,7 @@ public class NPCSpawner : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"NPC prefab '{npcBasePrefab.name}' is missing NetworkObject.");
+                Debug.LogError($"NPC prefab '{prefabToSpawn.name}' is missing NetworkObject.");
                 Destroy(npcInstance);
                 return;
             }

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d30e70c1a2f4a8c479382edb320cdbc5, type: 3}
+  m_Name: BeaverScoutDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::NPCDefinitionSO
+  npcName: Beaver Scout
+  faction: {fileID: 11400000, guid: 34d6c4b2bbadb67479d43cab310d4ad7, type: 2}
+  behavior: {fileID: 11400000, guid: ab1e4eaf154f04b46851e42d26a586d6, type: 2}
+  npcPrefabOverride: {fileID: 3622094151679886642, guid: ba305691a0aa42942822b8344d2b1821, type: 3}
+  visualPrefab: {fileID: 0}
+  maxHealth: 35
+  moveSpeed: 4
+  acceleration: 10
+  angularSpeed: 420
+  decisionTickInterval: 0.2
+  detectionRadius: 14
+  interactionDistance: 1.4
+  patrolRadius: 10
