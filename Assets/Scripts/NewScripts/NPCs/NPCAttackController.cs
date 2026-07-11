@@ -9,24 +9,62 @@ public class NPCAttackController : NetworkBehaviour
     [SerializeField] private float attackDamage = 10f;
     [SerializeField] private float attackRange = 1.6f;
     [SerializeField] private float attackAngle = 90f;
+    [SerializeField] private float attackDamageDelay = 0.35f;
     [SerializeField] private LayerMask attackTargetLayers = ~0;
     [SerializeField] private bool requireLineOfSight = true;
     [SerializeField] private float attackOriginHeight = 0.6f;
 
     private NPCBrain brain;
+    private NPCHealth health;
     private NPCFactionMember factionMember;
+    private bool hasPendingAttack;
+    private float pendingAttackTime;
 
     public float AttackRange => Mathf.Max(0.1f, attackRange);
 
     private void Awake()
     {
         brain = GetComponent<NPCBrain>();
+        health = GetComponent<NPCHealth>();
         factionMember = GetComponent<NPCFactionMember>();
     }
 
-    public void PerformAttack()
+    private void Update()
+    {
+        if (!hasPendingAttack || Time.time < pendingAttackTime)
+        {
+            return;
+        }
+
+        hasPendingAttack = false;
+        PerformAttackImmediate();
+    }
+
+    public void StartAttack()
     {
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned && !IsServer)
+        {
+            return;
+        }
+
+        if (health != null && health.IsDead)
+        {
+            hasPendingAttack = false;
+            return;
+        }
+
+        hasPendingAttack = true;
+        pendingAttackTime = Time.time + Mathf.Max(0f, attackDamageDelay);
+    }
+
+    private void PerformAttackImmediate()
+    {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned && !IsServer)
+        {
+            return;
+        }
+
+        if (health != null && health.IsDead)
         {
             return;
         }

@@ -258,6 +258,7 @@ MonoBehaviour:
   attackDamage: 10
   attackRange: 1.6
   attackAngle: 90
+  attackDamageDelay: 0.35
   attackTargetLayers:
     serializedVersion: 2
     m_Bits: 4294967295

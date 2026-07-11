@@ -295,7 +295,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 animationController.PlayAction();
             }
 
-            Brain.AttackController?.PerformAttack();
+            Brain.AttackController?.StartAttack();
             attackRecoveryEndTime = Time.time + config.AttackRecoveryDuration;
         }
 
@@ -363,7 +363,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 animationController.PlayAction();
             }
 
-            Brain.AttackController?.PerformAttack();
+            Brain.AttackController?.StartAttack();
             attackRecoveryEndTime = Time.time + config.AttackRecoveryDuration;
         }
 
