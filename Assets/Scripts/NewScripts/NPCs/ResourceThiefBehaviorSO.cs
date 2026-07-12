@@ -11,10 +11,12 @@ public class ResourceThiefBehaviorSO : NPCBehaviorSO
     }
 
     [SerializeField] private DeliveryMode deliveryMode = DeliveryMode.RemoveFromWorld;
+    [SerializeField] private NPCInterestProfileSO interestProfile;
     [SerializeField] private float targetRefreshInterval = 1f;
     [SerializeField] private float deliveryDistance = 1.5f;
 
     public DeliveryMode Delivery => deliveryMode;
+    public NPCInterestProfileSO InterestProfile => interestProfile;
     public float TargetRefreshInterval => targetRefreshInterval;
     public float DeliveryDistance => deliveryDistance;
 
@@ -83,12 +85,14 @@ public class ResourceThiefBehaviorSO : NPCBehaviorSO
             if (Brain.Carrier.TryPickup(targetObject))
             {
                 targetObject = null;
+                Brain.Carrier.SetSharedCarryMoveTarget(homePosition);
                 Brain.Agent.SetDestination(homePosition);
             }
         }
 
         private void UpdateDelivering()
         {
+            Brain.Carrier.SetSharedCarryMoveTarget(homePosition);
             Brain.Agent.SetDestination(homePosition);
             if (Vector3.Distance(Brain.transform.position, homePosition) > config.DeliveryDistance)
             {
@@ -117,10 +121,12 @@ public class ResourceThiefBehaviorSO : NPCBehaviorSO
                 }
 
                 Brain.Carrier.ForceRelease(carriedObject);
+                Brain.Carrier.ClearSharedCarryMoveTarget();
                 return;
             }
 
             Brain.Carrier.DropHeldObject();
+            Brain.Carrier.ClearSharedCarryMoveTarget();
         }
 
         private void UpdatePatrol()
@@ -185,7 +191,7 @@ public class ResourceThiefBehaviorSO : NPCBehaviorSO
             baseResource ??= candidate.GetComponentInParent<BaseResourceNew>();
             if (baseResource != null)
             {
-                bool canCarry = baseResource.CanBeCarriedBy(Brain.Carrier);
+                bool canCarry = IsInterestedIn(baseResource) && baseResource.CanBeCarriedBy(Brain.Carrier);
                 stealableRoot = canCarry ? baseResource.gameObject : null;
                 return canCarry;
             }
@@ -194,12 +200,22 @@ public class ResourceThiefBehaviorSO : NPCBehaviorSO
             bridgeComponent ??= candidate.GetComponentInParent<MountableBridgeComponent>();
             if (bridgeComponent != null)
             {
-                bool canCarry = bridgeComponent.CanBeCarriedBy(Brain.Carrier);
+                bool canCarry = IsInterestedIn(bridgeComponent) && bridgeComponent.CanBeCarriedBy(Brain.Carrier);
                 stealableRoot = canCarry ? bridgeComponent.gameObject : null;
                 return canCarry;
             }
 
             return false;
+        }
+
+        private bool IsInterestedIn(BaseResourceNew baseResource)
+        {
+            return config.InterestProfile == null || config.InterestProfile.IsInterestedIn(baseResource);
+        }
+
+        private bool IsInterestedIn(MountableBridgeComponent bridgeComponent)
+        {
+            return config.InterestProfile == null || config.InterestProfile.IsInterestedIn(bridgeComponent);
         }
     }
 }

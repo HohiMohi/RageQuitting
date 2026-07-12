@@ -82,7 +82,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1ad49bc1f16dc84eabfc46f497d168a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainStorageNew
-  storableBaseResourceSOList: {fileID: 11400000, guid: 8cc3e2dbbb3666d43ae67e63cf6f1221, type: 2}
+  storableBaseResourcesSOList: []
+  withdrawSpawnPoint: {fileID: 0}
+  withdrawSpawnFallbackOffset: {x: 0, y: 0.25, z: 1}
   allRequiredResourcesStored: 0
   requiredBridgeComponentsArray:
     requiredBridgeComponents:

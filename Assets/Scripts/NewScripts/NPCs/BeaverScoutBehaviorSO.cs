@@ -13,6 +13,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     }
 
     [SerializeField] private DeliveryMode deliveryMode = DeliveryMode.RemoveFromWorld;
+    [SerializeField] private NPCInterestProfileSO interestProfile;
+    [SerializeField] private int storageWithdrawAmountThreshold = 0;
     [SerializeField] private float idleSearchDuration = 5f;
     [SerializeField] private float targetRefreshInterval = 1f;
     [SerializeField] private float patrolArrivalDistance = 0.75f;
@@ -31,6 +33,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private float rageApproachStoppingDistance = 1.3f;
 
     public DeliveryMode Delivery => deliveryMode;
+    public NPCInterestProfileSO InterestProfile => interestProfile;
+    public int StorageWithdrawAmountThreshold => Mathf.Max(0, storageWithdrawAmountThreshold);
     public float IdleSearchDuration => Mathf.Max(0.1f, idleSearchDuration);
     public float TargetRefreshInterval => Mathf.Max(0.1f, targetRefreshInterval);
     public float PatrolArrivalDistance => Mathf.Max(0.1f, patrolArrivalDistance);
@@ -60,6 +64,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         FollowingPlayer,
         MovingToPatrolPoint,
         MovingToTarget,
+        MovingToStorage,
         Delivering,
         PreparingAttack,
         Attacking,
@@ -72,13 +77,22 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
     private class BeaverScoutController : NPCBehaviorController
     {
+        private struct EncounteredStorageInfo
+        {
+            public ulong storageId;
+            public Vector3 firstEncounterPosition;
+        }
+
         private readonly BeaverScoutBehaviorSO config;
         private Vector3 homePosition;
         private Vector3 patrolTarget;
         private GameObject targetObject;
+        private BaseStorageNew targetStorage;
+        private BaseResourceSO targetStorageResource;
         private PlayerHealth followTargetPlayerHealth;
         private Transform followTargetTransform;
         private readonly HashSet<ulong> encounteredPlayerIds = new HashSet<ulong>();
+        private readonly Dictionary<ulong, EncounteredStorageInfo> encounteredStorages = new Dictionary<ulong, EncounteredStorageInfo>();
         private ScoutState state;
         private float idleSearchEndTime;
         private float nextTargetRefreshTime;
@@ -96,6 +110,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private NetworkObject rageTargetNetworkObject;
         private bool pendingRageAfterCommittedAttack;
         private NPCAnimationController animationController;
+        private BeaverScoutDebugBridge debugBridge;
 
         public BeaverScoutController(NPCBrain brain, BeaverScoutBehaviorSO config) : base(brain)
         {
@@ -107,6 +122,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             homePosition = Brain.transform.position;
             previousHealth = Brain.Health != null ? Brain.Health.CurrentHealth : 0f;
             animationController = Brain.GetComponent<NPCAnimationController>();
+            debugBridge = EnsureDebugBridge();
             if (Brain.Health != null)
             {
                 Brain.Health.OnDamaged += BrainHealth_OnDamaged;
@@ -157,6 +173,9 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                     break;
                 case ScoutState.MovingToTarget:
                     UpdateMovingToTarget();
+                    break;
+                case ScoutState.MovingToStorage:
+                    UpdateMovingToStorage();
                     break;
                 case ScoutState.Delivering:
                     UpdateDelivering();
@@ -239,6 +258,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             if (Brain.Carrier != null && Brain.Carrier.CarriedObject != null)
             {
                 Brain.Carrier.DropHeldObject();
+                Brain.Carrier.ClearSharedCarryMoveTarget();
             }
 
             if (animationController == null)
@@ -252,6 +272,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             targetObject = null;
+            ClearStorageTarget();
             ClearFollowTarget();
             reactionLockEndTime = Time.time + config.HitReactionLockDuration;
             state = enterRage ? ScoutState.RagePreparingAttack : ScoutState.PreparingAttack;
@@ -262,8 +283,10 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         {
             state = ScoutState.IdleSearching;
             targetObject = null;
+            ClearStorageTarget();
             ClearFollowTarget();
             RestoreAgentStoppingDistance();
+            RegisterNearbyStorages();
             idleSearchEndTime = Time.time + config.IdleSearchDuration;
             nextTargetRefreshTime = 0f;
             StopAgent();
@@ -462,7 +485,24 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                     return;
                 }
 
-                targetObject = FindClosestStealableObject();
+                ClearStorageTarget();
+                targetObject = null;
+                if (!HasAnyAvailablePlayerInDetectionRange()
+                    && TryFindClosestStorageWithInterestedResource(out BaseStorageNew storage, out BaseResourceSO resourceSO))
+                {
+                    targetStorage = storage;
+                    targetStorageResource = resourceSO;
+                }
+                else
+                {
+                    targetObject = FindClosestStealableObject();
+                }
+            }
+
+            if (targetStorage != null && targetStorageResource != null)
+            {
+                EnterMovingToStorage();
+                return;
             }
 
             if (targetObject != null)
@@ -602,6 +642,46 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             if (Brain.Carrier.TryPickup(targetObject))
             {
                 targetObject = null;
+                Brain.Carrier.SetSharedCarryMoveTarget(homePosition);
+                EnterDelivering();
+                return;
+            }
+
+            EnterIdleSearching();
+        }
+
+        private void EnterMovingToStorage()
+        {
+            RestoreAgentStoppingDistance();
+            if (!CanWithdrawFromTargetStorage())
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            state = ScoutState.MovingToStorage;
+            ResumeAgent();
+            Brain.Agent.SetDestination(targetStorage.transform.position);
+        }
+
+        private void UpdateMovingToStorage()
+        {
+            if (!CanWithdrawFromTargetStorage())
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            Brain.Agent.SetDestination(targetStorage.transform.position);
+            if (!Brain.StorageInteractor.HasStorageTargetInRange(targetStorage))
+            {
+                return;
+            }
+
+            if (Brain.StorageInteractor.TryWithdrawAndCarry(targetStorage, targetStorageResource, out _))
+            {
+                ClearStorageTarget();
+                Brain.Carrier.SetSharedCarryMoveTarget(homePosition);
                 EnterDelivering();
                 return;
             }
@@ -620,6 +700,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
             state = ScoutState.Delivering;
             ResumeAgent();
+            Brain.Carrier.SetSharedCarryMoveTarget(homePosition);
             Brain.Agent.SetDestination(homePosition);
         }
 
@@ -627,10 +708,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         {
             if (Brain.Carrier.CarriedObject == null)
             {
+                Brain.Carrier.ClearSharedCarryMoveTarget();
                 EnterIdleSearching();
                 return;
             }
 
+            Brain.Carrier.SetSharedCarryMoveTarget(homePosition);
             Brain.Agent.SetDestination(homePosition);
             if (Vector3.Distance(Brain.transform.position, homePosition) > config.DeliveryDistance)
             {
@@ -638,6 +721,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             DeliverCarriedObject();
+            Brain.Carrier.ClearSharedCarryMoveTarget();
             EnterIdleSearching();
         }
 
@@ -793,6 +877,141 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             return closestObject;
         }
 
+        private void RegisterNearbyStorages()
+        {
+            Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
+            foreach (Collider collider in colliders)
+            {
+                GameObject candidate = collider.attachedRigidbody != null ? collider.attachedRigidbody.gameObject : collider.gameObject;
+                BaseStorageNew storage = candidate.GetComponent<BaseStorageNew>();
+                storage ??= candidate.GetComponentInParent<BaseStorageNew>();
+                if (storage == null)
+                {
+                    continue;
+                }
+
+                ulong storageId = GetStorageId(storage);
+                if (encounteredStorages.ContainsKey(storageId))
+                {
+                    continue;
+                }
+
+                encounteredStorages.Add(storageId, new EncounteredStorageInfo
+                {
+                    storageId = storageId,
+                    firstEncounterPosition = storage.transform.position
+                });
+                debugBridge?.AddEncounteredStorage(storageId, storage.transform.position);
+            }
+        }
+
+        private BeaverScoutDebugBridge EnsureDebugBridge()
+        {
+            if (Brain.TryGetComponent(out BeaverScoutDebugBridge existingDebugBridge))
+            {
+                return existingDebugBridge;
+            }
+
+            return Brain.gameObject.AddComponent<BeaverScoutDebugBridge>();
+        }
+
+        private static ulong GetStorageId(BaseStorageNew storage)
+        {
+            if (storage != null && storage.NetworkObject != null && storage.NetworkObject.IsSpawned)
+            {
+                return storage.NetworkObject.NetworkObjectId;
+            }
+
+            return storage != null ? unchecked((ulong)storage.GetInstanceID()) : 0;
+        }
+
+        private bool TryFindClosestStorageWithInterestedResource(out BaseStorageNew selectedStorage, out BaseResourceSO selectedResource)
+        {
+            selectedStorage = null;
+            selectedResource = null;
+
+            if (Brain.StorageInteractor == null)
+            {
+                return false;
+            }
+
+            Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
+            HashSet<BaseStorageNew> checkedStorages = new HashSet<BaseStorageNew>();
+            float closestDistance = float.MaxValue;
+
+            foreach (Collider collider in colliders)
+            {
+                GameObject candidate = collider.attachedRigidbody != null ? collider.attachedRigidbody.gameObject : collider.gameObject;
+                BaseStorageNew storage = candidate.GetComponent<BaseStorageNew>();
+                storage ??= candidate.GetComponentInParent<BaseStorageNew>();
+                if (storage == null || !checkedStorages.Add(storage))
+                {
+                    continue;
+                }
+
+                if (!TrySelectInterestedResourceFromStorage(storage, out BaseResourceSO resourceSO))
+                {
+                    continue;
+                }
+
+                float distance = Vector3.Distance(Brain.transform.position, storage.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    selectedStorage = storage;
+                    selectedResource = resourceSO;
+                }
+            }
+
+            return selectedStorage != null && selectedResource != null;
+        }
+
+        private bool TrySelectInterestedResourceFromStorage(BaseStorageNew storage, out BaseResourceSO selectedResource)
+        {
+            selectedResource = null;
+            if (storage == null || Brain.StorageInteractor == null)
+            {
+                return false;
+            }
+
+            IReadOnlyList<BaseResourceSO> orderedResources = GetStorageResourceSearchOrder(storage);
+            if (orderedResources == null)
+            {
+                return false;
+            }
+
+            foreach (BaseResourceSO resourceSO in orderedResources)
+            {
+                if (resourceSO == null)
+                {
+                    continue;
+                }
+
+                if (config.InterestProfile != null && !config.InterestProfile.IsInterestedIn(resourceSO))
+                {
+                    continue;
+                }
+
+                if (CanWithdrawResourceAboveThreshold(storage, resourceSO))
+                {
+                    selectedResource = resourceSO;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private IReadOnlyList<BaseResourceSO> GetStorageResourceSearchOrder(BaseStorageNew storage)
+        {
+            if (config.InterestProfile != null && !config.InterestProfile.AllowsAnyBaseResource)
+            {
+                return config.InterestProfile.AllowedBaseResources;
+            }
+
+            return storage != null ? storage.StorableBaseResources : null;
+        }
+
         private bool TryFindClosestUnencounteredPlayer(out PlayerHealth playerHealth, out Transform playerTransform, out ulong playerId)
         {
             playerHealth = null;
@@ -826,6 +1045,21 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             return playerHealth != null && playerTransform != null;
+        }
+
+        private bool HasAnyAvailablePlayerInDetectionRange()
+        {
+            Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
+            foreach (Collider collider in colliders)
+            {
+                GameObject candidate = collider.attachedRigidbody != null ? collider.attachedRigidbody.gameObject : collider.gameObject;
+                if (TryGetPlayerTarget(candidate, out _, out _, out _))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool TryGetPlayerTarget(GameObject candidate, out PlayerHealth playerHealth, out Transform playerTransform, out ulong playerId)
@@ -910,6 +1144,31 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         {
             followTargetPlayerHealth = null;
             followTargetTransform = null;
+        }
+
+        private void ClearStorageTarget()
+        {
+            targetStorage = null;
+            targetStorageResource = null;
+        }
+
+        private bool CanWithdrawFromTargetStorage()
+        {
+            return targetStorage != null
+                && targetStorageResource != null
+                && Brain.StorageInteractor != null
+                && CanWithdrawResourceAboveThreshold(targetStorage, targetStorageResource);
+        }
+
+        private bool CanWithdrawResourceAboveThreshold(BaseStorageNew storage, BaseResourceSO resourceSO)
+        {
+            if (storage == null || resourceSO == null || Brain.StorageInteractor == null)
+            {
+                return false;
+            }
+
+            return storage.CheckBaseResourceAmount(resourceSO) > config.StorageWithdrawAmountThreshold
+                && Brain.StorageInteractor.CanWithdraw(storage, resourceSO);
         }
 
         private bool IsAttackCommitted()
@@ -1066,7 +1325,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             baseResource ??= candidate.GetComponentInParent<BaseResourceNew>();
             if (baseResource != null)
             {
-                bool canCarry = baseResource.CanBeCarriedBy(Brain.Carrier);
+                bool canCarry = IsInterestedIn(baseResource) && baseResource.CanBeCarriedBy(Brain.Carrier);
                 stealableRoot = canCarry ? baseResource.gameObject : null;
                 return canCarry;
             }
@@ -1075,12 +1334,22 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             bridgeComponent ??= candidate.GetComponentInParent<MountableBridgeComponent>();
             if (bridgeComponent != null)
             {
-                bool canCarry = bridgeComponent.CanBeCarriedBy(Brain.Carrier);
+                bool canCarry = IsInterestedIn(bridgeComponent) && bridgeComponent.CanBeCarriedBy(Brain.Carrier);
                 stealableRoot = canCarry ? bridgeComponent.gameObject : null;
                 return canCarry;
             }
 
             return false;
+        }
+
+        private bool IsInterestedIn(BaseResourceNew baseResource)
+        {
+            return config.InterestProfile == null || config.InterestProfile.IsInterestedIn(baseResource);
+        }
+
+        private bool IsInterestedIn(MountableBridgeComponent bridgeComponent)
+        {
+            return config.InterestProfile == null || config.InterestProfile.IsInterestedIn(bridgeComponent);
         }
     }
 }

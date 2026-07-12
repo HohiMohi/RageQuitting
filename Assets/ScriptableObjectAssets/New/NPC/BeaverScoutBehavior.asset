@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: BeaverScoutBehavior
   m_EditorClassIdentifier: Assembly-CSharp::BeaverScoutBehaviorSO
   deliveryMode: 0
+  interestProfile: {fileID: 11400000, guid: 96fb7e1aa2efa804baf39a695ba86ee8, type: 2}
+  storageWithdrawAmountThreshold: 0
   idleSearchDuration: 5
   targetRefreshInterval: 1
   patrolArrivalDistance: 0.75

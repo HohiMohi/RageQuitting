@@ -1337,6 +1337,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FurnaceStorage
   storableBaseResourcesSOList: []
+  withdrawSpawnPoint: {fileID: 0}
+  withdrawSpawnFallbackOffset: {x: 0, y: 0.25, z: 1}
   bellows: {fileID: 7985848920380130718}
   ventilationGrille: {fileID: 2913119735182266251}
   kindling: {fileID: 4475291188123351510}

@@ -22,8 +22,9 @@ public class MainStorageNew : BaseStorageNew
     }
 
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -33,7 +34,6 @@ public class MainStorageNew : BaseStorageNew
             Instance = this;
         }
         allRequiredResourcesStored = false;
-        storedBaseResourceDictionary = new Dictionary<BaseResourceSO, int>();
         storedBridgeComponentDictionary = new Dictionary<BridgeComponentSO, int>();
     }
 
@@ -66,6 +66,12 @@ public class MainStorageNew : BaseStorageNew
             Debug.Log("All required resources stored! Bridge can be built!");
             //Invoke event to notify bridge that all required resources are stored and it can be built
         }
+    }
+
+    protected override void OnBaseResourceAmountChanged(BaseResourceSO baseResourceSO, int currentAmount)
+    {
+        base.OnBaseResourceAmountChanged(baseResourceSO, currentAmount);
+        CheckAllRequiredStoredResources();
     }
     
     public void StoreBridgeComponent(BridgeComponentSO bridgeComponentSO)

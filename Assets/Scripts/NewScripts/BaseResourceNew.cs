@@ -22,6 +22,10 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private readonly Dictionary<ulong, float> holderLastInputTimes = new Dictionary<ulong, float>();
     private readonly Dictionary<ulong, Vector3> holderBodyAnchorLocalOffsets = new Dictionary<ulong, Vector3>();
     private readonly Dictionary<ulong, float> holderControllerRadii = new Dictionary<ulong, float>();
+    private readonly List<ulong> npcHolderActorIds = new List<ulong>();
+    private readonly Dictionary<ulong, ICarryActor> npcHolderActors = new Dictionary<ulong, ICarryActor>();
+    private readonly Dictionary<ulong, int> npcHolderAttachPointIndices = new Dictionary<ulong, int>();
+    private readonly Dictionary<ulong, Vector3> npcHolderAttachLocalPoints = new Dictionary<ulong, Vector3>();
     private ICarryActor externalCarryActor;
 
     public EventHandler<ResourceDurabilityChangedEventArgs> ResourceDurabilityChanged;
@@ -214,11 +218,18 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public bool CanBeCarriedBy(ICarryActor carryActor)
     {
-        return carryActor != null
-            && carryActor.CanCarryObject
-            && !isPickedUp
-            && externalCarryActor == null
-            && !AllowsMultipleCarriers();
+        if (carryActor == null || !carryActor.CanCarryObject || externalCarryActor != null)
+        {
+            return false;
+        }
+
+        if (!AllowsMultipleCarriers())
+        {
+            return !isPickedUp;
+        }
+
+        return GetCurrentHolderCount() < GetMaxCarriers()
+            && !npcHolderActors.ContainsKey(carryActor.ActorId);
     }
 
     public bool TryPickupByCarrier(ICarryActor carryActor)
@@ -231,6 +242,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         if (IsNetworkSessionActive() && !IsServer)
         {
             return false;
+        }
+
+        if (AllowsMultipleCarriers())
+        {
+            return TryAddNpcSharedCarryHolder(carryActor);
         }
 
         externalCarryActor = carryActor;
@@ -251,6 +267,27 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public bool DropByCarrier(ICarryActor carryActor, Vector3 dropPosition, Quaternion dropRotation)
     {
+        if (AllowsMultipleCarriers() && carryActor != null && npcHolderActors.ContainsKey(carryActor.ActorId))
+        {
+            ClearNpcSharedCarryHolder(carryActor.ActorId, true);
+
+            if (GetCurrentHolderCount() > 0)
+            {
+                UpdateHolderCarryLoadClientRpcs();
+                return true;
+            }
+
+            transform.SetPositionAndRotation(dropPosition, dropRotation);
+            SetPickedUpState(false);
+
+            if (IsNetworkSessionActive())
+            {
+                CompleteDropClientRpc(dropPosition, dropRotation);
+            }
+
+            return true;
+        }
+
         if (externalCarryActor != carryActor)
         {
             return false;
@@ -323,13 +360,13 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             return false;
         }
 
-        if (!AllowsMultipleCarriers() && holderClientIds.Count > 0)
+        if (!AllowsMultipleCarriers() && GetCurrentHolderCount() > 0)
         {
             RejectPickupClientRpc(CreateTargetClientRpcParams(ownerClientId));
             return false;
         }
 
-        if (holderClientIds.Count >= GetMaxCarriers())
+        if (GetCurrentHolderCount() >= GetMaxCarriers())
         {
             RejectPickupClientRpc(CreateTargetClientRpcParams(ownerClientId));
             return false;
@@ -387,7 +424,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         StopHolderVisualOverrideClientRpc(senderClientId);
         ConfirmReleaseClientRpc(CreateTargetClientRpcParams(senderClientId));
 
-        if (holderClientIds.Count > 0)
+        if (GetCurrentHolderCount() > 0)
         {
             UpdateHolderCarryLoadClientRpcs();
             return true;
@@ -473,7 +510,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     private void ForceReleaseCurrentHolder()
     {
-        if (holderClientIds.Count == 0)
+        if (holderClientIds.Count == 0 && npcHolderActorIds.Count == 0)
         {
             return;
         }
@@ -486,6 +523,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             ClearHeldResource(holderClientId);
             StopHolderVisualOverrideClientRpc(holderClientId);
             ConfirmReleaseClientRpc(CreateTargetClientRpcParams(holderClientId));
+        }
+
+        ulong[] previousNpcHolderActorIds = npcHolderActorIds.ToArray();
+        foreach (ulong actorId in previousNpcHolderActorIds)
+        {
+            ClearNpcSharedCarryHolder(actorId, true);
         }
     }
 
@@ -514,6 +557,61 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         holderLastInputTimes.Remove(clientId);
         holderBodyAnchorLocalOffsets.Remove(clientId);
         holderControllerRadii.Remove(clientId);
+    }
+
+    private bool TryAddNpcSharedCarryHolder(ICarryActor carryActor)
+    {
+        if (carryActor == null || npcHolderActors.ContainsKey(carryActor.ActorId) || GetCurrentHolderCount() >= GetMaxCarriers())
+        {
+            return false;
+        }
+
+        if (IsSpawned && NetworkObject != null && NetworkObject.OwnerClientId != NetworkManager.ServerClientId)
+        {
+            NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
+        }
+
+        int attachPointIndex = ShouldUseServerDrivenCarry() ? GetFirstFreeAttachPointIndex() : -1;
+        Vector3 attachLocalPoint = ShouldUseServerDrivenCarry() ? GetCarryAttachLocalPoint(attachPointIndex, carryActor.CollisionRadius) : Vector3.zero;
+        ulong actorId = carryActor.ActorId;
+
+        npcHolderActorIds.Add(actorId);
+        npcHolderActors[actorId] = carryActor;
+        npcHolderAttachPointIndices[actorId] = attachPointIndex;
+        npcHolderAttachLocalPoints[actorId] = attachLocalPoint;
+
+        SetPickedUpState(true);
+        if (IsNetworkSessionActive())
+        {
+            SetPickedUpStateClientRpc(true);
+        }
+
+        carryActor.ConfirmSharedCarry(gameObject, attachLocalPoint, CalculateCarryMovementSpeedPenalty());
+        UpdateHolderCarryLoadClientRpcs();
+        return true;
+    }
+
+    private void ClearNpcSharedCarryHolder(ulong actorId, bool notifyActor)
+    {
+        if (!npcHolderActors.TryGetValue(actorId, out ICarryActor carryActor))
+        {
+            return;
+        }
+
+        npcHolderActorIds.Remove(actorId);
+        npcHolderActors.Remove(actorId);
+        npcHolderAttachPointIndices.Remove(actorId);
+        npcHolderAttachLocalPoints.Remove(actorId);
+
+        if (notifyActor)
+        {
+            carryActor.ForceRelease(gameObject);
+        }
+    }
+
+    private int GetCurrentHolderCount()
+    {
+        return holderClientIds.Count + npcHolderActorIds.Count;
     }
 
     private bool AllowsMultipleCarriers()
@@ -548,7 +646,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     private float GetCarrierRatio()
     {
-        return Mathf.Clamp01((float)holderClientIds.Count / GetRecommendedCarriers());
+        return Mathf.Clamp01((float)GetCurrentHolderCount() / GetRecommendedCarriers());
     }
 
     private float CalculateCarryMovementSpeedPenalty()
@@ -574,7 +672,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     private bool ShouldUpdateKinematicCarryPosition()
     {
-        if (!ShouldUseServerDrivenCarry() || holderClientIds.Count == 0)
+        if (!ShouldUseServerDrivenCarry() || GetCurrentHolderCount() == 0)
         {
             return false;
         }
@@ -601,15 +699,25 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             combinedInput += holderInput;
         }
 
-        combinedInput.y = 0f;
-        combinedInput = Vector3.ClampMagnitude(combinedInput / GetRecommendedCarriers(), 1f);
-        if (combinedInput == Vector3.zero)
+        foreach (ulong actorId in npcHolderActorIds)
         {
-            return;
+            if (!npcHolderActors.TryGetValue(actorId, out ICarryActor carryActor))
+            {
+                continue;
+            }
+
+            combinedInput += Vector3.ClampMagnitude(carryActor.GetSharedCarryInput(), 1f);
         }
 
-        float carryMoveSpeed = baseResourceSO != null ? baseResourceSO.carryMoveSpeed : 4f;
-        transform.position += combinedInput * carryMoveSpeed * Time.deltaTime;
+        combinedInput.y = 0f;
+        combinedInput = Vector3.ClampMagnitude(combinedInput / GetRecommendedCarriers(), 1f);
+        if (combinedInput != Vector3.zero)
+        {
+            float carryMoveSpeed = baseResourceSO != null ? baseResourceSO.carryMoveSpeed : 4f;
+            transform.position += combinedInput * carryMoveSpeed * Time.deltaTime;
+        }
+
+        UpdateNpcSharedCarryAttachments();
     }
 
     private bool TryGetHolderTransform(ulong holderClientId, out Transform holderTransform)
@@ -709,13 +817,27 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         int maxCarriers = GetMaxCarriers();
         for (int i = 0; i < maxCarriers; i++)
         {
-            if (!holderAttachPointIndices.ContainsValue(i))
+            if (!holderAttachPointIndices.ContainsValue(i) && !npcHolderAttachPointIndices.ContainsValue(i))
             {
                 return i;
             }
         }
 
-        return Mathf.Max(0, holderAttachPointIndices.Count);
+        return Mathf.Max(0, GetCurrentHolderCount());
+    }
+
+    private void UpdateNpcSharedCarryAttachments()
+    {
+        foreach (ulong actorId in npcHolderActorIds)
+        {
+            if (!npcHolderActors.TryGetValue(actorId, out ICarryActor carryActor)
+                || !npcHolderAttachLocalPoints.TryGetValue(actorId, out Vector3 attachLocalPoint))
+            {
+                continue;
+            }
+
+            carryActor.ApplySharedCarryAttachment(transform.TransformPoint(attachLocalPoint));
+        }
     }
 
     private Vector3 GetCarryAttachLocalPoint(int attachPointIndex, float playerControllerRadius)
@@ -917,6 +1039,14 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             foreach (ulong holderClientId in holderClientIds)
             {
                 ClearHeldResource(holderClientId);
+            }
+        }
+
+        if (npcHolderActorIds.Count > 0)
+        {
+            foreach (ulong actorId in npcHolderActorIds.ToArray())
+            {
+                ClearNpcSharedCarryHolder(actorId, true);
             }
         }
 

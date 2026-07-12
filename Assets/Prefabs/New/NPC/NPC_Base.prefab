@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 3098827496799528937}
   - component: {fileID: 4819304511543750011}
   - component: {fileID: 6213901842837744107}
+  - component: {fileID: 6765276042045917342}
   m_Layer: 0
   m_Name: NPC_Base
   m_TagString: Untagged
@@ -286,6 +287,18 @@ MonoBehaviour:
   visibleAfterDamageDuration: 2
   backgroundColor: {r: 0.12, g: 0.02, b: 0.02, a: 0.78}
   fillColor: {r: 0.86, g: 0.08, b: 0.08, a: 0.95}
+--- !u!114 &6765276042045917342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dc60e9aa5ec4ee58e8fc9ba2d55df57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCStorageInteractor
 --- !u!1 &100010
 GameObject:
   m_ObjectHideFlags: 0

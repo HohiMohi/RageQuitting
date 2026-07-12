@@ -57,15 +57,36 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     {
         bridgeComponentSpriteRenderer.sprite = e.mountableBridgeComponentSO.componentSprite;
         currentlySelectedMountableBridgeComponentSO = e.mountableBridgeComponentSO;
-        if (CheckRequiredBaseResources(currentlySelectedMountableBridgeComponentSO))
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && !IsServer)
         {
-            RemoveBaseResourcesFromStorage(currentlySelectedMountableBridgeComponentSO);
-            SpawnMountableBridgeComponent(currentlySelectedMountableBridgeComponentSO);
+            int mountableBridgeComponentSOIndex = GetMountableBridgeComponentSOIndex(currentlySelectedMountableBridgeComponentSO);
+            if (mountableBridgeComponentSOIndex >= 0)
+            {
+                RequestProduceMountableBridgeComponentServerRpc(mountableBridgeComponentSOIndex);
+            }
+            return;
         }
-        else
+
+        TryProduceMountableBridgeComponent(currentlySelectedMountableBridgeComponentSO);
+    }
+
+    private bool TryProduceMountableBridgeComponent(MountableBridgeComponentSO mountableBridgeComponentSO)
+    {
+        if (mountableBridgeComponentSO == null)
         {
-            Debug.Log("There is not enough BaseResource in BaseStorageNew to produce this MountableBridgeComponent");
+            return false;
         }
+
+        if (CheckRequiredBaseResources(mountableBridgeComponentSO))
+        {
+            RemoveBaseResourcesFromStorage(mountableBridgeComponentSO);
+            SpawnMountableBridgeComponent(mountableBridgeComponentSO);
+            return true;
+        }
+
+        Debug.Log("There is not enough BaseResource in BaseStorageNew to produce this MountableBridgeComponent");
+        return false;
     }
     
     // Update is called once per frame
@@ -124,6 +145,17 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
         }
 
         SpawnNetworkMountableBridgeComponent(mountableBridgeComponentSOArray[mountableBridgeComponentSOIndex]);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestProduceMountableBridgeComponentServerRpc(int mountableBridgeComponentSOIndex)
+    {
+        if (mountableBridgeComponentSOIndex < 0 || mountableBridgeComponentSOIndex >= mountableBridgeComponentSOArray.Length)
+        {
+            return;
+        }
+
+        TryProduceMountableBridgeComponent(mountableBridgeComponentSOArray[mountableBridgeComponentSOIndex]);
     }
 
     private int GetMountableBridgeComponentSOIndex(MountableBridgeComponentSO mountableBridgeComponentSO)

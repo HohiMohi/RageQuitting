@@ -68,18 +68,14 @@ public class FurnaceStorage : BaseStorageNew
     }
 
     #endregion
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         furnaceIsOn = false;
         furnaceIsOnFire = false;
         isFuelAvailable = false;
         furnacePressure = 0;
         furnaceTemperature = 30;
-        storedBaseResourceDictionary = new Dictionary<BaseResourceSO, int>();
-        foreach (BaseResourceSO baseResourceSO in storableBaseResourcesSOList)
-        {
-            storedBaseResourceDictionary.Add(baseResourceSO, 0);
-        }
     }
     void Start()
     {
@@ -282,14 +278,19 @@ public class FurnaceStorage : BaseStorageNew
     }
     private void TryRefuelFurnace()
     {
-        bool fuelAdded = false;
-        foreach (KeyValuePair<BaseResourceSO, int> keyValuePair in storedBaseResourceDictionary)
+        if (IsNetworkSessionActive() && !IsServer)
         {
-            if (keyValuePair.Value > 0)
+            return;
+        }
+
+        bool fuelAdded = false;
+        foreach (BaseResourceSO baseResourceSO in storableBaseResourcesSOList)
+        {
+            if (baseResourceSO != null && CheckBaseResourceAmount(baseResourceSO) > 0)
             {
-                furnaceFuel += keyValuePair.Key.furnaceFuelAmount;
+                furnaceFuel += baseResourceSO.furnaceFuelAmount;
                 fuelAdded = true;
-                storedBaseResourceDictionary[keyValuePair.Key] -= 1;
+                TryRemoveBaseResourceAmount(baseResourceSO, 1);
                 break;
             }
         }
