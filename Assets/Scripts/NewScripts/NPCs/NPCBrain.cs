@@ -22,6 +22,7 @@ public class NPCBrain : NetworkBehaviour
     private NPCAttackController attackController;
     private NPCStorageInteractor storageInteractor;
     private NPCBehaviorController behaviorController;
+    private NPCSpawner originSpawner;
     private float tickTimer;
 
     public NPCDefinitionSO Definition => definition;
@@ -32,6 +33,7 @@ public class NPCBrain : NetworkBehaviour
     public NPCFactionMember FactionMember => factionMember;
     public NPCAttackController AttackController => attackController;
     public NPCStorageInteractor StorageInteractor => storageInteractor;
+    public NPCSpawner OriginSpawner => originSpawner;
     public float DetectionRadius => definition != null ? definition.detectionRadius : 12f;
     public float InteractionDistance => definition != null ? definition.interactionDistance : 1.4f;
     public float PatrolRadius => definition != null ? definition.patrolRadius : 8f;
@@ -84,6 +86,11 @@ public class NPCBrain : NetworkBehaviour
         definition = newDefinition;
         ApplyDefinition();
         RebuildBehavior();
+    }
+
+    public void SetOriginSpawner(NPCSpawner spawner)
+    {
+        originSpawner = spawner;
     }
 
     public void SetBehavior(NPCBehaviorSO behavior)

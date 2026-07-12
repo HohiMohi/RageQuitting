@@ -64,6 +64,7 @@ public class NPCSpawner : MonoBehaviour
 
         if (npcInstance.TryGetComponent(out NPCBrain brain))
         {
+            brain.SetOriginSpawner(this);
             brain.SetDefinition(definition);
         }
 
