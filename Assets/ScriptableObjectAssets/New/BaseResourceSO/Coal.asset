@@ -18,6 +18,11 @@ MonoBehaviour:
   baseResourceDestructionRecipeArray:
   - finalProductBaseResourceSO: {fileID: 11400000, guid: 724cd6647f00c974cbad74890edb25ce, type: 2}
     neededEquippableItemType: 2
+    products:
+    - resourceSO: {fileID: 11400000, guid: 724cd6647f00c974cbad74890edb25ce, type: 2}
+      amount: 1
+    spawnOffsets: []
+    fallbackScatterRadius: 0.35
   resourceDurability: 0
   movementSpeedPenalty: 0
   minAmountOfPlayersNeeded: 0
@@ -26,4 +31,6 @@ MonoBehaviour:
   maxCarriers: 1
   underStaffedPenaltyMultiplier: 1
   carryMoveSpeed: 4
+  carryPlayerClearance: 0.35
+  carryAttachLocalPoints: []
   furnaceFuelAmount: 4

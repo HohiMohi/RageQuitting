@@ -1,6 +1,6 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
-using static BlastFurnaceFactory;
 
 public class CarpenterTableFactory : BaseFactory
 {
@@ -8,7 +8,6 @@ public class CarpenterTableFactory : BaseFactory
     [SerializeField] private DimensionChangeSwitch[] dimensionChangeSwitchArray;
     [SerializeField] private CarpenterTableMinigame carpenterTableMinigame;
 
-    #region Component production properties
     [Header("Component production properties")]
     [SerializeField] private float componentLengthMax;
     [SerializeField] private float componentLengthMin;
@@ -16,13 +15,13 @@ public class CarpenterTableFactory : BaseFactory
     [SerializeField] private float componentWidthMax;
     [SerializeField] private float componentWidthMin;
     [SerializeField] private float componentWidthStep;
-    private float componentWidth;
-    private float componentLength;
-    private float currentWidth;
-    private float currentLength;
-    #endregion
 
-    #region Events
+    private readonly NetworkVariable<float> currentWidthNetwork = new NetworkVariable<float>();
+    private readonly NetworkVariable<float> currentLengthNetwork = new NetworkVariable<float>();
+
+    private float localCurrentWidth;
+    private float localCurrentLength;
+
     public EventHandler<BridgeComponentSelectionConfirmEventArgs> BridgeComponentSelectionConfirm;
     public class BridgeComponentSelectionConfirmEventArgs : EventArgs
     {
@@ -30,127 +29,217 @@ public class CarpenterTableFactory : BaseFactory
     }
 
     public EventHandler<TryEndProductionEventArgs> TryEndProduction;
-
     public class TryEndProductionEventArgs : EventArgs
     {
         public Transform interactor;
     }
 
-    #endregion
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public float CurrentWidth => IsNetworkSessionActive() ? currentWidthNetwork.Value : localCurrentWidth;
+    public float CurrentLength => IsNetworkSessionActive() ? currentLengthNetwork.Value : localCurrentLength;
+    public bool AreDimensionsMatchingSelectedComponent => CheckSettedComponentDimensions();
+
+    public Vector2 GetCurrentDimensions()
     {
-        tableSwitch.CarpenterTableSwitchPressed += CarpenterTableSwitch_OnCarpenterTableSwitchPressed;
-        factoryInteractionUI.OnConfirmButtonClick += FactoryInteractionUI_OnBridgeComponentSelectionConfirm;
-        carpenterTableMinigame.MinigameCompletedEvent += CarpenterTableFactory_OnMinigameCompleted;
-        carpenterTableMinigame.MinigameFailedEvent += CarpenterTableFactory_OnMinigameFailed;
-        carpenterTableMinigame.MinigameCriticallyFailedEvent += CarpenterTableFactory_OnMinigameCriticallyFailed;
-        InitializeStorageStorableResourcesList();
-        foreach (DimensionChangeSwitch dimensionChangeSwitch in dimensionChangeSwitchArray)
+        return new Vector2(CurrentWidth, CurrentLength);
+    }
+
+    public Vector2 GetRequiredDimensionsForSelectedComponent()
+    {
+        MountableBridgeComponentSO selectedComponent = SelectedComponent;
+        if (selectedComponent == null)
         {
-            dimensionChangeSwitch.DimensionChangeSwitchPressed += DimensionChangeSwitch_OnSwitchPressed;
+            return Vector2.zero;
         }
-        currentLength = componentLengthMin;
-        currentWidth = componentWidthMin;
+
+        return new Vector2(selectedComponent.componentWidth, selectedComponent.componentLength);
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        currentWidthNetwork.OnValueChanged += FactoryDimension_OnValueChanged;
+        currentLengthNetwork.OnValueChanged += FactoryDimension_OnValueChanged;
+
+        if (IsServer)
+        {
+            currentWidthNetwork.Value = componentWidthMin;
+            currentLengthNetwork.Value = componentLengthMin;
+        }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        currentWidthNetwork.OnValueChanged -= FactoryDimension_OnValueChanged;
+        currentLengthNetwork.OnValueChanged -= FactoryDimension_OnValueChanged;
+        base.OnNetworkDespawn();
+    }
+
+    protected override void Start()
+    {
+        base.Start();
+
+        if (tableSwitch != null)
+        {
+            tableSwitch.CarpenterTableSwitchPressed += CarpenterTableSwitch_OnCarpenterTableSwitchPressed;
+        }
+
+        if (dimensionChangeSwitchArray != null)
+        {
+            foreach (DimensionChangeSwitch dimensionChangeSwitch in dimensionChangeSwitchArray)
+            {
+                if (dimensionChangeSwitch != null)
+                {
+                    dimensionChangeSwitch.DimensionChangeSwitchPressed += DimensionChangeSwitch_OnSwitchPressed;
+                }
+            }
+        }
+
+        if (carpenterTableMinigame != null)
+        {
+            carpenterTableMinigame.MinigameCompletedEvent += CarpenterTableFactory_OnMinigameCompleted;
+            carpenterTableMinigame.MinigameFailedEvent += CarpenterTableFactory_OnMinigameFailed;
+            carpenterTableMinigame.MinigameCriticallyFailedEvent += CarpenterTableFactory_OnMinigameCriticallyFailed;
+        }
+
+        localCurrentLength = componentLengthMin;
+        localCurrentWidth = componentWidthMin;
+        OnFactoryStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    protected override bool CanProduceAdditionalConditions(MountableBridgeComponentSO mountableBridgeComponentSO, out FactoryProductionFailureReason reason)
+    {
+        if (!CheckSettedComponentDimensions())
+        {
+            reason = FactoryProductionFailureReason.InvalidDimensions;
+            return false;
+        }
+
+        reason = FactoryProductionFailureReason.None;
+        return true;
+    }
+
+    protected override void HandleSelectedComponentChanged(MountableBridgeComponentSO selectedComponent)
+    {
+        BridgeComponentSelectionConfirm?.Invoke(this, new BridgeComponentSelectionConfirmEventArgs
+        {
+            mountableBridgeComponentSO = selectedComponent
+        });
     }
 
     private void CarpenterTableFactory_OnMinigameCriticallyFailed(object sender, EventArgs e)
     {
-        Debug.Log("Minigame critically failed event received");
+        Debug.Log("Carpenter minigame is currently disabled in the production flow.");
     }
 
     private void CarpenterTableFactory_OnMinigameFailed(object sender, EventArgs e)
     {
-        Debug.Log("Minigame failed event received");
+        Debug.Log("Carpenter minigame is currently disabled in the production flow.");
     }
 
     private void CarpenterTableFactory_OnMinigameCompleted(object sender, EventArgs e)
     {
-        SpawnMountableBridgeComponent(currentlySelectedMountableBridgeComponentSO);
+        Debug.Log("Carpenter minigame is currently disabled in the production flow.");
     }
 
     private void DimensionChangeSwitch_OnSwitchPressed(object sender, DimensionChangeSwitch.DimensionChangeSwitchPressedEventArgs e)
     {
-        HandleDimensionSwitch(e.componentDimension, e.dimensionChangeType);
-        Debug.Log($"Width: {currentWidth}, Length: {currentLength}");
+        RequestChangeDimension(e.componentDimension, e.dimensionChangeType);
     }
 
     private void CarpenterTableSwitch_OnCarpenterTableSwitchPressed(object sender, CarpenterTableSwitch.CarpenterTableSwitchPressedEventArgs e)
     {
-        if (currentlySelectedMountableBridgeComponentSO == null)
+        RequestStartProduction();
+    }
+
+    private void RequestChangeDimension(ComponentDimension componentDimension, DimensionChangeType dimensionChangeType)
+    {
+        if (IsNetworkSessionActive())
         {
-            Debug.Log("No Mountable Bridge Component currently selected");
-            //invoke event to show ui//message
-        }
-        else
-        {
-            if (CheckRequiredBaseResources(currentlySelectedMountableBridgeComponentSO))
+            if (IsServer)
             {
-                if (CheckSettedComponentDimensions())
-                {
-                    RemoveBaseResourcesFromStorage(currentlySelectedMountableBridgeComponentSO);
-                    TryEndProduction(this, new TryEndProductionEventArgs
-                    {
-                        interactor = e.interactor,
-                    });
-                }
-                else
-                {
-                    Debug.Log("You need to adjust component dimensions to start production");
-                }
+                ApplyDimensionChangeServer(componentDimension, dimensionChangeType);
             }
             else
             {
-                Debug.Log("There are not enought resources to start production");
+                RequestChangeDimensionServerRpc((int)componentDimension, (int)dimensionChangeType);
             }
+
+            return;
         }
+
+        ApplyDimensionChangeLocal(componentDimension, dimensionChangeType);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestChangeDimensionServerRpc(int componentDimensionValue, int dimensionChangeTypeValue)
+    {
+        if (!Enum.IsDefined(typeof(ComponentDimension), componentDimensionValue)
+            || !Enum.IsDefined(typeof(DimensionChangeType), dimensionChangeTypeValue))
+        {
+            return;
+        }
+
+        ApplyDimensionChangeServer((ComponentDimension)componentDimensionValue, (DimensionChangeType)dimensionChangeTypeValue);
+    }
+
+    private void ApplyDimensionChangeServer(ComponentDimension componentDimension, DimensionChangeType dimensionChangeType)
+    {
+        if (IsProducing)
+        {
+            return;
+        }
+
+        switch (componentDimension)
+        {
+            case ComponentDimension.Length:
+                currentLengthNetwork.Value = ClampDimension(currentLengthNetwork.Value, componentLenghtStep, componentLengthMin, componentLengthMax, dimensionChangeType);
+                break;
+            case ComponentDimension.Width:
+                currentWidthNetwork.Value = ClampDimension(currentWidthNetwork.Value, componentWidthStep, componentWidthMin, componentWidthMax, dimensionChangeType);
+                break;
+        }
+
+        OnFactoryStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ApplyDimensionChangeLocal(ComponentDimension componentDimension, DimensionChangeType dimensionChangeType)
+    {
+        if (IsProducing)
+        {
+            return;
+        }
+
+        switch (componentDimension)
+        {
+            case ComponentDimension.Length:
+                localCurrentLength = ClampDimension(localCurrentLength, componentLenghtStep, componentLengthMin, componentLengthMax, dimensionChangeType);
+                break;
+            case ComponentDimension.Width:
+                localCurrentWidth = ClampDimension(localCurrentWidth, componentWidthStep, componentWidthMin, componentWidthMax, dimensionChangeType);
+                break;
+        }
+
+        Debug.Log($"Width: {CurrentWidth}, Length: {CurrentLength}");
+        OnFactoryStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private bool CheckSettedComponentDimensions()
     {
-        if (componentWidth == currentWidth && componentLength == currentLength)
-            return true;
-        else
-            return false;
+        MountableBridgeComponentSO selectedComponent = SelectedComponent;
+        return selectedComponent != null
+            && Mathf.Approximately(selectedComponent.componentWidth, CurrentWidth)
+            && Mathf.Approximately(selectedComponent.componentLength, CurrentLength);
     }
 
-    protected override void FactoryInteractionUI_OnBridgeComponentSelectionConfirm(object sender, FactoryInteractionUI.OnConfirmButtonClickEventArgs e)
+    private float ClampDimension(float currentValue, float step, float min, float max, DimensionChangeType dimensionChangeType)
     {
-        bridgeComponentSpriteRenderer.sprite = e.mountableBridgeComponentSO.componentSprite;
-        currentlySelectedMountableBridgeComponentSO = e.mountableBridgeComponentSO;
-        componentLength = e.mountableBridgeComponentSO.componentLength;
-        componentWidth = e.mountableBridgeComponentSO.componentWidth;
-        BridgeComponentSelectionConfirm?.Invoke(this, new BridgeComponentSelectionConfirmEventArgs
-        {
-            mountableBridgeComponentSO = currentlySelectedMountableBridgeComponentSO
-        });
+        float signedStep = dimensionChangeType == DimensionChangeType.Decrease ? -step : step;
+        return Mathf.Clamp(currentValue + signedStep, min, max);
     }
 
-    private void HandleDimensionSwitch(ComponentDimension componentDimension, DimensionChangeType dimensionChangeType)
+    private void FactoryDimension_OnValueChanged(float previousValue, float newValue)
     {
-        float step = 0;
-        switch (componentDimension)
-        {
-            case ComponentDimension.Length:
-                step = componentLenghtStep;
-                if (dimensionChangeType == DimensionChangeType.Decrease)
-                    step *= -1;
-                currentLength = Mathf.Clamp(currentLength + step, componentLengthMin, componentLengthMax);
-                break;
-            case ComponentDimension.Width:
-                step = componentWidthStep;
-                if (dimensionChangeType == DimensionChangeType.Decrease)
-                    step *= -1;
-                currentWidth = Mathf.Clamp(currentWidth + step, componentWidthMin, componentWidthMax);
-                break;
-            default:
-                break;
-
-        }
-    }
-    // Update is called once per frame
-    void Update()
-    {
-        
+        Debug.Log($"Width: {CurrentWidth}, Length: {CurrentLength}");
+        OnFactoryStateChanged?.Invoke(this, EventArgs.Empty);
     }
 }

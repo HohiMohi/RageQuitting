@@ -173,19 +173,10 @@ public class BaseStorageNew : NetworkBehaviour, IInteractableNew
             return false;
         }
 
-        spawnedResource = Instantiate(baseResourceSO.resourcePrefab, GetWithdrawSpawnPosition(), GetWithdrawSpawnRotation());
-        if (IsNetworkSessionActive())
+        if (!BaseResourceSpawnUtility.TrySpawnResource(baseResourceSO, GetWithdrawSpawnPosition(), GetWithdrawSpawnRotation(), out spawnedResource))
         {
-            if (!spawnedResource.TryGetComponent(out NetworkObject networkObject))
-            {
-                Debug.LogError($"{spawnedResource.name} is missing NetworkObject and cannot be withdrawn from networked storage.");
-                Destroy(spawnedResource);
-                StoreBaseResource(baseResourceSO, amount);
-                spawnedResource = null;
-                return false;
-            }
-
-            networkObject.Spawn(true);
+            StoreBaseResource(baseResourceSO, amount);
+            return false;
         }
 
         if (carryActor != null && spawnedResource.TryGetComponent(out BaseResourceNew baseResource))

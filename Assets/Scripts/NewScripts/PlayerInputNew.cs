@@ -23,6 +23,7 @@ public class PlayerInputNew : NetworkBehaviour
     public EventHandler OnActionAltCanceled;
     public EventHandler OnSwapItems;
     public EventHandler OnDropItem;
+    public EventHandler OnToggleBridgeRequirements;
     public EventHandler OnUI_Up;
     public EventHandler OnUI_Down;
     public EventHandler OnUI_Left;
@@ -101,6 +102,7 @@ public class PlayerInputNew : NetworkBehaviour
         playerGameInputActions.Game.ActionAlt.canceled += ActionAlt_canceled;
         playerGameInputActions.Game.SwapItems.performed += SwapItems_performed;
         playerGameInputActions.Game.DropItem.performed += DropItem_performed;
+        playerGameInputActions.Game.ToggleBridgeRequirements.performed += ToggleBridgeRequirements_performed;
         playerGameInputActions.UI.Up.performed += UI_Up_performed;
         playerGameInputActions.UI.Down.performed += UI_Down_performed;
         playerGameInputActions.UI.Left.performed += UI_Left_performed;
@@ -176,6 +178,11 @@ public class PlayerInputNew : NetworkBehaviour
     private void DropItem_performed(InputAction.CallbackContext context)
     {
         OnDropItem?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ToggleBridgeRequirements_performed(InputAction.CallbackContext context)
+    {
+        OnToggleBridgeRequirements?.Invoke(this, EventArgs.Empty);
     }
 
     private void SwapItems_performed(InputAction.CallbackContext context)

@@ -10,6 +10,7 @@ public class GameTimerManager : MonoBehaviour
     private float timeRemaining;
     private bool isGameActive = false;
     private bool isGameOver = false;
+    private GameplayManager subscribedGameplayManager;
 
     public event EventHandler OnTimerStarted;
     public event EventHandler<OnTimerChangedEventArgs> OnTimerChanged;
@@ -39,18 +40,15 @@ public class GameTimerManager : MonoBehaviour
         timeRemaining = levelDuration;
         isGameActive = true;
         isGameOver = false;
-
-        // Listen to GameplayManager's bridge assembly completion
-        if (GameplayManager.Instance != null)
-        {
-            GameplayManager.Instance.OnBridgeFullyAssembled += GameplayManager_OnBridgeFullyAssembled;
-        }
+        TrySubscribeGameplayManager();
 
         OnTimerStarted?.Invoke(this, EventArgs.Empty);
     }
 
     private void Update()
     {
+        TrySubscribeGameplayManager();
+
         if (!isGameActive || isGameOver) return;
 
         timeRemaining -= Time.deltaTime;
@@ -70,6 +68,31 @@ public class GameTimerManager : MonoBehaviour
     private void GameplayManager_OnBridgeFullyAssembled(object sender, EventArgs e)
     {
         TriggerVictory();
+    }
+
+    private void OnDestroy()
+    {
+        if (subscribedGameplayManager != null)
+        {
+            subscribedGameplayManager.OnBridgeFullyAssembled -= GameplayManager_OnBridgeFullyAssembled;
+            subscribedGameplayManager = null;
+        }
+
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
+    private void TrySubscribeGameplayManager()
+    {
+        if (subscribedGameplayManager != null || GameplayManager.Instance == null)
+        {
+            return;
+        }
+
+        subscribedGameplayManager = GameplayManager.Instance;
+        subscribedGameplayManager.OnBridgeFullyAssembled += GameplayManager_OnBridgeFullyAssembled;
     }
 
     private void TriggerVictory()

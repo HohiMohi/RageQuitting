@@ -2095,6 +2095,10 @@ PrefabInstance:
       propertyPath: baseFactory
       value: 
       objectReference: {fileID: 246577966056562001}
+    - target: {fileID: 8812937564109823441, guid: 58433f6ed45a6e646858bc3205333def, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3014869125
+      objectReference: {fileID: 0}
     - target: {fileID: 9167423254978147953, guid: 58433f6ed45a6e646858bc3205333def, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.5
@@ -2102,10 +2106,6 @@ PrefabInstance:
     - target: {fileID: 9167423254978147953, guid: 58433f6ed45a6e646858bc3205333def, type: 3}
       propertyPath: m_LocalPosition.z
       value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 8812937564109823441, guid: 58433f6ed45a6e646858bc3205333def, type: 3}
-      propertyPath: GlobalObjectIdHash
-      value: 3014869125
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 4549124301047114804, guid: 58433f6ed45a6e646858bc3205333def, type: 3}
@@ -2181,6 +2181,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d107ed0a4746b640a461da546b50b14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarpenterTableFactory
+  ShowTopMostFoldoutHeaderGroup: 1
   factoryInteractionUI: {fileID: 2091203626114508111}
   InteractionOutlineGameobject: {fileID: 6917787774525658937}
   mountableBridgeComponentSOArray: []
@@ -2188,6 +2189,7 @@ MonoBehaviour:
   baseStorageNew: {fileID: 8246286784152708134}
   mountableBridgeComponentSpawnPoint: {fileID: 2797740170306737412}
   bridgeComponentSpriteRenderer: {fileID: 1717993231873340428}
+  productionDuration: 1
   tableSwitch: {fileID: 6540749938131638533}
   dimensionChangeSwitchArray:
   - {fileID: 8265491220783710919}

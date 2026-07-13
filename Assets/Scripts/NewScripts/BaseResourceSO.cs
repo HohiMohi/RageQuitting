@@ -27,4 +27,14 @@ public struct BaseResourceDestructionRecipe
 {
     public BaseResourceSO finalProductBaseResourceSO;
     public EquippableItemType neededEquippableItemType;
+    public BaseResourceDestructionProduct[] products;
+    public Vector3[] spawnOffsets;
+    public float fallbackScatterRadius;
+}
+
+[Serializable]
+public struct BaseResourceDestructionProduct
+{
+    public BaseResourceSO resourceSO;
+    public int amount;
 }

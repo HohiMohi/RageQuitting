@@ -18,10 +18,25 @@ MonoBehaviour:
   baseResourceDestructionRecipeArray:
   - finalProductBaseResourceSO: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
     neededEquippableItemType: 1
+    products:
+    - resourceSO: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
+      amount: 1
+    spawnOffsets: []
+    fallbackScatterRadius: 0.35
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 0
+    products:
+    - resourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+      amount: 1
+    spawnOffsets: []
+    fallbackScatterRadius: 0.35
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 7
+    products:
+    - resourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+      amount: 1
+    spawnOffsets: []
+    fallbackScatterRadius: 0.35
   resourceDurability: 50
   movementSpeedPenalty: 0
   minAmountOfPlayersNeeded: 2
@@ -30,4 +45,6 @@ MonoBehaviour:
   maxCarriers: 2
   underStaffedPenaltyMultiplier: 0
   carryMoveSpeed: 4
+  carryPlayerClearance: 0.35
+  carryAttachLocalPoints: []
   furnaceFuelAmount: 0

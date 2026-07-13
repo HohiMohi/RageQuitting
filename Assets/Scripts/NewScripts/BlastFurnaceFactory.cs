@@ -4,40 +4,139 @@ using UnityEngine;
 public class BlastFurnaceFactory : BaseFactory
 {
     [SerializeField] protected FurnaceStorage furnaceStorage;
+
+    public FurnaceStorage FurnaceStorage => furnaceStorage;
+
     public EventHandler<BridgeComponentSelectionConfirmEventArgs> BridgeComponentSelectionConfirm;
-    public class BridgeComponentSelectionConfirmEventArgs: EventArgs
+    public class BridgeComponentSelectionConfirmEventArgs : EventArgs
     {
         public MountableBridgeComponentSO mountableBridgeComponentSO;
     }
-    private void Start()
+
+    protected override void Start()
     {
-        furnaceStorage.ProductionStarted += FurnaceStorage_OnProductionStarted;
-        furnaceStorage.ProductionFinished += FurnaceStorage_OnProductionFinished;
-        factoryInteractionUI.OnConfirmButtonClick += FactoryInteractionUI_OnBridgeComponentSelectionConfirm;
-        InitializeStorageStorableResourcesList();
-
-
+        base.Start();
+        SyncSelectedComponentToFurnace(SelectedComponent);
     }
 
-    private void FurnaceStorage_OnProductionFinished(object sender, EventArgs e)
+    protected override void HandleSelectedComponentChanged(MountableBridgeComponentSO selectedComponent)
     {
-        SpawnMountableBridgeComponent(currentlySelectedMountableBridgeComponentSO);
-    }
-
-    private void FurnaceStorage_OnProductionStarted(object sender, EventArgs e)
-    {
-        RemoveBaseResourcesFromStorage(currentlySelectedMountableBridgeComponentSO);
-
-    }
-
-    protected override void FactoryInteractionUI_OnBridgeComponentSelectionConfirm(object sender, FactoryInteractionUI.OnConfirmButtonClickEventArgs e)
-    {
-        bridgeComponentSpriteRenderer.sprite = e.mountableBridgeComponentSO.componentSprite;
-        currentlySelectedMountableBridgeComponentSO = e.mountableBridgeComponentSO;
+        SyncSelectedComponentToFurnace(selectedComponent);
         BridgeComponentSelectionConfirm?.Invoke(this, new BridgeComponentSelectionConfirmEventArgs
         {
-            mountableBridgeComponentSO = currentlySelectedMountableBridgeComponentSO
+            mountableBridgeComponentSO = selectedComponent
         });
     }
 
+    public bool TryStartFurnaceProductionServer()
+    {
+        if (!IsNetworkSessionActive())
+        {
+            return TryStartFurnaceProductionLocal();
+        }
+
+        if (!IsServer)
+        {
+            return false;
+        }
+
+        if (!CanProduceSelectedComponentServer(out FactoryProductionFailureReason reason))
+        {
+            ReportFurnaceProductionFailureServer(reason);
+            return false;
+        }
+
+        MountableBridgeComponentSO selectedComponent = SelectedComponent;
+        if (!TryConsumeRequiredResources(selectedComponent))
+        {
+            ReportFurnaceProductionFailureServer(FactoryProductionFailureReason.MissingResources);
+            return false;
+        }
+
+        BeginManualProductionServer();
+        return true;
+    }
+
+    public bool TryCompleteFurnaceProductionServer()
+    {
+        if (!IsNetworkSessionActive())
+        {
+            FinishProductionLocal();
+            return true;
+        }
+
+        if (!IsServer || !IsProducing)
+        {
+            return false;
+        }
+
+        FinishProductionServer();
+        return true;
+    }
+
+    public void CancelFurnaceProductionServer()
+    {
+        if (!IsNetworkSessionActive())
+        {
+            CancelProductionLocal();
+            return;
+        }
+
+        if (IsServer)
+        {
+            CancelProductionServer();
+        }
+    }
+
+    public void UpdateFurnaceProductionProgress(float progressNormalized)
+    {
+        if (IsNetworkSessionActive())
+        {
+            if (IsServer)
+            {
+                SetManualProductionProgressServer(progressNormalized);
+            }
+
+            return;
+        }
+
+        SetManualProductionProgressLocal(progressNormalized);
+    }
+
+    public void SyncSelectedComponentToFurnace(MountableBridgeComponentSO selectedComponent)
+    {
+        if (furnaceStorage != null)
+        {
+            furnaceStorage.SetSelectedMountableBridgeComponent(selectedComponent);
+        }
+    }
+
+    private bool TryStartFurnaceProductionLocal()
+    {
+        if (!CanProduceSelectedComponentLocal(out FactoryProductionFailureReason reason))
+        {
+            ReportFurnaceProductionFailureLocal(reason);
+            return false;
+        }
+
+        MountableBridgeComponentSO selectedComponent = SelectedComponent;
+        if (!TryConsumeRequiredResources(selectedComponent))
+        {
+            ReportFurnaceProductionFailureLocal(FactoryProductionFailureReason.MissingResources);
+            return false;
+        }
+
+        BeginManualProductionLocal();
+        return true;
+    }
+
+    private void ReportFurnaceProductionFailureServer(FactoryProductionFailureReason reason)
+    {
+        Debug.Log($"Cannot start furnace production: {reason}");
+    }
+
+    private void ReportFurnaceProductionFailureLocal(FactoryProductionFailureReason reason)
+    {
+        Debug.Log($"Cannot start furnace production: {reason}");
+    }
 }

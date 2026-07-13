@@ -14,7 +14,19 @@ public class ProductionProgressUI : MonoBehaviour
     {
         furnaceStorage.ProductionStarted += FurnaceStorage_OnProductionStarted;
         furnaceStorage.ProductionFinished += FurnaceStorage_OnProductionFinished;
+        furnaceStorage.FurnaceStateChanged += FurnaceStorage_OnFurnaceStateChanged;
         Hide();
+        FurnaceStorage_OnFurnaceStateChanged(this, EventArgs.Empty);
+    }
+
+    private void OnDestroy()
+    {
+        if (furnaceStorage != null)
+        {
+            furnaceStorage.ProductionStarted -= FurnaceStorage_OnProductionStarted;
+            furnaceStorage.ProductionFinished -= FurnaceStorage_OnProductionFinished;
+            furnaceStorage.FurnaceStateChanged -= FurnaceStorage_OnFurnaceStateChanged;
+        }
     }
 
     private void FurnaceStorage_OnProductionFinished(object sender, EventArgs e)
@@ -25,6 +37,19 @@ public class ProductionProgressUI : MonoBehaviour
     private void FurnaceStorage_OnProductionStarted(object sender, EventArgs e)
     {
         Show();
+    }
+
+    private void FurnaceStorage_OnFurnaceStateChanged(object sender, EventArgs e)
+    {
+        if (furnaceStorage.IsFurnaceOn)
+        {
+            Show();
+            UpdateFillMeters();
+        }
+        else
+        {
+            Hide();
+        }
     }
 
     // Update is called once per frame

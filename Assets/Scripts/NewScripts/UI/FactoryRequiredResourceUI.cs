@@ -8,7 +8,7 @@ public class FactoryRequiredResourceUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI resourceNameText;
     [SerializeField] private TextMeshProUGUI resourceAmountText;
 
-    public void SetProperties(Sprite resourceSprite, string resourceName, string resourceAmount )
+    public void SetProperties(Sprite resourceSprite, string resourceName, string resourceAmount)
     {
         resourceNameText.text = resourceName;
         resourceAmountText.text = resourceAmount;

@@ -153,6 +153,11 @@ public class PlayerNetworkSetup : NetworkBehaviour
             lookingAtUi.gameObject.SetActive(false);
         }
 
+        foreach (var bridgeRequirementsUi in GetComponentsInChildren<BridgeRequirementsUI>(true))
+        {
+            bridgeRequirementsUi.gameObject.SetActive(false);
+        }
+
         foreach (var canvas in GetComponentsInChildren<Canvas>(true))
         {
             canvas.gameObject.SetActive(false);

@@ -16,18 +16,31 @@ public class RequiredResourcesPanelUI : MonoBehaviour
 
     public void SetRequiredResourcesInformations(MountableBridgeComponentSO mountableBridgeComponentSO)
     {
+        SetRequiredResourcesInformations(mountableBridgeComponentSO, null);
+    }
+
+    public void SetRequiredResourcesInformations(MountableBridgeComponentSO mountableBridgeComponentSO, BaseStorageNew storage)
+    {
         if (instantiatedRequiredResourceObjectHolderList.Count != 0)
         {
             foreach (GameObject gameObject in instantiatedRequiredResourceObjectHolderList)
             {
                 Destroy(gameObject);
             }
+            instantiatedRequiredResourceObjectHolderList.Clear();
         }
+        if (mountableBridgeComponentSO == null)
+        {
+            return;
+        }
+
         foreach(RequiredResource requiredResource in mountableBridgeComponentSO.requiredResources)
         {
             GameObject requiredResourceInformationHolder = Instantiate(requiredResourceObjectHolderTemplate, contentHolder);
             instantiatedRequiredResourceObjectHolderList.Add(requiredResourceInformationHolder);
-            requiredResourceInformationHolder.GetComponent<FactoryRequiredResourceUI>().SetProperties(requiredResource.resourceType.icon, requiredResource.resourceType.resourceName, requiredResource.amount.ToString());
+            int ownedAmount = storage != null ? Mathf.Max(0, storage.CheckBaseResourceAmount(requiredResource.resourceType)) : -1;
+            string amountText = ownedAmount >= 0 ? $"{ownedAmount} / {requiredResource.amount}" : requiredResource.amount.ToString();
+            requiredResourceInformationHolder.GetComponent<FactoryRequiredResourceUI>().SetProperties(requiredResource.resourceType.icon, requiredResource.resourceType.resourceName, amountText);
             requiredResourceInformationHolder.SetActive(true);
         }
     }

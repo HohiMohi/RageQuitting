@@ -42,6 +42,40 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
     }
 }
 
+public readonly struct BridgeRequirementLine
+{
+    public readonly string ComponentName;
+    public readonly int CurrentAmount;
+    public readonly int RequiredAmount;
+
+    public BridgeRequirementLine(string componentName, int currentAmount, int requiredAmount)
+    {
+        ComponentName = componentName;
+        CurrentAmount = currentAmount;
+        RequiredAmount = requiredAmount;
+    }
+}
+
+public readonly struct BridgeRequirementsSnapshot
+{
+    public readonly int CurrentStageIndex;
+    public readonly bool IsBridgeComplete;
+    public readonly IReadOnlyList<BridgeRequirementLine> CurrentStageRequirements;
+    public readonly IReadOnlyList<BridgeRequirementLine> RemainingStageRequirements;
+
+    public BridgeRequirementsSnapshot(
+        int currentStageIndex,
+        bool isBridgeComplete,
+        IReadOnlyList<BridgeRequirementLine> currentStageRequirements,
+        IReadOnlyList<BridgeRequirementLine> remainingStageRequirements)
+    {
+        CurrentStageIndex = currentStageIndex;
+        IsBridgeComplete = isBridgeComplete;
+        CurrentStageRequirements = currentStageRequirements;
+        RemainingStageRequirements = remainingStageRequirements;
+    }
+}
+
 public class GameplayManager : MonoBehaviour
 {
     private const string RequestFullStateMessageName = "GameplayManager_RequestBridgeState";
@@ -76,15 +110,35 @@ public class GameplayManager : MonoBehaviour
 
     public bool IsFullyAssembled => isFullyAsembled;
     public event EventHandler OnBridgeFullyAssembled;
+    public event EventHandler OnBridgeRequirementsChanged;
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("GameplayManager: Duplicate instance detected. Disabling this instance.");
+            enabled = false;
+            return;
+        }
+
         Instance = this;
         isFullyAsembled = false;
     }
 
     private System.Collections.IEnumerator Start()
     {
+        if (Instance != this)
+        {
+            yield break;
+        }
+
+        EnsureBridgeReference();
+        if (bridge == null)
+        {
+            Debug.LogError("GameplayManager: No Bridge reference found in scene. Bridge gameplay state will not be initialized.");
+            yield break;
+        }
+
         CacheBridgeComponents();
         SubscribeBridgeComponentEvents();
         yield return null;
@@ -96,6 +150,7 @@ public class GameplayManager : MonoBehaviour
             {
                 InitializeServerBridgeState();
                 UpdateComponentsCanBeMountedProperty();
+                NotifyBridgeRequirementsChanged();
                 BroadcastBridgeState();
             }
             else
@@ -106,6 +161,7 @@ public class GameplayManager : MonoBehaviour
         else
         {
             UpdateComponentsCanBeMountedProperty();
+            NotifyBridgeRequirementsChanged();
         }
     }
 
@@ -119,16 +175,21 @@ public class GameplayManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (NetworkManager.Singleton == null || NetworkManager.Singleton.CustomMessagingManager == null || !networkMessagingRegistered)
+        UnsubscribeBridgeComponentEvents();
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.CustomMessagingManager != null && networkMessagingRegistered)
         {
-            return;
+            NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestFullStateMessageName);
+            NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestMountMessageName);
+            NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestAssembleMessageName);
+            NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(StateSyncMessageName);
+            networkMessagingRegistered = false;
         }
 
-        NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestFullStateMessageName);
-        NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestMountMessageName);
-        NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestAssembleMessageName);
-        NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(StateSyncMessageName);
-        networkMessagingRegistered = false;
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     private bool IsNetworkSessionActive()
@@ -177,6 +238,28 @@ public class GameplayManager : MonoBehaviour
         bridgeComponentEventsSubscribed = true;
     }
 
+    private void UnsubscribeBridgeComponentEvents()
+    {
+        if (bridge == null || !bridgeComponentEventsSubscribed)
+        {
+            return;
+        }
+
+        bridge.ComponentMounted -= Bridge_OnComponentMounted;
+        bridge.ComponentAssembled -= Bridge_OnComponentAssembled;
+        bridgeComponentEventsSubscribed = false;
+    }
+
+    private void EnsureBridgeReference()
+    {
+        if (bridge != null)
+        {
+            return;
+        }
+
+        bridge = FindFirstObjectByType<Bridge>();
+    }
+
     private void InitializeServerBridgeState()
     {
         if (!NetworkManager.Singleton.IsServer || bridgeComponentStates.Count > 0)
@@ -205,6 +288,7 @@ public class GameplayManager : MonoBehaviour
 
         bridgeComponentDataArray[e.componentID].isAssembled = true;
         CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
     }
 
     private void Bridge_OnComponentMounted(object sender, Bridge.ComponentMountedEventArgs e)
@@ -216,6 +300,7 @@ public class GameplayManager : MonoBehaviour
 
         bridgeComponentDataArray[e.componentID].isMounted = true;
         CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
     }
 
     private void UpdateComponentsCanBeMountedProperty()
@@ -335,6 +420,12 @@ public class GameplayManager : MonoBehaviour
 
         bridgeComponent.ApplyMountedState();
         heldComponent.RemoveFromWorld();
+        bridgeComponentDataArray[bridgeComponent.ComponentID].isMounted = true;
+        if (!bridgeComponent.NeedAssembling)
+        {
+            bridgeComponentDataArray[bridgeComponent.ComponentID].isAssembled = true;
+        }
+        NotifyBridgeRequirementsChanged();
     }
 
     private void HandleRequestMountMessage(ulong senderClientId, FastBufferReader reader)
@@ -379,6 +470,7 @@ public class GameplayManager : MonoBehaviour
         bridgeComponentStates[stateIndex] = state;
         ApplyNetworkState(state);
         CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
         BroadcastBridgeState();
     }
 
@@ -425,6 +517,7 @@ public class GameplayManager : MonoBehaviour
         bridgeComponentStates[stateIndex] = state;
         ApplyNetworkState(state);
         CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
         BroadcastBridgeState();
     }
 
@@ -491,6 +584,7 @@ public class GameplayManager : MonoBehaviour
             ApplyNetworkState(state);
         }
 
+        NotifyBridgeRequirementsChanged();
         if (IsBridgeFullyAssembledFromStateList())
         {
             InvokeBridgeFullyAssembledOnce();
@@ -572,7 +666,82 @@ public class GameplayManager : MonoBehaviour
 
         bridgeFullyAssembledEventInvoked = true;
         isFullyAsembled = true;
+        NotifyBridgeRequirementsChanged();
         OnBridgeFullyAssembled?.Invoke(this, EventArgs.Empty);
+    }
+
+    public BridgeRequirementsSnapshot GetBridgeRequirementsSnapshot()
+    {
+        List<BridgeRequirementLine> currentStageRequirements = new List<BridgeRequirementLine>();
+        List<BridgeRequirementLine> remainingStageRequirements = new List<BridgeRequirementLine>();
+
+        if (isFullyAsembled || bridgeBuildingStages == null || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
+        {
+            return new BridgeRequirementsSnapshot(currentBridgeBuildingStageIndex, isFullyAsembled, currentStageRequirements, remainingStageRequirements);
+        }
+
+        Dictionary<string, RequirementCounter> currentStageCounters = new Dictionary<string, RequirementCounter>();
+        AddStageRequirements(currentBridgeBuildingStageIndex, currentStageCounters, includeMountedProgress: true);
+        foreach (KeyValuePair<string, RequirementCounter> pair in currentStageCounters)
+        {
+            currentStageRequirements.Add(new BridgeRequirementLine(pair.Key, pair.Value.CurrentAmount, pair.Value.RequiredAmount));
+        }
+        currentStageRequirements.Sort((first, second) => string.Compare(first.ComponentName, second.ComponentName, StringComparison.Ordinal));
+
+        Dictionary<string, RequirementCounter> remainingStageCounters = new Dictionary<string, RequirementCounter>();
+        for (int stageIndex = currentBridgeBuildingStageIndex + 1; stageIndex < bridgeBuildingStages.Length; stageIndex++)
+        {
+            AddStageRequirements(stageIndex, remainingStageCounters, includeMountedProgress: false);
+        }
+
+        foreach (KeyValuePair<string, RequirementCounter> pair in remainingStageCounters)
+        {
+            remainingStageRequirements.Add(new BridgeRequirementLine(pair.Key, 0, pair.Value.RequiredAmount));
+        }
+        remainingStageRequirements.Sort((first, second) => string.Compare(first.ComponentName, second.ComponentName, StringComparison.Ordinal));
+
+        return new BridgeRequirementsSnapshot(currentBridgeBuildingStageIndex, false, currentStageRequirements, remainingStageRequirements);
+    }
+
+    private void AddStageRequirements(int stageIndex, Dictionary<string, RequirementCounter> counters, bool includeMountedProgress)
+    {
+        if (stageIndex < 0 || stageIndex >= bridgeBuildingStages.Length || bridgeBuildingStages[stageIndex].bridgeComponentDataIndexes == null)
+        {
+            return;
+        }
+
+        foreach (int componentIndex in bridgeBuildingStages[stageIndex].bridgeComponentDataIndexes)
+        {
+            if (componentIndex < 0 || componentIndex >= bridgeComponentDataArray.Length)
+            {
+                continue;
+            }
+
+            BridgeComponentData componentData = bridgeComponentDataArray[componentIndex];
+            string componentName = componentData.bridgeComponentSO != null && !string.IsNullOrWhiteSpace(componentData.bridgeComponentSO.componentName)
+                ? componentData.bridgeComponentSO.componentName
+                : $"Bridge Component {componentIndex}";
+
+            counters.TryGetValue(componentName, out RequirementCounter counter);
+            counter.RequiredAmount++;
+            if (includeMountedProgress && componentData.isMounted)
+            {
+                counter.CurrentAmount++;
+            }
+
+            counters[componentName] = counter;
+        }
+    }
+
+    private void NotifyBridgeRequirementsChanged()
+    {
+        OnBridgeRequirementsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private struct RequirementCounter
+    {
+        public int CurrentAmount;
+        public int RequiredAmount;
     }
 
     private bool TryGetStateIndex(int componentID, out int stateIndex)

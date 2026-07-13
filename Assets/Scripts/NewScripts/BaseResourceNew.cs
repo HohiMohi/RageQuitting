@@ -11,6 +11,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     [SerializeField] private BaseResourceSO baseResourceSO;
     [SerializeField] private float resourceDurability;
+    private readonly NetworkVariable<float> resourceDurabilityNetwork = new NetworkVariable<float>();
     public EventHandler EquippableItemNeeded;
     [SerializeField] private bool isPickedUp = false;
     public bool IsPickedUp => isPickedUp;
@@ -101,11 +102,31 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
+        resourceDurability = GetMaxResourceDurability();
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        resourceDurability = baseResourceSO.resourceDurability;
+        if (!IsNetworkSessionActive())
+        {
+            SetLocalDurability(GetMaxResourceDurability(), false);
+        }
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        resourceDurabilityNetwork.OnValueChanged += ResourceDurabilityNetwork_OnValueChanged;
+        if (IsServer)
+        {
+            resourceDurabilityNetwork.Value = GetMaxResourceDurability();
+        }
+
+        resourceDurability = resourceDurabilityNetwork.Value;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        resourceDurabilityNetwork.OnValueChanged -= ResourceDurabilityNetwork_OnValueChanged;
     }
 
     // Update is called once per frame
@@ -133,82 +154,14 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public void DamageReceived(EquippableItemSO equippableItemSO, float damage)
     {
-        float damageAmount = 0;
-        bool equippedItemSupported = false;
-        BaseResourceSO productBaseResourceSO = null;
-        if (equippableItemSO != null)
-        {
-
-            foreach (BaseResourceDestructionRecipe recipe in baseResourceSO.baseResourceDestructionRecipeArray)
-            {
-                if (equippableItemSO.itemType == recipe.neededEquippableItemType)
-                {
-                    equippedItemSupported = true;
-                    productBaseResourceSO = recipe.finalProductBaseResourceSO;
-                }
-            }
-            if (equippedItemSupported)
-            {
-                Debug.Log("Tool supported");
-                damageAmount = equippableItemSO.damage;
-                damageAmount *= 2;
-            }
-            else
-            {
-                EquippableItemNeeded?.Invoke(this, EventArgs.Empty);
-                Debug.Log("Unsupported tool type");
-            }
-        }
-
-        resourceDurability -= damageAmount;
-        if (resourceDurability <= 0f)
-        {
-            if (productBaseResourceSO != null)
-            {
-                Debug.Log($"{baseResourceSO.name} resource source destroyed. Resource spawned {productBaseResourceSO.name}");
-                // Here you would implement the logic to spawn the resource, e.g.:
-                Instantiate(productBaseResourceSO.resourcePrefab, transform.position, Quaternion.identity);
-            }
-            //Destroy the resource source object after spawning the resource
-            DespawnOrDestroy();
-
-        }
-        else
-        {
-            ResourceDurabilityChanged?.Invoke(this, new ResourceDurabilityChangedEventArgs
-            {
-                resourceDurability = resourceDurability,
-                resourceDurabilityNormalized = GetCurrentResourceDurabilityNormalized()
-            });
-        }
-
+        EquippableItemType toolType = equippableItemSO != null ? equippableItemSO.itemType : EquippableItemType.None;
+        float damageAmount = equippableItemSO != null ? damage * 2f : damage;
+        RequestOrApplyDamage(toolType, damageAmount);
     }
 
     public void DamageReceived(float damage)
     {
-        resourceDurability -= damage;
-        Debug.Log($"Current resource durability: {resourceDurability}");
-        if (resourceDurability <= 0f)
-        {
-            foreach (BaseResourceDestructionRecipe recipe in baseResourceSO.baseResourceDestructionRecipeArray)
-            {
-                if (recipe.neededEquippableItemType == EquippableItemType.None)
-                {
-                    Debug.Log(recipe.finalProductBaseResourceSO.resourcePrefab);
-                    Instantiate(recipe.finalProductBaseResourceSO.resourcePrefab, transform.position, Quaternion.identity);
-                    break;
-                }
-            }
-                DespawnOrDestroy();
-        }
-        else
-        {
-            ResourceDurabilityChanged?.Invoke(this, new ResourceDurabilityChangedEventArgs
-            {
-                resourceDurability = resourceDurability,
-                resourceDurabilityNormalized = GetCurrentResourceDurabilityNormalized()
-            });
-        }
+        RequestOrApplyDamage(EquippableItemType.None, damage);
     }
 
     public float GetMovementSpeedPenalty()
@@ -313,7 +266,8 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public float GetCurrentResourceDurabilityNormalized()
     {
-        return resourceDurability / baseResourceSO.resourceDurability;
+        float maxDurability = GetMaxResourceDurability();
+        return maxDurability > 0f ? resourceDurability / maxDurability : 0f;
     }
 
     private void UpdatePickedUpProperties()
@@ -344,6 +298,119 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     {
         isPickedUp = pickedUp;
         UpdatePickedUpProperties();
+    }
+
+    private void RequestOrApplyDamage(EquippableItemType toolType, float damage)
+    {
+        if (IsNetworkSessionActive())
+        {
+            if (IsServer)
+            {
+                ApplyDamageServer(toolType, damage);
+            }
+            else
+            {
+                RequestDamageServerRpc((int)toolType, damage);
+            }
+
+            return;
+        }
+
+        ApplyDamageLocal(toolType, damage);
+    }
+
+    private void ApplyDamageServer(EquippableItemType toolType, float damage)
+    {
+        if (!TryGetDestructionRecipe(toolType, out BaseResourceDestructionRecipe recipe))
+        {
+            NotifyEquippableItemNeeded();
+            return;
+        }
+
+        float currentDurability = resourceDurabilityNetwork.Value > 0f ? resourceDurabilityNetwork.Value : GetMaxResourceDurability();
+        float newDurability = Mathf.Max(0f, currentDurability - Mathf.Max(0f, damage));
+        resourceDurabilityNetwork.Value = newDurability;
+
+        if (newDurability <= 0f)
+        {
+            BaseResourceSpawnUtility.SpawnProducts(recipe, transform.position, transform.rotation);
+            DespawnOrDestroy();
+        }
+    }
+
+    private void ApplyDamageLocal(EquippableItemType toolType, float damage)
+    {
+        if (!TryGetDestructionRecipe(toolType, out BaseResourceDestructionRecipe recipe))
+        {
+            NotifyEquippableItemNeeded();
+            return;
+        }
+
+        SetLocalDurability(Mathf.Max(0f, resourceDurability - Mathf.Max(0f, damage)), true);
+        if (resourceDurability <= 0f)
+        {
+            BaseResourceSpawnUtility.SpawnProducts(recipe, transform.position, transform.rotation);
+            DespawnOrDestroy();
+        }
+    }
+
+    private bool TryGetDestructionRecipe(EquippableItemType toolType, out BaseResourceDestructionRecipe matchingRecipe)
+    {
+        matchingRecipe = default;
+        if (baseResourceSO == null || baseResourceSO.baseResourceDestructionRecipeArray == null)
+        {
+            return false;
+        }
+
+        foreach (BaseResourceDestructionRecipe recipe in baseResourceSO.baseResourceDestructionRecipeArray)
+        {
+            if (recipe.neededEquippableItemType == toolType)
+            {
+                matchingRecipe = recipe;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void SetLocalDurability(float durability, bool notify)
+    {
+        resourceDurability = durability;
+        if (notify)
+        {
+            RaiseResourceDurabilityChanged();
+        }
+    }
+
+    private void ResourceDurabilityNetwork_OnValueChanged(float previousValue, float newValue)
+    {
+        SetLocalDurability(newValue, true);
+    }
+
+    private void RaiseResourceDurabilityChanged()
+    {
+        ResourceDurabilityChanged?.Invoke(this, new ResourceDurabilityChangedEventArgs
+        {
+            resourceDurability = resourceDurability,
+            resourceDurabilityNormalized = GetCurrentResourceDurabilityNormalized()
+        });
+    }
+
+    private void NotifyEquippableItemNeeded()
+    {
+        if (IsNetworkSessionActive() && IsServer)
+        {
+            EquippableItemNeededClientRpc();
+            return;
+        }
+
+        EquippableItemNeeded?.Invoke(this, EventArgs.Empty);
+    }
+
+    private float GetMaxResourceDurability()
+    {
+        return baseResourceSO != null ? Mathf.Max(0f, baseResourceSO.resourceDurability) : 0f;
     }
 
     private bool TryCompleteNetworkPickup(ulong ownerClientId, Vector3 bodyAnchorLocalOffset, float playerControllerRadius)
@@ -495,6 +562,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private void RequestRemoveFromWorldServerRpc()
     {
         DespawnOrDestroy();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestDamageServerRpc(int toolType, float damage)
+    {
+        ApplyDamageServer((EquippableItemType)toolType, damage);
     }
 
     private ClientRpcParams CreateTargetClientRpcParams(ulong clientId)
@@ -892,6 +965,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private void SetPickedUpStateClientRpc(bool pickedUp)
     {
         SetPickedUpState(pickedUp);
+    }
+
+    [ClientRpc]
+    private void EquippableItemNeededClientRpc()
+    {
+        EquippableItemNeeded?.Invoke(this, EventArgs.Empty);
     }
 
     [ClientRpc]
