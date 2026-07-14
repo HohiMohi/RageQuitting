@@ -2,7 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class NPCCarrier : NetworkBehaviour, ICarryActor
+public class NPCCarrier : NetworkBehaviour, ICarryActor, ISharedCarryCollisionProvider
 {
     [SerializeField] private Transform carryAnchor;
     [SerializeField] private Transform bodyAnchor;
@@ -51,9 +51,45 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
 
     public Vector3 BodyAnchorLocalOffset => BodyAnchor != null ? BodyAnchor.localPosition : defaultBodyAnchorLocalPosition;
     public float CollisionRadius => collisionRadius;
+    public GameObject CollisionRoot => gameObject;
     public bool CanCarryObject => carriedObject == null;
     public GameObject CarriedObject => carriedObject;
     public bool IsSharedCarryActive => isSharedCarry;
+
+    public bool TryGetSharedCarryCapsule(out Vector3 point1, out Vector3 point2, out float radius)
+    {
+        return SharedCarryCollisionShapeUtility.TryGetCapsule(gameObject, out point1, out point2, out radius);
+    }
+
+    public bool CanApplySharedCarryDelta(Vector3 delta)
+    {
+        if (!isSharedCarry || delta.sqrMagnitude <= 0.000001f)
+        {
+            return true;
+        }
+
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+        {
+            return false;
+        }
+
+        Vector3 predictedPosition = transform.position + delta;
+        if (!NavMesh.SamplePosition(predictedPosition, out NavMeshHit sampledPosition, sharedCarryTargetSampleRadius, agent.areaMask))
+        {
+            return false;
+        }
+
+        Vector3 horizontalDifference = sampledPosition.position - predictedPosition;
+        horizontalDifference.y = 0f;
+        if (horizontalDifference.magnitude > Mathf.Max(0.1f, agent.radius))
+        {
+            return false;
+        }
+
+        Vector3 currentPosition = agent.nextPosition;
+        currentPosition.y = sampledPosition.position.y;
+        return !NavMesh.Raycast(currentPosition, sampledPosition.position, out _, agent.areaMask);
+    }
 
     private void Awake()
     {

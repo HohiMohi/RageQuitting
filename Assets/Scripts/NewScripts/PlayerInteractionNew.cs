@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerInteractionNew : MonoBehaviour
+public class PlayerInteractionNew : MonoBehaviour, ISharedCarryCollisionProvider
 {
     private PlayerInputNew _playerInputNew;
     private PlayerHealth _playerHealth;
@@ -370,6 +370,18 @@ public class PlayerInteractionNew : MonoBehaviour
     public float GetCharacterControllerRadius()
     {
         return TryGetComponent(out CharacterController characterController) ? characterController.radius : 0.5f;
+    }
+
+    public GameObject CollisionRoot => gameObject;
+
+    public bool TryGetSharedCarryCapsule(out Vector3 point1, out Vector3 point2, out float radius)
+    {
+        return SharedCarryCollisionShapeUtility.TryGetCapsule(gameObject, out point1, out point2, out radius);
+    }
+
+    public bool CanApplySharedCarryDelta(Vector3 delta)
+    {
+        return TryGetComponent(out CharacterController characterController) && characterController.enabled;
     }
 
     public void SubmitSharedCarryInput(Vector3 worldMoveInput)

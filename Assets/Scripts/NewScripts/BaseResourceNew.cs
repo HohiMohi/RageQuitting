@@ -19,6 +19,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [SerializeField] private float sharedCarryGroundRaycastDownDistance = 20f;
     [SerializeField] private float sharedCarryGroundClearance = 0.02f;
     [SerializeField] private float sharedCarryGroundVerticalFollowSpeed = 12f;
+    [SerializeField] private LayerMask sharedCarryObstacleLayers = Physics.AllLayers;
+    [SerializeField] private float sharedCarryCollisionSkin = 0.05f;
+    [SerializeField] private float sharedCarryMinimumStep = 0.01f;
+    [SerializeField] private int sharedCarrySolverIterations = 6;
+    [SerializeField, Range(0f, 1f)] private float sharedCarrySupportSurfaceNormalYThreshold = 0.7f;
     public bool IsPickedUp => isPickedUp;
     private Rigidbody _rigidbody;
     private readonly List<ulong> holderClientIds = new List<ulong>();
@@ -32,6 +37,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private readonly Dictionary<ulong, ICarryActor> npcHolderActors = new Dictionary<ulong, ICarryActor>();
     private readonly Dictionary<ulong, int> npcHolderAttachPointIndices = new Dictionary<ulong, int>();
     private readonly Dictionary<ulong, Vector3> npcHolderAttachLocalPoints = new Dictionary<ulong, Vector3>();
+    private readonly List<ISharedCarryCollisionProvider> sharedCarryCollisionProviders = new List<ISharedCarryCollisionProvider>();
     private ICarryActor externalCarryActor;
 
     public EventHandler<ResourceDurabilityChangedEventArgs> ResourceDurabilityChanged;
@@ -681,10 +687,36 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         npcHolderAttachPointIndices.Remove(actorId);
         npcHolderAttachLocalPoints.Remove(actorId);
 
-        if (notifyActor)
+        if (notifyActor && IsAliveCarryActor(carryActor))
         {
             carryActor.ForceRelease(gameObject);
         }
+    }
+
+    private void RemoveInvalidNpcSharedCarryHolders()
+    {
+        if (npcHolderActorIds.Count == 0)
+        {
+            return;
+        }
+
+        ulong[] actorIds = npcHolderActorIds.ToArray();
+        foreach (ulong actorId in actorIds)
+        {
+            if (!npcHolderActors.TryGetValue(actorId, out ICarryActor carryActor)
+                || !IsAliveCarryActor(carryActor))
+            {
+                npcHolderActorIds.Remove(actorId);
+                npcHolderActors.Remove(actorId);
+                npcHolderAttachPointIndices.Remove(actorId);
+                npcHolderAttachLocalPoints.Remove(actorId);
+            }
+        }
+    }
+
+    private static bool IsAliveCarryActor(ICarryActor carryActor)
+    {
+        return carryActor is Component component && component != null;
     }
 
     private int GetCurrentHolderCount()
@@ -760,6 +792,8 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     private void UpdateKinematicCarryPosition()
     {
+        RemoveInvalidNpcSharedCarryHolders();
+
         Vector3 combinedInput = Vector3.zero;
 
         foreach (ulong holderClientId in holderClientIds)
@@ -792,11 +826,60 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         if (combinedInput != Vector3.zero)
         {
             float carryMoveSpeed = baseResourceSO != null ? baseResourceSO.carryMoveSpeed : 4f;
-            transform.position += combinedInput * carryMoveSpeed * Time.deltaTime;
+            Vector3 desiredDelta = combinedInput * carryMoveSpeed * Time.deltaTime;
+            RebuildSharedCarryCollisionProviders();
+            Vector3 safeDelta = SharedCarryMovementSolver.GetSafeSharedCarryDelta(
+                desiredDelta,
+                sharedCarryCollisionProviders,
+                gameObject,
+                new SharedCarryMovementSolver.Settings
+                {
+                    obstacleLayers = sharedCarryObstacleLayers,
+                    collisionSkin = sharedCarryCollisionSkin,
+                    minimumStep = sharedCarryMinimumStep,
+                    solverIterations = sharedCarrySolverIterations,
+                    supportSurfaceNormalYThreshold = sharedCarrySupportSurfaceNormalYThreshold
+                });
+            transform.position += safeDelta;
         }
 
         AlignSharedCarryHeightToHolderAnchors();
         UpdateNpcSharedCarryAttachments();
+    }
+
+    private void RebuildSharedCarryCollisionProviders()
+    {
+        sharedCarryCollisionProviders.Clear();
+
+        foreach (ulong holderClientId in holderClientIds)
+        {
+            PlayerInteractionNew playerInteraction = null;
+            if (holderClientId == NoHolderClientId || !IsNetworkSessionActive())
+            {
+                playerInteraction = FindFirstObjectByType<PlayerInteractionNew>();
+            }
+            else if (NetworkManager.Singleton.ConnectedClients.TryGetValue(holderClientId, out NetworkClient networkClient))
+            {
+                playerInteraction = networkClient.PlayerObject != null
+                    ? networkClient.PlayerObject.GetComponent<PlayerInteractionNew>()
+                    : null;
+            }
+
+            if (playerInteraction != null
+                && playerInteraction is ISharedCarryCollisionProvider provider)
+            {
+                sharedCarryCollisionProviders.Add(provider);
+            }
+        }
+
+        foreach (ulong actorId in npcHolderActorIds)
+        {
+            if (npcHolderActors.TryGetValue(actorId, out ICarryActor carryActor)
+                && carryActor is ISharedCarryCollisionProvider provider)
+            {
+                sharedCarryCollisionProviders.Add(provider);
+            }
+        }
     }
 
     private void AlignSharedCarryHeightToHolderAnchors()
