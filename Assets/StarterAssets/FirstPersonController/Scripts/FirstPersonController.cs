@@ -232,31 +232,27 @@ namespace StarterAssets
 
 		private void CameraRotation()
 		{
-            // if there is an input
-            if (_playerInputNew.GetLookDeltaValue().sqrMagnitude >= _threshold)
-            // Prefab setup - StarterAssetsInputs handling
-            //if (_input.look.sqrMagnitude >= _threshold)
+            Vector2 lookDelta = _playerInputNew.GetLookDeltaValue();
+            bool hasLookInput = lookDelta.sqrMagnitude >= _threshold;
+            if (hasLookInput)
             {
-                //Don't multiply mouse input by Time.deltaTime
                 float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
-                _cinemachineTargetPitch += _playerInputNew.GetLookDeltaValue().y * RotationSpeed * deltaTimeMultiplier;
-                _rotationVelocity = _playerInputNew.GetLookDeltaValue().x * RotationSpeed * deltaTimeMultiplier;
+                _cinemachineTargetPitch += lookDelta.y * RotationSpeed * deltaTimeMultiplier;
+                _rotationVelocity = lookDelta.x * RotationSpeed * deltaTimeMultiplier;
+            }
+            else
+            {
+                _rotationVelocity = 0f;
+            }
 
+            _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
+            CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0.0f, 0.0f);
 
-				// Prefab setup - StarterAssetsInputs handling
-                //_cinemachineTargetPitch += _input.look.y * RotationSpeed * deltaTimeMultiplier;
-                //_rotationVelocity = _input.look.x * RotationSpeed * deltaTimeMultiplier;
-
-                // clamp our pitch rotation
-                _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
-
-				// Update Cinemachine camera target pitch
-				CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0.0f, 0.0f);
-
-				// rotate the player left and right
-				transform.Rotate(Vector3.up * _rotationVelocity);
-			}
+            if (hasLookInput)
+            {
+                transform.Rotate(Vector3.up * _rotationVelocity);
+            }
 		}
 
 		private void Move()
@@ -371,7 +367,8 @@ namespace StarterAssets
 
 		private void MoveDuringSharedCarry()
 		{
-			Vector3 worldMoveInput = GetWorldMoveInput();
+            Vector2 moveInput = _playerInputNew.GetMoveVectorValue();
+			Vector3 worldMoveInput = GetSharedCarryWorldMoveInput(moveInput);
 			SendSharedCarryInputIfNeeded(worldMoveInput);
 
 			Vector3 attachCorrection = _playerInteractionNew.GetSharedCarryAnchorCorrection();
@@ -389,15 +386,14 @@ namespace StarterAssets
 			_speed = 0f;
 		}
 
-		private Vector3 GetWorldMoveInput()
+		private Vector3 GetSharedCarryWorldMoveInput(Vector2 moveInput)
 		{
-			Vector2 moveInput = _playerInputNew.GetMoveVectorValue();
 			if (moveInput == Vector2.zero)
 			{
 				return Vector3.zero;
 			}
 
-			Vector3 worldMoveInput = transform.right * moveInput.x + transform.forward * moveInput.y;
+			Vector3 worldMoveInput = transform.forward * moveInput.y + transform.right * moveInput.x;
 			worldMoveInput.y = 0f;
 			return Vector3.ClampMagnitude(worldMoveInput, 1f);
 		}
@@ -415,6 +411,7 @@ namespace StarterAssets
 			_lastSentSharedCarryInput = worldMoveInput;
 			_playerInteractionNew.SubmitSharedCarryInput(worldMoveInput);
 		}
+
 
 		private void JumpAndGravity()
 		{

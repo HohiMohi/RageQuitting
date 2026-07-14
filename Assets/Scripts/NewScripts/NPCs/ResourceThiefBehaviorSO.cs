@@ -94,13 +94,15 @@ public class ResourceThiefBehaviorSO : NPCBehaviorSO
         {
             Brain.Carrier.SetSharedCarryMoveTarget(homePosition);
             Brain.Agent.SetDestination(homePosition);
-            if (Vector3.Distance(Brain.transform.position, homePosition) > config.DeliveryDistance)
-            {
-                return;
-            }
 
             GameObject carriedObject = Brain.Carrier.CarriedObject;
             if (carriedObject == null)
+            {
+                Brain.Carrier.ClearSharedCarryMoveTarget();
+                return;
+            }
+
+            if (!Brain.Carrier.HasCarriedObjectReached(homePosition, config.DeliveryDistance))
             {
                 return;
             }

@@ -820,7 +820,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
             Brain.Carrier.SetSharedCarryMoveTarget(homePosition);
             Brain.Agent.SetDestination(homePosition);
-            if (Vector3.Distance(Brain.transform.position, homePosition) > config.DeliveryDistance)
+            if (!Brain.Carrier.HasCarriedObjectReached(homePosition, config.DeliveryDistance))
             {
                 return;
             }

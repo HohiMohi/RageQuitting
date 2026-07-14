@@ -10,6 +10,11 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     [SerializeField] private MountableBridgeComponentSO mountableBridgeComponentSO;
     [SerializeField] private bool isPickedUp = false;
+    [SerializeField] private LayerMask sharedCarryGroundLayerMask = Physics.DefaultRaycastLayers;
+    [SerializeField] private float sharedCarryGroundRaycastUpOffset = 2f;
+    [SerializeField] private float sharedCarryGroundRaycastDownDistance = 20f;
+    [SerializeField] private float sharedCarryGroundClearance = 0.02f;
+    [SerializeField] private float sharedCarryGroundVerticalFollowSpeed = 12f;
     public bool IsPickedUp => isPickedUp;
 
     private Rigidbody _rigidbody;
@@ -620,14 +625,80 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             transform.position += combinedInput * carryMoveSpeed * Time.deltaTime;
         }
 
+        AlignSharedCarryHeightToHolderAnchors();
         UpdateNpcSharedCarryAttachments();
     }
 
-    private bool TryGetHolderTransform(ulong holderClientId, out Transform holderTransform)
+    private void AlignSharedCarryHeightToHolderAnchors()
     {
-        holderTransform = null;
+        if (!TryGetSharedCarryHolderAnchorHeight(out float targetHeight))
+        {
+            return;
+        }
 
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.ConnectedClients.TryGetValue(holderClientId, out NetworkClient networkClient))
+        float maxDelta = Mathf.Max(0.1f, sharedCarryGroundVerticalFollowSpeed) * Time.deltaTime;
+        Vector3 currentPosition = transform.position;
+        currentPosition.y = Mathf.MoveTowards(currentPosition.y, targetHeight, maxDelta);
+        transform.position = currentPosition;
+    }
+
+    private bool TryGetSharedCarryHolderAnchorHeight(out float targetHeight)
+    {
+        targetHeight = transform.position.y;
+        float totalHeight = 0f;
+        int validHolderCount = 0;
+
+        foreach (ulong holderClientId in holderClientIds)
+        {
+            if (!holderAttachLocalPoints.TryGetValue(holderClientId, out Vector3 attachLocalPoint)
+                || !TryGetHolderBodyAnchor(holderClientId, out Transform bodyAnchor))
+            {
+                continue;
+            }
+
+            totalHeight += bodyAnchor.position.y - transform.TransformVector(attachLocalPoint).y;
+            validHolderCount++;
+        }
+
+        foreach (ulong actorId in npcHolderActorIds)
+        {
+            if (!npcHolderActors.TryGetValue(actorId, out ICarryActor carryActor)
+                || !npcHolderAttachLocalPoints.TryGetValue(actorId, out Vector3 attachLocalPoint)
+                || carryActor.BodyAnchor == null)
+            {
+                continue;
+            }
+
+            totalHeight += carryActor.BodyAnchor.position.y - transform.TransformVector(attachLocalPoint).y;
+            validHolderCount++;
+        }
+
+        if (validHolderCount == 0)
+        {
+            return false;
+        }
+
+        targetHeight = totalHeight / validHolderCount;
+        return true;
+    }
+
+    private bool TryGetHolderBodyAnchor(ulong holderClientId, out Transform holderBodyAnchor)
+    {
+        holderBodyAnchor = null;
+
+        if (holderClientId == NoHolderClientId || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            PlayerInteractionNew localPlayerInteraction = FindFirstObjectByType<PlayerInteractionNew>();
+            if (localPlayerInteraction == null || localPlayerInteraction.GetPickedUpGameObject() != gameObject)
+            {
+                return false;
+            }
+
+            holderBodyAnchor = localPlayerInteraction.GetCarryBodyAnchor();
+            return holderBodyAnchor != null;
+        }
+
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(holderClientId, out NetworkClient networkClient))
         {
             return false;
         }
@@ -637,8 +708,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             return false;
         }
 
-        holderTransform = playerInteraction.GetPickUpHoldPositionHolder();
-        return holderTransform != null;
+        holderBodyAnchor = playerInteraction.GetCarryBodyAnchor();
+        return holderBodyAnchor != null;
     }
 
     public void SubmitSharedCarryInput(Vector3 worldMoveInput)
@@ -684,7 +755,6 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     {
         SetSharedCarryInput(serverRpcParams.Receive.SenderClientId, worldMoveInput);
     }
-
     private void SetupLocalSharedCarryPickup(PlayerInteractionNew playerInteraction)
     {
         if (!holderClientIds.Contains(NoHolderClientId))
@@ -791,12 +861,78 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         return new Bounds(Vector3.zero, Vector3.one);
     }
 
+    private void AlignSharedCarryHeightToGround()
+    {
+        if (!TryGetSharedCarryGroundedPosition(out Vector3 groundedPosition))
+        {
+            return;
+        }
+
+        float maxDelta = Mathf.Max(0.1f, sharedCarryGroundVerticalFollowSpeed) * Time.deltaTime;
+        Vector3 currentPosition = transform.position;
+        currentPosition.y = Mathf.MoveTowards(currentPosition.y, groundedPosition.y, maxDelta);
+        transform.position = currentPosition;
+    }
+
+    private bool TryGetSharedCarryGroundedPosition(out Vector3 groundedPosition)
+    {
+        groundedPosition = transform.position;
+        Bounds bounds = GetWorldColliderBounds();
+        float bottomOffset = transform.position.y - bounds.min.y;
+        float rayDistance = sharedCarryGroundRaycastUpOffset + bounds.size.y + sharedCarryGroundRaycastDownDistance;
+        Vector3 rayOrigin = new Vector3(transform.position.x, bounds.max.y + sharedCarryGroundRaycastUpOffset, transform.position.z);
+        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, rayDistance, sharedCarryGroundLayerMask, QueryTriggerInteraction.Ignore);
+
+        bool hasGroundHit = false;
+        RaycastHit bestHit = default;
+        float bestDistance = float.MaxValue;
+        for (int i = 0; i < hits.Length; i++)
+        {
+            RaycastHit hit = hits[i];
+            if (hit.collider == null || IsOwnCollider(hit.collider) || hit.distance >= bestDistance)
+            {
+                continue;
+            }
+
+            bestHit = hit;
+            bestDistance = hit.distance;
+            hasGroundHit = true;
+        }
+
+        if (!hasGroundHit)
+        {
+            return false;
+        }
+
+        groundedPosition.y = bestHit.point.y + bottomOffset + sharedCarryGroundClearance;
+        return true;
+    }
+
+    private Bounds GetWorldColliderBounds()
+    {
+        if (TryGetComponent(out Collider objectCollider))
+        {
+            return objectCollider.bounds;
+        }
+
+        return new Bounds(transform.position, Vector3.one);
+    }
+
+    private bool IsOwnCollider(Collider candidate)
+    {
+        if (candidate.transform == transform || candidate.transform.IsChildOf(transform))
+        {
+            return true;
+        }
+
+        return candidate.attachedRigidbody != null && candidate.attachedRigidbody.gameObject == gameObject;
+    }
+
     [ClientRpc]
     private void SetPickedUpStateClientRpc(bool pickedUp)
     {
         SetPickedUpState(pickedUp);
     }
-
     [ClientRpc]
     private void ConfirmPickupClientRpc(bool followHoldPosition, float movementSpeedPenalty, bool useSharedCarryMovement, Vector3 attachLocalPoint, ClientRpcParams clientRpcParams = default)
     {
@@ -860,7 +996,6 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
         visualOverride.StartOverride(carriedObjectNetworkId, attachLocalPoint, bodyAnchorLocalOffset);
     }
-
     [ClientRpc]
     private void StopHolderVisualOverrideClientRpc(ulong holderClientId)
     {
