@@ -1,8 +1,10 @@
+using System.Collections;
 using Cinemachine;
 using StarterAssets;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerNetworkSetup : NetworkBehaviour
 {
@@ -10,6 +12,7 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
     private bool setupCompleted;
     private static CinemachineVirtualCamera sharedVirtualCamera;
+    private Coroutine delayedCameraBindingCoroutine;
 
     public GameObject PlayerBodyVisual => playerBodyVisual;
 
@@ -20,6 +23,12 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        if (IsNetworkSessionActive() && IsScenePlacedNetworkPlayer())
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
         DisableScenePlacedPlayers();
 
         if (IsOwner)
@@ -34,8 +43,26 @@ public class PlayerNetworkSetup : NetworkBehaviour
         setupCompleted = true;
     }
 
+    public override void OnNetworkDespawn()
+    {
+        StopDelayedCameraBinding();
+        if (IsOwner)
+        {
+            ClearLocalCameraBinding();
+        }
+
+        setupCompleted = false;
+        base.OnNetworkDespawn();
+    }
+
     private void Start()
     {
+        if (IsNetworkSessionActive() && IsScenePlacedNetworkPlayer())
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
         if (setupCompleted || !ShouldRunAsLocalPlayer())
         {
             return;
@@ -53,6 +80,7 @@ public class PlayerNetworkSetup : NetworkBehaviour
         }
 
         AssignCameraToLocalPlayer();
+        ScheduleCameraRebind();
     }
 
     private void AssignCameraToLocalPlayer()
@@ -69,7 +97,7 @@ public class PlayerNetworkSetup : NetworkBehaviour
             return;
         }
 
-        sharedVirtualCamera ??= FindFirstObjectByType<CinemachineVirtualCamera>();
+        sharedVirtualCamera = FindActiveSceneVirtualCamera();
         if (sharedVirtualCamera == null)
         {
             Debug.LogWarning("PlayerNetworkSetup: No Cinemachine virtual camera found in scene.");
@@ -86,8 +114,78 @@ public class PlayerNetworkSetup : NetworkBehaviour
         }
     }
 
+    private void ScheduleCameraRebind()
+    {
+        StopDelayedCameraBinding();
+        delayedCameraBindingCoroutine = StartCoroutine(RebindCameraAfterSceneInitialization());
+    }
+
+    private IEnumerator RebindCameraAfterSceneInitialization()
+    {
+        yield return null;
+
+        delayedCameraBindingCoroutine = null;
+        if (isActiveAndEnabled && ShouldRunAsLocalPlayer() && !IsScenePlacedNetworkPlayer())
+        {
+            AssignCameraToLocalPlayer();
+        }
+    }
+
+    private void StopDelayedCameraBinding()
+    {
+        if (delayedCameraBindingCoroutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(delayedCameraBindingCoroutine);
+        delayedCameraBindingCoroutine = null;
+    }
+
+    private static CinemachineVirtualCamera FindActiveSceneVirtualCamera()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (sharedVirtualCamera != null
+            && sharedVirtualCamera.isActiveAndEnabled
+            && sharedVirtualCamera.gameObject.scene == activeScene)
+        {
+            return sharedVirtualCamera;
+        }
+
+        sharedVirtualCamera = null;
+        foreach (CinemachineVirtualCamera virtualCamera in FindObjectsByType<CinemachineVirtualCamera>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (virtualCamera.gameObject.scene == activeScene)
+            {
+                sharedVirtualCamera = virtualCamera;
+                break;
+            }
+        }
+
+        return sharedVirtualCamera;
+    }
+
+    private void ClearLocalCameraBinding()
+    {
+        if (sharedVirtualCamera != null
+            && TryGetComponent(out FirstPersonController firstPersonController)
+            && firstPersonController.CinemachineCameraTarget != null
+            && sharedVirtualCamera.Follow == firstPersonController.CinemachineCameraTarget.transform)
+        {
+            sharedVirtualCamera.Follow = null;
+            sharedVirtualCamera.LookAt = null;
+        }
+
+        sharedVirtualCamera = null;
+    }
+
     public static void DisableScenePlacedPlayers()
     {
+        if (!IsNetworkSessionActive())
+        {
+            return;
+        }
+
         foreach (var setup in FindObjectsByType<PlayerNetworkSetup>(FindObjectsSortMode.None))
         {
             var networkObject = setup.GetComponent<NetworkObject>();
@@ -158,6 +256,11 @@ public class PlayerNetworkSetup : NetworkBehaviour
             bridgeRequirementsUi.gameObject.SetActive(false);
         }
 
+        foreach (var restartLevelUi in GetComponentsInChildren<RestartLevelUI>(true))
+        {
+            restartLevelUi.gameObject.SetActive(false);
+        }
+
         foreach (var canvas in GetComponentsInChildren<Canvas>(true))
         {
             canvas.gameObject.SetActive(false);
@@ -185,5 +288,16 @@ public class PlayerNetworkSetup : NetworkBehaviour
         }
 
         return NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening;
+    }
+
+    private bool IsScenePlacedNetworkPlayer()
+    {
+        NetworkObject networkObject = GetComponent<NetworkObject>();
+        return networkObject != null && networkObject.IsSceneObject == true;
+    }
+
+    private static bool IsNetworkSessionActive()
+    {
+        return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
     }
 }

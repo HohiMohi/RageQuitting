@@ -24,6 +24,7 @@ public class PlayerInputNew : NetworkBehaviour
     public EventHandler OnSwapItems;
     public EventHandler OnDropItem;
     public EventHandler OnToggleBridgeRequirements;
+    public EventHandler OnToggleRestartMenu;
     public EventHandler OnUI_Up;
     public EventHandler OnUI_Down;
     public EventHandler OnUI_Left;
@@ -32,6 +33,8 @@ public class PlayerInputNew : NetworkBehaviour
 
     [SerializeField]
     private bool IsUIOpened;
+
+    public bool IsGameplayUiOpen => IsUIOpened;
 
     [Header("Temp")]
     public bool analogMovement;
@@ -103,6 +106,7 @@ public class PlayerInputNew : NetworkBehaviour
         playerGameInputActions.Game.SwapItems.performed += SwapItems_performed;
         playerGameInputActions.Game.DropItem.performed += DropItem_performed;
         playerGameInputActions.Game.ToggleBridgeRequirements.performed += ToggleBridgeRequirements_performed;
+        playerGameInputActions.Game.ToggleRestartMenu.performed += ToggleRestartMenu_performed;
         playerGameInputActions.UI.Up.performed += UI_Up_performed;
         playerGameInputActions.UI.Down.performed += UI_Down_performed;
         playerGameInputActions.UI.Left.performed += UI_Left_performed;
@@ -167,26 +171,46 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void FactoryInteractionUI_OnInteract(object sender, EventArgs e)
     {
-        IsUIOpened = false;
+        SetGameplayUiOpen(false);
     }
 
     private void BaseFactory_OnInteract(object sender, EventArgs e)
     {
-        IsUIOpened = true;
+        SetGameplayUiOpen(true);
     }
 
     private void DropItem_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            return;
+        }
+
         OnDropItem?.Invoke(this, EventArgs.Empty);
     }
 
     private void ToggleBridgeRequirements_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            return;
+        }
+
         OnToggleBridgeRequirements?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ToggleRestartMenu_performed(InputAction.CallbackContext context)
+    {
+        OnToggleRestartMenu?.Invoke(this, EventArgs.Empty);
     }
 
     private void SwapItems_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            return;
+        }
+
         OnSwapItems?.Invoke(this, EventArgs.Empty);
     }
 
@@ -202,16 +226,31 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void ActionAlt_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            return;
+        }
+
         OnActionAlt?.Invoke(this, EventArgs.Empty);
     }
 
     private void Action_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            return;
+        }
+
         OnAction?.Invoke(this, EventArgs.Empty);
     }
 
     private void Interact_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            return;
+        }
+
         OnInteract?.Invoke(this, EventArgs.Empty);
     }
 
@@ -225,6 +264,11 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Sprint_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            return;
+        }
+
         OnSprint?.Invoke(this, new OnSprintArgs
         {
             IsSprinting = true
@@ -233,7 +277,30 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Jump_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            return;
+        }
+
         OnJump?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SetGameplayUiOpen(bool isOpen)
+    {
+        if (!ShouldRunAsLocalPlayer() || IsUIOpened == isOpen)
+        {
+            return;
+        }
+
+        IsUIOpened = isOpen;
+        if (isOpen)
+        {
+            OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
+            OnActionCanceled?.Invoke(this, EventArgs.Empty);
+            OnActionAltCanceled?.Invoke(this, EventArgs.Empty);
+        }
+
+        SetCursorState(cursorLocked && !isOpen);
     }
 
     public Vector2 GetLookDeltaValue()
@@ -296,12 +363,13 @@ public class PlayerInputNew : NetworkBehaviour
     {
         if (IsInputActive())
         {
-            SetCursorState(cursorLocked);
+            SetCursorState(cursorLocked && !IsUIOpened);
         }
     }
 
     private void SetCursorState(bool newState)
     {
         Cursor.lockState = newState ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = !newState;
     }
 }

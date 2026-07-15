@@ -55,7 +55,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.2, g: 0.2, b: 0.2, a: 0.6}
@@ -244,7 +244,7 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -369,6 +369,7 @@ GameObject:
   - component: {fileID: 4186271902374816054}
   - component: {fileID: 7382414467715117638}
   - component: {fileID: 6243819655438720123}
+  - component: {fileID: 3389710196241267904}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -974,6 +975,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NPCFactionMember
   ShowTopMostFoldoutHeaderGroup: 1
   faction: {fileID: 11400000, guid: 4bae5ec511184baa8a3d2ff9e76710bd, type: 2}
+--- !u!114 &3389710196241267904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbed81fd8885c864597b332eae34845b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerLevelRestartController
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0
@@ -1382,6 +1396,7 @@ GameObject:
   - component: {fileID: 6588446640223766166}
   - component: {fileID: 8325895134712630139}
   - component: {fileID: 612345907341246891}
+  - component: {fileID: 8831978460269016011}
   m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
@@ -1491,6 +1506,24 @@ MonoBehaviour:
   playerInventory: {fileID: 4354115525238422459}
   firstItemSprite: {fileID: 612345907341246894}
   secondItemSprite: {fileID: 612345907341246897}
+--- !u!114 &8831978460269016011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4871004289504384582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b68723d8a08b2a4f97dfa536dff3c24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RestartLevelUI
+  playerInput: {fileID: 0}
+  restartController: {fileID: 0}
+  panelRoot: {fileID: 0}
+  restartButton: {fileID: 0}
+  availabilityText: {fileID: 0}
+  panelSize: {x: 360, y: 210}
 --- !u!1 &4961565375688202897
 GameObject:
   m_ObjectHideFlags: 0

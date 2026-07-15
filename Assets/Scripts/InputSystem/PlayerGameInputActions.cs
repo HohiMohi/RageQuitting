@@ -181,6 +181,15 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ToggleRestartMenu"",
+                    ""type"": ""Button"",
+                    ""id"": ""29ec1ad3-9216-4eb7-9a36-b3f3f5044f80"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -337,6 +346,17 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""action"": ""ToggleBridgeRequirements"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7c969f9f-eae6-460d-ac82-55a373ecd5e5"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleRestartMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -480,6 +500,7 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         m_Game_SwapItems = m_Game.FindAction("SwapItems", throwIfNotFound: true);
         m_Game_DropItem = m_Game.FindAction("DropItem", throwIfNotFound: true);
         m_Game_ToggleBridgeRequirements = m_Game.FindAction("ToggleBridgeRequirements", throwIfNotFound: true);
+        m_Game_ToggleRestartMenu = m_Game.FindAction("ToggleRestartMenu", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Up = m_UI.FindAction("Up", throwIfNotFound: true);
@@ -578,6 +599,7 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
     private readonly InputAction m_Game_SwapItems;
     private readonly InputAction m_Game_DropItem;
     private readonly InputAction m_Game_ToggleBridgeRequirements;
+    private readonly InputAction m_Game_ToggleRestartMenu;
     /// <summary>
     /// Provides access to input actions defined in input action map "Game".
     /// </summary>
@@ -629,6 +651,10 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// Provides access to the underlying input action "Game/ToggleBridgeRequirements".
         /// </summary>
         public InputAction @ToggleBridgeRequirements => m_Wrapper.m_Game_ToggleBridgeRequirements;
+        /// <summary>
+        /// Provides access to the underlying input action "Game/ToggleRestartMenu".
+        /// </summary>
+        public InputAction @ToggleRestartMenu => m_Wrapper.m_Game_ToggleRestartMenu;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -685,6 +711,9 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @ToggleBridgeRequirements.started += instance.OnToggleBridgeRequirements;
             @ToggleBridgeRequirements.performed += instance.OnToggleBridgeRequirements;
             @ToggleBridgeRequirements.canceled += instance.OnToggleBridgeRequirements;
+            @ToggleRestartMenu.started += instance.OnToggleRestartMenu;
+            @ToggleRestartMenu.performed += instance.OnToggleRestartMenu;
+            @ToggleRestartMenu.canceled += instance.OnToggleRestartMenu;
         }
 
         /// <summary>
@@ -726,6 +755,9 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @ToggleBridgeRequirements.started -= instance.OnToggleBridgeRequirements;
             @ToggleBridgeRequirements.performed -= instance.OnToggleBridgeRequirements;
             @ToggleBridgeRequirements.canceled -= instance.OnToggleBridgeRequirements;
+            @ToggleRestartMenu.started -= instance.OnToggleRestartMenu;
+            @ToggleRestartMenu.performed -= instance.OnToggleRestartMenu;
+            @ToggleRestartMenu.canceled -= instance.OnToggleRestartMenu;
         }
 
         /// <summary>
@@ -989,6 +1021,13 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleBridgeRequirements(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleRestartMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleRestartMenu(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
