@@ -4,6 +4,9 @@ using UnityEngine.AI;
 
 public class NPCCarrier : NetworkBehaviour, ICarryActor
 {
+    // Temporary global feature gate. Keep the shared-carry implementation intact for later re-enablement.
+    public static bool IsSharedCarryEnabled => false;
+
     [SerializeField] private Transform carryAnchor;
     [SerializeField] private Transform bodyAnchor;
     [SerializeField] private Vector3 defaultCarryAnchorLocalPosition = new Vector3(0f, 1f, 0.85f);
@@ -16,6 +19,8 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
     [SerializeField] private float sharedCarryStuckInputPauseDuration = 0.5f;
     [SerializeField] private float sharedCarryTargetSampleRadius = 2f;
     [SerializeField] private float collisionRadius = 0.5f;
+    [SerializeField] private float sharedCarryAttachmentCorrectionSpeed = 3f;
+    [SerializeField] private float sharedCarryAttachmentCorrectionMaxStep = 0.2f;
 
     private GameObject carriedObject;
     private bool isSharedCarry;
@@ -52,6 +57,7 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
     public Vector3 BodyAnchorLocalOffset => BodyAnchor != null ? BodyAnchor.localPosition : defaultBodyAnchorLocalPosition;
     public float CollisionRadius => collisionRadius;
     public bool CanCarryObject => carriedObject == null;
+    public bool CanParticipateInSharedCarry => IsSharedCarryEnabled;
     public GameObject CarriedObject => carriedObject;
     public bool IsSharedCarryActive => isSharedCarry;
 
@@ -259,6 +265,7 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
         }
 
         Vector3 delta = attachWorldPoint - BodyAnchor.position;
+        delta = Vector3.ClampMagnitude(delta, Mathf.Max(0.01f, sharedCarryAttachmentCorrectionMaxStep));
         if (delta.sqrMagnitude <= 0.000001f)
         {
             return;
@@ -266,11 +273,11 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
 
         if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
-            agent.Move(delta);
+            agent.Move(Vector3.ClampMagnitude(delta, Mathf.Max(0.01f, sharedCarryAttachmentCorrectionSpeed) * Time.deltaTime));
             return;
         }
 
-        transform.position += delta;
+        transform.position += Vector3.ClampMagnitude(delta, Mathf.Max(0.01f, sharedCarryAttachmentCorrectionSpeed) * Time.deltaTime);
     }
 
     private bool ShouldDriveCarryVisual()

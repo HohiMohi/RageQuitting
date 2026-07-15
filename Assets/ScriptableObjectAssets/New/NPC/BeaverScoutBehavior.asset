@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: BeaverScoutBehavior
   m_EditorClassIdentifier: Assembly-CSharp::BeaverScoutBehaviorSO
   deliveryMode: 0
-  interestProfile: {fileID: 11400000, guid: 96fb7e1aa2efa804baf39a695ba86ee8, type: 2}
+  interestProfile: {fileID: 11400000, guid: 7a7df7073b964cbd9f96d3d320f01fb9, type: 2}
+  destructionProfile: {fileID: 11400000, guid: 61d47e1e88fb8d24697c3842d25401a2, type: 2}
   storageWithdrawAmountThreshold: 0
   idleSearchDuration: 5
   targetRefreshInterval: 1
@@ -31,3 +32,6 @@ MonoBehaviour:
   rageHealthThresholdNormalized: 0.5
   rageApproachRefreshInterval: 0.25
   rageApproachStoppingDistance: 1.3
+  storageSweepPatrolThreshold: 5
+  storageSweepArrivalDistance: 1.4
+  resourceDestructionAttackInterval: 1

@@ -14,6 +14,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
     [SerializeField] private DeliveryMode deliveryMode = DeliveryMode.RemoveFromWorld;
     [SerializeField] private NPCInterestProfileSO interestProfile;
+    [SerializeField] private NPCDestructionProfileSO destructionProfile;
     [SerializeField] private int storageWithdrawAmountThreshold = 0;
     [SerializeField] private float idleSearchDuration = 5f;
     [SerializeField] private float targetRefreshInterval = 1f;
@@ -33,9 +34,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private float rageApproachStoppingDistance = 1.3f;
     [SerializeField] private int storageSweepPatrolThreshold = 5;
     [SerializeField] private float storageSweepArrivalDistance = 1.4f;
+    [SerializeField] private float resourceDestructionAttackInterval = 1f;
 
     public DeliveryMode Delivery => deliveryMode;
     public NPCInterestProfileSO InterestProfile => interestProfile;
+    public NPCDestructionProfileSO DestructionProfile => destructionProfile;
     public int StorageWithdrawAmountThreshold => Mathf.Max(0, storageWithdrawAmountThreshold);
     public float IdleSearchDuration => Mathf.Max(0.1f, idleSearchDuration);
     public float TargetRefreshInterval => Mathf.Max(0.1f, targetRefreshInterval);
@@ -55,6 +58,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     public float RageApproachStoppingDistance => Mathf.Max(0.1f, rageApproachStoppingDistance);
     public int StorageSweepPatrolThreshold => Mathf.Max(1, storageSweepPatrolThreshold);
     public float StorageSweepArrivalDistance => Mathf.Max(0.1f, storageSweepArrivalDistance);
+    public float ResourceDestructionAttackInterval => Mathf.Max(0.05f, resourceDestructionAttackInterval);
 
     public override NPCBehaviorController CreateController(NPCBrain brain)
     {
@@ -69,6 +73,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         MovingToPatrolPoint,
         MovingToTarget,
         MovingToStorage,
+        MovingToDestructionTarget,
+        DestroyingResource,
         Delivering,
         PreparingAttack,
         Attacking,
@@ -89,6 +95,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private GameObject targetObject;
         private BaseStorageNew targetStorage;
         private BaseResourceSO targetStorageResource;
+        private BaseResourceNew destructionTarget;
         private PlayerHealth followTargetPlayerHealth;
         private Transform followTargetTransform;
         private readonly HashSet<ulong> encounteredPlayerIds = new HashSet<ulong>();
@@ -116,6 +123,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private int storageSweepIndex;
         private NPCStorageEncounterInfo currentStorageSweepTarget;
         private bool finishStorageSweepAfterReturningToBase;
+        private float nextResourceDestructionAttackTime;
 
         public BeaverScoutController(NPCBrain brain, BeaverScoutBehaviorSO config) : base(brain)
         {
@@ -143,6 +151,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             targetObject = null;
+            ClearDestructionTarget();
             lastAttacker = null;
             rageTargetNetworkObject = null;
             pendingRageAfterCommittedAttack = false;
@@ -180,6 +189,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                     break;
                 case ScoutState.MovingToStorage:
                     UpdateMovingToStorage();
+                    break;
+                case ScoutState.MovingToDestructionTarget:
+                    UpdateMovingToDestructionTarget();
+                    break;
+                case ScoutState.DestroyingResource:
+                    UpdateDestroyingResource();
                     break;
                 case ScoutState.Delivering:
                     UpdateDelivering();
@@ -283,6 +298,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             targetObject = null;
+            ClearDestructionTarget();
             ClearStorageTarget();
             ClearFollowTarget();
             ClearStorageSweep();
@@ -296,6 +312,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         {
             state = ScoutState.IdleSearching;
             targetObject = null;
+            ClearDestructionTarget();
             ClearStorageTarget();
             ClearFollowTarget();
             RestoreAgentStoppingDistance();
@@ -510,6 +527,10 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 else
                 {
                     targetObject = FindClosestStealableObject();
+                    if (targetObject == null)
+                    {
+                        destructionTarget = FindClosestDestructibleResource();
+                    }
                 }
             }
 
@@ -524,6 +545,13 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             {
                 ResetConsecutivePatrolIdleCount();
                 EnterMovingToTarget();
+                return;
+            }
+
+            if (destructionTarget != null)
+            {
+                ResetConsecutivePatrolIdleCount();
+                EnterMovingToDestructionTarget();
                 return;
             }
 
@@ -689,6 +717,75 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             ResetConsecutivePatrolIdleCount();
             ResumeAgent();
             Brain.Agent.SetDestination(targetStorage.transform.position);
+        }
+
+        private void EnterMovingToDestructionTarget()
+        {
+            RestoreAgentStoppingDistance();
+            if (!IsDestructionTargetValid(destructionTarget))
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            state = ScoutState.MovingToDestructionTarget;
+            ResumeAgent();
+            Brain.Agent.SetDestination(destructionTarget.transform.position);
+        }
+
+        private void UpdateMovingToDestructionTarget()
+        {
+            if (!IsDestructionTargetValid(destructionTarget))
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            Brain.Agent.SetDestination(destructionTarget.transform.position);
+            if (!IsDestructionTargetInAttackRange())
+            {
+                return;
+            }
+
+            state = ScoutState.DestroyingResource;
+            StopAgent();
+            nextResourceDestructionAttackTime = 0f;
+        }
+
+        private void UpdateDestroyingResource()
+        {
+            if (!IsDestructionTargetValid(destructionTarget))
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            if (!IsDestructionTargetInAttackRange())
+            {
+                state = ScoutState.MovingToDestructionTarget;
+                ResumeAgent();
+                return;
+            }
+
+            StopAgent();
+            FaceDestructionTarget();
+            if (Time.time < nextResourceDestructionAttackTime)
+            {
+                return;
+            }
+
+            if (animationController != null)
+            {
+                animationController.PlayAction();
+            }
+
+            if (!TryStartResourceDestructionAttack())
+            {
+                EnterIdleSearching();
+                return;
+            }
+
+            nextResourceDestructionAttackTime = Time.time + config.ResourceDestructionAttackInterval;
         }
 
         private void UpdateMovingToStorage()
@@ -1053,6 +1150,33 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             return closestObject;
+        }
+
+        private BaseResourceNew FindClosestDestructibleResource()
+        {
+            Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
+            BaseResourceNew closestResource = null;
+            float closestDistance = float.MaxValue;
+            HashSet<BaseResourceNew> checkedResources = new HashSet<BaseResourceNew>();
+
+            foreach (Collider collider in colliders)
+            {
+                BaseResourceNew resource = collider.GetComponent<BaseResourceNew>();
+                resource ??= collider.GetComponentInParent<BaseResourceNew>();
+                if (resource == null || !checkedResources.Add(resource) || !IsDestructionTargetValid(resource))
+                {
+                    continue;
+                }
+
+                float distance = Vector3.Distance(Brain.transform.position, resource.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestResource = resource;
+                }
+            }
+
+            return closestResource;
         }
 
         private void RegisterNearbyStorages()
@@ -1527,6 +1651,55 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private bool IsStealable(GameObject candidate)
         {
             return TryGetStealableRoot(candidate, out _);
+        }
+
+        private bool IsDestructionTargetValid(BaseResourceNew resource)
+        {
+            if (resource == null || resource.IsPickedUp || config.DestructionProfile == null)
+            {
+                return false;
+            }
+
+            return config.DestructionProfile.TryGetRule(resource, out NPCBaseResourceDestructionRule rule)
+                && resource.CanBeDestroyedWith(rule.toolType);
+        }
+
+        private bool IsDestructionTargetInAttackRange()
+        {
+            float attackRange = Brain.AttackController != null ? Brain.AttackController.AttackRange : Brain.InteractionDistance;
+            return destructionTarget != null
+                && Vector3.Distance(Brain.transform.position, destructionTarget.transform.position) <= attackRange;
+        }
+
+        private bool TryStartResourceDestructionAttack()
+        {
+            return destructionTarget != null
+                && Brain.AttackController != null
+                && config.DestructionProfile != null
+                && config.DestructionProfile.TryGetRule(destructionTarget, out NPCBaseResourceDestructionRule rule)
+                && Brain.AttackController.StartResourceAttack(destructionTarget, rule.toolType);
+        }
+
+        private void ClearDestructionTarget()
+        {
+            Brain.AttackController?.CancelPendingResourceAttack();
+            destructionTarget = null;
+            nextResourceDestructionAttackTime = 0f;
+        }
+
+        private void FaceDestructionTarget()
+        {
+            if (destructionTarget == null)
+            {
+                return;
+            }
+
+            Vector3 direction = destructionTarget.transform.position - Brain.transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude > 0.0001f)
+            {
+                Brain.transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+            }
         }
 
         private bool TryGetStealableRoot(GameObject candidate, out GameObject stealableRoot)

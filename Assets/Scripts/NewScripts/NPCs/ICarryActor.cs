@@ -17,6 +17,7 @@ public interface ICarryActor
     Vector3 BodyAnchorLocalOffset { get; }
     float CollisionRadius { get; }
     bool CanCarryObject { get; }
+    bool CanParticipateInSharedCarry { get; }
     void ConfirmCarry(GameObject carriedObject);
     void ConfirmSharedCarry(GameObject carriedObject, Vector3 attachLocalPoint, float movementPenalty);
     void ForceRelease(GameObject carriedObject);

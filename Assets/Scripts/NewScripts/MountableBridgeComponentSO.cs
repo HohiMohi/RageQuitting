@@ -19,6 +19,7 @@ public class MountableBridgeComponentSO : ScriptableObject
     public float carryMoveSpeed = 4f;
     public float carryPlayerClearance = 0.35f;
     public Vector3[] carryAttachLocalPoints;
+    public CarryPhysicsProfileSO carryPhysicsProfile;
     [Header("Blast Furnace Factory properties")]
     public float meltingPoint;
     public float combustionTemperature;

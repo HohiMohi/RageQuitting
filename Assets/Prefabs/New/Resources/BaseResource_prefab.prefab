@@ -72,7 +72,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
@@ -883,6 +883,7 @@ GameObject:
   - component: {fileID: 3202944920606426928}
   - component: {fileID: 6812937564109823441}
   - component: {fileID: 6812937564109823442}
+  - component: {fileID: 6812937564109823443}
   m_Layer: 0
   m_Name: BaseResource_prefab
   m_TagString: Untagged
@@ -994,6 +995,29 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!114 &6812937564109823443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6061949036794205903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2c6e9f2d9dd5f8fad1e3b5f2b8c9da2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SharedCarryPhysicsBody
+  profile: {fileID: 11400000, guid: e4e8fbf4f1f17a8fcf3d5d7e4e0b1c24, type: 2}
+  defaultMass: 20
+  defaultLinearDrag: 1.5
+  defaultAngularDrag: 4
+  defaultGripSpring: 900
+  defaultGripDamper: 90
+  defaultMaxGripForce: 1800
+  defaultMaxGripDistance: 1.25
+  defaultMaxVelocity: 6
+  defaultMovementForce: 450
+  defaultMovementDamper: 65
 --- !u!65 &1023935666134794376
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -5,6 +5,13 @@ using UnityEngine;
 
 public class NPCAttackController : NetworkBehaviour
 {
+    private enum PendingAttackType
+    {
+        None,
+        Combat,
+        Resource
+    }
+
     [SerializeField] private Transform attackOrigin;
     [SerializeField] private float attackDamage = 10f;
     [SerializeField] private float attackRange = 1.6f;
@@ -17,8 +24,10 @@ public class NPCAttackController : NetworkBehaviour
     private NPCBrain brain;
     private NPCHealth health;
     private NPCFactionMember factionMember;
-    private bool hasPendingAttack;
+    private PendingAttackType pendingAttackType;
     private float pendingAttackTime;
+    private BaseResourceNew pendingResourceTarget;
+    private EquippableItemType pendingResourceToolType;
 
     public float AttackRange => Mathf.Max(0.1f, attackRange);
 
@@ -31,12 +40,19 @@ public class NPCAttackController : NetworkBehaviour
 
     private void Update()
     {
-        if (!hasPendingAttack || Time.time < pendingAttackTime)
+        if (pendingAttackType == PendingAttackType.None || Time.time < pendingAttackTime)
         {
             return;
         }
 
-        hasPendingAttack = false;
+        PendingAttackType attackType = pendingAttackType;
+        pendingAttackType = PendingAttackType.None;
+        if (attackType == PendingAttackType.Resource)
+        {
+            PerformResourceAttackImmediate();
+            return;
+        }
+
         PerformAttackImmediate();
     }
 
@@ -49,12 +65,34 @@ public class NPCAttackController : NetworkBehaviour
 
         if (health != null && health.IsDead)
         {
-            hasPendingAttack = false;
+            CancelPendingAttack();
             return;
         }
 
-        hasPendingAttack = true;
+        pendingAttackType = PendingAttackType.Combat;
         pendingAttackTime = Time.time + Mathf.Max(0f, attackDamageDelay);
+    }
+
+    public bool StartResourceAttack(BaseResourceNew target, EquippableItemType toolType)
+    {
+        if (!CanRunServerAuthoritativeAttack() || target == null || !target.CanBeDestroyedWith(toolType))
+        {
+            return false;
+        }
+
+        pendingResourceTarget = target;
+        pendingResourceToolType = toolType;
+        pendingAttackType = PendingAttackType.Resource;
+        pendingAttackTime = Time.time + Mathf.Max(0f, attackDamageDelay);
+        return true;
+    }
+
+    public void CancelPendingResourceAttack()
+    {
+        if (pendingAttackType == PendingAttackType.Resource)
+        {
+            CancelPendingAttack();
+        }
     }
 
     private void PerformAttackImmediate()
@@ -106,6 +144,59 @@ public class NPCAttackController : NetworkBehaviour
 
             DamageTarget(target);
         }
+    }
+
+    private void PerformResourceAttackImmediate()
+    {
+        BaseResourceNew target = pendingResourceTarget;
+        EquippableItemType toolType = pendingResourceToolType;
+        pendingResourceTarget = null;
+
+        if (!CanRunServerAuthoritativeAttack() || target == null || !target.CanBeDestroyedWith(toolType))
+        {
+            return;
+        }
+
+        Vector3 origin = GetAttackOrigin();
+        if (!TryGetResourceTargetPoint(target, origin, out Vector3 targetPoint, out Transform targetRoot))
+        {
+            return;
+        }
+
+        Vector3 directionToTarget = targetPoint - origin;
+        if (directionToTarget.magnitude > Mathf.Max(0.1f, attackRange))
+        {
+            return;
+        }
+
+        float minimumDot = Mathf.Cos(Mathf.Deg2Rad * Mathf.Clamp(attackAngle, 1f, 360f) * 0.5f);
+        if (!IsInAttackCone(directionToTarget, transform.forward, minimumDot))
+        {
+            return;
+        }
+
+        if (requireLineOfSight && !HasLineOfSight(origin, directionToTarget, targetRoot))
+        {
+            return;
+        }
+
+        target.TryDamageFromNpc(toolType, attackDamage);
+    }
+
+    private bool CanRunServerAuthoritativeAttack()
+    {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned && !IsServer)
+        {
+            return false;
+        }
+
+        return health == null || !health.IsDead;
+    }
+
+    private void CancelPendingAttack()
+    {
+        pendingAttackType = PendingAttackType.None;
+        pendingResourceTarget = null;
     }
 
     private Vector3 GetAttackOrigin()
@@ -168,6 +259,39 @@ public class NPCAttackController : NetworkBehaviour
         }
 
         return targetTransform.position;
+    }
+
+    private bool TryGetResourceTargetPoint(BaseResourceNew target, Vector3 origin, out Vector3 targetPoint, out Transform targetRoot)
+    {
+        targetPoint = default;
+        targetRoot = null;
+        if (target == null || target.transform.root == transform.root)
+        {
+            return false;
+        }
+
+        Collider targetCollider = target.GetComponent<Collider>();
+        targetCollider ??= target.GetComponentInChildren<Collider>();
+        if (targetCollider != null)
+        {
+            if ((attackTargetLayers.value & (1 << targetCollider.gameObject.layer)) == 0)
+            {
+                return false;
+            }
+
+            targetPoint = GetTargetPoint(targetCollider, target.transform, origin);
+            targetRoot = targetCollider.transform.root;
+            return true;
+        }
+
+        if ((attackTargetLayers.value & (1 << target.gameObject.layer)) == 0)
+        {
+            return false;
+        }
+
+        targetPoint = target.transform.position;
+        targetRoot = target.transform.root;
+        return true;
     }
 
     private static bool IsInAttackCone(Vector3 directionToTarget, Vector3 forward, float minimumDot)

@@ -15,7 +15,6 @@ MonoBehaviour:
   allowAnyBaseResource: 0
   allowAnyMountableBridgeComponent: 0
   allowedBaseResources:
-  - {fileID: 11400000, guid: c315a3ca10ef0ac4abd0d0ff876d0a5c, type: 2}
   - {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
   - {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
   - {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}

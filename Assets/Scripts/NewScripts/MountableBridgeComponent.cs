@@ -18,6 +18,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     public bool IsPickedUp => isPickedUp;
 
     private Rigidbody _rigidbody;
+    private SharedCarryPhysicsBody _sharedCarryPhysicsBody;
     private readonly List<ulong> holderClientIds = new List<ulong>();
     private readonly Dictionary<ulong, int> holderAttachPointIndices = new Dictionary<ulong, int>();
     private readonly Dictionary<ulong, Vector3> holderAttachLocalPoints = new Dictionary<ulong, Vector3>();
@@ -102,9 +103,14 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         {
             _rigidbody = gameObject.AddComponent<Rigidbody>();
         }
+        _sharedCarryPhysicsBody = GetComponent<SharedCarryPhysicsBody>();
+        if (_sharedCarryPhysicsBody != null && mountableBridgeComponentSO != null)
+        {
+            _sharedCarryPhysicsBody.SetProfile(mountableBridgeComponentSO.carryPhysicsProfile);
+        }
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (ShouldUpdateKinematicCarryPosition())
         {
@@ -144,6 +150,11 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             return !isPickedUp;
         }
 
+        if (!carryActor.CanParticipateInSharedCarry)
+        {
+            return false;
+        }
+
         return GetCurrentHolderCount() < GetMaxCarriers()
             && !npcHolderActors.ContainsKey(carryActor.ActorId);
     }
@@ -162,6 +173,11 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
         if (AllowsMultipleCarriers())
         {
+            if (!carryActor.CanParticipateInSharedCarry)
+            {
+                return false;
+            }
+
             return TryAddNpcSharedCarryHolder(carryActor);
         }
 
@@ -269,6 +285,14 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             return;
         }
 
+        if (isPickedUp && AllowsMultipleCarriers() && _sharedCarryPhysicsBody != null)
+        {
+            bool simulatePhysics = !IsNetworkSessionActive() || IsServer;
+            _sharedCarryPhysicsBody.BeginSharedCarry(simulatePhysics);
+            return;
+        }
+
+        _sharedCarryPhysicsBody?.EndSharedCarry();
         _rigidbody.useGravity = !isPickedUp;
         _rigidbody.isKinematic = isPickedUp;
     }
@@ -469,7 +493,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     private bool TryAddNpcSharedCarryHolder(ICarryActor carryActor)
     {
-        if (carryActor == null || npcHolderActors.ContainsKey(carryActor.ActorId) || GetCurrentHolderCount() >= GetMaxCarriers())
+        if (carryActor == null || !carryActor.CanParticipateInSharedCarry || npcHolderActors.ContainsKey(carryActor.ActorId) || GetCurrentHolderCount() >= GetMaxCarriers())
         {
             return false;
         }
@@ -590,7 +614,13 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     private void UpdateKinematicCarryPosition()
     {
+        if (_sharedCarryPhysicsBody == null)
+        {
+            return;
+        }
+
         Vector3 combinedInput = Vector3.zero;
+        List<SharedCarryPhysicsHolder> physicsHolders = new List<SharedCarryPhysicsHolder>();
 
         foreach (ulong holderClientId in holderClientIds)
         {
@@ -605,6 +635,16 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             }
 
             combinedInput += holderInput;
+            if (TryGetHolderBodyAnchor(holderClientId, out Transform bodyAnchor)
+                && holderAttachLocalPoints.TryGetValue(holderClientId, out Vector3 attachLocalPoint))
+            {
+                physicsHolders.Add(new SharedCarryPhysicsHolder
+                {
+                    BodyAnchor = bodyAnchor,
+                    AttachLocalPoint = attachLocalPoint,
+                    DesiredInput = holderInput
+                });
+            }
         }
 
         foreach (ulong actorId in npcHolderActorIds)
@@ -614,18 +654,22 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
                 continue;
             }
 
-            combinedInput += Vector3.ClampMagnitude(carryActor.GetSharedCarryInput(), 1f);
+            Vector3 npcInput = Vector3.ClampMagnitude(carryActor.GetSharedCarryInput(), 1f);
+            combinedInput += npcInput;
+            if (carryActor.BodyAnchor != null && npcHolderAttachLocalPoints.TryGetValue(actorId, out Vector3 npcAttachLocalPoint))
+            {
+                physicsHolders.Add(new SharedCarryPhysicsHolder
+                {
+                    BodyAnchor = carryActor.BodyAnchor,
+                    AttachLocalPoint = npcAttachLocalPoint,
+                    DesiredInput = npcInput
+                });
+            }
         }
 
         combinedInput.y = 0f;
         combinedInput = Vector3.ClampMagnitude(combinedInput / GetRecommendedCarriers(), 1f);
-        if (combinedInput != Vector3.zero)
-        {
-            float carryMoveSpeed = mountableBridgeComponentSO != null ? mountableBridgeComponentSO.carryMoveSpeed : 4f;
-            transform.position += combinedInput * carryMoveSpeed * Time.deltaTime;
-        }
-
-        AlignSharedCarryHeightToHolderAnchors();
+        _sharedCarryPhysicsBody.Simulate(physicsHolders, combinedInput, Time.fixedDeltaTime);
         UpdateNpcSharedCarryAttachments();
     }
 
