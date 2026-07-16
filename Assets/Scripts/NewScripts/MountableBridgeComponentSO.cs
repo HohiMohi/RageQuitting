@@ -16,6 +16,7 @@ public class MountableBridgeComponentSO : ScriptableObject
     public int recommendedCarriers = 1;
     public int maxCarriers = 1;
     public float underStaffedPenaltyMultiplier = 1f;
+    [Min(0f)] public float sharedCarryUnderstaffedStaminaDrainPerSecond = 1f;
     public float carryMoveSpeed = 4f;
     public float carryPlayerClearance = 0.35f;
     public Vector3[] carryAttachLocalPoints;

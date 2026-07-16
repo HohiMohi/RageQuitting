@@ -33,12 +33,17 @@ public class PlayerInteractionNew : MonoBehaviour
     private int minAmountOfPlayersNeeded = 0;
     private int currentAmountOfPlayersSupporting = 0;
     private float holdedItemMovementSpeedPenalty = 0;
+    private int sharedCarryPlayerHolderCount;
+    private int sharedCarryRequiredPlayerCount;
+    private float sharedCarryUnderstaffedStaminaDrainPerSecond;
 
     public bool IsSharedCarryMovementActive => sharedCarryMovementActive && _pickedUpGameObject != null;
     public bool HasPickedUpObject => _pickedUpGameObject != null;
     public bool IsHoldingObject => _pickedUpGameObject != null;
     public bool IsHoldingDownedPlayer => _pickedUpGameObject != null && _pickedUpGameObject.TryGetComponent(out DownedPlayerCarryable _);
     public bool IsHoldingSelfPositionedObject => _pickedUpGameObject != null && pickedUpObjectSelfPositioned;
+    public bool IsSharedCarryUnderstaffed => IsSharedCarryMovementActive && sharedCarryPlayerHolderCount < sharedCarryRequiredPlayerCount;
+    public float SharedCarryUnderstaffedStaminaDrainPerSecond => sharedCarryUnderstaffedStaminaDrainPerSecond;
     public Vector3 CarryBodyAnchorLocalOffset => defaultCarryBodyAnchorLocalPosition;
 
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
@@ -210,6 +215,7 @@ public class PlayerInteractionNew : MonoBehaviour
         pickedUpObjectSelfPositioned = selfPositioned;
         sharedCarryMovementActive = useSharedCarryMovement;
         sharedCarryAttachLocalPoint = attachLocalPoint;
+        ClearSharedCarryStaminaLoad();
         SetHoldedItemProperties(pIckableObject);
 
         if (!pickedUpObjectSelfPositioned && ShouldParentPickedUpObject(_pickedUpGameObject))
@@ -264,6 +270,7 @@ public class PlayerInteractionNew : MonoBehaviour
         pickedUpObjectSelfPositioned = false;
         sharedCarryMovementActive = false;
         sharedCarryAttachLocalPoint = Vector3.zero;
+        ClearSharedCarryStaminaLoad();
         SetHoldedItemProperties(null);
         OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -287,6 +294,7 @@ public class PlayerInteractionNew : MonoBehaviour
             pickedUpObjectSelfPositioned = false;
             sharedCarryMovementActive = false;
             sharedCarryAttachLocalPoint = Vector3.zero;
+            ClearSharedCarryStaminaLoad();
 
             // Position it slightly in front of the player to avoid physics clipping/stuck
             Vector3 dropPosition = transform.position + transform.forward * 1.0f + Vector3.up * 0.5f;
@@ -372,6 +380,20 @@ public class PlayerInteractionNew : MonoBehaviour
         return TryGetComponent(out CharacterController characterController) ? characterController.radius : 0.5f;
     }
 
+    public void ApplySharedCarryPickupPlacement(Vector3 worldPosition)
+    {
+        if (TryGetComponent(out CharacterController characterController))
+        {
+            bool wasEnabled = characterController.enabled;
+            characterController.enabled = false;
+            transform.position = worldPosition;
+            characterController.enabled = wasEnabled;
+            return;
+        }
+
+        transform.position = worldPosition;
+    }
+
     public void SubmitSharedCarryInput(Vector3 worldMoveInput)
     {
         if (!IsSharedCarryMovementActive || !_pickedUpGameObject.TryGetComponent(out ISharedCarryObject sharedCarryObject))
@@ -380,6 +402,31 @@ public class PlayerInteractionNew : MonoBehaviour
         }
 
         sharedCarryObject.SubmitSharedCarryInput(worldMoveInput);
+    }
+
+    public void UpdateSharedCarryLoad(float movementSpeedPenalty, int playerHolderCount, int requiredPlayerCount, float understaffedStaminaDrainPerSecond)
+    {
+        holdedItemMovementSpeedPenalty = movementSpeedPenalty;
+        minAmountOfPlayersNeeded = Mathf.Max(1, requiredPlayerCount);
+        currentAmountOfPlayersSupporting = Mathf.Max(0, playerHolderCount);
+        sharedCarryPlayerHolderCount = Mathf.Max(0, playerHolderCount);
+        sharedCarryRequiredPlayerCount = Mathf.Max(1, requiredPlayerCount);
+        sharedCarryUnderstaffedStaminaDrainPerSecond = Mathf.Max(0f, understaffedStaminaDrainPerSecond);
+
+        UpdateHoldedItemMovementSpeedPenalty?.Invoke(this, new UpdateHoldedItemMovementSpeedPenaltyEventArgs
+        {
+            currentMovementSpeedPenaltyMultiplier = movementSpeedPenalty,
+        });
+    }
+
+    public void RequestSharedCarryExhaustion()
+    {
+        if (!IsSharedCarryUnderstaffed || _pickedUpGameObject == null || !_pickedUpGameObject.TryGetComponent(out ISharedCarryObject sharedCarryObject))
+        {
+            return;
+        }
+
+        sharedCarryObject.RequestSharedCarryExhaustion();
     }
 
     public Vector3 GetSharedCarryAnchorCorrection()
@@ -530,6 +577,7 @@ public class PlayerInteractionNew : MonoBehaviour
             holdedItemMovementSpeedPenalty = 0;
             pickedUpObject = null;
             Debug.Log("Properties resetted");
+            ClearSharedCarryStaminaLoad();
         }
 
         float movementSpeedPenalty = CalculateMovementSpeedPenalty();
@@ -549,6 +597,13 @@ public class PlayerInteractionNew : MonoBehaviour
         {
             currentMovementSpeedPenaltyMultiplier = movementSpeedPenalty,
         });
+    }
+
+    private void ClearSharedCarryStaminaLoad()
+    {
+        sharedCarryPlayerHolderCount = 0;
+        sharedCarryRequiredPlayerCount = 0;
+        sharedCarryUnderstaffedStaminaDrainPerSecond = 0f;
     }
 
     private float CalculateMovementSpeedPenalty()

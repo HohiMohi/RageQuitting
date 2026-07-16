@@ -81,6 +81,17 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
         AssignCameraToLocalPlayer();
         ScheduleCameraRebind();
+        EnsureGameTimerUi();
+    }
+
+    private void EnsureGameTimerUi()
+    {
+        if (!TryGetComponent(out GameTimerUI gameTimerUi))
+        {
+            gameTimerUi = gameObject.AddComponent<GameTimerUI>();
+        }
+
+        gameTimerUi.enabled = true;
     }
 
     private void AssignCameraToLocalPlayer()

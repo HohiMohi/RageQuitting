@@ -1011,9 +1011,12 @@ MonoBehaviour:
   defaultMass: 20
   defaultLinearDrag: 1.5
   defaultAngularDrag: 4
-  defaultGripSpring: 900
-  defaultGripDamper: 90
-  defaultMaxGripForce: 1800
+  defaultHorizontalConstraintSpring: 140
+  defaultHorizontalConstraintDampingRatio: 1.05
+  defaultMaxHorizontalConstraintForce: 650
+  defaultVerticalSupportSpring: 220
+  defaultVerticalSupportDampingRatio: 1.1
+  defaultMaxVerticalSupportForce: 1600
   defaultMaxGripDistance: 1.25
   defaultMaxVelocity: 6
   defaultMovementForce: 450

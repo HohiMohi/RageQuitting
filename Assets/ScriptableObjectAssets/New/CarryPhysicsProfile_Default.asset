@@ -26,3 +26,12 @@ MonoBehaviour:
   allowYawRotation: 1
   movementForce: 450
   movementDamper: 65
+  horizontalConstraintSpring: 140
+  horizontalConstraintDampingRatio: 1.05
+  maxHorizontalConstraintForce: 650
+  horizontalConstraintDeadZone: 0.03
+  horizontalConstraintForceResponse: 18
+  maxHolderAnchorVelocity: 8
+  verticalSupportSpring: 220
+  verticalSupportDampingRatio: 1.1
+  maxVerticalSupportForce: 1600

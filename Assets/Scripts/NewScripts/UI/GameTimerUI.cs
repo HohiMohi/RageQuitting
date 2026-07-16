@@ -9,29 +9,65 @@ public class GameTimerUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private Image timerProgressBar; // Radial or linear fill progress bar
 
+    [Header("Runtime HUD")]
+    [SerializeField] private Canvas targetCanvas;
+    [SerializeField] private Vector2 anchoredPosition = new Vector2(-24f, -24f);
+    [SerializeField] private Vector2 hudSize = new Vector2(176f, 52f);
+
     [Header("Feedback Settings")]
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color warningColor = new Color(0.9f, 0.2f, 0.2f); // Vibrant red warning color
     [SerializeField] private float warningThreshold = 60f; // Warning effects trigger under 60 seconds
     [SerializeField] private float pulseSpeed = 5f;
 
-    private void Start()
+    private GameTimerManager subscribedTimerManager;
+
+    private void OnEnable()
     {
-        if (GameTimerManager.Instance != null)
-        {
-            GameTimerManager.Instance.OnTimerChanged += GameTimerManager_OnTimerChanged;
-        }
-        else
-        {
-            Debug.LogError("GameTimerUI: GameTimerManager Instance not found in scene!");
-        }
+        EnsureVisuals();
+        TrySubscribeTimerManager();
     }
 
     private void OnDestroy()
     {
-        if (GameTimerManager.Instance != null)
+        UnsubscribeTimerManager();
+    }
+
+    private void Update()
+    {
+        TrySubscribeTimerManager();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeTimerManager();
+    }
+
+    private void TrySubscribeTimerManager()
+    {
+        GameTimerManager timerManager = GameTimerManager.Instance;
+        if (timerManager == subscribedTimerManager)
         {
-            GameTimerManager.Instance.OnTimerChanged -= GameTimerManager_OnTimerChanged;
+            return;
+        }
+
+        UnsubscribeTimerManager();
+        if (timerManager == null)
+        {
+            return;
+        }
+
+        subscribedTimerManager = timerManager;
+        subscribedTimerManager.OnTimerChanged += GameTimerManager_OnTimerChanged;
+        UpdateUI(subscribedTimerManager.GetTimeRemaining(), subscribedTimerManager.GetNormalizedTimeRemaining());
+    }
+
+    private void UnsubscribeTimerManager()
+    {
+        if (subscribedTimerManager != null)
+        {
+            subscribedTimerManager.OnTimerChanged -= GameTimerManager_OnTimerChanged;
+            subscribedTimerManager = null;
         }
     }
 
@@ -42,6 +78,12 @@ public class GameTimerUI : MonoBehaviour
 
     private void UpdateUI(float timeRemaining, float normalizedTimeRemaining)
     {
+        EnsureVisuals();
+        if (timerText == null)
+        {
+            return;
+        }
+
         // 1. Format time into MM:SS format
         int minutes = Mathf.FloorToInt(timeRemaining / 60F);
         int seconds = Mathf.FloorToInt(timeRemaining - (minutes * 60));
@@ -75,5 +117,66 @@ public class GameTimerUI : MonoBehaviour
             }
             timerText.transform.localScale = Vector3.one;
         }
+    }
+
+    private void EnsureVisuals()
+    {
+        if (timerText != null)
+        {
+            return;
+        }
+
+        if (targetCanvas == null)
+        {
+            targetCanvas = GetComponentInChildren<Canvas>(true);
+        }
+
+        if (targetCanvas == null)
+        {
+            return;
+        }
+
+        GameObject root = new GameObject("GameTimerHUD", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        RectTransform rootRectTransform = root.GetComponent<RectTransform>();
+        rootRectTransform.SetParent(targetCanvas.transform, false);
+        rootRectTransform.anchorMin = Vector2.one;
+        rootRectTransform.anchorMax = Vector2.one;
+        rootRectTransform.pivot = Vector2.one;
+        rootRectTransform.anchoredPosition = anchoredPosition;
+        rootRectTransform.sizeDelta = hudSize;
+
+        Image background = root.GetComponent<Image>();
+        background.color = new Color(0.03f, 0.05f, 0.07f, 0.78f);
+        background.raycastTarget = false;
+
+        GameObject textObject = new GameObject("Time", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        RectTransform textRectTransform = textObject.GetComponent<RectTransform>();
+        textRectTransform.SetParent(rootRectTransform, false);
+        textRectTransform.anchorMin = new Vector2(0.08f, 0.22f);
+        textRectTransform.anchorMax = new Vector2(0.92f, 0.88f);
+        textRectTransform.offsetMin = Vector2.zero;
+        textRectTransform.offsetMax = Vector2.zero;
+
+        timerText = textObject.GetComponent<TextMeshProUGUI>();
+        timerText.font = TMP_Settings.defaultFontAsset;
+        timerText.fontSize = 28f;
+        timerText.alignment = TextAlignmentOptions.Center;
+        timerText.color = normalColor;
+        timerText.raycastTarget = false;
+
+        GameObject progressObject = new GameObject("Progress", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        RectTransform progressRectTransform = progressObject.GetComponent<RectTransform>();
+        progressRectTransform.SetParent(rootRectTransform, false);
+        progressRectTransform.anchorMin = new Vector2(0.08f, 0.09f);
+        progressRectTransform.anchorMax = new Vector2(0.92f, 0.17f);
+        progressRectTransform.offsetMin = Vector2.zero;
+        progressRectTransform.offsetMax = Vector2.zero;
+
+        timerProgressBar = progressObject.GetComponent<Image>();
+        timerProgressBar.type = Image.Type.Filled;
+        timerProgressBar.fillMethod = Image.FillMethod.Horizontal;
+        timerProgressBar.fillOrigin = 0;
+        timerProgressBar.color = normalColor;
+        timerProgressBar.raycastTarget = false;
     }
 }

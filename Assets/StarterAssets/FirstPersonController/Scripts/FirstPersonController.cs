@@ -13,6 +13,12 @@ namespace StarterAssets
 	public class FirstPersonController : MonoBehaviour
 	{
 		public event EventHandler OnJumpStarted;
+		public event EventHandler<SharedCarryExhaustionWarningChangedEventArgs> OnSharedCarryExhaustionWarningChanged;
+
+		public class SharedCarryExhaustionWarningChangedEventArgs : EventArgs
+		{
+			public bool IsWarningActive;
+		}
 
 		[Header("Player")]
 		[Tooltip("Move speed of the character in m/s")]
@@ -83,9 +89,13 @@ namespace StarterAssets
         [SerializeField] private float sharedCarryAttachCorrectionSpeed = 12f;
         [SerializeField] private float sharedCarryAttachSnapDistance = 1.5f;
         [SerializeField] private float sharedCarryInputSendInterval = 0.05f;
-        [SerializeField] private float sharedCarryInputChangeThreshold = 0.01f;
-        private float _sharedCarryInputSendTimer;
-        private Vector3 _lastSentSharedCarryInput;
+		[SerializeField] private float sharedCarryInputChangeThreshold = 0.01f;
+		[SerializeField] private float sharedCarryExhaustionWarningDuration = 3f;
+		private float _sharedCarryInputSendTimer;
+		private Vector3 _lastSentSharedCarryInput;
+		private float _sharedCarryExhaustionWarningElapsed;
+		private bool _isSharedCarryExhaustionWarningActive;
+		private bool _sharedCarryExhaustionRequested;
 
 		// timeout deltatime
 		private float _jumpTimeoutDelta;
@@ -108,6 +118,7 @@ namespace StarterAssets
 
 		public float VerticalVelocity => _verticalVelocity;
 		public bool IsSprinting => _isSprinting && _currentStamina > 0f && !IsDowned();
+		public bool IsSharedCarryExhaustionWarningActive => _isSharedCarryExhaustionWarningActive;
 
 		private bool IsCurrentDeviceMouse
 		{
@@ -132,9 +143,47 @@ namespace StarterAssets
 			_playerInputNew.OnSprint += PlayerInputNew_OnSprint;
 			_playerInputNew.OnJump += PlayerInputNew_OnJump;
 			_playerHealth = GetComponent<PlayerHealth>();
+			if (_playerHealth != null)
+			{
+				_playerHealth.OnDownedStateChanged += PlayerHealth_OnDownedStateChanged;
+			}
 			_downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
 			_currentStamina = MaxStamina;
         }
+
+		private void OnDestroy()
+		{
+			if (_playerInputNew != null)
+			{
+				_playerInputNew.OnSprint -= PlayerInputNew_OnSprint;
+				_playerInputNew.OnJump -= PlayerInputNew_OnJump;
+			}
+
+			if (_playerHealth != null)
+			{
+				_playerHealth.OnDownedStateChanged -= PlayerHealth_OnDownedStateChanged;
+			}
+		}
+
+		private void PlayerHealth_OnDownedStateChanged(object sender, EventArgs e)
+		{
+			if (_playerHealth == null)
+			{
+				return;
+			}
+
+			_isSprinting = false;
+			_isJumpPerformed = false;
+			_staminaRegenerationTimeoutCounter = 0f;
+			_countStaminaTimeout = false;
+			_canRegenerateStamina = false;
+			CancelSharedCarryExhaustionWarning();
+
+			if (!_playerHealth.IsDowned)
+			{
+				_currentStamina = MaxStamina;
+			}
+		}
 
         private void PlayerInputNew_OnJump(object sender, EventArgs e)
         {
@@ -197,6 +246,21 @@ namespace StarterAssets
         {
 			_holdedItemMovementSpeedPenaltyMultiplier = e.currentMovementSpeedPenaltyMultiplier;
             currentMovementSpeed = MoveSpeed * (1 - _inventoryItemMovementSpeedPenaltyMultiplier) * (1 - _holdedItemMovementSpeedPenaltyMultiplier);
+			if (_playerInteractionNew != null && _playerInteractionNew.IsSharedCarryMovementActive)
+			{
+				if (_playerInteractionNew.IsSharedCarryUnderstaffed)
+				{
+					_canRegenerateStamina = false;
+					_countStaminaTimeout = false;
+				}
+				else if (!_isSprinting)
+				{
+					_countStaminaTimeout = true;
+				}
+
+				return;
+			}
+
 			if(_holdedItemMovementSpeedPenaltyMultiplier > 0 )
 			{
 				_canRegenerateStamina = false;
@@ -477,9 +541,16 @@ namespace StarterAssets
 
         #region Stamina
 
-        private void HandleStaminaRegeneration()
+		private void HandleStaminaRegeneration()
 		{
 			if (IsDowned())
+			{
+				_countStaminaTimeout = false;
+				_canRegenerateStamina = false;
+				return;
+			}
+
+			if (IsSharedCarryStraining())
 			{
 				_countStaminaTimeout = false;
 				_canRegenerateStamina = false;
@@ -514,6 +585,13 @@ namespace StarterAssets
 				return;
 			}
 
+			if (_playerInteractionNew != null && _playerInteractionNew.IsSharedCarryMovementActive)
+			{
+				HandleSharedCarryStaminaUsage();
+				return;
+			}
+
+			CancelSharedCarryExhaustionWarning();
 			if (_holdedItemMovementSpeedPenaltyMultiplier > 0)
 			{
 				_currentStamina -= Time.deltaTime;
@@ -523,6 +601,54 @@ namespace StarterAssets
 					Debug.Log("You have been crushed by Holded Item.");
 				}
 			}
+		}
+
+		private void HandleSharedCarryStaminaUsage()
+		{
+			if (!IsSharedCarryStraining())
+			{
+				CancelSharedCarryExhaustionWarning();
+				return;
+			}
+
+			_currentStamina = Mathf.Max(0f, _currentStamina - _playerInteractionNew.SharedCarryUnderstaffedStaminaDrainPerSecond * Time.deltaTime);
+			if (_currentStamina > 0f)
+			{
+				return;
+			}
+
+			if (!_isSharedCarryExhaustionWarningActive)
+			{
+				_isSharedCarryExhaustionWarningActive = true;
+				_sharedCarryExhaustionWarningElapsed = 0f;
+				_sharedCarryExhaustionRequested = false;
+				OnSharedCarryExhaustionWarningChanged?.Invoke(this, new SharedCarryExhaustionWarningChangedEventArgs { IsWarningActive = true });
+			}
+
+			_sharedCarryExhaustionWarningElapsed += Time.deltaTime;
+			if (!_sharedCarryExhaustionRequested && _sharedCarryExhaustionWarningElapsed >= Mathf.Max(0.1f, sharedCarryExhaustionWarningDuration))
+			{
+				_sharedCarryExhaustionRequested = true;
+				_playerInteractionNew.RequestSharedCarryExhaustion();
+			}
+		}
+
+		private bool IsSharedCarryStraining()
+		{
+			return _playerInteractionNew != null && _playerInteractionNew.IsSharedCarryUnderstaffed;
+		}
+
+		private void CancelSharedCarryExhaustionWarning()
+		{
+			if (!_isSharedCarryExhaustionWarningActive)
+			{
+				return;
+			}
+
+			_isSharedCarryExhaustionWarningActive = false;
+			_sharedCarryExhaustionWarningElapsed = 0f;
+			_sharedCarryExhaustionRequested = false;
+			OnSharedCarryExhaustionWarningChanged?.Invoke(this, new SharedCarryExhaustionWarningChangedEventArgs { IsWarningActive = false });
 		}
 
 		public float GetStaminaNormalized()

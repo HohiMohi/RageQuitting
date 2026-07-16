@@ -19,9 +19,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [SerializeField] private float sharedCarryGroundRaycastDownDistance = 20f;
     [SerializeField] private float sharedCarryGroundClearance = 0.02f;
     [SerializeField] private float sharedCarryGroundVerticalFollowSpeed = 12f;
+    [SerializeField] private float sharedCarryMaxVerticalPlacementDelta = 0.75f;
     public bool IsPickedUp => isPickedUp;
     private Rigidbody _rigidbody;
     private SharedCarryPhysicsBody _sharedCarryPhysicsBody;
+    private SharedCarryCollisionController _sharedCarryCollisionController;
     private readonly List<ulong> holderClientIds = new List<ulong>();
     private readonly Dictionary<ulong, int> holderAttachPointIndices = new Dictionary<ulong, int>();
     private readonly Dictionary<ulong, Vector3> holderAttachLocalPoints = new Dictionary<ulong, Vector3>();
@@ -109,6 +111,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     {
         _rigidbody = GetComponent<Rigidbody>();
         _sharedCarryPhysicsBody = GetComponent<SharedCarryPhysicsBody>();
+        _sharedCarryCollisionController = GetComponent<SharedCarryCollisionController>();
+        if (_sharedCarryCollisionController == null)
+        {
+            _sharedCarryCollisionController = gameObject.AddComponent<SharedCarryCollisionController>();
+        }
         if (_sharedCarryPhysicsBody != null && baseResourceSO != null)
         {
             _sharedCarryPhysicsBody.SetProfile(baseResourceSO.carryPhysicsProfile);
@@ -501,8 +508,16 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             return false;
         }
 
-        int attachPointIndex = ShouldUseServerDrivenCarry() ? GetFirstFreeAttachPointIndex() : -1;
-        Vector3 attachLocalPoint = ShouldUseServerDrivenCarry() ? GetCarryAttachLocalPoint(attachPointIndex, playerControllerRadius) : Vector3.zero;
+        int attachPointIndex = -1;
+        Vector3 attachLocalPoint = Vector3.zero;
+        Vector3 playerPlacement = Vector3.zero;
+        NetworkObject playerNetworkObject = null;
+        if (ShouldUseServerDrivenCarry()
+            && !TryPrepareSharedCarryPlayerPickup(ownerClientId, bodyAnchorLocalOffset, playerControllerRadius, out attachPointIndex, out attachLocalPoint, out playerPlacement, out playerNetworkObject))
+        {
+            RejectPickupClientRpc(CreateTargetClientRpcParams(ownerClientId));
+            return false;
+        }
         holderClientIds.Add(ownerClientId);
         HeldResourceByClientId[ownerClientId] = this;
         holderAttachPointIndices[ownerClientId] = attachPointIndex;
@@ -525,6 +540,20 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
 
         SetPickedUpState(true);
+        if (ShouldUseServerDrivenCarry())
+        {
+            if (playerNetworkObject.TryGetComponent(out PlayerInteractionNew serverPlayerInteraction))
+            {
+                serverPlayerInteraction.ApplySharedCarryPickupPlacement(playerPlacement);
+            }
+            else
+            {
+                playerNetworkObject.transform.position = playerPlacement;
+            }
+            _sharedCarryCollisionController.SetHolderCollisionIgnored(playerNetworkObject.transform, true);
+            ApplySharedCarryPickupPlacementClientRpc(playerPlacement, CreateTargetClientRpcParams(ownerClientId));
+            SetHolderCollisionIgnoredClientRpc(ownerClientId, true);
+        }
         SetPickedUpStateClientRpc(true);
         ConfirmPickupClientRpc(!ShouldUseServerDrivenCarry(), CalculateCarryMovementSpeedPenalty(), ShouldUseServerDrivenCarry(), attachLocalPoint, CreateTargetClientRpcParams(ownerClientId));
         if (ShouldUseServerDrivenCarry())
@@ -543,6 +572,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
 
         holderClientIds.Remove(senderClientId);
+        if (TryGetPlayerObject(senderClientId, out NetworkObject senderPlayerObject))
+        {
+            _sharedCarryCollisionController?.SetHolderCollisionIgnored(senderPlayerObject.transform, false);
+        }
+        SetHolderCollisionIgnoredClientRpc(senderClientId, false);
         ClearHeldResource(senderClientId);
         StopHolderVisualOverrideClientRpc(senderClientId);
         ConfirmReleaseClientRpc(CreateTargetClientRpcParams(senderClientId));
@@ -565,6 +599,43 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         return true;
     }
 
+    private void TryCrushNetworkSharedCarryHolder(ulong holderClientId)
+    {
+        if (!AllowsMultipleCarriers() || holderClientIds.Count >= GetRecommendedCarriers() || !TryGetPlayerObject(holderClientId, out NetworkObject playerNetworkObject))
+        {
+            return;
+        }
+
+        if (!TryCompleteNetworkDrop(holderClientId, transform.position, transform.rotation)
+            || !playerNetworkObject.TryGetComponent(out PlayerHealth playerHealth))
+        {
+            return;
+        }
+
+        playerHealth.DamageReceived(playerHealth.CurrentHealth);
+    }
+
+    private void TryCrushLocalSharedCarryHolder()
+    {
+        if (!holderClientIds.Contains(NoHolderClientId) || holderClientIds.Count >= GetRecommendedCarriers())
+        {
+            return;
+        }
+
+        PlayerInteractionNew playerInteraction = FindFirstObjectByType<PlayerInteractionNew>();
+        if (playerInteraction == null || playerInteraction.GetPickedUpGameObject() != gameObject)
+        {
+            return;
+        }
+
+        PlayerHealth playerHealth = playerInteraction.GetComponent<PlayerHealth>();
+        playerInteraction.DropHeldObjectForStateChange();
+        if (playerHealth != null)
+        {
+            playerHealth.DamageReceived(playerHealth.CurrentHealth);
+        }
+    }
+
     private void DespawnOrDestroy()
     {
         if (IsSpawned && NetworkObject != null)
@@ -576,6 +647,61 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
 
         Destroy(gameObject);
+    }
+
+    private bool TryPrepareSharedCarryPlayerPickup(
+        ulong ownerClientId,
+        Vector3 bodyAnchorLocalOffset,
+        float playerControllerRadius,
+        out int attachPointIndex,
+        out Vector3 attachLocalPoint,
+        out Vector3 playerPlacement,
+        out NetworkObject playerNetworkObject)
+    {
+        attachPointIndex = -1;
+        attachLocalPoint = Vector3.zero;
+        playerPlacement = Vector3.zero;
+        playerNetworkObject = null;
+
+        if (!TryGetPlayerObject(ownerClientId, out playerNetworkObject)
+            || !playerNetworkObject.TryGetComponent(out CharacterController characterController))
+        {
+            return false;
+        }
+
+        if (GetCurrentHolderCount() == 0)
+        {
+            SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody);
+        }
+
+        attachPointIndex = GetFirstFreeAttachPointIndex();
+        attachLocalPoint = GetCarryAttachLocalPoint(attachPointIndex, playerControllerRadius);
+        return SharedCarryAttachmentUtility.TryFindSafePlayerRootPosition(
+            playerNetworkObject.transform,
+            characterController,
+            transform,
+            transform.TransformPoint(attachLocalPoint),
+            bodyAnchorLocalOffset,
+            sharedCarryMaxVerticalPlacementDelta,
+            out playerPlacement);
+    }
+
+    private bool TryPrepareLocalSharedCarryPlayerPickup(PlayerInteractionNew playerInteraction, Vector3 attachLocalPoint, out Vector3 playerPlacement)
+    {
+        playerPlacement = playerInteraction.transform.position;
+        if (!playerInteraction.TryGetComponent(out CharacterController characterController))
+        {
+            return false;
+        }
+
+        return SharedCarryAttachmentUtility.TryFindSafePlayerRootPosition(
+            playerInteraction.transform,
+            characterController,
+            transform,
+            transform.TransformPoint(attachLocalPoint),
+            playerInteraction.CarryBodyAnchorLocalOffset,
+            sharedCarryMaxVerticalPlacementDelta,
+            out playerPlacement);
     }
 
     public void RemoveFromWorld()
@@ -615,6 +741,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     }
 
     [ServerRpc(RequireOwnership = false)]
+    private void RequestSharedCarryExhaustionServerRpc(ServerRpcParams serverRpcParams = default)
+    {
+        TryCrushNetworkSharedCarryHolder(serverRpcParams.Receive.SenderClientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
     private void RequestRemoveFromWorldServerRpc()
     {
         DespawnOrDestroy();
@@ -649,6 +781,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
         foreach (ulong holderClientId in previousHolderClientIds)
         {
+            if (TryGetPlayerObject(holderClientId, out NetworkObject holderPlayerObject))
+            {
+                _sharedCarryCollisionController?.SetHolderCollisionIgnored(holderPlayerObject.transform, false);
+            }
+            SetHolderCollisionIgnoredClientRpc(holderClientId, false);
             ClearHeldResource(holderClientId);
             StopHolderVisualOverrideClientRpc(holderClientId);
             ConfirmReleaseClientRpc(CreateTargetClientRpcParams(holderClientId));
@@ -710,6 +847,10 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         npcHolderAttachLocalPoints[actorId] = attachLocalPoint;
 
         SetPickedUpState(true);
+        if (ShouldUseServerDrivenCarry())
+        {
+            _sharedCarryCollisionController.SetHolderCollisionIgnored(GetCarryActorRoot(carryActor), true);
+        }
         if (IsNetworkSessionActive())
         {
             SetPickedUpStateClientRpc(true);
@@ -731,6 +872,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         npcHolderActors.Remove(actorId);
         npcHolderAttachPointIndices.Remove(actorId);
         npcHolderAttachLocalPoints.Remove(actorId);
+        _sharedCarryCollisionController?.SetHolderCollisionIgnored(GetCarryActorRoot(carryActor), false);
 
         if (notifyActor)
         {
@@ -741,6 +883,21 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private int GetCurrentHolderCount()
     {
         return holderClientIds.Count + npcHolderActorIds.Count;
+    }
+
+    private static Transform GetCarryActorRoot(ICarryActor carryActor)
+    {
+        if (carryActor == null)
+        {
+            return null;
+        }
+
+        if (carryActor.NetworkObject != null)
+        {
+            return carryActor.NetworkObject.transform;
+        }
+
+        return carryActor.BodyAnchor != null ? carryActor.BodyAnchor.root : null;
     }
 
     private bool AllowsMultipleCarriers()
@@ -792,10 +949,13 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private void UpdateHolderCarryLoadClientRpcs()
     {
         float movementSpeedPenalty = CalculateCarryMovementSpeedPenalty();
+        int playerHolderCount = holderClientIds.Count;
+        int requiredPlayerCount = GetRecommendedCarriers();
+        float staminaDrainPerSecond = baseResourceSO != null ? baseResourceSO.sharedCarryUnderstaffedStaminaDrainPerSecond : 0f;
 
         foreach (ulong holderClientId in holderClientIds)
         {
-            UpdateCarryLoadClientRpc(movementSpeedPenalty, CreateTargetClientRpcParams(holderClientId));
+            UpdateCarryLoadClientRpc(movementSpeedPenalty, playerHolderCount, requiredPlayerCount, staminaDrainPerSecond, CreateTargetClientRpcParams(holderClientId));
         }
     }
 
@@ -974,6 +1134,22 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         SetSharedCarryInput(NoHolderClientId, worldMoveInput);
     }
 
+    public void RequestSharedCarryExhaustion()
+    {
+        if (!AllowsMultipleCarriers())
+        {
+            return;
+        }
+
+        if (IsNetworkSessionActive())
+        {
+            RequestSharedCarryExhaustionServerRpc();
+            return;
+        }
+
+        TryCrushLocalSharedCarryHolder();
+    }
+
     private void SetSharedCarryInput(ulong clientId, Vector3 worldMoveInput)
     {
         if (!holderClientIds.Contains(clientId))
@@ -999,8 +1175,18 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     {
         if (!holderClientIds.Contains(NoHolderClientId))
         {
+            if (GetCurrentHolderCount() == 0)
+            {
+                SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody);
+            }
+
             int attachPointIndex = GetFirstFreeAttachPointIndex();
             Vector3 attachLocalPoint = GetCarryAttachLocalPoint(attachPointIndex, playerInteraction.GetCharacterControllerRadius());
+            if (!TryPrepareLocalSharedCarryPlayerPickup(playerInteraction, attachLocalPoint, out Vector3 playerPlacement))
+            {
+                return;
+            }
+
             holderClientIds.Add(NoHolderClientId);
             holderAttachPointIndices[NoHolderClientId] = attachPointIndex;
             holderAttachLocalPoints[NoHolderClientId] = attachLocalPoint;
@@ -1008,10 +1194,17 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             holderLastInputTimes[NoHolderClientId] = Time.time;
             holderBodyAnchorLocalOffsets[NoHolderClientId] = playerInteraction.CarryBodyAnchorLocalOffset;
             holderControllerRadii[NoHolderClientId] = playerInteraction.GetCharacterControllerRadius();
+            playerInteraction.ApplySharedCarryPickupPlacement(playerPlacement);
+            _sharedCarryCollisionController.SetHolderCollisionIgnored(playerInteraction.transform, true);
         }
 
         SetPickedUpState(true);
         playerInteraction.ConfirmPickedUpObject(gameObject, this, false, CalculateCarryMovementSpeedPenalty(), true, holderAttachLocalPoints[NoHolderClientId]);
+        playerInteraction.UpdateSharedCarryLoad(
+            CalculateCarryMovementSpeedPenalty(),
+            holderClientIds.Count,
+            GetRecommendedCarriers(),
+            baseResourceSO != null ? baseResourceSO.sharedCarryUnderstaffedStaminaDrainPerSecond : 0f);
     }
 
     private void ClearLocalSharedCarryState()
@@ -1022,6 +1215,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
 
         holderClientIds.Remove(NoHolderClientId);
+        _sharedCarryCollisionController?.SetHolderCollisionIgnored(FindFirstObjectByType<PlayerInteractionNew>()?.transform, false);
         ClearHeldResource(NoHolderClientId);
     }
 
@@ -1065,40 +1259,13 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     private Vector3 GenerateDefaultCarryAttachLocalPoint(int attachPointIndex, float playerControllerRadius)
     {
-        Bounds bounds = GetLocalColliderBounds();
-        int carrierCount = GetMaxCarriers();
-        float attachHeight = bounds.center.y;
         float playerClearance = baseResourceSO != null ? baseResourceSO.carryPlayerClearance : 0.35f;
-        float attachDistance = playerControllerRadius + playerClearance;
-
-        if (carrierCount <= 1)
-        {
-            return new Vector3(bounds.center.x, attachHeight, bounds.max.z + attachDistance);
-        }
-
-        if (carrierCount == 2)
-        {
-            float side = attachPointIndex == 0 ? -1f : 1f;
-            return new Vector3(bounds.center.x + side * (bounds.extents.x + attachDistance), attachHeight, bounds.center.z);
-        }
-
-        float angle = (Mathf.PI * 2f / carrierCount) * attachPointIndex;
-        float radius = Mathf.Max(bounds.extents.x, bounds.extents.z) + attachDistance;
-        return bounds.center + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+        return SharedCarryAttachmentUtility.GenerateDefaultAttachLocalPoint(transform, attachPointIndex, GetMaxCarriers(), playerControllerRadius, playerClearance);
     }
 
     private Bounds GetLocalColliderBounds()
     {
-        if (TryGetComponent(out Collider objectCollider))
-        {
-            Bounds worldBounds = objectCollider.bounds;
-            return new Bounds(transform.InverseTransformPoint(worldBounds.center), new Vector3(
-                worldBounds.size.x / Mathf.Max(transform.lossyScale.x, 0.001f),
-                worldBounds.size.y / Mathf.Max(transform.lossyScale.y, 0.001f),
-                worldBounds.size.z / Mathf.Max(transform.lossyScale.z, 0.001f)));
-        }
-
-        return new Bounds(Vector3.zero, Vector3.one);
+        return SharedCarryAttachmentUtility.GetLocalColliderBounds(transform);
     }
 
     private void AlignSharedCarryHeightToGround()
@@ -1194,6 +1361,25 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     }
 
     [ClientRpc]
+    private void ApplySharedCarryPickupPlacementClientRpc(Vector3 playerPlacement, ClientRpcParams clientRpcParams = default)
+    {
+        if (NetworkManager.Singleton?.LocalClient?.PlayerObject != null
+            && NetworkManager.Singleton.LocalClient.PlayerObject.TryGetComponent(out PlayerInteractionNew playerInteraction))
+        {
+            playerInteraction.ApplySharedCarryPickupPlacement(playerPlacement);
+        }
+    }
+
+    [ClientRpc]
+    private void SetHolderCollisionIgnoredClientRpc(ulong holderClientId, bool ignored)
+    {
+        if (TryGetPlayerObject(holderClientId, out NetworkObject playerNetworkObject))
+        {
+            _sharedCarryCollisionController?.SetHolderCollisionIgnored(playerNetworkObject.transform, ignored);
+        }
+    }
+
+    [ClientRpc]
     private void RejectPickupClientRpc(ClientRpcParams clientRpcParams = default)
     {
         Debug.Log($"{name} is already being carried.");
@@ -1214,7 +1400,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     }
 
     [ClientRpc]
-    private void UpdateCarryLoadClientRpc(float movementSpeedPenalty, ClientRpcParams clientRpcParams = default)
+    private void UpdateCarryLoadClientRpc(float movementSpeedPenalty, int playerHolderCount, int requiredPlayerCount, float staminaDrainPerSecond, ClientRpcParams clientRpcParams = default)
     {
         if (NetworkManager.Singleton == null || NetworkManager.Singleton.LocalClient?.PlayerObject == null)
         {
@@ -1223,7 +1409,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
         if (NetworkManager.Singleton.LocalClient.PlayerObject.TryGetComponent(out PlayerInteractionNew playerInteraction))
         {
-            playerInteraction.SetHoldedItemMovementSpeedPenalty(movementSpeedPenalty);
+            playerInteraction.UpdateSharedCarryLoad(movementSpeedPenalty, playerHolderCount, requiredPlayerCount, staminaDrainPerSecond);
         }
     }
 
@@ -1317,6 +1503,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             return;
         }
 
+        if (isPickedUp && AllowsMultipleCarriers())
+        {
+            return;
+        }
+
         if (IsActiveSharedCarryHolder(collision.collider))
         {
             return;
@@ -1404,6 +1595,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public override void OnDestroy()
     {
+        _sharedCarryCollisionController?.RestoreAllCollisions();
         if (holderClientIds.Count > 0)
         {
             foreach (ulong holderClientId in holderClientIds)
