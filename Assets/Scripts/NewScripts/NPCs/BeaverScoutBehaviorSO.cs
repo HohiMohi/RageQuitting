@@ -35,6 +35,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private int storageSweepPatrolThreshold = 5;
     [SerializeField] private float storageSweepArrivalDistance = 1.4f;
     [SerializeField] private float resourceDestructionAttackInterval = 1f;
+    [SerializeField] private float idlePatrolRangeIncrease = 2f;
+    [SerializeField] private float maxPatrolRadius = 30f;
 
     public DeliveryMode Delivery => deliveryMode;
     public NPCInterestProfileSO InterestProfile => interestProfile;
@@ -59,6 +61,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     public int StorageSweepPatrolThreshold => Mathf.Max(1, storageSweepPatrolThreshold);
     public float StorageSweepArrivalDistance => Mathf.Max(0.1f, storageSweepArrivalDistance);
     public float ResourceDestructionAttackInterval => Mathf.Max(0.05f, resourceDestructionAttackInterval);
+    public float IdlePatrolRangeIncrease => Mathf.Max(0f, idlePatrolRangeIncrease);
+
+    public float GetMaxPatrolRadius(float basePatrolRadius)
+    {
+        return Mathf.Max(Mathf.Max(0.1f, basePatrolRadius), maxPatrolRadius);
+    }
 
     public override NPCBehaviorController CreateController(NPCBrain brain)
     {
@@ -124,6 +132,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private NPCStorageEncounterInfo currentStorageSweepTarget;
         private bool finishStorageSweepAfterReturningToBase;
         private float nextResourceDestructionAttackTime;
+        private float currentPatrolRadius;
 
         public BeaverScoutController(NPCBrain brain, BeaverScoutBehaviorSO config) : base(brain)
         {
@@ -133,6 +142,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         public override void Enter()
         {
             homePosition = Brain.transform.position;
+            currentPatrolRadius = Brain.PatrolRadius;
             previousHealth = Brain.Health != null ? Brain.Health.CurrentHealth : 0f;
             animationController = Brain.GetComponent<NPCAnimationController>();
             if (Brain.Health != null)
@@ -320,6 +330,18 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             idleSearchEndTime = Time.time + config.IdleSearchDuration;
             nextTargetRefreshTime = 0f;
             StopAgent();
+        }
+
+        private float CurrentPatrolRadius => Mathf.Max(0.1f, currentPatrolRadius);
+
+        private void IncreasePatrolRadius()
+        {
+            float basePatrolRadius = Mathf.Max(0.1f, Brain.PatrolRadius);
+            float maxPatrolRadius = config.GetMaxPatrolRadius(basePatrolRadius);
+            currentPatrolRadius = Mathf.Clamp(
+                Mathf.Max(basePatrolRadius, currentPatrolRadius) + config.IdlePatrolRangeIncrease,
+                basePatrolRadius,
+                maxPatrolRadius);
         }
 
         private void UpdatePreparingAttack()
@@ -558,6 +580,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             if (Time.time >= idleSearchEndTime)
             {
                 consecutivePatrolIdleCount++;
+                IncreasePatrolRadius();
                 if (consecutivePatrolIdleCount >= config.StorageSweepPatrolThreshold)
                 {
                     EnterReturningToBaseForStorageSweep();
@@ -1035,8 +1058,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             selectedPatrolTarget = Brain.transform.position;
             for (int i = 0; i < 8; i++)
             {
-                Vector3 randomDirection = Random.insideUnitSphere * Brain.PatrolRadius + homePosition;
-                if (NavMesh.SamplePosition(randomDirection, out NavMeshHit hit, Brain.PatrolRadius, NavMesh.AllAreas))
+                Vector3 randomDirection = Random.insideUnitSphere * CurrentPatrolRadius + homePosition;
+                if (NavMesh.SamplePosition(randomDirection, out NavMeshHit hit, CurrentPatrolRadius, NavMesh.AllAreas))
                 {
                     selectedPatrolTarget = hit.position;
                     return true;

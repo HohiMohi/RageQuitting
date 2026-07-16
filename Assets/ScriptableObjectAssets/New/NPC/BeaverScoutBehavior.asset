@@ -35,3 +35,5 @@ MonoBehaviour:
   storageSweepPatrolThreshold: 5
   storageSweepArrivalDistance: 1.4
   resourceDestructionAttackInterval: 1
+  idlePatrolRangeIncrease: 2
+  maxPatrolRadius: 30
