@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInteractableNew, ISharedCarryObject
+public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInteractableNew, ISharedCarryObject, IHeldObjectHudInfoProvider
 {
     private const ulong NoHolderClientId = ulong.MaxValue;
     private const float SharedCarryInputStaleTime = 0.2f;
@@ -426,6 +426,9 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         CompleteDropClientRpc(dropPosition, dropRotation);
         return true;
     }
+
+    public string HeldObjectDisplayName => mountableBridgeComponentSO != null ? mountableBridgeComponentSO.componentName : gameObject.name;
+    public Sprite HeldObjectIcon => mountableBridgeComponentSO != null ? mountableBridgeComponentSO.componentSprite : null;
 
     private void TryCrushNetworkSharedCarryHolder(ulong holderClientId)
     {

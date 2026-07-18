@@ -1,73 +1,85 @@
 using StarterAssets;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerStaminaUI : MonoBehaviour
 {
     [SerializeField] private Image staminaMeterHolder;
+    [SerializeField] private Image warningPulseTarget;
+    [SerializeField] private TMP_Text staminaValueText;
     [SerializeField] private FirstPersonController firstPersonController;
     [SerializeField] private Color exhaustionWarningColor = new Color(0.9f, 0.08f, 0.08f, 1f);
     [SerializeField] private float exhaustionWarningBlinkSpeed = 8f;
-    private Color normalColor;
-    private bool isExhaustionWarningActive;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        normalColor = staminaMeterHolder != null ? staminaMeterHolder.color : Color.white;
-        if (firstPersonController != null)
-        {
-            firstPersonController.OnSharedCarryExhaustionWarningChanged += FirstPersonController_OnSharedCarryExhaustionWarningChanged;
-            isExhaustionWarningActive = firstPersonController.IsSharedCarryExhaustionWarningActive;
-        }
-        Show();
-    }
 
-    private void OnDestroy()
+    private Color normalFillColor = Color.white;
+    private Color normalPulseTargetColor = Color.white;
+
+    private void Awake()
     {
-        if (firstPersonController != null)
+        EnsureReferences();
+        if (staminaMeterHolder != null)
         {
-            firstPersonController.OnSharedCarryExhaustionWarningChanged -= FirstPersonController_OnSharedCarryExhaustionWarningChanged;
+            normalFillColor = staminaMeterHolder.color;
+        }
+        if (warningPulseTarget != null)
+        {
+            normalPulseTargetColor = warningPulseTarget.color;
         }
     }
 
     private void Update()
     {
-        UpdateVisual();
-    }
-    private void Show()
-    {
-        gameObject.SetActive(true);
-    }
-    private void Hide()
-    {
-        gameObject.SetActive(false);
-    }
-
-    private void UpdateVisual()
-    {
-        if (staminaMeterHolder == null || firstPersonController == null)
+        EnsureReferences();
+        if (firstPersonController == null)
         {
             return;
         }
 
-        isExhaustionWarningActive = firstPersonController.IsSharedCarryExhaustionWarningActive;
-        if (isExhaustionWarningActive)
+        float normalized = firstPersonController.GetStaminaNormalized();
+        if (staminaMeterHolder != null)
         {
-            float pulse = Mathf.PingPong(Time.time * exhaustionWarningBlinkSpeed, 1f);
-            Color warningColor = exhaustionWarningColor;
-            warningColor.a = Mathf.Lerp(0.2f, exhaustionWarningColor.a, pulse);
-            staminaMeterHolder.fillAmount = 1f;
-            staminaMeterHolder.color = warningColor;
+            staminaMeterHolder.fillAmount = normalized;
+            SetHorizontalFillScale(staminaMeterHolder, normalized);
         }
-        else
+        if (staminaValueText != null)
         {
-            staminaMeterHolder.fillAmount = firstPersonController.GetStaminaNormalized();
-            staminaMeterHolder.color = normalColor;
+            staminaValueText.text = $"{firstPersonController.CurrentStamina:0} / {firstPersonController.MaxStamina:0}";
+        }
+
+        bool showWarning = firstPersonController.IsSharedCarryExhaustionWarningActive;
+        float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * exhaustionWarningBlinkSpeed);
+        if (staminaMeterHolder != null)
+        {
+            staminaMeterHolder.color = showWarning
+                ? Color.Lerp(normalFillColor, exhaustionWarningColor, pulse)
+                : normalFillColor;
+        }
+        if (warningPulseTarget != null)
+        {
+            warningPulseTarget.color = showWarning
+                ? Color.Lerp(normalPulseTargetColor, exhaustionWarningColor, pulse)
+                : normalPulseTargetColor;
         }
     }
 
-    private void FirstPersonController_OnSharedCarryExhaustionWarningChanged(object sender, FirstPersonController.SharedCarryExhaustionWarningChangedEventArgs e)
+    private static void SetHorizontalFillScale(Image fillImage, float normalizedValue)
     {
-        isExhaustionWarningActive = e.IsWarningActive;
+        RectTransform fillRect = fillImage.rectTransform;
+        fillRect.pivot = Vector2.zero;
+        fillRect.localScale = new Vector3(Mathf.Clamp01(normalizedValue), 1f, 1f);
+    }
+
+    private void EnsureReferences()
+    {
+        if (firstPersonController == null)
+        {
+            firstPersonController = GetComponentInParent<FirstPersonController>();
+        }
+
+        if (firstPersonController == null && transform.root != null)
+        {
+            firstPersonController = transform.root.GetComponentInChildren<FirstPersonController>(true);
+        }
     }
 }

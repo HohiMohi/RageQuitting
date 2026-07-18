@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew, IDamageable, ISharedCarryObject
+public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew, IDamageable, ISharedCarryObject, IHeldObjectHudInfoProvider
 {
     private const ulong NoHolderClientId = ulong.MaxValue;
     private const float SharedCarryInputStaleTime = 0.2f;
@@ -297,6 +297,9 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         float maxDurability = GetMaxResourceDurability();
         return maxDurability > 0f ? resourceDurability / maxDurability : 0f;
     }
+
+    public string HeldObjectDisplayName => baseResourceSO != null ? baseResourceSO.resourceName : gameObject.name;
+    public Sprite HeldObjectIcon => baseResourceSO != null ? baseResourceSO.icon : null;
 
     public bool CanBeDestroyedWith(EquippableItemType toolType)
     {

@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -5,27 +6,26 @@ public class PlayerInventoryUI : MonoBehaviour
 {
     [SerializeField] private PlayerInventory playerInventory;
     [SerializeField] private Image firstItemSprite;
+    [SerializeField] private TMP_Text firstItemNameText;
     [SerializeField] private Image secondItemSprite;
+    [SerializeField] private TMP_Text secondItemNameText;
 
     private void Awake()
     {
-        if (playerInventory == null)
-        {
-            playerInventory = GetComponentInParent<PlayerInventory>();
-        }
-
-        SetSlot(firstItemSprite, null);
-        SetSlot(secondItemSprite, null);
+        EnsureReferences();
+        RefreshSlots();
     }
 
     private void OnEnable()
     {
-        if (playerInventory == null)
+        EnsureReferences();
+        if (playerInventory != null)
         {
-            return;
+            playerInventory.OnInventoryUpdated += HandleInventoryUpdated;
+            playerInventory.OnInventorySlotsChanged += HandleInventorySlotsChanged;
         }
 
-        playerInventory.OnInventoryUpdated += PlayerInventory_OnInventoryUpdated;
+        RefreshSlots();
     }
 
     private void OnDisable()
@@ -35,30 +35,51 @@ public class PlayerInventoryUI : MonoBehaviour
             return;
         }
 
-        playerInventory.OnInventoryUpdated -= PlayerInventory_OnInventoryUpdated;
+        playerInventory.OnInventoryUpdated -= HandleInventoryUpdated;
+        playerInventory.OnInventorySlotsChanged -= HandleInventorySlotsChanged;
     }
 
-    private void PlayerInventory_OnInventoryUpdated(object sender, PlayerInventory.OnInventoryUpdateArgs e)
+    private void HandleInventoryUpdated(object sender, PlayerInventory.OnInventoryUpdateArgs e)
     {
-        if (e.itemSlotIndex == 0)
+        RefreshSlots();
+    }
+
+    private void HandleInventorySlotsChanged(object sender, System.EventArgs e)
+    {
+        RefreshSlots();
+    }
+
+    private void RefreshSlots()
+    {
+        EnsureReferences();
+        SetSlot(firstItemSprite, firstItemNameText, playerInventory != null ? playerInventory.GetItemInSlot(0) : null);
+        SetSlot(secondItemSprite, secondItemNameText, playerInventory != null ? playerInventory.GetItemInSlot(1) : null);
+    }
+
+    private void EnsureReferences()
+    {
+        if (playerInventory == null)
         {
-            SetSlot(firstItemSprite, e.itemInSlot);
+            playerInventory = GetComponentInParent<PlayerInventory>();
         }
-        else if (e.itemSlotIndex == 1)
+
+        if (playerInventory == null && transform.root != null)
         {
-            SetSlot(secondItemSprite, e.itemInSlot);
+            playerInventory = transform.root.GetComponentInChildren<PlayerInventory>(true);
         }
     }
 
-    private static void SetSlot(Image slotImage, EquippableItemSO item)
+    private static void SetSlot(Image slotImage, TMP_Text itemNameText, EquippableItemSO item)
     {
-        if (slotImage == null)
+        if (slotImage != null)
         {
-            return;
+            slotImage.sprite = item != null ? item.uiSprite : null;
+            slotImage.enabled = item != null && item.uiSprite != null;
         }
 
-        slotImage.sprite = item != null ? item.uiSprite : null;
-        slotImage.enabled = item != null;
+        if (itemNameText != null)
+        {
+            itemNameText.text = item != null ? item.itemName : string.Empty;
+        }
     }
 }
-

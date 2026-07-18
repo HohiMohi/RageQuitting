@@ -2,7 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using System.Collections.Generic;
 
-public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractableNew
+public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractableNew, IHeldObjectHudInfoProvider
 {
     private const ulong NoCarrierNetworkObjectId = ulong.MaxValue;
     private static readonly Dictionary<ulong, DownedPlayerCarryable> CarriedPlayerByCarrierClientId = new Dictionary<ulong, DownedPlayerCarryable>();
@@ -33,6 +33,8 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     public bool IsCarried => IsNetworkSessionActive() ? isCarriedNetwork.Value || localCarryFollowActive : isCarriedLocal || localCarryFollowActive;
     public bool IsLocalCarryFollowActive => localCarryFollowActive;
     public bool CanBeCarried => playerHealth != null && playerHealth.IsDowned && !IsCarried;
+    public string HeldObjectDisplayName => "Downed player";
+    public Sprite HeldObjectIcon => null;
 
     private void Awake()
     {

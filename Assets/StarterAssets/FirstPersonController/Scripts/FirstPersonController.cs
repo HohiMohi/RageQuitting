@@ -118,6 +118,7 @@ namespace StarterAssets
 
 		public float VerticalVelocity => _verticalVelocity;
 		public bool IsSprinting => _isSprinting && _currentStamina > 0f && !IsDowned();
+		public float CurrentStamina => _currentStamina;
 		public bool IsSharedCarryExhaustionWarningActive => _isSharedCarryExhaustionWarningActive;
 
 		private bool IsCurrentDeviceMouse

@@ -44,6 +44,8 @@ public class PlayerInteractionNew : MonoBehaviour
     public bool IsHoldingSelfPositionedObject => _pickedUpGameObject != null && pickedUpObjectSelfPositioned;
     public bool IsSharedCarryUnderstaffed => IsSharedCarryMovementActive && sharedCarryPlayerHolderCount < sharedCarryRequiredPlayerCount;
     public float SharedCarryUnderstaffedStaminaDrainPerSecond => sharedCarryUnderstaffedStaminaDrainPerSecond;
+    public int CurrentSharedCarryPlayerCount => sharedCarryPlayerHolderCount;
+    public int RequiredSharedCarryPlayerCount => sharedCarryRequiredPlayerCount;
     public Vector3 CarryBodyAnchorLocalOffset => defaultCarryBodyAnchorLocalPosition;
 
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
@@ -412,6 +414,7 @@ public class PlayerInteractionNew : MonoBehaviour
         sharedCarryPlayerHolderCount = Mathf.Max(0, playerHolderCount);
         sharedCarryRequiredPlayerCount = Mathf.Max(1, requiredPlayerCount);
         sharedCarryUnderstaffedStaminaDrainPerSecond = Mathf.Max(0f, understaffedStaminaDrainPerSecond);
+        OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
 
         UpdateHoldedItemMovementSpeedPenalty?.Invoke(this, new UpdateHoldedItemMovementSpeedPenaltyEventArgs
         {
