@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
@@ -11,9 +12,12 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     [SerializeField] private GameObject readyForMountingVisualsGameObject;
     [SerializeField] private GameObject mountedComponentVisualsGameObject;
     [SerializeField] private Material ghostMaterial;
+    [Tooltip("Optional explicit list of colliders enabled after mounting. When empty, all colliders outside the ghost visuals are used.")]
+    [SerializeField] private Collider[] mountedPhysicalColliders;
     private float assemblingProgressNeeded;
     private float currentAssemblingProgress;
     private bool needAssembling;
+    private Collider[] readyForMountingInteractionColliders = Array.Empty<Collider>();
 
     public EventHandler<ComponentMountedEventArgs> ComponentMounted;
     public EventHandler<ComponentAsembledEventArgs> ComponentAsembled;
@@ -91,17 +95,9 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     private void Awake()
     {
-        readyForMountingVisualsGameObject.SetActive(false);
-        mountedComponentVisualsGameObject.SetActive(false);
-
-        // Ensure all colliders in readyForMountingVisualsGameObject are triggers so players can walk through them
-        if (readyForMountingVisualsGameObject != null)
-        {
-            foreach (Collider col in readyForMountingVisualsGameObject.GetComponentsInChildren<Collider>(true))
-            {
-                col.isTrigger = true;
-            }
-        }
+        CacheBridgeComponentColliders();
+        ConfigureReadyForMountingInteractionColliders();
+        ApplyVisualAndColliderState();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -154,7 +150,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         if (e.componentID == componentID && !isMounted)
         {
             canBeMounted = e.canBeMounted;
-            readyForMountingVisualsGameObject.SetActive(e.canBeMounted);
+            ApplyVisualAndColliderState();
         }
     }
 
@@ -163,7 +159,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         if (e.componentID == componentID && !isMounted)
         {
             canBeMounted = e.canBeMounted;
-            readyForMountingVisualsGameObject.SetActive(e.canBeMounted);
+            ApplyVisualAndColliderState();
         }
     }
 
@@ -248,10 +244,10 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void ApplyMountedState()
     {
-        readyForMountingVisualsGameObject.SetActive(false);
-        mountedComponentVisualsGameObject.SetActive(true);
-        ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
         isMounted = true;
+        canBeMounted = false;
+        ApplyVisualAndColliderState();
+        ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
         if (!needAssembling)
         {
             ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
@@ -273,8 +269,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         canBeMounted = state.canBeMounted;
         currentAssemblingProgress = state.currentAssemblingProgress;
 
-        readyForMountingVisualsGameObject.SetActive(canBeMounted && !isMounted);
-        mountedComponentVisualsGameObject.SetActive(isMounted);
+        ApplyVisualAndColliderState();
 
         if (!wasMounted && isMounted)
         {
@@ -290,5 +285,91 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     public void DamageReceived(float damage)
     {
         throw new NotImplementedException();
+    }
+
+    private void CacheBridgeComponentColliders()
+    {
+        readyForMountingInteractionColliders = readyForMountingVisualsGameObject != null
+            ? readyForMountingVisualsGameObject.GetComponentsInChildren<Collider>(true)
+            : Array.Empty<Collider>();
+
+        if (mountedPhysicalColliders != null && mountedPhysicalColliders.Length > 0)
+        {
+            List<Collider> configuredPhysicalColliders = new List<Collider>();
+            foreach (Collider collider in mountedPhysicalColliders)
+            {
+                if (collider != null && !IsReadyForMountingInteractionCollider(collider))
+                {
+                    configuredPhysicalColliders.Add(collider);
+                }
+            }
+
+            mountedPhysicalColliders = configuredPhysicalColliders.ToArray();
+            return;
+        }
+
+        List<Collider> physicalColliders = new List<Collider>();
+        foreach (Collider collider in GetComponentsInChildren<Collider>(true))
+        {
+            if (collider == null || IsReadyForMountingInteractionCollider(collider))
+            {
+                continue;
+            }
+
+            physicalColliders.Add(collider);
+        }
+
+        mountedPhysicalColliders = physicalColliders.ToArray();
+    }
+
+    private bool IsReadyForMountingInteractionCollider(Collider collider)
+    {
+        if (readyForMountingVisualsGameObject == null || collider == null)
+        {
+            return false;
+        }
+
+        Transform readyVisualsTransform = readyForMountingVisualsGameObject.transform;
+        return collider.transform == readyVisualsTransform || collider.transform.IsChildOf(readyVisualsTransform);
+    }
+
+    private void ConfigureReadyForMountingInteractionColliders()
+    {
+        foreach (Collider interactionCollider in readyForMountingInteractionColliders)
+        {
+            if (interactionCollider == null)
+            {
+                continue;
+            }
+
+            interactionCollider.enabled = true;
+            interactionCollider.isTrigger = true;
+        }
+    }
+
+    private void ApplyVisualAndColliderState()
+    {
+        if (readyForMountingVisualsGameObject != null)
+        {
+            readyForMountingVisualsGameObject.SetActive(canBeMounted && !isMounted);
+        }
+
+        if (mountedComponentVisualsGameObject != null)
+        {
+            mountedComponentVisualsGameObject.SetActive(isMounted);
+        }
+
+        if (mountedPhysicalColliders == null)
+        {
+            return;
+        }
+
+        foreach (Collider physicalCollider in mountedPhysicalColliders)
+        {
+            if (physicalCollider != null)
+            {
+                physicalCollider.enabled = isMounted;
+            }
+        }
     }
 }
