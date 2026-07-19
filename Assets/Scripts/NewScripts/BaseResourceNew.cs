@@ -22,6 +22,9 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [SerializeField] private float sharedCarryMaxVerticalPlacementDelta = 0.75f;
     public bool IsPickedUp => isPickedUp;
     public bool CanBeCarried => baseResourceSO != null && baseResourceSO.canBeCarried;
+    public bool CanBeDestroyed => baseResourceSO != null
+        && baseResourceSO.baseResourceDestructionRecipeArray != null
+        && baseResourceSO.baseResourceDestructionRecipeArray.Length > 0;
     private Rigidbody _rigidbody;
     private SharedCarryPhysicsBody _sharedCarryPhysicsBody;
     private SharedCarryCollisionController _sharedCarryCollisionController;
@@ -131,6 +134,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         {
             _sharedCarryPhysicsBody.SetProfile(baseResourceSO.carryPhysicsProfile);
         }
+        ApplyCarryabilityPhysicsState();
         resourceDurability = GetMaxResourceDurability();
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -151,6 +155,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
 
         resourceDurability = resourceDurabilityNetwork.Value;
+        ApplyCarryabilityPhysicsState();
     }
 
     public override void OnNetworkDespawn()
@@ -346,6 +351,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             return;
         }
 
+        if (baseResourceSO != null && !CanBeCarried)
+        {
+            ApplyCarryabilityPhysicsState();
+            return;
+        }
+
         if (isPickedUp)
         {
             if (AllowsMultipleCarriers() && _sharedCarryPhysicsBody != null)
@@ -360,10 +371,42 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
         else
         {
-            _sharedCarryPhysicsBody?.EndSharedCarry();
-            _rigidbody.useGravity = true;
-            _rigidbody.isKinematic = false;
+            ApplyCarryabilityPhysicsState();
         }
+    }
+
+    private void ApplyCarryabilityPhysicsState()
+    {
+        if (_rigidbody == null || baseResourceSO == null)
+        {
+            return;
+        }
+
+        if (CanBeCarried)
+        {
+            if (isPickedUp)
+            {
+                return;
+            }
+
+            _sharedCarryPhysicsBody?.EndSharedCarry();
+            _rigidbody.isKinematic = false;
+            _rigidbody.useGravity = true;
+            _rigidbody.detectCollisions = true;
+            return;
+        }
+
+        _sharedCarryPhysicsBody?.EndSharedCarry();
+
+        if (!_rigidbody.isKinematic)
+        {
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.angularVelocity = Vector3.zero;
+        }
+
+        _rigidbody.useGravity = false;
+        _rigidbody.isKinematic = true;
+        _rigidbody.detectCollisions = true;
     }
 
     private bool IsNetworkSessionActive()

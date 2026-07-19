@@ -192,6 +192,11 @@ public class LookingAtComponentUI : MonoBehaviour
             return;
         }
 
+        if (target is BaseResourceNew baseResource && !baseResource.CanBeDestroyed)
+        {
+            return;
+        }
+
         if (target is IDamageable && !(target is BridgeComponent))
         {
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action, "Attack"));

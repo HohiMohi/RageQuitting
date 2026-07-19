@@ -10,23 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6c0995a3182a1464a89a990f501066fb, type: 3}
-  m_Name: Coal
+  m_Name: IronNugget
   m_EditorClassIdentifier: Assembly-CSharp::BaseResourceSO
-  resourceName: Coal Vein
-  resourcePrefab: {fileID: 3729975646768033361, guid: 5ee1ddbd34d3efa448821c62897004ad, type: 3}
-  icon: {fileID: 741899376876123942, guid: 02757d04723893e4b9ed1f9f0f4249f7, type: 3}
-  baseResourceDestructionRecipeArray:
-  - finalProductBaseResourceSO: {fileID: 11400000, guid: 724cd6647f00c974cbad74890edb25ce, type: 2}
-    neededEquippableItemType: 2
-    products:
-    - resourceSO: {fileID: 11400000, guid: 724cd6647f00c974cbad74890edb25ce, type: 2}
-      amount: 3
-    spawnOffsets: []
-    fallbackScatterRadius: 0.35
-  resourceDurability: 50
+  resourceName: Iron Nugget
+  resourcePrefab: {fileID: 8908232955564892484, guid: fd7c7f6043997e0449d1602ccc261922, type: 3}
+  icon: {fileID: 21300000, guid: 0aea6da8a0f80f244894c623649ec1cc, type: 3}
+  baseResourceDestructionRecipeArray: []
+  resourceDurability: 0
   movementSpeedPenalty: 0
-  canBeCarried: 0
-  minAmountOfPlayersNeeded: 0
+  canBeCarried: 1
+  minAmountOfPlayersNeeded: 1
   allowMultipleCarriers: 0
   recommendedCarriers: 1
   maxCarriers: 1

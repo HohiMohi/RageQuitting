@@ -1379,15 +1379,15 @@ PrefabInstance:
     - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
       propertyPath: 'storableBaseResourcesSOList.Array.data[0]'
       value: 
-      objectReference: {fileID: 11400000, guid: 3f54812b53140fa419a8868dbc44acb2, type: 2}
+      objectReference: {fileID: 11400000, guid: 724cd6647f00c974cbad74890edb25ce, type: 2}
     - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
       propertyPath: 'storableBaseResourcesSOList.Array.data[1]'
       value: 
-      objectReference: {fileID: 11400000, guid: 724cd6647f00c974cbad74890edb25ce, type: 2}
+      objectReference: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
       propertyPath: 'storableBaseResourcesSOList.Array.data[2]'
       value: 
-      objectReference: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+      objectReference: {fileID: 11400000, guid: 59cb7f33c89966747a8e01f704f5bfbc, type: 2}
     - target: {fileID: 5511810197672116553, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
       propertyPath: furnaceStorage
       value: 
