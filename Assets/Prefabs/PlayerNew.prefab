@@ -339,6 +339,37 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &1350885326080557180
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1907752771520777589}
+  m_Layer: 0
+  m_Name: CameraFeedbackOffset
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1907752771520777589
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1350885326080557180}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 365638902093576632}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1958055688446606850
 GameObject:
   m_ObjectHideFlags: 0
@@ -370,6 +401,8 @@ GameObject:
   - component: {fileID: 7382414467715117638}
   - component: {fileID: 6243819655438720123}
   - component: {fileID: 3389710196241267904}
+  - component: {fileID: 5408844525525588024}
+  - component: {fileID: 4680480229104245975}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -437,7 +470,14 @@ MonoBehaviour:
   MoveSpeed: 4
   SprintSpeed: 6
   RotationSpeed: 5
-  SpeedChangeRate: 10
+  groundAcceleration: 22
+  groundDeceleration: 28
+  reverseAcceleration: 34
+  airAcceleration: 4
+  strafeSpeedMultiplier: 0.9
+  backwardSpeedMultiplier: 0.8
+  walkStepDistance: 0.8
+  sprintStepDistance: 1.05
   JumpHeight: 1.2
   Gravity: -15
   JumpTimeout: 0.1
@@ -902,7 +942,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDamageFeedback
   playerHealth: {fileID: 6339126401750945372}
-  firstPersonController: {fileID: 8036448780592137977}
+  cameraFeedbackComposer: {fileID: 5408844525525588024}
   damageOverlay: {fileID: 0}
   audioSource: {fileID: 0}
   flashColor: {r: 0.9, g: 0, b: 0, a: 1}
@@ -989,6 +1029,51 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLevelRestartController
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &5408844525525588024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16a81246e5850e14ab259e991a9ad82c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCameraFeedbackComposer
+  baseCameraTarget: {fileID: 365638902093576632}
+  outputTarget: {fileID: 1907752771520777589}
+--- !u!114 &4680480229104245975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21bdb9c072548be428da983ad9b147fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementFeedback
+  controller: {fileID: 8036448780592137977}
+  cameraFeedbackComposer: {fileID: 5408844525525588024}
+  playerInput: {fileID: 8057224913680877428}
+  playerHealth: {fileID: 6339126401750945372}
+  walkBobAmplitude: 0.008
+  sprintBobAmplitude: 0.014
+  bobCyclesPerMeter: 1.25
+  horizontalBobRatio: 0.55
+  positionSmoothing: 14
+  maximumStrafeRoll: 1
+  accelerationSway: 0.003
+  maximumAccelerationOffset: 0.012
+  rotationSmoothing: 12
+  jumpPositionImpulse: 0.025
+  landingPositionImpulse: 0.055
+  landingReferenceSpeed: 10
+  impulseRecoverySpeed: 7
+  sprintFovBonus: 4
+  fovChangeSpeed: 8
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0
@@ -1526,6 +1611,7 @@ MonoBehaviour:
   restartController: {fileID: 0}
   panelRoot: {fileID: 0}
   restartButton: {fileID: 0}
+  startTimerButton: {fileID: 0}
   availabilityText: {fileID: 0}
   panelSize: {x: 360, y: 320}
 --- !u!1 &4961565375688202897
@@ -1824,7 +1910,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 1.1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1907752771520777589}
   m_Father: {fileID: 8436876622116572697}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8971768974546094915

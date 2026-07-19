@@ -116,6 +116,11 @@ public class PlayerNetworkSetup : NetworkBehaviour
         }
 
         var targetTransform = cameraTarget.transform;
+        if (TryGetComponent(out PlayerCameraFeedbackComposer feedbackComposer))
+        {
+            targetTransform = feedbackComposer.OutputTarget;
+        }
+
         sharedVirtualCamera.Follow = targetTransform;
         sharedVirtualCamera.LookAt = targetTransform;
 
@@ -180,11 +185,19 @@ public class PlayerNetworkSetup : NetworkBehaviour
     {
         if (sharedVirtualCamera != null
             && TryGetComponent(out FirstPersonController firstPersonController)
-            && firstPersonController.CinemachineCameraTarget != null
-            && sharedVirtualCamera.Follow == firstPersonController.CinemachineCameraTarget.transform)
+            && firstPersonController.CinemachineCameraTarget != null)
         {
-            sharedVirtualCamera.Follow = null;
-            sharedVirtualCamera.LookAt = null;
+            Transform expectedTarget = firstPersonController.CinemachineCameraTarget.transform;
+            if (TryGetComponent(out PlayerCameraFeedbackComposer feedbackComposer))
+            {
+                expectedTarget = feedbackComposer.OutputTarget;
+            }
+
+            if (sharedVirtualCamera.Follow == expectedTarget)
+            {
+                sharedVirtualCamera.Follow = null;
+                sharedVirtualCamera.LookAt = null;
+            }
         }
 
         sharedVirtualCamera = null;
@@ -214,6 +227,7 @@ public class PlayerNetworkSetup : NetworkBehaviour
         SetComponentEnabled<PlayerInteractionNew>(false);
         SetComponentEnabled<PlayerActionController>(false);
         SetComponentEnabled<PlayerInventory>(false);
+        SetComponentEnabled<PlayerMovementFeedback>(false);
         SetComponentEnabled<PlayerInput>(false);
         SetComponentEnabled<StarterAssetsInputs>(false);
 

@@ -1,4 +1,3 @@
-using StarterAssets;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,7 +6,7 @@ public class PlayerDamageFeedback : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private PlayerHealth playerHealth;
-    [SerializeField] private FirstPersonController firstPersonController;
+    [SerializeField] private PlayerCameraFeedbackComposer cameraFeedbackComposer;
     [SerializeField] private Image damageOverlay;
     [SerializeField] private AudioSource audioSource;
 
@@ -29,8 +28,6 @@ public class PlayerDamageFeedback : MonoBehaviour
     [SerializeField] private float audioPitchVariance = 0.08f;
 
     private NetworkObject networkObject;
-    private Transform cameraTarget;
-    private Vector3 cameraTargetBaseLocalPosition;
     private float previousHealth;
     private float overlayAlpha;
     private float shakeTimer;
@@ -47,9 +44,9 @@ public class PlayerDamageFeedback : MonoBehaviour
             playerHealth = GetComponent<PlayerHealth>();
         }
 
-        if (firstPersonController == null)
+        if (cameraFeedbackComposer == null)
         {
-            firstPersonController = GetComponent<FirstPersonController>();
+            cameraFeedbackComposer = GetComponent<PlayerCameraFeedbackComposer>();
         }
 
         if (audioSource == null)
@@ -65,7 +62,6 @@ public class PlayerDamageFeedback : MonoBehaviour
         audioSource.playOnAwake = false;
         audioSource.spatialBlend = 0f;
 
-        ResolveCameraTarget();
         EnsureOverlay();
         previousHealth = playerHealth != null ? playerHealth.CurrentHealth : 0f;
     }
@@ -166,7 +162,7 @@ public class PlayerDamageFeedback : MonoBehaviour
 
     private void UpdateCameraShake()
     {
-        if (cameraTarget == null || shakeTimer <= 0f)
+        if (cameraFeedbackComposer == null || shakeTimer <= 0f)
         {
             return;
         }
@@ -176,7 +172,7 @@ public class PlayerDamageFeedback : MonoBehaviour
         float strength = shakeStrength * normalizedTime;
         float noiseX = Mathf.PerlinNoise(Time.time * shakeFrequency, 0.13f) * 2f - 1f;
         float noiseY = Mathf.PerlinNoise(0.37f, Time.time * shakeFrequency) * 2f - 1f;
-        cameraTarget.localPosition = cameraTargetBaseLocalPosition + new Vector3(noiseX, noiseY, 0f) * strength;
+        cameraFeedbackComposer.SetDamageFeedback(new Vector3(noiseX, noiseY, 0f) * strength);
 
         if (shakeTimer <= 0f)
         {
@@ -189,10 +185,7 @@ public class PlayerDamageFeedback : MonoBehaviour
         shakeTimer = 0f;
         shakeStrength = 0f;
 
-        if (cameraTarget != null)
-        {
-            cameraTarget.localPosition = cameraTargetBaseLocalPosition;
-        }
+        cameraFeedbackComposer?.ClearDamageFeedback();
     }
 
     private void PlayDamageAudio(float multiplier)
@@ -252,17 +245,6 @@ public class PlayerDamageFeedback : MonoBehaviour
         color.a = Mathf.Clamp01(alpha);
         damageOverlay.color = color;
         damageOverlay.enabled = color.a > 0f;
-    }
-
-    private void ResolveCameraTarget()
-    {
-        if (firstPersonController == null || firstPersonController.CinemachineCameraTarget == null)
-        {
-            return;
-        }
-
-        cameraTarget = firstPersonController.CinemachineCameraTarget.transform;
-        cameraTargetBaseLocalPosition = cameraTarget.localPosition;
     }
 
     private AudioClip GetFallbackDamageClip()

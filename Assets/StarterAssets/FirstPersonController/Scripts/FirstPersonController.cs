@@ -13,7 +13,21 @@ namespace StarterAssets
 	public class FirstPersonController : MonoBehaviour
 	{
 		public event EventHandler OnJumpStarted;
+		public event EventHandler<LandedEventArgs> OnLanded;
+		public event EventHandler<FootstepEventArgs> OnFootstep;
 		public event EventHandler<SharedCarryExhaustionWarningChangedEventArgs> OnSharedCarryExhaustionWarningChanged;
+
+		public class LandedEventArgs : EventArgs
+		{
+			public float ImpactSpeed;
+		}
+
+		public class FootstepEventArgs : EventArgs
+		{
+			public Vector3 Position;
+			public Collider GroundCollider;
+			public bool IsSprinting;
+		}
 
 		public class SharedCarryExhaustionWarningChangedEventArgs : EventArgs
 		{
@@ -27,8 +41,15 @@ namespace StarterAssets
 		public float SprintSpeed = 6.0f;
 		[Tooltip("Rotation speed of the character")]
 		public float RotationSpeed = 1.0f;
-		[Tooltip("Acceleration and deceleration")]
-		public float SpeedChangeRate = 10.0f;
+		[Header("Movement Feel")]
+		[SerializeField] private float groundAcceleration = 22f;
+		[SerializeField] private float groundDeceleration = 28f;
+		[SerializeField] private float reverseAcceleration = 34f;
+		[SerializeField] private float airAcceleration = 4f;
+		[SerializeField, Range(0.1f, 1f)] private float strafeSpeedMultiplier = 0.9f;
+		[SerializeField, Range(0.1f, 1f)] private float backwardSpeedMultiplier = 0.8f;
+		[SerializeField] private float walkStepDistance = 0.8f;
+		[SerializeField] private float sprintStepDistance = 1.05f;
 
 		[Space(10)]
 		[Tooltip("The height the player can jump")]
@@ -64,7 +85,9 @@ namespace StarterAssets
 		private float _cinemachineTargetPitch;
 
 		// player
-		private float _speed;
+		private Vector3 _horizontalVelocity;
+		private float _mostNegativeAirVelocity;
+		private float _footstepDistanceAccumulator;
 		private bool _isSprinting = false;
 		private bool _isJumpPerformed = false;
         private float _rotationVelocity;
@@ -117,6 +140,8 @@ namespace StarterAssets
 		private const float _threshold = 0.01f;
 
 		public float VerticalVelocity => _verticalVelocity;
+		public Vector3 HorizontalVelocity => _horizontalVelocity;
+		public float HorizontalSpeed => _horizontalVelocity.magnitude;
 		public bool IsSprinting => _isSprinting && _currentStamina > 0f && !IsDowned();
 		public float CurrentStamina => _currentStamina;
 		public bool IsSharedCarryExhaustionWarningActive => _isSharedCarryExhaustionWarningActive;
@@ -290,9 +315,21 @@ namespace StarterAssets
 
 		private void GroundedCheck()
 		{
+			bool wasGrounded = Grounded;
 			// set sphere position, with offset
 			Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z);
 			Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
+
+			if (!Grounded)
+			{
+				_mostNegativeAirVelocity = Mathf.Min(_mostNegativeAirVelocity, _verticalVelocity);
+			}
+			else if (!wasGrounded)
+			{
+				float impactSpeed = Mathf.Abs(Mathf.Min(0f, _mostNegativeAirVelocity));
+				_mostNegativeAirVelocity = 0f;
+				OnLanded?.Invoke(this, new LandedEventArgs { ImpactSpeed = impactSpeed });
+			}
 		}
 
 		private void CameraRotation()
@@ -326,7 +363,7 @@ namespace StarterAssets
 			{
 				_isSprinting = false;
 				_isJumpPerformed = false;
-				_speed = 0f;
+				_horizontalVelocity = Vector3.zero;
 				return;
 			}
 
@@ -334,7 +371,7 @@ namespace StarterAssets
 			{
 				_isSprinting = false;
 				_isJumpPerformed = false;
-				_speed = 0f;
+				_horizontalVelocity = Vector3.zero;
 				return;
 			}
 
@@ -350,83 +387,92 @@ namespace StarterAssets
 				return;
 			}
 
-			// set target speed based on move speed, sprint speed and if sprint is pressed
-			float targetSpeed = 0f;
-			if (_isSprinting && _currentStamina > 0)
-			{
-				targetSpeed = SprintSpeed;
-			}
-			else
-			{
-				targetSpeed = MoveSpeed;
-			}
-			// apply movement speed penalties from holded item and inventory items
-			targetSpeed *= (1- _holdedItemMovementSpeedPenaltyMultiplier);
-			targetSpeed *= (1 - _inventoryItemMovementSpeedPenaltyMultiplier);
-            // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
+			Vector2 moveInput = Vector2.ClampMagnitude(_playerInputNew.GetMoveVectorValue(), 1f);
+			float targetSpeed = IsSprinting ? SprintSpeed : MoveSpeed;
+			targetSpeed *= 1f - _holdedItemMovementSpeedPenaltyMultiplier;
+			targetSpeed *= 1f - _inventoryItemMovementSpeedPenaltyMultiplier;
 
-            // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
-            // if there is no input, set the target speed to 0
-            // Prefab setup - StarterAssetsInputs handling
-            //if (_input.move == Vector2.zero) targetSpeed = 0.0f;
-            if (_playerInputNew.GetMoveVectorValue() == Vector2.zero) targetSpeed = 0.0f;
-            // a reference to the players current horizontal velocity
-            float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
+			Vector3 localDesiredVelocity = new Vector3(
+				moveInput.x * strafeSpeedMultiplier,
+				0f,
+				moveInput.y * (moveInput.y < 0f ? backwardSpeedMultiplier : 1f));
+			localDesiredVelocity = Vector3.ClampMagnitude(localDesiredVelocity, 1f) * targetSpeed;
+			Vector3 desiredVelocity = transform.TransformDirection(localDesiredVelocity);
+			desiredVelocity.y = 0f;
 
-			float speedOffset = 0.1f;
-            // Prefab setup - StarterAssetsInputs handling
-            //float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
-            float inputMagnitude = _input.analogMovement ? _playerInputNew.GetMoveVectorValue().magnitude : 1f;
-            // accelerate or decelerate to target speed
-            if (currentHorizontalSpeed < targetSpeed - speedOffset || currentHorizontalSpeed > targetSpeed + speedOffset)
+			float acceleration = GetHorizontalAcceleration(desiredVelocity);
+			_horizontalVelocity = Vector3.MoveTowards(_horizontalVelocity, desiredVelocity, acceleration * Time.deltaTime);
+
+			Vector3 positionBeforeMove = transform.position;
+			_controller.Move((_horizontalVelocity + Vector3.up * _verticalVelocity) * Time.deltaTime);
+			UpdateFootsteps(positionBeforeMove, transform.position);
+
+			if (moveInput != Vector2.zero && IsSprinting)
 			{
-				// creates curved result rather than a linear one giving a more organic speed change
-				// note T in Lerp is clamped, so we don't need to clamp our speed
-				_speed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed * inputMagnitude, Time.deltaTime * SpeedChangeRate);
-
-				// round speed to 3 decimal places
-				_speed = Mathf.Round(_speed * 1000f) / 1000f;
+				_currentStamina = Mathf.Max(0f, _currentStamina - Time.deltaTime);
 			}
-			else
+		}
+
+		private float GetHorizontalAcceleration(Vector3 desiredVelocity)
+		{
+			if (!Grounded)
 			{
-				_speed = targetSpeed;
+				return Mathf.Max(0f, airAcceleration);
 			}
 
-            // normalise input direction
-            // Prefab setup - StarterAssetsInputs handling
-            //Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
-            Vector3 inputDirection = new Vector3(_playerInputNew.GetMoveVectorValue().x, 0.0f, _playerInputNew.GetMoveVectorValue().y).normalized;
-            // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
-            // if there is a move input rotate player when the player is moving
+			if (desiredVelocity.sqrMagnitude <= 0.0001f)
+			{
+				return Mathf.Max(0f, groundDeceleration);
+			}
 
-            // Prefab setup - StarterAssetsInputs handling
-            //if (_input.move != Vector2.zero)
-            if (_playerInputNew.GetMoveVectorValue() != Vector2.zero)
-            {
-                // move
-                // Prefab setup - StarterAssetsInputs handling
-                //inputDirection = transform.right * _input.move.x + transform.forward * _input.move.y;
-                inputDirection = transform.right * _playerInputNew.GetMoveVectorValue().x + transform.forward * _playerInputNew.GetMoveVectorValue().y;
-                if (_isSprinting && _currentStamina > 0)
-                {
-                    _currentStamina -= Time.deltaTime;
-                    if (_currentStamina < 0)
-                    {
-                        _currentStamina = 0;
-                    }
-                }
-            }
+			if (_horizontalVelocity.sqrMagnitude > 0.0001f
+				&& Vector3.Dot(_horizontalVelocity.normalized, desiredVelocity.normalized) < 0f)
+			{
+				return Mathf.Max(0f, reverseAcceleration);
+			}
 
+			return Mathf.Max(0f, groundAcceleration);
+		}
 
-			// move the player
-			_controller.Move(inputDirection.normalized * (_speed * Time.deltaTime) + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+		private void UpdateFootsteps(Vector3 previousPosition, Vector3 currentPosition)
+		{
+			if (!Grounded || HorizontalSpeed < 0.2f)
+			{
+				_footstepDistanceAccumulator = 0f;
+				return;
+			}
+
+			Vector3 horizontalDelta = currentPosition - previousPosition;
+			horizontalDelta.y = 0f;
+			_footstepDistanceAccumulator += horizontalDelta.magnitude;
+			float stepDistance = Mathf.Max(0.1f, IsSprinting ? sprintStepDistance : walkStepDistance);
+			if (_footstepDistanceAccumulator < stepDistance)
+			{
+				return;
+			}
+
+			_footstepDistanceAccumulator %= stepDistance;
+			Collider groundCollider = null;
+			Vector3 footstepPosition = transform.position;
+			if (Physics.Raycast(transform.position + Vector3.up * 0.25f, Vector3.down, out RaycastHit hit, 2f, GroundLayers, QueryTriggerInteraction.Ignore))
+			{
+				groundCollider = hit.collider;
+				footstepPosition = hit.point;
+			}
+
+			OnFootstep?.Invoke(this, new FootstepEventArgs
+			{
+				Position = footstepPosition,
+				GroundCollider = groundCollider,
+				IsSprinting = IsSprinting
+			});
 		}
 
 		private void MoveWhileDowned()
 		{
 			_isSprinting = false;
 			_isJumpPerformed = false;
-			_speed = 0f;
+			_horizontalVelocity = Vector3.zero;
 			_controller.Move(new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 		}
 
@@ -448,7 +494,7 @@ namespace StarterAssets
 			}
 
 			_controller.Move(new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
-			_speed = 0f;
+			_horizontalVelocity = Vector3.zero;
 		}
 
 		private Vector3 GetSharedCarryWorldMoveInput(Vector2 moveInput)

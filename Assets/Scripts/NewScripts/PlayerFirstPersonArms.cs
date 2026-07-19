@@ -153,7 +153,12 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             playerInventory = GetComponent<PlayerInventory>();
         }
 
-        if (cameraRoot == null && firstPersonController != null && firstPersonController.CinemachineCameraTarget != null)
+        PlayerCameraFeedbackComposer feedbackComposer = GetComponent<PlayerCameraFeedbackComposer>();
+        if (feedbackComposer != null && feedbackComposer.OutputTarget != null)
+        {
+            cameraRoot = feedbackComposer.OutputTarget;
+        }
+        else if (cameraRoot == null && firstPersonController != null && firstPersonController.CinemachineCameraTarget != null)
         {
             cameraRoot = firstPersonController.CinemachineCameraTarget.transform;
         }
