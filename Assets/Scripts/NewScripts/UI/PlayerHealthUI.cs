@@ -25,6 +25,12 @@ public class PlayerHealthUI : MonoBehaviour
         UpdateVisual();
     }
 
+    private void Start()
+    {
+        // OnEnable can run before PlayerHealth.Awake initializes singleplayer health.
+        UpdateVisual();
+    }
+
     private void OnDisable()
     {
         if (playerHealth == null)
