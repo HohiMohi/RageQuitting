@@ -10,6 +10,7 @@ using Unity.Services.Core;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class MultiplayerRoomManager : MonoBehaviour
@@ -30,10 +31,13 @@ public class MultiplayerRoomManager : MonoBehaviour
     [SerializeField] private TMP_Text lobbyCodeText;
     [SerializeField] private Button leaveRoomButton;
     [SerializeField] private Button copyCodeButton;
-    [SerializeField] private Button startGameButton;
+    [FormerlySerializedAs("startGameButton")]
+    [SerializeField] private Button startFppSceneButton;
+    [SerializeField] private Button startTutorialSceneButton;
     [SerializeField] private TMP_Text[] playerSlotTexts; // Array of 4 text components
 
     private string currentRoomCode;
+    private bool sceneLoadInProgress;
     private const int MAX_PLAYERS = 4;
 
     private void Awake()
@@ -60,7 +64,11 @@ public class MultiplayerRoomManager : MonoBehaviour
         joinRoomButton.onClick.AddListener(OnJoinRoomClicked);
         leaveRoomButton.onClick.AddListener(OnLeaveRoomClicked);
         copyCodeButton.onClick.AddListener(OnCopyCodeClicked);
-        startGameButton.onClick.AddListener(OnStartGameClicked);
+        startFppSceneButton.onClick.AddListener(OnStartFppSceneClicked);
+        if (startTutorialSceneButton != null)
+        {
+            startTutorialSceneButton.onClick.AddListener(OnStartTutorialSceneClicked);
+        }
 
         // Keep buttons inactive until initialized
 createRoomButton.interactable = false;
@@ -207,11 +215,37 @@ createRoomButton.interactable = false;
         }
     }
 
-    private void OnStartGameClicked()
+    private void OnStartFppSceneClicked()
     {
-        if (NetworkManager.Singleton.IsServer)
+        TryStartGameplayScene(GameplaySceneRegistry.FppSceneName);
+    }
+
+    private void OnStartTutorialSceneClicked()
+    {
+        TryStartGameplayScene(GameplaySceneRegistry.TutorialSceneName);
+    }
+
+    private void TryStartGameplayScene(string sceneName)
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (sceneLoadInProgress || networkManager == null || !networkManager.IsHost || !GameplaySceneRegistry.IsGameplayScene(sceneName))
         {
-            NetworkManager.Singleton.SceneManager.LoadScene("FPP_scene", UnityEngine.SceneManagement.LoadSceneMode.Single);
+            return;
+        }
+
+        sceneLoadInProgress = true;
+        SetGameplaySceneButtonsInteractable(false);
+        statusText.text = $"Loading {sceneName}...";
+
+        SceneEventProgressStatus status = networkManager.SceneManager.LoadScene(
+            sceneName,
+            UnityEngine.SceneManagement.LoadSceneMode.Single);
+
+        if (status != SceneEventProgressStatus.Started)
+        {
+            sceneLoadInProgress = false;
+            statusText.text = $"Could not load {sceneName}: {status}.";
+            SetGameplaySceneButtonsInteractable(true);
         }
     }
 
@@ -273,7 +307,23 @@ createRoomButton.interactable = false;
             playerSlotTexts[i].color = isLocal ? Color.green : Color.white;
         }
 
-        startGameButton.gameObject.SetActive(NetworkManager.Singleton.IsHost);
+        bool hostCanStart = NetworkManager.Singleton.IsHost;
+        startFppSceneButton.gameObject.SetActive(hostCanStart);
+        if (startTutorialSceneButton != null)
+        {
+            startTutorialSceneButton.gameObject.SetActive(hostCanStart);
+        }
+
+        SetGameplaySceneButtonsInteractable(hostCanStart && !sceneLoadInProgress);
+    }
+
+    private void SetGameplaySceneButtonsInteractable(bool interactable)
+    {
+        startFppSceneButton.interactable = interactable;
+        if (startTutorialSceneButton != null)
+        {
+            startTutorialSceneButton.interactable = interactable;
+        }
     }
 
     private void SetButtonsInteractable(bool interactable)
@@ -292,7 +342,8 @@ createRoomButton.interactable = false;
         TMP_Text lobbyCodeText,
         Button leaveRoomButton,
         Button copyCodeButton,
-        Button startGameButton,
+        Button startFppSceneButton,
+        Button startTutorialSceneButton,
         TMP_Text[] playerSlotTexts)
     {
         this.mainPanel = mainPanel;
@@ -304,7 +355,8 @@ createRoomButton.interactable = false;
         this.lobbyCodeText = lobbyCodeText;
         this.leaveRoomButton = leaveRoomButton;
         this.copyCodeButton = copyCodeButton;
-        this.startGameButton = startGameButton;
+        this.startFppSceneButton = startFppSceneButton;
+        this.startTutorialSceneButton = startTutorialSceneButton;
         this.playerSlotTexts = playerSlotTexts;
     }
 }

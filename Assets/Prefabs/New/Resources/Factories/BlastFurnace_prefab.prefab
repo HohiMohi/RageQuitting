@@ -1369,9 +1369,37 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 7461202528316383959}
     - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
+      propertyPath: furnaceFuel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
+      propertyPath: furnaceHeatingRate
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
       propertyPath: blastFurnaceFactory
       value: 
       objectReference: {fileID: 4807982504743458985}
+    - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
+      propertyPath: furnaceMaxTemperature
+      value: 1000
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
+      propertyPath: furnacePressureChangeSpeed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
+      propertyPath: furnaceFuelNormalizedTemperature
+      value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
+      propertyPath: furnaceOverheatTemperatureDecayRate
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
+      propertyPath: furnacePressureTemperatureMultiplier
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5442656064045859160, guid: 2e5a7409ed8cab94c8c9792ad32ac825, type: 3}
       propertyPath: storableBaseResourcesSOList.Array.size
       value: 3

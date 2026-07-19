@@ -16,9 +16,9 @@ MonoBehaviour:
   componentSprite: {fileID: 21300000, guid: 4aaf890b27d202e4a81b0b2956ca6ba8, type: 3}
   inGameGameObjectPrefab: {fileID: 7506650461565164450, guid: e7298032b7f0c80439dadb841fcfe388, type: 3}
   requiredResources:
-  - resourceType: {fileID: 11400000, guid: c315a3ca10ef0ac4abd0d0ff876d0a5c, type: 2}
-    amount: 1
   - resourceType: {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
+    amount: 1
+  - resourceType: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
     amount: 1
   bridgeComponentSO: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
   movementSpeedPenalty: 0
@@ -27,10 +27,14 @@ MonoBehaviour:
   recommendedCarriers: 2
   maxCarriers: 2
   underStaffedPenaltyMultiplier: 0.4
+  sharedCarryUnderstaffedStaminaDrainPerSecond: 1
   carryMoveSpeed: 4
+  carryPlayerClearance: 0.35
+  carryAttachLocalPoints: []
+  carryPhysicsProfile: {fileID: 0}
   meltingPoint: 0
   combustionTemperature: 0
   neededProgress: 0
   neededCombustionProgress: 0
-  componentWidth: 0
-  componentLength: 0
+  componentWidth: 55
+  componentLength: 110

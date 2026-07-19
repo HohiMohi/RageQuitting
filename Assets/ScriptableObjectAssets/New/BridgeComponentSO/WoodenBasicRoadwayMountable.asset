@@ -16,8 +16,8 @@ MonoBehaviour:
   componentSprite: {fileID: 741899376876123942, guid: 02757d04723893e4b9ed1f9f0f4249f7, type: 3}
   inGameGameObjectPrefab: {fileID: 7506650461565164450, guid: 2873c4f4ac00493418d25cf74eb16c66, type: 3}
   requiredResources:
-  - resourceType: {fileID: 11400000, guid: c315a3ca10ef0ac4abd0d0ff876d0a5c, type: 2}
-    amount: 1
+  - resourceType: {fileID: 11400000, guid: 59cb7f33c89966747a8e01f704f5bfbc, type: 2}
+    amount: 3
   bridgeComponentSO: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
   movementSpeedPenalty: 0
   minAmountOfPlayersNeeded: 0

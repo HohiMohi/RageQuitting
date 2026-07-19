@@ -7,7 +7,6 @@ using UnityEngine.SceneManagement;
 public class PlayerSpawnManager : MonoBehaviour
 {
     [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private string gameSceneName = "FPP_scene";
 
     private void OnEnable()
     {
@@ -81,7 +80,7 @@ public class PlayerSpawnManager : MonoBehaviour
 
     private void OnSceneLoaded(string sceneName, LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
     {
-        if (sceneName != gameSceneName || !NetworkManager.Singleton.IsServer)
+        if (!GameplaySceneRegistry.IsGameplayScene(sceneName) || !NetworkManager.Singleton.IsServer)
         {
             return;
         }
@@ -96,7 +95,7 @@ public class PlayerSpawnManager : MonoBehaviour
             return;
         }
 
-        if (SceneManager.GetActiveScene().name != gameSceneName)
+        if (!GameplaySceneRegistry.IsGameplayScene(SceneManager.GetActiveScene().name))
         {
             return;
         }

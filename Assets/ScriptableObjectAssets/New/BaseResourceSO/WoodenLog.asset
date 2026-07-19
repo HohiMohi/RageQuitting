@@ -23,10 +23,10 @@ MonoBehaviour:
       amount: 1
     spawnOffsets: []
     fallbackScatterRadius: 0.35
-  - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+  - finalProductBaseResourceSO: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
     neededEquippableItemType: 0
     products:
-    - resourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+    - resourceSO: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
       amount: 1
     spawnOffsets: []
     fallbackScatterRadius: 0.35
@@ -45,7 +45,9 @@ MonoBehaviour:
   recommendedCarriers: 2
   maxCarriers: 2
   underStaffedPenaltyMultiplier: 0
+  sharedCarryUnderstaffedStaminaDrainPerSecond: 1
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints: []
+  carryPhysicsProfile: {fileID: 0}
   furnaceFuelAmount: 0

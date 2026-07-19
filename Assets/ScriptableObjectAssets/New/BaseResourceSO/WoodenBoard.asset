@@ -23,7 +23,7 @@ MonoBehaviour:
       amount: 1
     spawnOffsets: []
     fallbackScatterRadius: 0.35
-  resourceDurability: 5
+  resourceDurability: 50
   movementSpeedPenalty: 0
   canBeCarried: 1
   minAmountOfPlayersNeeded: 0
@@ -31,7 +31,9 @@ MonoBehaviour:
   recommendedCarriers: 1
   maxCarriers: 1
   underStaffedPenaltyMultiplier: 1
+  sharedCarryUnderstaffedStaminaDrainPerSecond: 1
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints: []
+  carryPhysicsProfile: {fileID: 0}
   furnaceFuelAmount: 0

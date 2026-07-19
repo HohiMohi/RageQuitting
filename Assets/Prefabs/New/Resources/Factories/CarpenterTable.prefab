@@ -2197,12 +2197,12 @@ MonoBehaviour:
   - {fileID: 3691229131188389092}
   - {fileID: 9146419888124439251}
   carpenterTableMinigame: {fileID: 8296694872700268407}
-  componentLengthMax: 0
-  componentLengthMin: 0
-  componentLenghtStep: 0
-  componentWidthMax: 0
-  componentWidthMin: 0
-  componentWidthStep: 0
+  componentLengthMax: 200
+  componentLengthMin: 100
+  componentLenghtStep: 10
+  componentWidthMax: 100
+  componentWidthMin: 50
+  componentWidthStep: 5
 --- !u!114 &8246286784152708134 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3141851306939008851, guid: 58433f6ed45a6e646858bc3205333def, type: 3}

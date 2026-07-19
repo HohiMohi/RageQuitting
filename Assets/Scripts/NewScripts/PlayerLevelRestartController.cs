@@ -6,9 +6,8 @@ using UnityEngine.SceneManagement;
 
 public class PlayerLevelRestartController : NetworkBehaviour
 {
-    private const string GameSceneName = "FPP_scene";
-
     private static bool restartInProgress;
+    private static string restartSceneName;
 
     public bool CanRequestRestart
     {
@@ -37,9 +36,10 @@ public class PlayerLevelRestartController : NetworkBehaviour
         }
 
         NetworkManager networkManager = NetworkManager.Singleton;
+        string sceneName = SceneManager.GetActiveScene().name;
         if (networkManager == null || !networkManager.IsListening)
         {
-            SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+            SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
             return;
         }
 
@@ -60,26 +60,34 @@ public class PlayerLevelRestartController : NetworkBehaviour
             return;
         }
 
+        string sceneName = SceneManager.GetActiveScene().name;
+        if (!GameplaySceneRegistry.IsGameplayScene(sceneName))
+        {
+            return;
+        }
+
         restartInProgress = true;
+        restartSceneName = sceneName;
         SceneManager.sceneLoaded += ResetRestartStateAfterSceneLoad;
 
-        DespawnRuntimeObjectsInGameScene(networkManager);
-        SceneEventProgressStatus status = networkManager.SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+        DespawnRuntimeObjectsInGameScene(networkManager, sceneName);
+        SceneEventProgressStatus status = networkManager.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
         if (status != SceneEventProgressStatus.Started)
         {
             SceneManager.sceneLoaded -= ResetRestartStateAfterSceneLoad;
             restartInProgress = false;
-            Debug.LogWarning($"PlayerLevelRestartController: Could not restart {GameSceneName}. Netcode status: {status}.");
+            restartSceneName = null;
+            Debug.LogWarning($"PlayerLevelRestartController: Could not restart {sceneName}. Netcode status: {status}.");
         }
     }
 
-    private static void DespawnRuntimeObjectsInGameScene(NetworkManager networkManager)
+    private static void DespawnRuntimeObjectsInGameScene(NetworkManager networkManager, string sceneName)
     {
         List<NetworkObject> objectsToDespawn = networkManager.SpawnManager.SpawnedObjectsList
             .Where(networkObject => networkObject != null
                 && networkObject.IsSpawned
                 && networkObject.IsSceneObject != true
-                && networkObject.gameObject.scene.name == GameSceneName)
+                && networkObject.gameObject.scene.name == sceneName)
             .ToList();
 
         foreach (NetworkObject networkObject in objectsToDespawn)
@@ -90,18 +98,19 @@ public class PlayerLevelRestartController : NetworkBehaviour
 
     private static void ResetRestartStateAfterSceneLoad(Scene scene, LoadSceneMode loadSceneMode)
     {
-        if (scene.name != GameSceneName)
+        if (scene.name != restartSceneName)
         {
             return;
         }
 
         SceneManager.sceneLoaded -= ResetRestartStateAfterSceneLoad;
         restartInProgress = false;
+        restartSceneName = null;
     }
 
     private static bool IsGameSceneActive()
     {
-        return SceneManager.GetActiveScene().name == GameSceneName;
+        return GameplaySceneRegistry.IsGameplayScene(SceneManager.GetActiveScene().name);
     }
 
     private bool ShouldRunAsLocalPlayer()
