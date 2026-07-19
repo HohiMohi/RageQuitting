@@ -8,6 +8,7 @@ public class GameTimerUI : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private Image timerProgressBar; // Radial or linear fill progress bar
+    [SerializeField] private GameObject timerVisualRoot;
 
     [Header("Runtime HUD")]
     [SerializeField] private Canvas targetCanvas;
@@ -59,6 +60,8 @@ public class GameTimerUI : MonoBehaviour
 
         subscribedTimerManager = timerManager;
         subscribedTimerManager.OnTimerChanged += GameTimerManager_OnTimerChanged;
+        subscribedTimerManager.OnTimerStateChanged += GameTimerManager_OnTimerStateChanged;
+        UpdateVisibility(subscribedTimerManager.State);
         UpdateUI(subscribedTimerManager.GetTimeRemaining(), subscribedTimerManager.GetNormalizedTimeRemaining());
     }
 
@@ -67,6 +70,7 @@ public class GameTimerUI : MonoBehaviour
         if (subscribedTimerManager != null)
         {
             subscribedTimerManager.OnTimerChanged -= GameTimerManager_OnTimerChanged;
+            subscribedTimerManager.OnTimerStateChanged -= GameTimerManager_OnTimerStateChanged;
             subscribedTimerManager = null;
         }
     }
@@ -74,6 +78,20 @@ public class GameTimerUI : MonoBehaviour
     private void GameTimerManager_OnTimerChanged(object sender, GameTimerManager.OnTimerChangedEventArgs e)
     {
         UpdateUI(e.timeRemaining, e.normalizedTimeRemaining);
+    }
+
+    private void GameTimerManager_OnTimerStateChanged(object sender, GameTimerManager.GameTimerStateChangedEventArgs e)
+    {
+        UpdateVisibility(e.CurrentState);
+    }
+
+    private void UpdateVisibility(GameTimerState timerState)
+    {
+        EnsureVisuals();
+        if (timerVisualRoot != null)
+        {
+            timerVisualRoot.SetActive(timerState != GameTimerState.Waiting);
+        }
     }
 
     private void UpdateUI(float timeRemaining, float normalizedTimeRemaining)
@@ -123,6 +141,12 @@ public class GameTimerUI : MonoBehaviour
     {
         if (timerText != null)
         {
+            if (timerVisualRoot == null)
+            {
+                timerVisualRoot = timerText.transform.parent != null
+                    ? timerText.transform.parent.gameObject
+                    : timerText.gameObject;
+            }
             return;
         }
 
@@ -137,6 +161,7 @@ public class GameTimerUI : MonoBehaviour
         }
 
         GameObject root = new GameObject("GameTimerHUD", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        timerVisualRoot = root;
         RectTransform rootRectTransform = root.GetComponent<RectTransform>();
         rootRectTransform.SetParent(targetCanvas.transform, false);
         rootRectTransform.anchorMin = Vector2.one;

@@ -1527,7 +1527,7 @@ MonoBehaviour:
   panelRoot: {fileID: 0}
   restartButton: {fileID: 0}
   availabilityText: {fileID: 0}
-  panelSize: {x: 360, y: 210}
+  panelSize: {x: 360, y: 320}
 --- !u!1 &4961565375688202897
 GameObject:
   m_ObjectHideFlags: 0

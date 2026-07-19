@@ -100,6 +100,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LevelGameplayManager_FPP
       objectReference: {fileID: 0}
+    - target: {fileID: 9214975559166259720, guid: 14f94f1b1c4dc6640b9a65608b28cf25, type: 3}
+      propertyPath: waitForStartSignal
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

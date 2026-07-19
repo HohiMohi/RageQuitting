@@ -790,9 +790,29 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 556827759559716921, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
+      propertyPath: waitForStartSignal
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1552292777013075507, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: m_Name
       value: GameplayManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 2188109991209079206, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 359840603
+      objectReference: {fileID: 0}
+    - target: {fileID: 2188109991209079206, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
+      propertyPath: SynchronizeTransform
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2188109991209079206, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2188109991209079206, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 2329330506
       objectReference: {fileID: 0}
     - target: {fileID: 3487032495626965324, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -836,7 +856,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9129826428557026998, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: bridgeBuildingStages.Array.size
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9129826428557026998, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: bridgeComponentDataArray.Array.size
@@ -868,7 +888,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9129826428557026998, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: bridgeBuildingStages.Array.data[2].bridgeComponentDataIndexes.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9129826428557026998, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: 'bridgeBuildingStages.Array.data[0].bridgeComponentDataIndexes.Array.data[2]'
@@ -1907,7 +1927,71 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerNew
       objectReference: {fileID: 0}
+    - target: {fileID: 2154427504566462931, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2154427504566462931, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4280908484
+      objectReference: {fileID: 0}
+    - target: {fileID: 2154427504566462931, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 5346388102498935093, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5346388102498935093, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4292798696
+      objectReference: {fileID: 0}
+    - target: {fileID: 5346388102498935093, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 5510460443086970741, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 6194662702917152136, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6194662702917152136, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 7165727331659393750, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7165727331659393750, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4288257172
+      objectReference: {fileID: 0}
+    - target: {fileID: 7165727331659393750, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 7319483658115602345, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7319483658115602345, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 8047535799542016529, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8047535799542016529, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4288257172
+      objectReference: {fileID: 0}
+    - target: {fileID: 8047535799542016529, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
@@ -1954,6 +2038,30 @@ PrefabInstance:
     - target: {fileID: 8925164677366372071, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 9069046029012093377, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9069046029012093377, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4292798696
+      objectReference: {fileID: 0}
+    - target: {fileID: 9069046029012093377, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 9212260846755439903, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_overflowMode
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9212260846755439903, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4288257172
+      objectReference: {fileID: 0}
+    - target: {fileID: 9212260846755439903, guid: fa6506c595b3e9443b7366f61e71c8ea, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
