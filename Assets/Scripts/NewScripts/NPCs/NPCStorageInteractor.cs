@@ -18,6 +18,7 @@ public class NPCStorageInteractor : NetworkBehaviour
     {
         return storage != null
             && resourceSO != null
+            && resourceSO.canBeCarried
             && amount > 0
             && carrier != null
             && carrier.CanCarryObject

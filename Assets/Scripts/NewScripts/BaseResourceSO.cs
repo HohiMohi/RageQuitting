@@ -11,6 +11,7 @@ public class BaseResourceSO : ScriptableObject
     public BaseResourceDestructionRecipe[] baseResourceDestructionRecipeArray;
     public float resourceDurability;
     public float movementSpeedPenalty;
+    public bool canBeCarried = true;
     public int minAmountOfPlayersNeeded;
     public bool allowMultipleCarriers;
     public int recommendedCarriers = 1;

@@ -39,6 +39,7 @@ MonoBehaviour:
     fallbackScatterRadius: 0.35
   resourceDurability: 50
   movementSpeedPenalty: 0
+  canBeCarried: 1
   minAmountOfPlayersNeeded: 2
   allowMultipleCarriers: 1
   recommendedCarriers: 2

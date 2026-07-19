@@ -21,6 +21,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [SerializeField] private float sharedCarryGroundVerticalFollowSpeed = 12f;
     [SerializeField] private float sharedCarryMaxVerticalPlacementDelta = 0.75f;
     public bool IsPickedUp => isPickedUp;
+    public bool CanBeCarried => baseResourceSO != null && baseResourceSO.canBeCarried;
     private Rigidbody _rigidbody;
     private SharedCarryPhysicsBody _sharedCarryPhysicsBody;
     private SharedCarryCollisionController _sharedCarryCollisionController;
@@ -46,12 +47,22 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public void Interact(Transform interactor)
     {
+        if (!CanBeCarried)
+        {
+            return;
+        }
+
         Debug.Log("Interacted with Base Resource");
         PickedUp(interactor);
     }
 
     public void PickedUp(Transform parent)
     {
+        if (!CanBeCarried)
+        {
+            return;
+        }
+
         if (!parent.TryGetComponent(out PlayerInteractionNew playerInteraction))
         {
             return;
@@ -189,7 +200,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public bool CanBeCarriedBy(ICarryActor carryActor)
     {
-        if (carryActor == null || !carryActor.CanCarryObject || externalCarryActor != null)
+        if (!CanBeCarried || carryActor == null || !carryActor.CanCarryObject || externalCarryActor != null)
         {
             return false;
         }
@@ -481,6 +492,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     private bool TryCompleteNetworkPickup(ulong ownerClientId, Vector3 bodyAnchorLocalOffset, float playerControllerRadius)
     {
+        if (!CanBeCarried)
+        {
+            RejectPickupClientRpc(CreateTargetClientRpcParams(ownerClientId));
+            return false;
+        }
+
         if (externalCarryActor != null)
         {
             RejectPickupClientRpc(CreateTargetClientRpcParams(ownerClientId));

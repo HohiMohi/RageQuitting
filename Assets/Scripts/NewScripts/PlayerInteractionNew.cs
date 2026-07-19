@@ -168,6 +168,11 @@ public class PlayerInteractionNew : MonoBehaviour
                 {
                     if (_pickedUpGameObject == null)
                     {
+                        if (pickableObject is BaseResourceNew baseResource && !baseResource.CanBeCarried)
+                        {
+                            return;
+                        }
+
                         pickableObject.PickedUp(transform);
                         OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
                     }

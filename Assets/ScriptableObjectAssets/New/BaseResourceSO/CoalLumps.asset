@@ -18,6 +18,7 @@ MonoBehaviour:
   baseResourceDestructionRecipeArray: []
   resourceDurability: 0
   movementSpeedPenalty: 0
+  canBeCarried: 1
   minAmountOfPlayersNeeded: 0
   allowMultipleCarriers: 0
   recommendedCarriers: 1

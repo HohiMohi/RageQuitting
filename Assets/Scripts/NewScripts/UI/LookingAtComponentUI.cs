@@ -111,7 +111,12 @@ public class LookingAtComponentUI : MonoBehaviour
             case BaseStorageNew baseStorage:
                 AddStoragePrompts(baseStorage);
                 break;
-            case BaseResourceNew:
+            case BaseResourceNew baseResource:
+                if (baseResource.CanBeCarried)
+                {
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Pick up"));
+                }
+                break;
             case MountableBridgeComponent:
             case EquippableItem:
                 prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Pick up"));
