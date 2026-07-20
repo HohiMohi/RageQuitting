@@ -458,7 +458,7 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                 {
                     ""name"": """",
                     ""id"": ""ec302c6c-f2d6-4a72-ba90-abc07528dbe1"",
-                    ""path"": ""<Keyboard>/q"",
+                    ""path"": ""<Keyboard>/escape"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",

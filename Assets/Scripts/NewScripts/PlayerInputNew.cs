@@ -25,6 +25,7 @@ public class PlayerInputNew : NetworkBehaviour
     public EventHandler OnDropItem;
     public EventHandler OnToggleBridgeRequirements;
     public EventHandler OnToggleRestartMenu;
+    public EventHandler OnUI_Interact;
     public EventHandler OnUI_Up;
     public EventHandler OnUI_Down;
     public EventHandler OnUI_Left;
@@ -147,6 +148,10 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void UI_Back_performed(InputAction.CallbackContext context)
     {
+        if (IsUIOpened)
+        {
+            OnUI_Back?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private void UI_Right_performed(InputAction.CallbackContext context)
@@ -248,6 +253,7 @@ public class PlayerInputNew : NetworkBehaviour
     {
         if (IsUIOpened)
         {
+            OnUI_Interact?.Invoke(this, EventArgs.Empty);
             return;
         }
 
