@@ -10,6 +10,8 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
     private Vector3 movementEulerOffset;
     private Vector3 damagePositionOffset;
     private Vector3 damageEulerOffset;
+    private Vector3 turnPositionOffset;
+    private Vector3 turnEulerOffset;
 
     public Transform OutputTarget
     {
@@ -49,6 +51,12 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
         damageEulerOffset = eulerOffset;
     }
 
+    public void SetTurnFeedback(Vector3 positionOffset, Vector3 eulerOffset)
+    {
+        turnPositionOffset = positionOffset;
+        turnEulerOffset = eulerOffset;
+    }
+
     public void ClearMovementFeedback()
     {
         movementPositionOffset = Vector3.zero;
@@ -61,10 +69,17 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
         damageEulerOffset = Vector3.zero;
     }
 
+    public void ClearTurnFeedback()
+    {
+        turnPositionOffset = Vector3.zero;
+        turnEulerOffset = Vector3.zero;
+    }
+
     public void ClearAllFeedback()
     {
         ClearMovementFeedback();
         ClearDamageFeedback();
+        ClearTurnFeedback();
     }
 
     private void EnsureOutputTarget()
@@ -103,7 +118,7 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
             return;
         }
 
-        outputTarget.localPosition = movementPositionOffset + damagePositionOffset;
-        outputTarget.localRotation = Quaternion.Euler(movementEulerOffset + damageEulerOffset);
+        outputTarget.localPosition = movementPositionOffset + damagePositionOffset + turnPositionOffset;
+        outputTarget.localRotation = Quaternion.Euler(movementEulerOffset + damageEulerOffset + turnEulerOffset);
     }
 }

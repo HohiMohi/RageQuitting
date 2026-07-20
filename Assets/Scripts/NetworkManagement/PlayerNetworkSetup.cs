@@ -124,6 +124,8 @@ public class PlayerNetworkSetup : NetworkBehaviour
         sharedVirtualCamera.Follow = targetTransform;
         sharedVirtualCamera.LookAt = targetTransform;
 
+        firstPersonController.ResetLookRotationState();
+
         if (TryGetComponent(out PlayerInteractionNew playerInteraction))
         {
             playerInteraction.SetInteractionOrigin(targetTransform);

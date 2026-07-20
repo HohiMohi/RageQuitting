@@ -13,6 +13,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private PlayerInteractionNew playerInteraction;
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private PlayerInventory playerInventory;
+    [SerializeField] private PlayerTurnFeedback playerTurnFeedback;
 
     [Header("Pose")]
     [SerializeField] private Vector3 rootLocalPosition = new Vector3(0f, -0.24f, 0.95f);
@@ -31,6 +32,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private float actionSwingAngle = 36f;
     [SerializeField] private float hitReactionDuration = 0.22f;
     [SerializeField] private float poseLerpSpeed = 14f;
+    [SerializeField] private float maximumTurnLagPosition = 0.018f;
+    [SerializeField] private float maximumTurnLagAngle = 2f;
 
     [Header("Tool Visual")]
     [SerializeField] private EquippableToolVisualBuilder.ToolVisualMaterials toolVisualMaterials;
@@ -151,6 +154,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         if (playerInventory == null)
         {
             playerInventory = GetComponent<PlayerInventory>();
+        }
+
+        if (playerTurnFeedback == null)
+        {
+            playerTurnFeedback = GetComponent<PlayerTurnFeedback>();
         }
 
         PlayerCameraFeedbackComposer feedbackComposer = GetComponent<PlayerCameraFeedbackComposer>();
@@ -320,6 +328,9 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
         Vector3 targetRootPosition = rootLocalPosition + new Vector3(sway, bob, 0f);
         Vector3 targetRootEuler = rootLocalEulerAngles;
+		float turnAmount = playerTurnFeedback != null ? playerTurnFeedback.TurnAmount : 0f;
+		targetRootPosition += new Vector3(-turnAmount * maximumTurnLagPosition, 0f, 0f);
+		targetRootEuler += new Vector3(0f, -turnAmount * maximumTurnLagAngle, 0f);
 
         if (isSprinting)
         {

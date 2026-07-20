@@ -403,6 +403,7 @@ GameObject:
   - component: {fileID: 3389710196241267904}
   - component: {fileID: 5408844525525588024}
   - component: {fileID: 4680480229104245975}
+  - component: {fileID: 8697235149423384611}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -491,6 +492,9 @@ MonoBehaviour:
   CinemachineCameraTarget: {fileID: 8301098796299706282}
   TopClamp: 89
   BottomClamp: -89
+  maximumCameraBodyYawOffset: 6
+  bodyYawSmoothTime: 0.09
+  bodyMaximumYawSpeed: 720
   MaxStamina: 5
   StaminaRegenerationTimeout: 2
   currentMovementSpeed: 0
@@ -855,6 +859,7 @@ MonoBehaviour:
   playerInteraction: {fileID: 1047544986995738481}
   playerHealth: {fileID: 6339126401750945372}
   playerInventory: {fileID: 4354115525238422459}
+  playerTurnFeedback: {fileID: 0}
   rootLocalPosition: {x: 0, y: -0.24, z: 0.95}
   rootLocalEulerAngles: {x: -4, y: 0, z: 0}
   armSpacing: 0.24
@@ -869,6 +874,8 @@ MonoBehaviour:
   actionSwingAngle: 36
   hitReactionDuration: 0.22
   poseLerpSpeed: 14
+  maximumTurnLagPosition: 0.018
+  maximumTurnLagAngle: 2
   toolVisualMaterials:
     axeMaterial: {fileID: 2100000, guid: b4fd3acc17e8e1748b7872045b26764b, type: 2}
     pickaxeMaterial: {fileID: 2100000, guid: 1f00d72b054ec0347a696b7c89144ca3, type: 2}
@@ -1074,6 +1081,27 @@ MonoBehaviour:
   impulseRecoverySpeed: 7
   sprintFovBonus: 4
   fovChangeSpeed: 8
+--- !u!114 &8697235149423384611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae0d55a345d21df42b34b86bf56603c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTurnFeedback
+  controller: {fileID: 0}
+  cameraFeedbackComposer: {fileID: 0}
+  playerInput: {fileID: 0}
+  playerHealth: {fileID: 0}
+  maximumTurnRoll: 0.75
+  maximumLateralOffset: 0.012
+  responseSpring: 90
+  responseDamping: 12
+  maximumResponse: 1.15
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0

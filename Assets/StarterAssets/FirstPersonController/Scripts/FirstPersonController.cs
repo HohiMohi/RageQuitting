@@ -80,9 +80,17 @@ namespace StarterAssets
 		public float TopClamp = 90.0f;
 		[Tooltip("How far in degrees can you move the camera down")]
 		public float BottomClamp = -90.0f;
+		[Header("Look Feel")]
+		[SerializeField] private float maximumCameraBodyYawOffset = 6f;
+		[SerializeField] private float bodyYawSmoothTime = 0.09f;
+		[SerializeField] private float bodyMaximumYawSpeed = 720f;
 
 		// cinemachine
 		private float _cinemachineTargetPitch;
+		private float _aimYaw;
+		private float _bodyYawVelocity;
+		private float _cameraBodyYawOffset;
+		private bool _lookRotationInitialized;
 
 		// player
 		private Vector3 _horizontalVelocity;
@@ -90,7 +98,6 @@ namespace StarterAssets
 		private float _footstepDistanceAccumulator;
 		private bool _isSprinting = false;
 		private bool _isJumpPerformed = false;
-        private float _rotationVelocity;
 		private float _verticalVelocity;
 		private float _terminalVelocity = 53.0f;
 		private float _holdedItemMovementSpeedPenaltyMultiplier = 0f;
@@ -146,6 +153,22 @@ namespace StarterAssets
 		public bool IsSprinting => _isSprinting && _currentStamina > 0f && !IsDowned();
 		public float CurrentStamina => _currentStamina;
 		public bool IsSharedCarryExhaustionWarningActive => _isSharedCarryExhaustionWarningActive;
+		public float AimYaw => _aimYaw;
+		public float BodyYawVelocity => _bodyYawVelocity;
+		public float CameraBodyYawOffset => _cameraBodyYawOffset;
+		public float CameraBodyYawOffsetNormalized
+		{
+			get
+			{
+				float intensity = CameraMotionSettings.Instance != null
+					? CameraMotionSettings.Instance.RotationMotionIntensity
+					: 1f;
+				float maximumOffset = Mathf.Max(0f, maximumCameraBodyYawOffset) * intensity;
+				return maximumOffset > 0.0001f
+					? Mathf.Clamp(_cameraBodyYawOffset / maximumOffset, -1f, 1f)
+					: 0f;
+			}
+		}
 
 		private bool IsCurrentDeviceMouse
 		{
@@ -178,6 +201,16 @@ namespace StarterAssets
 			_currentStamina = MaxStamina;
         }
 
+		private void OnEnable()
+		{
+			ResetLookRotationState();
+		}
+
+		private void OnDisable()
+		{
+			_bodyYawVelocity = 0f;
+		}
+
 		private void OnDestroy()
 		{
 			if (_playerInputNew != null)
@@ -205,6 +238,7 @@ namespace StarterAssets
 			_countStaminaTimeout = false;
 			_canRegenerateStamina = false;
 			CancelSharedCarryExhaustionWarning();
+			ResetLookRotationState();
 
 			if (!_playerHealth.IsDowned)
 			{
@@ -335,6 +369,7 @@ namespace StarterAssets
 
 		private void CameraRotation()
 		{
+            EnsureLookRotationInitialized();
             Vector2 lookDelta = _playerInputNew.GetLookDeltaValue();
             bool hasLookInput = lookDelta.sqrMagnitude >= _threshold;
             if (hasLookInput)
@@ -342,20 +377,65 @@ namespace StarterAssets
                 float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
                 _cinemachineTargetPitch += lookDelta.y * RotationSpeed * deltaTimeMultiplier;
-                _rotationVelocity = lookDelta.x * RotationSpeed * deltaTimeMultiplier;
-            }
-            else
-            {
-                _rotationVelocity = 0f;
+				_aimYaw += lookDelta.x * RotationSpeed * deltaTimeMultiplier;
             }
 
             _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
-            CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0.0f, 0.0f);
+			float motionIntensity = CameraMotionSettings.Instance != null
+				? CameraMotionSettings.Instance.RotationMotionIntensity
+				: 1f;
+			float maximumYawOffset = Mathf.Max(0f, maximumCameraBodyYawOffset) * motionIntensity;
 
-            if (hasLookInput)
-            {
-                transform.Rotate(Vector3.up * _rotationVelocity);
-            }
+			float bodyYaw;
+			if (maximumYawOffset <= 0.0001f || bodyYawSmoothTime <= 0.0001f)
+			{
+				bodyYaw = _aimYaw;
+				_bodyYawVelocity = 0f;
+			}
+			else
+			{
+				bodyYaw = Mathf.SmoothDampAngle(
+					transform.eulerAngles.y,
+					_aimYaw,
+					ref _bodyYawVelocity,
+					bodyYawSmoothTime,
+					Mathf.Max(0f, bodyMaximumYawSpeed),
+					Time.deltaTime);
+
+				float yawOffset = Mathf.DeltaAngle(bodyYaw, _aimYaw);
+				if (Mathf.Abs(yawOffset) > maximumYawOffset)
+				{
+					yawOffset = Mathf.Clamp(yawOffset, -maximumYawOffset, maximumYawOffset);
+					bodyYaw = _aimYaw - yawOffset;
+				}
+			}
+
+			transform.rotation = Quaternion.Euler(0f, bodyYaw, 0f);
+			_cameraBodyYawOffset = Mathf.DeltaAngle(bodyYaw, _aimYaw);
+			CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(
+				_cinemachineTargetPitch,
+				_cameraBodyYawOffset,
+				0f);
+		}
+
+		public void ResetLookRotationState()
+		{
+			_aimYaw = transform.eulerAngles.y;
+			_bodyYawVelocity = 0f;
+			_cameraBodyYawOffset = 0f;
+			_lookRotationInitialized = true;
+			if (CinemachineCameraTarget != null)
+			{
+				CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(_cinemachineTargetPitch, 0f, 0f);
+			}
+		}
+
+		private void EnsureLookRotationInitialized()
+		{
+			if (!_lookRotationInitialized)
+			{
+				ResetLookRotationState();
+			}
 		}
 
 		private void Move()
