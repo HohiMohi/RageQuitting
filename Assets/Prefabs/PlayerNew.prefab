@@ -467,9 +467,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55919ac34a26952479f3fc91f777b2fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MoveSpeed: 4
-  SprintSpeed: 6
-  RotationSpeed: 5
+  MoveSpeed: 3.5
+  SprintSpeed: 5
+  RotationSpeed: 4
   groundAcceleration: 22
   groundDeceleration: 28
   reverseAcceleration: 34
@@ -645,7 +645,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4249334050
+  GlobalObjectIdHash: 3629775205
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -2001,6 +2001,54 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerHUD
       objectReference: {fileID: 0}
+    - target: {fileID: 2359307834646867116, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4280908484
+      objectReference: {fileID: 0}
+    - target: {fileID: 2359307834646867116, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 4647812463356611774, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4292798696
+      objectReference: {fileID: 0}
+    - target: {fileID: 4647812463356611774, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 4792788714763264096, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4288257172
+      objectReference: {fileID: 0}
+    - target: {fileID: 4792788714763264096, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 5977814592231780206, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4288257172
+      objectReference: {fileID: 0}
+    - target: {fileID: 5977814592231780206, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 6399586502429250262, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 6785278213455245225, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4288257172
+      objectReference: {fileID: 0}
+    - target: {fileID: 6785278213455245225, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542471059284633847, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 7830768075667101656, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -2080,6 +2128,14 @@ PrefabInstance:
     - target: {fileID: 7830768075667101656, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8604635303237198922, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4292798696
+      objectReference: {fileID: 0}
+    - target: {fileID: 8604635303237198922, guid: 97c56e4b1fcce9740a0e9b97fda340db, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

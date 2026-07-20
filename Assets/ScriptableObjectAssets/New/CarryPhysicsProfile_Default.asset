@@ -26,7 +26,7 @@ MonoBehaviour:
   allowYawRotation: 1
   movementForce: 450
   movementDamper: 65
-  sharedCarryYawTorque: 60
+  sharedCarryYawTorque: 20
   horizontalConstraintSpring: 140
   horizontalConstraintDampingRatio: 1.05
   maxHorizontalConstraintForce: 650
