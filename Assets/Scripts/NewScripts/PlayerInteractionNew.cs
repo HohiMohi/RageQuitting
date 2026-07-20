@@ -401,14 +401,14 @@ public class PlayerInteractionNew : MonoBehaviour
         transform.position = worldPosition;
     }
 
-    public void SubmitSharedCarryInput(Vector3 worldMoveInput)
+    public void SubmitSharedCarryInput(Vector3 worldTranslationInput, float yawInput)
     {
         if (!IsSharedCarryMovementActive || !_pickedUpGameObject.TryGetComponent(out ISharedCarryObject sharedCarryObject))
         {
             return;
         }
 
-        sharedCarryObject.SubmitSharedCarryInput(worldMoveInput);
+        sharedCarryObject.SubmitSharedCarryInput(worldTranslationInput, yawInput);
     }
 
     public void UpdateSharedCarryLoad(float movementSpeedPenalty, int playerHolderCount, int requiredPlayerCount, float understaffedStaminaDrainPerSecond)

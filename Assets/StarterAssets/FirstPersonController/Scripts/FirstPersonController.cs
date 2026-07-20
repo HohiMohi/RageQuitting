@@ -116,6 +116,7 @@ namespace StarterAssets
 		[SerializeField] private float sharedCarryExhaustionWarningDuration = 3f;
 		private float _sharedCarryInputSendTimer;
 		private Vector3 _lastSentSharedCarryInput;
+		private float _lastSentSharedCarryYawInput;
 		private float _sharedCarryExhaustionWarningElapsed;
 		private bool _isSharedCarryExhaustionWarningActive;
 		private bool _sharedCarryExhaustionRequested;
@@ -479,8 +480,8 @@ namespace StarterAssets
 		private void MoveDuringSharedCarry()
 		{
             Vector2 moveInput = _playerInputNew.GetMoveVectorValue();
-			Vector3 worldMoveInput = GetSharedCarryWorldMoveInput(moveInput);
-			SendSharedCarryInputIfNeeded(worldMoveInput);
+			Vector3 worldTranslationInput = GetSharedCarryWorldTranslationInput(moveInput.y);
+			SendSharedCarryInputIfNeeded(worldTranslationInput, moveInput.x);
 
 			Vector3 attachCorrection = _playerInteractionNew.GetSharedCarryAnchorCorrection();
 			if (attachCorrection.magnitude > sharedCarryAttachSnapDistance)
@@ -497,30 +498,33 @@ namespace StarterAssets
 			_horizontalVelocity = Vector3.zero;
 		}
 
-		private Vector3 GetSharedCarryWorldMoveInput(Vector2 moveInput)
+		private Vector3 GetSharedCarryWorldTranslationInput(float forwardInput)
 		{
-			if (moveInput == Vector2.zero)
+			if (Mathf.Approximately(forwardInput, 0f))
 			{
 				return Vector3.zero;
 			}
 
-			Vector3 worldMoveInput = transform.forward * moveInput.y + transform.right * moveInput.x;
-			worldMoveInput.y = 0f;
-			return Vector3.ClampMagnitude(worldMoveInput, 1f);
+			Vector3 worldTranslationInput = transform.forward * forwardInput;
+			worldTranslationInput.y = 0f;
+			return Vector3.ClampMagnitude(worldTranslationInput, 1f);
 		}
 
-		private void SendSharedCarryInputIfNeeded(Vector3 worldMoveInput)
+		private void SendSharedCarryInputIfNeeded(Vector3 worldTranslationInput, float yawInput)
 		{
 			_sharedCarryInputSendTimer += Time.deltaTime;
-			bool inputChanged = Vector3.Distance(_lastSentSharedCarryInput, worldMoveInput) >= sharedCarryInputChangeThreshold;
+			yawInput = Mathf.Clamp(yawInput, -1f, 1f);
+			bool inputChanged = Vector3.Distance(_lastSentSharedCarryInput, worldTranslationInput) >= sharedCarryInputChangeThreshold
+				|| Mathf.Abs(_lastSentSharedCarryYawInput - yawInput) >= sharedCarryInputChangeThreshold;
 			if (_sharedCarryInputSendTimer < sharedCarryInputSendInterval && !inputChanged)
 			{
 				return;
 			}
 
 			_sharedCarryInputSendTimer = 0f;
-			_lastSentSharedCarryInput = worldMoveInput;
-			_playerInteractionNew.SubmitSharedCarryInput(worldMoveInput);
+			_lastSentSharedCarryInput = worldTranslationInput;
+			_lastSentSharedCarryYawInput = yawInput;
+			_playerInteractionNew.SubmitSharedCarryInput(worldTranslationInput, yawInput);
 		}
 
 

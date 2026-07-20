@@ -32,6 +32,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private readonly Dictionary<ulong, int> holderAttachPointIndices = new Dictionary<ulong, int>();
     private readonly Dictionary<ulong, Vector3> holderAttachLocalPoints = new Dictionary<ulong, Vector3>();
     private readonly Dictionary<ulong, Vector3> holderMoveInputs = new Dictionary<ulong, Vector3>();
+    private readonly Dictionary<ulong, float> holderYawInputs = new Dictionary<ulong, float>();
     private readonly Dictionary<ulong, float> holderLastInputTimes = new Dictionary<ulong, float>();
     private readonly Dictionary<ulong, Vector3> holderBodyAnchorLocalOffsets = new Dictionary<ulong, Vector3>();
     private readonly Dictionary<ulong, float> holderControllerRadii = new Dictionary<ulong, float>();
@@ -586,6 +587,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         holderAttachPointIndices[ownerClientId] = attachPointIndex;
         holderAttachLocalPoints[ownerClientId] = attachLocalPoint;
         holderMoveInputs[ownerClientId] = Vector3.zero;
+        holderYawInputs[ownerClientId] = 0f;
         holderLastInputTimes[ownerClientId] = Time.time;
         holderBodyAnchorLocalOffsets[ownerClientId] = bodyAnchorLocalOffset;
         holderControllerRadii[ownerClientId] = playerControllerRadius;
@@ -737,34 +739,67 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody);
         }
 
-        attachPointIndex = GetFirstFreeAttachPointIndex();
-        attachLocalPoint = GetCarryAttachLocalPoint(attachPointIndex, playerControllerRadius);
-        return SharedCarryAttachmentUtility.TryFindSafePlayerRootPosition(
-            playerNetworkObject.transform,
-            characterController,
-            transform,
-            transform.TransformPoint(attachLocalPoint),
-            bodyAnchorLocalOffset,
-            sharedCarryMaxVerticalPlacementDelta,
-            out playerPlacement);
+        Vector3 actorAnchorWorldPosition = playerNetworkObject.transform.TransformPoint(bodyAnchorLocalOffset);
+        foreach (int candidateIndex in GetFreeAttachPointIndicesByDistance(actorAnchorWorldPosition, playerControllerRadius))
+        {
+            Vector3 candidateLocalPoint = GetCarryAttachLocalPoint(candidateIndex, playerControllerRadius);
+            if (!SharedCarryAttachmentUtility.TryFindSafePlayerRootPosition(
+                    playerNetworkObject.transform,
+                    characterController,
+                    transform,
+                    transform.TransformPoint(candidateLocalPoint),
+                    bodyAnchorLocalOffset,
+                    sharedCarryMaxVerticalPlacementDelta,
+                    out playerPlacement))
+            {
+                continue;
+            }
+
+            attachPointIndex = candidateIndex;
+            attachLocalPoint = candidateLocalPoint;
+            return true;
+        }
+
+        return false;
     }
 
-    private bool TryPrepareLocalSharedCarryPlayerPickup(PlayerInteractionNew playerInteraction, Vector3 attachLocalPoint, out Vector3 playerPlacement)
+    private bool TryPrepareLocalSharedCarryPlayerPickup(
+        PlayerInteractionNew playerInteraction,
+        out int attachPointIndex,
+        out Vector3 attachLocalPoint,
+        out Vector3 playerPlacement)
     {
+        attachPointIndex = -1;
+        attachLocalPoint = Vector3.zero;
         playerPlacement = playerInteraction.transform.position;
         if (!playerInteraction.TryGetComponent(out CharacterController characterController))
         {
             return false;
         }
 
-        return SharedCarryAttachmentUtility.TryFindSafePlayerRootPosition(
-            playerInteraction.transform,
-            characterController,
-            transform,
-            transform.TransformPoint(attachLocalPoint),
-            playerInteraction.CarryBodyAnchorLocalOffset,
-            sharedCarryMaxVerticalPlacementDelta,
-            out playerPlacement);
+        float controllerRadius = playerInteraction.GetCharacterControllerRadius();
+        Vector3 actorAnchorWorldPosition = playerInteraction.GetCarryBodyAnchor().position;
+        foreach (int candidateIndex in GetFreeAttachPointIndicesByDistance(actorAnchorWorldPosition, controllerRadius))
+        {
+            Vector3 candidateLocalPoint = GetCarryAttachLocalPoint(candidateIndex, controllerRadius);
+            if (!SharedCarryAttachmentUtility.TryFindSafePlayerRootPosition(
+                    playerInteraction.transform,
+                    characterController,
+                    transform,
+                    transform.TransformPoint(candidateLocalPoint),
+                    playerInteraction.CarryBodyAnchorLocalOffset,
+                    sharedCarryMaxVerticalPlacementDelta,
+                    out playerPlacement))
+            {
+                continue;
+            }
+
+            attachPointIndex = candidateIndex;
+            attachLocalPoint = candidateLocalPoint;
+            return true;
+        }
+
+        return false;
     }
 
     public void RemoveFromWorld()
@@ -883,6 +918,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         holderAttachPointIndices.Remove(clientId);
         holderAttachLocalPoints.Remove(clientId);
         holderMoveInputs.Remove(clientId);
+        holderYawInputs.Remove(clientId);
         holderLastInputTimes.Remove(clientId);
         holderBodyAnchorLocalOffsets.Remove(clientId);
         holderControllerRadii.Remove(clientId);
@@ -895,13 +931,24 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             return false;
         }
 
+        int attachPointIndex = -1;
+        Vector3 attachLocalPoint = Vector3.zero;
+        if (ShouldUseServerDrivenCarry())
+        {
+            Transform actorRoot = GetCarryActorRoot(carryActor);
+            Vector3 actorAnchorWorldPosition = carryActor.BodyAnchor != null
+                ? carryActor.BodyAnchor.position
+                : actorRoot != null ? actorRoot.position : transform.position;
+            if (!TryGetNearestFreeAttachPoint(actorAnchorWorldPosition, carryActor.CollisionRadius, out attachPointIndex, out attachLocalPoint))
+            {
+                return false;
+            }
+        }
+
         if (IsSpawned && NetworkObject != null && NetworkObject.OwnerClientId != NetworkManager.ServerClientId)
         {
             NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
         }
-
-        int attachPointIndex = ShouldUseServerDrivenCarry() ? GetFirstFreeAttachPointIndex() : -1;
-        Vector3 attachLocalPoint = ShouldUseServerDrivenCarry() ? GetCarryAttachLocalPoint(attachPointIndex, carryActor.CollisionRadius) : Vector3.zero;
         ulong actorId = carryActor.ActorId;
 
         npcHolderActorIds.Add(actorId);
@@ -1049,9 +1096,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                 continue;
             }
 
+            holderYawInputs.TryGetValue(holderClientId, out float holderYawInput);
+
             if (holderLastInputTimes.TryGetValue(holderClientId, out float lastInputTime) && Time.time - lastInputTime > SharedCarryInputStaleTime)
             {
                 holderInput = Vector3.zero;
+                holderYawInput = 0f;
             }
 
             combinedInput += holderInput;
@@ -1062,7 +1112,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                 {
                     BodyAnchor = bodyAnchor,
                     AttachLocalPoint = attachLocalPoint,
-                    DesiredInput = holderInput
+                    DesiredYawInput = holderYawInput
                 });
             }
         }
@@ -1081,14 +1131,14 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                 {
                     BodyAnchor = carryActor.BodyAnchor,
                     AttachLocalPoint = attachLocalPoint,
-                    DesiredInput = Vector3.ClampMagnitude(carryActor.GetSharedCarryInput(), 1f)
+                    DesiredYawInput = 0f
                 });
             }
         }
 
         combinedInput.y = 0f;
         combinedInput = Vector3.ClampMagnitude(combinedInput / GetRecommendedCarriers(), 1f);
-        _sharedCarryPhysicsBody.Simulate(physicsHolders, combinedInput, Time.fixedDeltaTime);
+        _sharedCarryPhysicsBody.Simulate(physicsHolders, combinedInput, GetRecommendedCarriers(), Time.fixedDeltaTime);
         UpdateNpcSharedCarryAttachments();
     }
 
@@ -1175,26 +1225,27 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         return holderBodyAnchor != null;
     }
 
-    public void SubmitSharedCarryInput(Vector3 worldMoveInput)
+    public void SubmitSharedCarryInput(Vector3 worldTranslationInput, float yawInput)
     {
-        worldMoveInput.y = 0f;
-        worldMoveInput = Vector3.ClampMagnitude(worldMoveInput, 1f);
+        worldTranslationInput.y = 0f;
+        worldTranslationInput = Vector3.ClampMagnitude(worldTranslationInput, 1f);
+        yawInput = Mathf.Clamp(yawInput, -1f, 1f);
 
         if (IsNetworkSessionActive())
         {
             if (IsServer)
             {
-                SetSharedCarryInput(NetworkManager.Singleton.LocalClientId, worldMoveInput);
+                SetSharedCarryInput(NetworkManager.Singleton.LocalClientId, worldTranslationInput, yawInput);
             }
             else
             {
-                SubmitSharedCarryInputServerRpc(worldMoveInput);
+                SubmitSharedCarryInputServerRpc(worldTranslationInput, yawInput);
             }
 
             return;
         }
 
-        SetSharedCarryInput(NoHolderClientId, worldMoveInput);
+        SetSharedCarryInput(NoHolderClientId, worldTranslationInput, yawInput);
     }
 
     public void RequestSharedCarryExhaustion()
@@ -1213,26 +1264,27 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         TryCrushLocalSharedCarryHolder();
     }
 
-    private void SetSharedCarryInput(ulong clientId, Vector3 worldMoveInput)
+    private void SetSharedCarryInput(ulong clientId, Vector3 worldTranslationInput, float yawInput)
     {
         if (!holderClientIds.Contains(clientId))
         {
             return;
         }
 
-        holderMoveInputs[clientId] = worldMoveInput;
+        holderMoveInputs[clientId] = worldTranslationInput;
+        holderYawInputs[clientId] = yawInput;
         holderLastInputTimes[clientId] = Time.time;
 
         if (IsServer && clientId != NoHolderClientId)
         {
-            UpdateHolderSharedCarryAnimationInputClientRpc(clientId, worldMoveInput);
+            UpdateHolderSharedCarryAnimationInputClientRpc(clientId, worldTranslationInput);
         }
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void SubmitSharedCarryInputServerRpc(Vector3 worldMoveInput, ServerRpcParams serverRpcParams = default)
+    private void SubmitSharedCarryInputServerRpc(Vector3 worldTranslationInput, float yawInput, ServerRpcParams serverRpcParams = default)
     {
-        SetSharedCarryInput(serverRpcParams.Receive.SenderClientId, worldMoveInput);
+        SetSharedCarryInput(serverRpcParams.Receive.SenderClientId, worldTranslationInput, yawInput);
     }
     private void SetupLocalSharedCarryPickup(PlayerInteractionNew playerInteraction)
     {
@@ -1243,9 +1295,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                 SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody);
             }
 
-            int attachPointIndex = GetFirstFreeAttachPointIndex();
-            Vector3 attachLocalPoint = GetCarryAttachLocalPoint(attachPointIndex, playerInteraction.GetCharacterControllerRadius());
-            if (!TryPrepareLocalSharedCarryPlayerPickup(playerInteraction, attachLocalPoint, out Vector3 playerPlacement))
+            if (!TryPrepareLocalSharedCarryPlayerPickup(
+                    playerInteraction,
+                    out int attachPointIndex,
+                    out Vector3 attachLocalPoint,
+                    out Vector3 playerPlacement))
             {
                 return;
             }
@@ -1254,6 +1308,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             holderAttachPointIndices[NoHolderClientId] = attachPointIndex;
             holderAttachLocalPoints[NoHolderClientId] = attachLocalPoint;
             holderMoveInputs[NoHolderClientId] = Vector3.zero;
+            holderYawInputs[NoHolderClientId] = 0f;
             holderLastInputTimes[NoHolderClientId] = Time.time;
             holderBodyAnchorLocalOffsets[NoHolderClientId] = playerInteraction.CarryBodyAnchorLocalOffset;
             holderControllerRadii[NoHolderClientId] = playerInteraction.GetCharacterControllerRadius();
@@ -1282,18 +1337,29 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         ClearHeldResource(NoHolderClientId);
     }
 
-    private int GetFirstFreeAttachPointIndex()
+    private List<int> GetFreeAttachPointIndicesByDistance(Vector3 actorAnchorWorldPosition, float carrierRadius)
     {
-        int maxCarriers = GetMaxCarriers();
-        for (int i = 0; i < maxCarriers; i++)
+        return SharedCarryAttachmentUtility.GetFreeAttachPointIndicesByDistance(
+            transform,
+            actorAnchorWorldPosition,
+            GetMaxCarriers(),
+            index => holderAttachPointIndices.ContainsValue(index) || npcHolderAttachPointIndices.ContainsValue(index),
+            index => GetCarryAttachLocalPoint(index, carrierRadius));
+    }
+
+    private bool TryGetNearestFreeAttachPoint(Vector3 actorAnchorWorldPosition, float carrierRadius, out int attachPointIndex, out Vector3 attachLocalPoint)
+    {
+        List<int> candidates = GetFreeAttachPointIndicesByDistance(actorAnchorWorldPosition, carrierRadius);
+        if (candidates.Count == 0)
         {
-            if (!holderAttachPointIndices.ContainsValue(i) && !npcHolderAttachPointIndices.ContainsValue(i))
-            {
-                return i;
-            }
+            attachPointIndex = -1;
+            attachLocalPoint = Vector3.zero;
+            return false;
         }
 
-        return Mathf.Max(0, GetCurrentHolderCount());
+        attachPointIndex = candidates[0];
+        attachLocalPoint = GetCarryAttachLocalPoint(attachPointIndex, carrierRadius);
+        return true;
     }
 
     private void UpdateNpcSharedCarryAttachments()

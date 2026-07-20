@@ -17,6 +17,7 @@ public class CarryPhysicsProfileSO : ScriptableObject
     public bool allowYawRotation = true;
     [Min(0f)] public float movementForce = 450f;
     [Min(0f)] public float movementDamper = 65f;
+    [Min(0f)] public float sharedCarryYawTorque = 60f;
     [Header("Stabilized Shared Carry")]
     [Min(0f)] public float horizontalConstraintSpring = 140f;
     [Range(0.1f, 2f)] public float horizontalConstraintDampingRatio = 1.05f;

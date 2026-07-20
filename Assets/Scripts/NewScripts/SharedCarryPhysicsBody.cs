@@ -5,7 +5,7 @@ public struct SharedCarryPhysicsHolder
 {
     public Transform BodyAnchor;
     public Vector3 AttachLocalPoint;
-    public Vector3 DesiredInput;
+    public float DesiredYawInput;
 }
 
 [RequireComponent(typeof(Rigidbody))]
@@ -28,6 +28,8 @@ public class SharedCarryPhysicsBody : MonoBehaviour
     [SerializeField] private float defaultMaxVelocity = 6f;
     [SerializeField] private float defaultMovementForce = 450f;
     [SerializeField] private float defaultMovementDamper = 65f;
+    [SerializeField] private float defaultMaxGripTorque = 250f;
+    [SerializeField] private float defaultSharedCarryYawTorque = 60f;
 
     private Rigidbody body;
     private bool sharedCarryActive;
@@ -105,7 +107,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         ResetConstraintState();
     }
 
-    public void Simulate(IReadOnlyList<SharedCarryPhysicsHolder> holders, Vector3 combinedInput, float fixedDeltaTime)
+    public void Simulate(IReadOnlyList<SharedCarryPhysicsHolder> holders, Vector3 combinedInput, int carrierNormalizationCount, float fixedDeltaTime)
     {
         if (!sharedCarryActive || body == null || !body.gameObject.activeInHierarchy || holders == null || holders.Count == 0)
         {
@@ -173,7 +175,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             Vector3 targetForce = error * perHolderSpring + relativeVelocity * perHolderDamper;
             targetForce = Vector3.ClampMagnitude(targetForce, perHolderMaxForce);
             Vector3 force = SmoothConstraintForce(holder.BodyAnchor, targetForce, forceBlend);
-            body.AddForceAtPosition(force, attachPoint, ForceMode.Force);
+            body.AddForce(force, ForceMode.Force);
         }
 
         PruneConstraintState(holders);
@@ -188,6 +190,21 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         horizontalVelocity.y = 0f;
         Vector3 movementForce = Vector3.ClampMagnitude(combinedInput, 1f) * GetMovementForce() - horizontalVelocity * GetMovementDamper();
         body.AddForce(movementForce, ForceMode.Force);
+
+        if (AllowsYawRotation())
+        {
+            float normalizationDivisor = Mathf.Max(1, carrierNormalizationCount);
+            float combinedYawInput = 0f;
+            for (int i = 0; i < holders.Count; i++)
+            {
+                combinedYawInput += Mathf.Clamp(holders[i].DesiredYawInput, -1f, 1f);
+            }
+
+            float yawTorque = combinedYawInput / normalizationDivisor * GetSharedCarryYawTorque();
+            yawTorque = Mathf.Clamp(yawTorque, -GetMaxGripTorque(), GetMaxGripTorque());
+            body.AddTorque(Vector3.up * yawTorque, ForceMode.Force);
+        }
+
         horizontalVelocity = Vector3.ClampMagnitude(new Vector3(body.linearVelocity.x, 0f, body.linearVelocity.z), GetMaxVelocity());
         body.linearVelocity = new Vector3(horizontalVelocity.x, body.linearVelocity.y, horizontalVelocity.z);
 
@@ -234,6 +251,9 @@ public class SharedCarryPhysicsBody : MonoBehaviour
     private float GetMaxAngularVelocity() => profile != null ? profile.maxAngularVelocity : 3f;
     private float GetMovementForce() => profile != null ? profile.movementForce : defaultMovementForce;
     private float GetMovementDamper() => profile != null ? profile.movementDamper : defaultMovementDamper;
+    private float GetMaxGripTorque() => profile != null ? Mathf.Max(0f, profile.maxGripTorque) : defaultMaxGripTorque;
+    private float GetSharedCarryYawTorque() => profile != null ? Mathf.Max(0f, profile.sharedCarryYawTorque) : defaultSharedCarryYawTorque;
+    private bool AllowsYawRotation() => profile == null || profile.allowYawRotation;
     private float GetHorizontalConstraintSpring() => profile != null ? profile.horizontalConstraintSpring : defaultHorizontalConstraintSpring;
     private float GetHorizontalConstraintDampingRatio() => profile != null ? profile.horizontalConstraintDampingRatio : defaultHorizontalConstraintDampingRatio;
     private float GetMaxHorizontalConstraintForce() => profile != null ? profile.maxHorizontalConstraintForce : defaultMaxHorizontalConstraintForce;

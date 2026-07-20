@@ -3,6 +3,56 @@ using UnityEngine;
 
 public static class SharedCarryAttachmentUtility
 {
+    private readonly struct AttachPointCandidate
+    {
+        public readonly int Index;
+        public readonly float SqrDistance;
+
+        public AttachPointCandidate(int index, float sqrDistance)
+        {
+            Index = index;
+            SqrDistance = sqrDistance;
+        }
+    }
+
+    public static List<int> GetFreeAttachPointIndicesByDistance(
+        Transform carriedObject,
+        Vector3 actorAnchorWorldPosition,
+        int attachPointCount,
+        System.Func<int, bool> isOccupied,
+        System.Func<int, Vector3> getAttachLocalPoint)
+    {
+        List<AttachPointCandidate> candidates = new List<AttachPointCandidate>();
+        if (carriedObject == null || attachPointCount <= 0 || isOccupied == null || getAttachLocalPoint == null)
+        {
+            return new List<int>();
+        }
+
+        for (int index = 0; index < attachPointCount; index++)
+        {
+            if (isOccupied(index))
+            {
+                continue;
+            }
+
+            Vector3 worldPoint = carriedObject.TransformPoint(getAttachLocalPoint(index));
+            candidates.Add(new AttachPointCandidate(index, (worldPoint - actorAnchorWorldPosition).sqrMagnitude));
+        }
+
+        candidates.Sort((left, right) =>
+        {
+            int distanceComparison = left.SqrDistance.CompareTo(right.SqrDistance);
+            return distanceComparison != 0 ? distanceComparison : left.Index.CompareTo(right.Index);
+        });
+
+        List<int> sortedIndices = new List<int>(candidates.Count);
+        foreach (AttachPointCandidate candidate in candidates)
+        {
+            sortedIndices.Add(candidate.Index);
+        }
+
+        return sortedIndices;
+    }
 
     public static Bounds GetLocalColliderBounds(Transform root)
     {
