@@ -48,6 +48,9 @@ MonoBehaviour:
   sharedCarryUnderstaffedStaminaDrainPerSecond: 1
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
-  carryAttachLocalPoints: []
+  carryAttachLocalPoints:
+  - {x: 0, y: -0.85, z: 0}
+  - {x: 0, y: 2.85, z: 0}
+  sharedCarryRotationOffsetEuler: {x: 0, y: 0, z: 90}
   carryPhysicsProfile: {fileID: 0}
   furnaceFuelAmount: 0

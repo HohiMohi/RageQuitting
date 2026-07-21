@@ -23,7 +23,9 @@ MonoBehaviour:
       amount: 1
     - resourceSO: {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
       amount: 1
-    spawnOffsets: []
+    spawnOffsets:
+    - {x: 0, y: 1, z: 0}
+    - {x: 0, y: 3, z: 0}
     fallbackScatterRadius: 0.35
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 7

@@ -21,6 +21,7 @@ public class BaseResourceSO : ScriptableObject
     public float carryMoveSpeed = 4f;
     public float carryPlayerClearance = 0.35f;
     public Vector3[] carryAttachLocalPoints;
+    public Vector3 sharedCarryRotationOffsetEuler;
     public CarryPhysicsProfileSO carryPhysicsProfile;
     public float furnaceFuelAmount;
 }

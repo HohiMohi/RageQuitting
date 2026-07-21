@@ -37,6 +37,9 @@ public class SharedCarryPhysicsBody : MonoBehaviour
     private float normalLinearDamping;
     private float normalAngularDamping;
     private bool normalPhysicsCaptured;
+    private bool usesCustomRotationConstraint;
+    private Quaternion sharedCarryTiltOffset = Quaternion.identity;
+    private Quaternion lockedSharedCarryYaw = Quaternion.identity;
     private readonly Dictionary<Transform, AnchorMotionState> anchorMotionStates = new Dictionary<Transform, AnchorMotionState>();
     private readonly Dictionary<Transform, Vector3> smoothedConstraintForces = new Dictionary<Transform, Vector3>();
 
@@ -90,7 +93,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         }
         body.linearVelocity = Vector3.ClampMagnitude(body.linearVelocity, GetMaxVelocity());
         body.angularVelocity = Vector3.zero;
-        body.constraints = GetRotationConstraints();
+        ConfigureRotationConstraint();
         ResetConstraintState();
     }
 
@@ -103,6 +106,9 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         }
 
         body.constraints = RigidbodyConstraints.None;
+        usesCustomRotationConstraint = false;
+        sharedCarryTiltOffset = Quaternion.identity;
+        lockedSharedCarryYaw = Quaternion.identity;
         RestoreNormalPhysics();
         ResetConstraintState();
     }
@@ -113,6 +119,8 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         {
             return;
         }
+
+        ApplyCustomRotationConstraint();
 
         int validHolderCount = 0;
         float targetHeight = 0f;
@@ -343,5 +351,44 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         }
 
         return constraints;
+    }
+
+    private void ConfigureRotationConstraint()
+    {
+        Quaternion yawRotation = ExtractYawRotation(body.rotation);
+        sharedCarryTiltOffset = Quaternion.Inverse(yawRotation) * body.rotation;
+        lockedSharedCarryYaw = yawRotation;
+        usesCustomRotationConstraint = Quaternion.Angle(sharedCarryTiltOffset, Quaternion.identity) > 0.1f;
+        body.constraints = usesCustomRotationConstraint ? RigidbodyConstraints.None : GetRotationConstraints();
+    }
+
+    private void ApplyCustomRotationConstraint()
+    {
+        if (!usesCustomRotationConstraint)
+        {
+            return;
+        }
+
+        Quaternion orientationWithoutTilt = body.rotation * Quaternion.Inverse(sharedCarryTiltOffset);
+        Quaternion yawRotation = AllowsYawRotation()
+            ? ExtractYawRotation(orientationWithoutTilt)
+            : lockedSharedCarryYaw;
+        body.rotation = yawRotation * sharedCarryTiltOffset;
+
+        float yawVelocity = AllowsYawRotation() ? Vector3.Dot(body.angularVelocity, Vector3.up) : 0f;
+        body.angularVelocity = Vector3.up * yawVelocity;
+    }
+
+    private static Quaternion ExtractYawRotation(Quaternion rotation)
+    {
+        Vector3 heading = Vector3.ProjectOnPlane(rotation * Vector3.forward, Vector3.up);
+        if (heading.sqrMagnitude < 0.0001f)
+        {
+            heading = Vector3.ProjectOnPlane(rotation * Vector3.right, Vector3.up);
+        }
+
+        return heading.sqrMagnitude >= 0.0001f
+            ? Quaternion.LookRotation(heading.normalized, Vector3.up)
+            : Quaternion.identity;
     }
 }

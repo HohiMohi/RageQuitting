@@ -5,6 +5,22 @@ using UnityEngine;
 
 public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew, IDamageable, ISharedCarryObject, IHeldObjectHudInfoProvider
 {
+    private readonly struct RigidbodyState
+    {
+        public readonly Vector3 Position;
+        public readonly Quaternion Rotation;
+        public readonly Vector3 LinearVelocity;
+        public readonly Vector3 AngularVelocity;
+
+        public RigidbodyState(Rigidbody body)
+        {
+            Position = body.position;
+            Rotation = body.rotation;
+            LinearVelocity = body.linearVelocity;
+            AngularVelocity = body.angularVelocity;
+        }
+    }
+
     private const ulong NoHolderClientId = ulong.MaxValue;
     private const float SharedCarryInputStaleTime = 0.2f;
     private static readonly Dictionary<ulong, BaseResourceNew> HeldResourceByClientId = new Dictionary<ulong, BaseResourceNew>();
@@ -734,9 +750,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             return false;
         }
 
-        if (GetCurrentHolderCount() == 0)
+        bool preparedInitialOrientation = GetCurrentHolderCount() == 0;
+        RigidbodyState orientationState = default;
+        if (preparedInitialOrientation)
         {
-            SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody);
+            orientationState = CaptureRigidbodyState();
+            SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody, GetSharedCarryRotationOffset());
         }
 
         Vector3 actorAnchorWorldPosition = playerNetworkObject.transform.TransformPoint(bodyAnchorLocalOffset);
@@ -760,6 +779,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             return true;
         }
 
+        if (preparedInitialOrientation)
+        {
+            RestoreRigidbodyState(orientationState);
+        }
+
         return false;
     }
 
@@ -778,6 +802,14 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
 
         float controllerRadius = playerInteraction.GetCharacterControllerRadius();
+        bool preparedInitialOrientation = GetCurrentHolderCount() == 0;
+        RigidbodyState orientationState = default;
+        if (preparedInitialOrientation)
+        {
+            orientationState = CaptureRigidbodyState();
+            SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody, GetSharedCarryRotationOffset());
+        }
+
         Vector3 actorAnchorWorldPosition = playerInteraction.GetCarryBodyAnchor().position;
         foreach (int candidateIndex in GetFreeAttachPointIndicesByDistance(actorAnchorWorldPosition, controllerRadius))
         {
@@ -797,6 +829,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             attachPointIndex = candidateIndex;
             attachLocalPoint = candidateLocalPoint;
             return true;
+        }
+
+        if (preparedInitialOrientation)
+        {
+            RestoreRigidbodyState(orientationState);
         }
 
         return false;
@@ -933,6 +970,14 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
         int attachPointIndex = -1;
         Vector3 attachLocalPoint = Vector3.zero;
+        bool preparedInitialOrientation = ShouldUseServerDrivenCarry() && GetCurrentHolderCount() == 0;
+        RigidbodyState orientationState = default;
+        if (preparedInitialOrientation)
+        {
+            orientationState = CaptureRigidbodyState();
+            SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody, GetSharedCarryRotationOffset());
+        }
+
         if (ShouldUseServerDrivenCarry())
         {
             Transform actorRoot = GetCarryActorRoot(carryActor);
@@ -941,6 +986,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                 : actorRoot != null ? actorRoot.position : transform.position;
             if (!TryGetNearestFreeAttachPoint(actorAnchorWorldPosition, carryActor.CollisionRadius, out attachPointIndex, out attachLocalPoint))
             {
+                if (preparedInitialOrientation)
+                {
+                    RestoreRigidbodyState(orientationState);
+                }
+
                 return false;
             }
         }
@@ -1018,6 +1068,29 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private bool ShouldUseServerDrivenCarry()
     {
         return AllowsMultipleCarriers();
+    }
+
+    private Vector3 GetSharedCarryRotationOffset()
+    {
+        return baseResourceSO != null ? baseResourceSO.sharedCarryRotationOffsetEuler : Vector3.zero;
+    }
+
+    private RigidbodyState CaptureRigidbodyState()
+    {
+        return new RigidbodyState(_rigidbody);
+    }
+
+    private void RestoreRigidbodyState(RigidbodyState state)
+    {
+        if (_rigidbody == null)
+        {
+            return;
+        }
+
+        transform.SetPositionAndRotation(state.Position, state.Rotation);
+        Physics.SyncTransforms();
+        _rigidbody.linearVelocity = state.LinearVelocity;
+        _rigidbody.angularVelocity = state.AngularVelocity;
     }
 
     private int GetRecommendedCarriers()
@@ -1290,11 +1363,6 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     {
         if (!holderClientIds.Contains(NoHolderClientId))
         {
-            if (GetCurrentHolderCount() == 0)
-            {
-                SharedCarryAttachmentUtility.NormalizeSharedCarryOrientation(_rigidbody);
-            }
-
             if (!TryPrepareLocalSharedCarryPlayerPickup(
                     playerInteraction,
                     out int attachPointIndex,

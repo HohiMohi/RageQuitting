@@ -121,16 +121,55 @@ public static class SharedCarryAttachmentUtility
 
     public static void NormalizeSharedCarryOrientation(Rigidbody body)
     {
+        NormalizeSharedCarryOrientation(body, Vector3.zero);
+    }
+
+    public static void NormalizeSharedCarryOrientation(Rigidbody body, Vector3 rotationOffsetEuler)
+    {
         if (body == null)
         {
             return;
         }
 
-        float yaw = body.rotation.eulerAngles.y;
-        body.position = body.position;
-        body.rotation = Quaternion.Euler(0f, yaw, 0f);
+        float lowestPointBeforeRotation = GetLowestColliderPointY(body.transform);
+        Quaternion rotationOffset = Quaternion.Euler(rotationOffsetEuler);
+        Quaternion orientationWithoutOffset = body.rotation * Quaternion.Inverse(rotationOffset);
+        Vector3 heading = Vector3.ProjectOnPlane(orientationWithoutOffset * Vector3.forward, Vector3.up);
+        if (heading.sqrMagnitude < 0.0001f)
+        {
+            heading = Vector3.ProjectOnPlane(orientationWithoutOffset * Vector3.right, Vector3.up);
+        }
+
+        Quaternion yawRotation = heading.sqrMagnitude >= 0.0001f
+            ? Quaternion.LookRotation(heading.normalized, Vector3.up)
+            : Quaternion.Euler(0f, body.rotation.eulerAngles.y, 0f);
+        Transform bodyTransform = body.transform;
+        bodyTransform.rotation = yawRotation * rotationOffset;
+        Physics.SyncTransforms();
+
+        float lowestPointAfterRotation = GetLowestColliderPointY(bodyTransform);
+        if (float.IsFinite(lowestPointBeforeRotation) && float.IsFinite(lowestPointAfterRotation))
+        {
+            bodyTransform.position += Vector3.up * (lowestPointBeforeRotation - lowestPointAfterRotation);
+            Physics.SyncTransforms();
+        }
+
         body.angularVelocity = Vector3.zero;
         body.linearVelocity = Vector3.zero;
+    }
+
+    private static float GetLowestColliderPointY(Transform root)
+    {
+        float lowestPoint = float.PositiveInfinity;
+        foreach (Collider collider in root.GetComponentsInChildren<Collider>(false))
+        {
+            if (collider != null && collider.enabled && !collider.isTrigger)
+            {
+                lowestPoint = Mathf.Min(lowestPoint, collider.bounds.min.y);
+            }
+        }
+
+        return lowestPoint;
     }
 
     public static bool TryFindSafePlayerRootPosition(
