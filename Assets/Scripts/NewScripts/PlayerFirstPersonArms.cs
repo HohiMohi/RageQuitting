@@ -2,6 +2,7 @@ using StarterAssets;
 using System;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class PlayerFirstPersonArms : NetworkBehaviour
 {
@@ -15,6 +16,10 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private PlayerInventory playerInventory;
     [SerializeField] private PlayerTurnFeedback playerTurnFeedback;
 
+    [Header("Rendering")]
+    [SerializeField, Range(0, 31)] private int firstPersonRenderLayer = 30;
+    [SerializeField] private float firstPersonNearClipPlane = 0.01f;
+
     [Header("Pose")]
     [SerializeField] private Vector3 rootLocalPosition = new Vector3(0f, -0.24f, 0.95f);
     [SerializeField] private Vector3 rootLocalEulerAngles = new Vector3(-4f, 0f, 0f);
@@ -26,8 +31,12 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private float idleBobAmplitude = 0.012f;
     [SerializeField] private float moveBobAmplitude = 0.045f;
     [SerializeField] private float sprintBobAmplitude = 0.07f;
-    [SerializeField] private float bobFrequency = 7f;
-    [SerializeField] private float sprintBobFrequency = 10f;
+    [SerializeField] private float idleBobCyclesPerSecond = 0.4f;
+    [SerializeField] private float walkArmCyclesPerMeter = 0.45f;
+    [SerializeField] private float sprintArmCyclesPerMeter = 0.4f;
+    [SerializeField] private float locomotionAmplitudeSmoothing = 10f;
+    [SerializeField] private float sprintBlendSpeed = 8f;
+    [SerializeField] private float maximumTrackedDistancePerFrame = 0.5f;
     [SerializeField] private float actionDuration = 0.32f;
     [SerializeField] private float actionSwingAngle = 36f;
     [SerializeField] private float hitReactionDuration = 0.22f;
@@ -50,7 +59,16 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     private GameObject rightToolVisual;
     private Material skinMaterial;
     private Material forearmMaterial;
-    private float bobTimer;
+    private float idleBobPhase;
+    private float locomotionPhase;
+    private float locomotionAmount;
+    private float sprintBlend;
+    private Vector3 previousPlayerPosition;
+    private bool hasPreviousPlayerPosition;
+    private Camera firstPersonCamera;
+    private Camera baseCamera;
+    private int originalBaseCameraCullingMask;
+    private bool baseCameraMaskOverridden;
     private float actionTimer;
     private float hitReactionTimer;
     private float previousHealth;
@@ -74,6 +92,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     {
         CacheReferences();
         previousHealth = playerHealth != null ? playerHealth.CurrentHealth : 0f;
+        ResetLocomotionState();
     }
 
     private void Start()
@@ -84,6 +103,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         setupCompleted = false;
+        ResetLocomotionState();
         TrySetup();
     }
 
@@ -94,6 +114,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
     private void OnEnable()
     {
+        ResetLocomotionState();
         SubscribeEvents();
     }
 
@@ -114,6 +135,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             return;
         }
 
+        EnsureFirstPersonCamera();
+
         float deltaTime = Time.deltaTime;
         if (deltaTime <= 0f)
         {
@@ -121,7 +144,21 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         }
 
         UpdateTimers(deltaTime);
+        UpdateLocomotionAnimation(deltaTime);
         UpdatePose(deltaTime);
+    }
+
+    private void LateUpdate()
+    {
+        if (firstPersonCamera == null || baseCamera == null)
+        {
+            return;
+        }
+
+        firstPersonCamera.fieldOfView = baseCamera.fieldOfView;
+        firstPersonCamera.aspect = baseCamera.aspect;
+        firstPersonCamera.nearClipPlane = Mathf.Max(0.001f, firstPersonNearClipPlane);
+        firstPersonCamera.farClipPlane = baseCamera.farClipPlane;
     }
 
     private void CacheReferences()
@@ -209,6 +246,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         forearmMaterial.color = forearmColor;
 
         GameObject rootObject = new GameObject("FirstPersonArms");
+        rootObject.layer = firstPersonRenderLayer;
         armsRoot = rootObject.transform;
         armsRoot.SetParent(cameraRoot, false);
         armsRoot.localPosition = rootLocalPosition;
@@ -218,6 +256,67 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         rightArmRoot = CreateArm("Right", armSpacing);
         rightToolAnchor = CreateToolAnchor(rightArmRoot);
         RefreshToolVisual();
+    }
+
+    private void EnsureFirstPersonCamera()
+    {
+        Camera currentMainCamera = Camera.main;
+        if (currentMainCamera == null)
+        {
+            return;
+        }
+
+        if (firstPersonCamera != null && baseCamera == currentMainCamera)
+        {
+            return;
+        }
+
+        DestroyFirstPersonCamera();
+        baseCamera = currentMainCamera;
+        originalBaseCameraCullingMask = baseCamera.cullingMask;
+        baseCameraMaskOverridden = true;
+        baseCamera.cullingMask &= ~(1 << firstPersonRenderLayer);
+
+        GameObject cameraObject = new GameObject("FirstPersonArmsCamera");
+        cameraObject.transform.SetParent(baseCamera.transform, false);
+        firstPersonCamera = cameraObject.AddComponent<Camera>();
+        firstPersonCamera.CopyFrom(baseCamera);
+        firstPersonCamera.cullingMask = 1 << firstPersonRenderLayer;
+        firstPersonCamera.nearClipPlane = Mathf.Max(0.001f, firstPersonNearClipPlane);
+
+        UniversalAdditionalCameraData baseCameraData = baseCamera.GetUniversalAdditionalCameraData();
+        UniversalAdditionalCameraData overlayCameraData = cameraObject.AddComponent<UniversalAdditionalCameraData>();
+        overlayCameraData.renderType = CameraRenderType.Overlay;
+        overlayCameraData.renderPostProcessing = false;
+        if (!baseCameraData.cameraStack.Contains(firstPersonCamera))
+        {
+            baseCameraData.cameraStack.Add(firstPersonCamera);
+        }
+    }
+
+    private void DestroyFirstPersonCamera()
+    {
+        if (baseCamera != null)
+        {
+            UniversalAdditionalCameraData baseCameraData = baseCamera.GetUniversalAdditionalCameraData();
+            if (firstPersonCamera != null)
+            {
+                baseCameraData.cameraStack.Remove(firstPersonCamera);
+            }
+
+            if (baseCameraMaskOverridden)
+            {
+                baseCamera.cullingMask = originalBaseCameraCullingMask;
+            }
+        }
+
+        baseCameraMaskOverridden = false;
+        baseCamera = null;
+        if (firstPersonCamera != null)
+        {
+            Destroy(firstPersonCamera.gameObject);
+            firstPersonCamera = null;
+        }
     }
 
     private Shader GetDefaultShader()
@@ -291,6 +390,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
     private void ApplyVisualObjectSettings(GameObject visualObject, Material material)
     {
+        visualObject.layer = firstPersonRenderLayer;
         foreach (var collider in visualObject.GetComponentsInChildren<Collider>())
         {
             Destroy(collider);
@@ -308,20 +408,82 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         hitReactionTimer = Mathf.Max(0f, hitReactionTimer - deltaTime);
     }
 
+    private void UpdateLocomotionAnimation(float deltaTime)
+    {
+        Vector3 currentPosition = transform.position;
+        Vector3 horizontalDelta = hasPreviousPlayerPosition
+            ? currentPosition - previousPlayerPosition
+            : Vector3.zero;
+        horizontalDelta.y = 0f;
+        previousPlayerPosition = currentPosition;
+        hasPreviousPlayerPosition = true;
+
+        bool isDowned = playerHealth != null && playerHealth.IsDowned;
+        bool canAnimateLocomotion = firstPersonController != null
+            && firstPersonController.Grounded
+            && !isDowned;
+        bool isSprinting = canAnimateLocomotion && firstPersonController.IsSprinting;
+
+        sprintBlend = Mathf.MoveTowards(
+            sprintBlend,
+            isSprinting ? 1f : 0f,
+            Mathf.Max(0f, sprintBlendSpeed) * deltaTime);
+
+        float speedReference = Mathf.Max(
+            0.01f,
+            Mathf.Lerp(firstPersonController != null ? firstPersonController.MoveSpeed : 1f,
+                firstPersonController != null ? firstPersonController.SprintSpeed : 1f,
+                sprintBlend));
+        float targetLocomotionAmount = canAnimateLocomotion
+            ? Mathf.Clamp01(firstPersonController.HorizontalSpeed / speedReference)
+            : 0f;
+        locomotionAmount = Mathf.MoveTowards(
+            locomotionAmount,
+            targetLocomotionAmount,
+            Mathf.Max(0f, locomotionAmplitudeSmoothing) * deltaTime);
+
+        if (!canAnimateLocomotion)
+        {
+            return;
+        }
+
+        const float completeAnimationCycle = Mathf.PI * 4f;
+        idleBobPhase = Mathf.Repeat(
+            idleBobPhase + deltaTime * Mathf.Max(0f, idleBobCyclesPerSecond) * Mathf.PI * 2f,
+            completeAnimationCycle);
+
+        float travelledDistance = Mathf.Min(
+            horizontalDelta.magnitude,
+            Mathf.Max(0f, maximumTrackedDistancePerFrame));
+        if (travelledDistance <= 0f)
+        {
+            return;
+        }
+
+        float cyclesPerMeter = Mathf.Lerp(
+            Mathf.Max(0f, walkArmCyclesPerMeter),
+            Mathf.Max(0f, sprintArmCyclesPerMeter),
+            sprintBlend);
+        locomotionPhase = Mathf.Repeat(
+            locomotionPhase + travelledDistance * cyclesPerMeter * Mathf.PI * 2f,
+            completeAnimationCycle);
+    }
+
     private void UpdatePose(float deltaTime)
     {
-        Vector2 moveInput = playerInput != null ? playerInput.GetMoveVectorValue() : Vector2.zero;
-        float moveAmount = Mathf.Clamp01(moveInput.magnitude);
-        bool isSprinting = firstPersonController != null && firstPersonController.IsSprinting && moveAmount > 0.1f;
+        float moveAmount = locomotionAmount;
+        bool isSprinting = sprintBlend > 0.5f && moveAmount > 0.01f;
         bool isCarrying = playerInteraction != null && playerInteraction.IsHoldingObject;
         bool isDowned = playerHealth != null && playerHealth.IsDowned;
 
-        float currentBobFrequency = isSprinting ? sprintBobFrequency : bobFrequency;
-        bobTimer += deltaTime * currentBobFrequency * Mathf.Lerp(0.35f, 1f, moveAmount);
-
-        float bobAmplitude = isSprinting ? sprintBobAmplitude : Mathf.Lerp(idleBobAmplitude, moveBobAmplitude, moveAmount);
-        float bob = Mathf.Sin(bobTimer) * bobAmplitude;
-        float sway = Mathf.Cos(bobTimer * 0.5f) * bobAmplitude * 0.55f;
+        float movementBobAmplitude = Mathf.Lerp(moveBobAmplitude, sprintBobAmplitude, sprintBlend) * moveAmount;
+        float idleWeight = firstPersonController != null && firstPersonController.Grounded && !isDowned
+            ? 1f - moveAmount
+            : 0f;
+        float bob = Mathf.Sin(idleBobPhase) * idleBobAmplitude * idleWeight
+            + Mathf.Sin(locomotionPhase) * movementBobAmplitude;
+        float sway = Mathf.Cos(idleBobPhase * 0.5f) * idleBobAmplitude * idleWeight * 0.55f
+            + Mathf.Cos(locomotionPhase * 0.5f) * movementBobAmplitude * 0.55f;
         float actionNormalized = actionDuration > 0f ? Mathf.Clamp01(actionTimer / actionDuration) : 0f;
         float actionCurve = Mathf.Sin(actionNormalized * Mathf.PI);
         float hitNormalized = hitReactionDuration > 0f ? Mathf.Clamp01(hitReactionTimer / hitReactionDuration) : 0f;
@@ -371,7 +533,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         Vector3 targetPosition = new Vector3(side * armSpacing, 0f, 0f);
         Vector3 targetEuler = new Vector3(0f, side * 3f, side * -3f);
 
-        targetEuler.x += Mathf.Sin(bobTimer + (isLeft ? 0f : Mathf.PI)) * moveAmount * 7f;
+        targetEuler.x += Mathf.Sin(locomotionPhase + (isLeft ? 0f : Mathf.PI)) * moveAmount * 7f;
         targetEuler.x += actionCurve * actionSwingAngle * (isLeft ? 0.45f : 1f);
         targetEuler.z += actionCurve * side * -12f;
 
@@ -455,9 +617,27 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         }
 
         rightToolVisual = EquippableToolVisualBuilder.BuildVisual(itemType, rightToolAnchor, toolVisualMaterials);
-        if (rightToolVisual != null && playerHealth != null)
+        if (rightToolVisual != null)
         {
-            rightToolVisual.SetActive(!playerHealth.IsDowned);
+            SetLayerRecursively(rightToolVisual, firstPersonRenderLayer);
+            if (playerHealth != null)
+            {
+                rightToolVisual.SetActive(!playerHealth.IsDowned);
+            }
+        }
+    }
+
+    private static void SetLayerRecursively(GameObject root, int layer)
+    {
+        if (root == null)
+        {
+            return;
+        }
+
+        root.layer = layer;
+        foreach (Transform child in root.transform)
+        {
+            SetLayerRecursively(child.gameObject, layer);
         }
     }
 
@@ -502,6 +682,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         if (playerHealth != null)
         {
             playerHealth.OnHealthChanged += PlayerHealth_OnHealthChanged;
+            playerHealth.OnDownedStateChanged -= PlayerHealth_OnDownedStateChanged;
+            playerHealth.OnDownedStateChanged += PlayerHealth_OnDownedStateChanged;
         }
 
         if (playerInventory != null)
@@ -527,6 +709,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         if (playerHealth != null)
         {
             playerHealth.OnHealthChanged -= PlayerHealth_OnHealthChanged;
+            playerHealth.OnDownedStateChanged -= PlayerHealth_OnDownedStateChanged;
         }
 
         if (playerInventory != null)
@@ -566,8 +749,25 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         previousHealth = currentHealth;
     }
 
+    private void PlayerHealth_OnDownedStateChanged(object sender, EventArgs e)
+    {
+        ResetLocomotionState();
+    }
+
+    private void ResetLocomotionState()
+    {
+        idleBobPhase = 0f;
+        locomotionPhase = 0f;
+        locomotionAmount = 0f;
+        sprintBlend = 0f;
+        previousPlayerPosition = transform.position;
+        hasPreviousPlayerPosition = true;
+    }
+
     private void DestroyArms()
     {
+        DestroyFirstPersonCamera();
+
         if (armsRoot != null)
         {
             Destroy(armsRoot.gameObject);

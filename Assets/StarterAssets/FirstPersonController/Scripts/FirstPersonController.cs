@@ -486,6 +486,9 @@ namespace StarterAssets
 
 			Vector3 positionBeforeMove = transform.position;
 			_controller.Move((_horizontalVelocity + Vector3.up * _verticalVelocity) * Time.deltaTime);
+			Vector3 actualHorizontalDelta = transform.position - positionBeforeMove;
+			actualHorizontalDelta.y = 0f;
+			_horizontalVelocity = actualHorizontalDelta / Mathf.Max(Time.deltaTime, 0.0001f);
 			UpdateFootsteps(positionBeforeMove, transform.position);
 
 			if (moveInput != Vector2.zero && IsSprinting)

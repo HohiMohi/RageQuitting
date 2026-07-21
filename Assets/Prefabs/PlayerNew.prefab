@@ -860,6 +860,8 @@ MonoBehaviour:
   playerHealth: {fileID: 6339126401750945372}
   playerInventory: {fileID: 4354115525238422459}
   playerTurnFeedback: {fileID: 0}
+  firstPersonRenderLayer: 30
+  firstPersonNearClipPlane: 0.01
   rootLocalPosition: {x: 0, y: -0.24, z: 0.95}
   rootLocalEulerAngles: {x: -4, y: 0, z: 0}
   armSpacing: 0.24
@@ -868,8 +870,12 @@ MonoBehaviour:
   idleBobAmplitude: 0.012
   moveBobAmplitude: 0.045
   sprintBobAmplitude: 0.07
-  bobFrequency: 7
-  sprintBobFrequency: 10
+  idleBobCyclesPerSecond: 0.4
+  walkArmCyclesPerMeter: 0.45
+  sprintArmCyclesPerMeter: 0.4
+  locomotionAmplitudeSmoothing: 10
+  sprintBlendSpeed: 8
+  maximumTrackedDistancePerFrame: 0.5
   actionDuration: 0.32
   actionSwingAngle: 36
   hitReactionDuration: 0.22
