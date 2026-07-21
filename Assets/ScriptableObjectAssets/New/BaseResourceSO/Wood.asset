@@ -24,9 +24,14 @@ MonoBehaviour:
     - resourceSO: {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
       amount: 1
     spawnOffsets:
-    - {x: 0, y: 1, z: 0}
-    - {x: 0, y: 3, z: 0}
+    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 2, z: 0}
     fallbackScatterRadius: 0.35
+    scatterSpawnOffsets: 1
+    spawnOffsetScatterRadius: 0.15
+    scatterVelocityMin: 0.5
+    scatterVelocityMax: 1.5
+    scatterUpwardBias: 0.1
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 7
     products:
@@ -34,6 +39,11 @@ MonoBehaviour:
       amount: 1
     spawnOffsets: []
     fallbackScatterRadius: 0.35
+    scatterSpawnOffsets: 0
+    spawnOffsetScatterRadius: 0
+    scatterVelocityMin: 0
+    scatterVelocityMax: 0
+    scatterUpwardBias: 0
   resourceDurability: 50
   movementSpeedPenalty: 0
   canBeCarried: 0
@@ -46,5 +56,6 @@ MonoBehaviour:
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints: []
+  sharedCarryRotationOffsetEuler: {x: 0, y: 0, z: 0}
   carryPhysicsProfile: {fileID: 0}
   furnaceFuelAmount: 0

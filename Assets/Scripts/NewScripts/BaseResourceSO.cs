@@ -34,6 +34,11 @@ public struct BaseResourceDestructionRecipe
     public BaseResourceDestructionProduct[] products;
     public Vector3[] spawnOffsets;
     public float fallbackScatterRadius;
+    public bool scatterSpawnOffsets;
+    [Min(0f)] public float spawnOffsetScatterRadius;
+    [Min(0f)] public float scatterVelocityMin;
+    [Min(0f)] public float scatterVelocityMax;
+    [Min(0f)] public float scatterUpwardBias;
 }
 
 [Serializable]
