@@ -699,6 +699,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 639136070856975893, guid: ec7d14fcee4207b4a95f1aa2d367d1d7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 990833165}
+    - targetCorrespondingSourceObject: {fileID: 639136070856975893, guid: ec7d14fcee4207b4a95f1aa2d367d1d7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1008272441}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ec7d14fcee4207b4a95f1aa2d367d1d7, type: 3}
 --- !u!4 &94233840 stripped
@@ -715,7 +718,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 11e0d04f5ab244a4d8c8d4b13ec7357e, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bridge
 --- !u!4 &94233842 stripped
 Transform:
@@ -1107,7 +1110,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -1688,6 +1691,71 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 333780374}
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &363237993
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.091610186
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.00000028277896
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -10.843445
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 630556344847300459, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2125892877424298890, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: m_Name
+      value: WoodenAbutmentMountable
+      objectReference: {fileID: 0}
+    - target: {fileID: 4888261340680202910, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 4062243749
+      objectReference: {fileID: 0}
+    - target: {fileID: 4888261340680202910, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 2927464040
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ccd6213e4409d2c42af52fc6bfadf539, type: 3}
 --- !u!1001 &367159338
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1698,7 +1766,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -2504,11 +2572,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[0]'
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 9c1e7fcbba447974193389a1230b761b, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[1]'
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 9fa6cb6c61419394fae67d6286faa6de, type: 2}
     - target: {fileID: 1729528994032473016, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: m_SizeDelta.y
@@ -3783,7 +3851,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62424ce4c4e3e0b45ad7ea0ed0d8b4cb, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawnPoint
   spawnIndex: 1
 --- !u!1 &874605735
@@ -4554,6 +4622,92 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1780440010760642928, guid: d14f305e42b6f474f9e3be5d6bd50377, type: 3}
   m_PrefabInstance: {fileID: 997970258}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1008272440
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 94233842}
+    m_Modifications:
+    - target: {fileID: 677788956319822613, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_Name
+      value: WoodenAbutmentBridgeComponent
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546353653165739073, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: componentID
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.69
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -4.24
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8976598577191718263, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8976598577191718263, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8976598577191718263, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8976598577191718263, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8976598577191718263, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+--- !u!4 &1008272441 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6791451970182892134, guid: 62f2eb337917068469faa152452d0cbd, type: 3}
+  m_PrefabInstance: {fileID: 1008272440}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1028513131
 GameObject:
   m_ObjectHideFlags: 0
@@ -4781,7 +4935,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[0]'
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 9fa6cb6c61419394fae67d6286faa6de, type: 2}
     - target: {fileID: 5660118369519838738, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -5981,7 +6135,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -6196,7 +6350,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
   m_SerializedVersion: 0
   m_AgentTypeID: 0
@@ -6761,7 +6915,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62424ce4c4e3e0b45ad7ea0ed0d8b4cb, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawnPoint
   spawnIndex: 0
 --- !u!1001 &1330480656
@@ -7097,7 +7251,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -7360,7 +7514,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3974033819670228483, guid: 5ad926efbf4048245aa9af818ceb5150, type: 3}
       propertyPath: resourceType
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: c315a3ca10ef0ac4abd0d0ff876d0a5c, type: 2}
     - target: {fileID: 3974033819670228483, guid: 5ad926efbf4048245aa9af818ceb5150, type: 3}
       propertyPath: minimumAvailableCount
@@ -7433,7 +7587,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3974033819670228483, guid: 5ad926efbf4048245aa9af818ceb5150, type: 3}
       propertyPath: resourceType
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 0603da15035368645805691e40633fda, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -8122,7 +8276,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62424ce4c4e3e0b45ad7ea0ed0d8b4cb, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawnPoint
   spawnIndex: 2
 --- !u!1001 &1671768792
@@ -8563,28 +8717,32 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridge
-      value:
+      value: 
       objectReference: {fileID: 94233841}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeBuildingStages.Array.size
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
-      propertyPath: bridgeComponentDataArray.Array.size
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
+      propertyPath: bridgeComponentDataArray.Array.size
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[3].bridgeComponentSO
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[4].bridgeComponentSO
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[5].bridgeComponentSO
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
+    - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
+      propertyPath: bridgeComponentDataArray.Array.data[6].bridgeComponentSO
+      value: 
+      objectReference: {fileID: 11400000, guid: 43e6a23a14d975d46927ef4c7c4a9df7, type: 2}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[3].bridgeComponentType
       value: 1
@@ -8595,6 +8753,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[5].bridgeComponentType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
+      propertyPath: bridgeComponentDataArray.Array.data[6].bridgeComponentType
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
@@ -8615,7 +8777,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[5].componentAdvancementLevel
-      value: 4
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
+      propertyPath: bridgeComponentDataArray.Array.data[6].componentAdvancementLevel
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeBuildingStages.Array.data[0].bridgeComponentDataIndexes.Array.size
@@ -8623,11 +8789,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeBuildingStages.Array.data[1].bridgeComponentDataIndexes.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeBuildingStages.Array.data[2].bridgeComponentDataIndexes.Array.size
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeBuildingStages.Array.data[3].bridgeComponentDataIndexes.Array.size
@@ -8635,6 +8801,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: bridgeBuildingStages.Array.data[4].bridgeComponentDataIndexes.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
+      propertyPath: bridgeBuildingStages.Array.data[5].bridgeComponentDataIndexes.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
@@ -8647,7 +8817,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: 'bridgeBuildingStages.Array.data[1].bridgeComponentDataIndexes.Array.data[0]'
-      value: 0
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: 'bridgeBuildingStages.Array.data[1].bridgeComponentDataIndexes.Array.data[1]'
@@ -8655,7 +8825,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: 'bridgeBuildingStages.Array.data[2].bridgeComponentDataIndexes.Array.data[0]'
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: 'bridgeBuildingStages.Array.data[2].bridgeComponentDataIndexes.Array.data[1]'
@@ -8663,10 +8833,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: 'bridgeBuildingStages.Array.data[3].bridgeComponentDataIndexes.Array.data[0]'
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
       propertyPath: 'bridgeBuildingStages.Array.data[4].bridgeComponentDataIndexes.Array.data[0]'
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8217075278306168709, guid: e1790848520c05a4a84732799c636454, type: 3}
+      propertyPath: 'bridgeBuildingStages.Array.data[5].bridgeComponentDataIndexes.Array.data[0]'
       value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -9461,7 +9635,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7301199775807734505, guid: cb0da5cee111893439cb2af1ced3cd69, type: 3}
       propertyPath: 'clearingObstacles.Array.data[0]'
-      value:
+      value: 
       objectReference: {fileID: 1973837563}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9510,7 +9684,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62424ce4c4e3e0b45ad7ea0ed0d8b4cb, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawnPoint
   spawnIndex: 3
 --- !u!1001 &1973837561
@@ -9616,7 +9790,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3d44f95405394434f830a109dac02320, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BaseResourceNew
 --- !u!1001 &1976685763
 PrefabInstance:
@@ -9632,7 +9806,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value:
+      value: 
       objectReference: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -9726,11 +9900,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1663187150, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: thirdPersonInputs
-      value:
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 1663187150, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: starterAssetsInputs
-      value:
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 597308369130767402, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: m_Pivot.x
@@ -9826,7 +10000,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8890774966862588244, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: playerInput
-      value:
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -10656,7 +10830,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8762286023885395323, guid: 9c489a8547f4d9e4387da15a4ff82c81, type: 3}
       propertyPath: m_Follow
-      value:
+      value: 
       objectReference: {fileID: 1441179722}
     - target: {fileID: 8762286024517199034, guid: 9c489a8547f4d9e4387da15a4ff82c81, type: 3}
       propertyPath: Damping.y
@@ -10693,3 +10867,4 @@ SceneRoots:
   - {fileID: 1225413486}
   - {fileID: 1445944065}
   - {fileID: 1455517684}
+  - {fileID: 363237993}

@@ -16,28 +16,28 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     [SerializeField] private GameObject diggingVisual;
     [SerializeField] private GameObject completedDigVisual;
 
-    private BridgeComponent bridgeComponent;
-    private BridgeConstructionWorkflowSO workflow;
-    private BridgeConstructionStage currentStage;
-    private float currentWorkProgress;
+    protected BridgeComponent bridgeComponent;
+    protected BridgeConstructionWorkflowSO workflow;
+    protected BridgeConstructionStage currentStage;
+    protected float currentWorkProgress;
     private bool initialized;
 
-    public BridgeConstructionStage CurrentStage => currentStage;
+    public virtual BridgeConstructionStage CurrentStage => currentStage;
     public bool RequiresSiteClearing => requiresSiteClearing;
     public Vector2 ClearingAreaSize => clearingAreaSize;
     public int RemainingObstacleCount => CountRemainingObstacles();
-    public float CurrentWorkProgress => currentWorkProgress;
-    public float RequiredWorkProgress => currentStage == BridgeConstructionStage.Digging && workflow != null
+    public virtual float CurrentWorkProgress => currentWorkProgress;
+    public virtual float RequiredWorkProgress => currentStage == BridgeConstructionStage.Digging && workflow != null
         ? workflow.DiggingProgressNeeded
         : bridgeComponent != null ? bridgeComponent.GetAssemblingProgressNeeded() : 0f;
-    public bool CanAcceptMountedComponent => currentStage == BridgeConstructionStage.ReadyForMount;
+    public virtual bool CanAcceptMountedComponent => currentStage == BridgeConstructionStage.ReadyForMount;
 
-    private void Awake()
+    protected virtual void Awake()
     {
         Initialize();
     }
 
-    public void Initialize()
+    public virtual void Initialize()
     {
         if (initialized)
         {
@@ -76,7 +76,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         }
     }
 
-    public bool TryApplyToolWork(EquippableItemType toolType, float workPower)
+    public virtual bool TryApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
     {
         if (workPower <= 0f)
         {
@@ -122,7 +122,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     {
     }
 
-    public void GetInteractionPrompts(Transform interactor, List<InteractionPrompt> prompts)
+    public virtual void GetInteractionPrompts(Transform interactor, List<InteractionPrompt> prompts)
     {
         switch (currentStage)
         {
@@ -144,15 +144,21 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         }
     }
 
-    public void ApplyNetworkState(BridgeConstructionStage stage, float progress)
+    public virtual void ApplyNetworkState(BridgeComponentNetworkState state)
     {
-        currentStage = stage;
-        currentWorkProgress = Mathf.Max(0f, progress);
+        currentStage = (BridgeConstructionStage)state.constructionStage;
+        currentWorkProgress = Mathf.Max(0f, state.constructionProgress);
         ApplyVisualState();
         bridgeComponent.RefreshVisualAndColliderState();
     }
 
-    public void NotifyMounted()
+    public virtual void PopulateNetworkState(ref BridgeComponentNetworkState state)
+    {
+        state.constructionStage = (int)currentStage;
+        state.constructionProgress = currentWorkProgress;
+    }
+
+    public virtual void NotifyMounted()
     {
         if (currentStage == BridgeConstructionStage.ReadyForMount)
         {
@@ -162,14 +168,14 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         }
     }
 
-    public void NotifyAssembled()
+    public virtual void NotifyAssembled()
     {
         currentStage = BridgeConstructionStage.Complete;
         currentWorkProgress = RequiredWorkProgress;
         ApplyVisualState();
     }
 
-    public void ApplyAssemblyProgress(float progress)
+    public virtual void ApplyAssemblyProgress(float progress)
     {
         if (currentStage != BridgeConstructionStage.Hammering)
         {
@@ -193,7 +199,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         return true;
     }
 
-    private BridgeConstructionStage GetInitialStage()
+    protected virtual BridgeConstructionStage GetInitialStage()
     {
         if (workflow == null)
         {
@@ -231,7 +237,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         return NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
     }
 
-    private void ApplyVisualState()
+    protected virtual void ApplyVisualState()
     {
         if (constructionInteractionCollider != null)
         {
@@ -275,5 +281,15 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     public bool IsConstructionInteractionCollider(Collider candidate)
     {
         return candidate != null && candidate == constructionInteractionCollider;
+    }
+
+    public virtual bool ShouldEnablePhysicalColliders(bool isMounted)
+    {
+        return isMounted;
+    }
+
+    public virtual MonoBehaviour GetWorkValidationTarget(int workPointId)
+    {
+        return this;
     }
 }

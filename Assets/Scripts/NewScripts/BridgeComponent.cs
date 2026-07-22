@@ -246,6 +246,19 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         EquippedItemTypeNeeded?.Invoke(this, EventArgs.Empty);
     }
 
+    public void CompleteConstructionFromSite()
+    {
+        if (isAssembled)
+        {
+            return;
+        }
+
+        isAssembled = true;
+        currentAssemblingProgress = assemblingProgressNeeded;
+        ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
+        ApplyVisualAndColliderState();
+    }
+
     public void ApplyMountedState()
     {
         isMounted = true;
@@ -273,7 +286,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         isAssembled = state.isAssembled;
         canBeMounted = state.canBeMounted;
         currentAssemblingProgress = state.currentAssemblingProgress;
-        constructionSite?.ApplyNetworkState((BridgeConstructionStage)state.constructionStage, state.constructionProgress);
+        constructionSite?.ApplyNetworkState(state);
 
         ApplyVisualAndColliderState();
 
@@ -318,7 +331,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         foreach (Collider collider in GetComponentsInChildren<Collider>(true))
         {
             if (collider == null || IsReadyForMountingInteractionCollider(collider) ||
-                (constructionSite != null && constructionSite.IsConstructionInteractionCollider(collider)))
+                (constructionSite != null && constructionSite.IsConstructionInteractionCollider(collider)) ||
+                collider.GetComponentInParent<BridgeAbutmentWorkPoint>() != null)
             {
                 continue;
             }
@@ -375,7 +389,9 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         {
             if (physicalCollider != null)
             {
-                physicalCollider.enabled = isMounted;
+                physicalCollider.enabled = constructionSite != null
+                    ? constructionSite.ShouldEnablePhysicalColliders(isMounted)
+                    : isMounted;
             }
         }
     }

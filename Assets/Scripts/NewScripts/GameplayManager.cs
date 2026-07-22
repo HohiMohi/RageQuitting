@@ -14,6 +14,12 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
     public float currentAssemblingProgress;
     public int constructionStage;
     public float constructionProgress;
+    public int constructionValueA;
+    public int constructionValueB;
+    public float constructionAnchor0;
+    public float constructionAnchor1;
+    public float constructionAnchor2;
+    public float constructionAnchor3;
 
     public BridgeComponentNetworkState(int componentID)
     {
@@ -24,6 +30,12 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
         currentAssemblingProgress = 0f;
         constructionStage = (int)BridgeConstructionStage.ReadyForMount;
         constructionProgress = 0f;
+        constructionValueA = 0;
+        constructionValueB = 0;
+        constructionAnchor0 = 0f;
+        constructionAnchor1 = 0f;
+        constructionAnchor2 = 0f;
+        constructionAnchor3 = 0f;
     }
 
     public bool Equals(BridgeComponentNetworkState other)
@@ -34,7 +46,13 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
             && canBeMounted == other.canBeMounted
             && currentAssemblingProgress.Equals(other.currentAssemblingProgress)
             && constructionStage == other.constructionStage
-            && constructionProgress.Equals(other.constructionProgress);
+            && constructionProgress.Equals(other.constructionProgress)
+            && constructionValueA == other.constructionValueA
+            && constructionValueB == other.constructionValueB
+            && constructionAnchor0.Equals(other.constructionAnchor0)
+            && constructionAnchor1.Equals(other.constructionAnchor1)
+            && constructionAnchor2.Equals(other.constructionAnchor2)
+            && constructionAnchor3.Equals(other.constructionAnchor3);
     }
 
     public override bool Equals(object obj)
@@ -44,7 +62,14 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(componentID, isMounted, isAssembled, canBeMounted, currentAssemblingProgress, constructionStage, constructionProgress);
+        return HashCode.Combine(
+            HashCode.Combine(componentID, isMounted, isAssembled, canBeMounted, currentAssemblingProgress, constructionStage, constructionProgress),
+            constructionValueA,
+            constructionValueB,
+            constructionAnchor0,
+            constructionAnchor1,
+            constructionAnchor2,
+            constructionAnchor3);
     }
 }
 
@@ -90,10 +115,10 @@ public class GameplayManager : MonoBehaviour
     private const string RequestConstructionWorkMessageName = "GameplayManager_RequestConstructionWork";
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
     private const int StateMessageBaseSize = sizeof(int);
-    private const int StateMessageItemSize = sizeof(int) * 2 + sizeof(bool) * 3 + sizeof(float) * 2;
+    private const int StateMessageItemSize = sizeof(int) * 4 + sizeof(bool) * 3 + sizeof(float) * 6;
     private const int MountRequestMessageSize = sizeof(int) + sizeof(ulong);
     private const int AssembleRequestMessageSize = sizeof(int) * 2;
-    private const int ConstructionWorkRequestMessageSize = sizeof(int) * 2;
+    private const int ConstructionWorkRequestMessageSize = sizeof(int) * 3;
 
     public static GameplayManager Instance { get; private set; }
 
@@ -282,7 +307,7 @@ public class GameplayManager : MonoBehaviour
             BridgeComponent component = null;
             TryGetBridgeComponent(i, out component);
             BridgeConstructionSite constructionSite = component != null ? component.ConstructionSite : null;
-            bridgeComponentStates.Add(new BridgeComponentNetworkState(i)
+            BridgeComponentNetworkState state = new BridgeComponentNetworkState(i)
             {
                 isMounted = bridgeComponentDataArray[i].isMounted,
                 isAssembled = bridgeComponentDataArray[i].isAssembled,
@@ -290,7 +315,9 @@ public class GameplayManager : MonoBehaviour
                 currentAssemblingProgress = 0f,
                 constructionStage = constructionSite != null ? (int)constructionSite.CurrentStage : (int)BridgeConstructionStage.ReadyForMount,
                 constructionProgress = constructionSite != null ? constructionSite.CurrentWorkProgress : 0f
-            });
+            };
+            constructionSite?.PopulateNetworkState(ref state);
+            bridgeComponentStates.Add(state);
         }
     }
 
@@ -425,7 +452,7 @@ public class GameplayManager : MonoBehaviour
         NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RequestAssembleMessageName, NetworkManager.ServerClientId, writer);
     }
 
-    public void RequestConstructionSiteWork(BridgeComponent bridgeComponent, EquippableItemSO equippableItemSO, float workPower)
+    public void RequestConstructionSiteWork(BridgeComponent bridgeComponent, EquippableItemSO equippableItemSO, float workPower, int workPointId = -1)
     {
         if (bridgeComponent == null || equippableItemSO == null || workPower <= 0f)
         {
@@ -434,7 +461,7 @@ public class GameplayManager : MonoBehaviour
 
         if (!IsNetworkSessionActive())
         {
-            if (bridgeComponent.ConstructionSite != null && bridgeComponent.ConstructionSite.TryApplyToolWork(equippableItemSO.itemType, workPower))
+            if (bridgeComponent.ConstructionSite != null && bridgeComponent.ConstructionSite.TryApplyToolWork(equippableItemSO.itemType, workPower, workPointId))
             {
                 NotifyBridgeRequirementsChanged();
             }
@@ -443,13 +470,14 @@ public class GameplayManager : MonoBehaviour
 
         if (NetworkManager.Singleton.IsServer)
         {
-            TryApplyConstructionWorkServer(NetworkManager.Singleton.LocalClientId, bridgeComponent.ComponentID, equippableItemSO.itemType);
+            TryApplyConstructionWorkServer(NetworkManager.Singleton.LocalClientId, bridgeComponent.ComponentID, equippableItemSO.itemType, workPointId);
             return;
         }
 
         using FastBufferWriter writer = new FastBufferWriter(ConstructionWorkRequestMessageSize, Allocator.Temp);
         writer.WriteValueSafe(bridgeComponent.ComponentID);
         writer.WriteValueSafe((int)equippableItemSO.itemType);
+        writer.WriteValueSafe(workPointId);
         NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RequestConstructionWorkMessageName, NetworkManager.ServerClientId, writer);
     }
 
@@ -473,8 +501,7 @@ public class GameplayManager : MonoBehaviour
         }
 
         BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
-        state.constructionStage = (int)constructionSite.CurrentStage;
-        state.constructionProgress = constructionSite.CurrentWorkProgress;
+        constructionSite.PopulateNetworkState(ref state);
         bridgeComponentStates[stateIndex] = state;
         ApplyNetworkState(state);
         NotifyBridgeRequirementsChanged();
@@ -485,30 +512,36 @@ public class GameplayManager : MonoBehaviour
     {
         reader.ReadValueSafe(out int componentID);
         reader.ReadValueSafe(out int toolTypeValue);
-        TryApplyConstructionWorkServer(senderClientId, componentID, (EquippableItemType)toolTypeValue);
+        reader.ReadValueSafe(out int workPointId);
+        TryApplyConstructionWorkServer(senderClientId, componentID, (EquippableItemType)toolTypeValue, workPointId);
     }
 
-    private void TryApplyConstructionWorkServer(ulong senderClientId, int componentID, EquippableItemType requestedToolType)
+    private void TryApplyConstructionWorkServer(ulong senderClientId, int componentID, EquippableItemType requestedToolType, int workPointId)
     {
         if (!NetworkManager.Singleton.IsServer ||
             !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent) ||
             bridgeComponent.ConstructionSite == null ||
-            !TryGetValidatedPlayerTool(senderClientId, bridgeComponent.ConstructionSite, requestedToolType, out EquippableItemSO selectedTool))
+            !TryGetValidatedPlayerTool(senderClientId, bridgeComponent.ConstructionSite.GetWorkValidationTarget(workPointId), requestedToolType, out EquippableItemSO selectedTool))
         {
             return;
         }
 
-        if (!bridgeComponent.ConstructionSite.TryApplyToolWork(selectedTool.itemType, selectedTool.ConstructionWorkPower) ||
+        if (!bridgeComponent.ConstructionSite.TryApplyToolWork(selectedTool.itemType, selectedTool.ConstructionWorkPower, workPointId) ||
             !TryGetStateIndex(componentID, out int stateIndex))
         {
             return;
         }
 
         BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
-        state.constructionStage = (int)bridgeComponent.ConstructionSite.CurrentStage;
-        state.constructionProgress = bridgeComponent.ConstructionSite.CurrentWorkProgress;
+        bridgeComponent.ConstructionSite.PopulateNetworkState(ref state);
+        state.isAssembled = bridgeComponent.IsAssembled || bridgeComponent.ConstructionSite.CurrentStage == BridgeConstructionStage.Complete;
+        if (state.isAssembled)
+        {
+            state.currentAssemblingProgress = bridgeComponent.GetAssemblingProgressNeeded();
+        }
         bridgeComponentStates[stateIndex] = state;
         ApplyNetworkState(state);
+        CheckCurrentStageMountingProgress();
         NotifyBridgeRequirementsChanged();
         BroadcastBridgeState();
     }
@@ -591,8 +624,8 @@ public class GameplayManager : MonoBehaviour
         state.canBeMounted = false;
         if (bridgeComponent.ConstructionSite != null)
         {
-            state.constructionStage = (int)BridgeConstructionStage.Hammering;
-            state.constructionProgress = 0f;
+            bridgeComponent.ConstructionSite.NotifyMounted();
+            bridgeComponent.ConstructionSite.PopulateNetworkState(ref state);
         }
         if (!bridgeComponent.NeedAssembling)
         {
@@ -744,6 +777,12 @@ public class GameplayManager : MonoBehaviour
         writer.WriteValueSafe(state.currentAssemblingProgress);
         writer.WriteValueSafe(state.constructionStage);
         writer.WriteValueSafe(state.constructionProgress);
+        writer.WriteValueSafe(state.constructionValueA);
+        writer.WriteValueSafe(state.constructionValueB);
+        writer.WriteValueSafe(state.constructionAnchor0);
+        writer.WriteValueSafe(state.constructionAnchor1);
+        writer.WriteValueSafe(state.constructionAnchor2);
+        writer.WriteValueSafe(state.constructionAnchor3);
     }
 
     private BridgeComponentNetworkState ReadState(FastBufferReader reader)
@@ -755,6 +794,12 @@ public class GameplayManager : MonoBehaviour
         reader.ReadValueSafe(out float currentAssemblingProgress);
         reader.ReadValueSafe(out int constructionStage);
         reader.ReadValueSafe(out float constructionProgress);
+        reader.ReadValueSafe(out int constructionValueA);
+        reader.ReadValueSafe(out int constructionValueB);
+        reader.ReadValueSafe(out float constructionAnchor0);
+        reader.ReadValueSafe(out float constructionAnchor1);
+        reader.ReadValueSafe(out float constructionAnchor2);
+        reader.ReadValueSafe(out float constructionAnchor3);
 
         return new BridgeComponentNetworkState(componentID)
         {
@@ -763,7 +808,13 @@ public class GameplayManager : MonoBehaviour
             canBeMounted = canBeMounted,
             currentAssemblingProgress = currentAssemblingProgress,
             constructionStage = constructionStage,
-            constructionProgress = constructionProgress
+            constructionProgress = constructionProgress,
+            constructionValueA = constructionValueA,
+            constructionValueB = constructionValueB,
+            constructionAnchor0 = constructionAnchor0,
+            constructionAnchor1 = constructionAnchor1,
+            constructionAnchor2 = constructionAnchor2,
+            constructionAnchor3 = constructionAnchor3
         };
     }
 

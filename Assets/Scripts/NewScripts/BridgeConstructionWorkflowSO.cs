@@ -16,5 +16,9 @@ public enum BridgeConstructionStage
     Digging,
     ReadyForMount,
     Hammering,
-    Complete
+    Complete,
+    WaitingForFoundation,
+    Leveling,
+    Anchoring,
+    Backfilling
 }

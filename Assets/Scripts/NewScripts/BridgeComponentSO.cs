@@ -13,6 +13,7 @@ public class BridgeComponentSO : ScriptableObject
     public float assemblingProgressNeeded;
     public bool needAssembling;
     public BridgeConstructionWorkflowSO constructionWorkflow;
+    public BridgeAbutmentConstructionWorkflowSO abutmentConstructionWorkflow;
 
 }
 
