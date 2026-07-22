@@ -91,6 +91,12 @@ public class EquippableToolVisualBuilder : MonoBehaviour
 
                 BuildPickaxe(generatedRoot.transform, materials);
                 break;
+            case EquippableItemType.Shovel:
+                BuildShovel(generatedRoot.transform, materials);
+                break;
+            case EquippableItemType.IndustrialHammer:
+                BuildIndustrialHammer(generatedRoot.transform, materials);
+                break;
             default:
                 Destroy(generatedRoot);
                 return null;
@@ -233,6 +239,25 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         CreateCube("HeadCenter", root, new Vector3(0f, 0.42f, 0f), Quaternion.identity, new Vector3(0.2f, 0.12f, 0.1f), metal);
         CreateCube("LeftPick", root, new Vector3(-0.31f, 0.43f, 0f), Quaternion.Euler(0f, 0f, -18f), new Vector3(0.48f, 0.07f, 0.055f), metal);
         CreateCube("RightPick", root, new Vector3(0.31f, 0.43f, 0f), Quaternion.Euler(0f, 0f, 18f), new Vector3(0.48f, 0.07f, 0.055f), metal);
+    }
+
+    private static void BuildShovel(Transform root, ToolVisualMaterials materials)
+    {
+        Material metal = GetMaterial(materials.pickaxeMaterial, new Color(0.48f, 0.48f, 0.48f, 1f));
+        Material handle = GetMaterial(materials.handleMaterial, new Color(0.42f, 0.23f, 0.12f, 1f));
+
+        CreateCapsule("Handle", root, new Vector3(0f, -0.05f, 0f), Quaternion.identity, new Vector3(0.07f, 0.65f, 0.07f), handle);
+        CreateCube("Grip", root, new Vector3(0f, 0.62f, 0f), Quaternion.identity, new Vector3(0.28f, 0.08f, 0.08f), handle);
+        CreateCube("Blade", root, new Vector3(0f, -0.68f, 0f), Quaternion.Euler(10f, 0f, 0f), new Vector3(0.34f, 0.32f, 0.08f), metal);
+    }
+
+    private static void BuildIndustrialHammer(Transform root, ToolVisualMaterials materials)
+    {
+        Material metal = GetMaterial(materials.pickaxeMaterial, new Color(0.38f, 0.4f, 0.42f, 1f));
+        Material handle = GetMaterial(materials.handleMaterial, new Color(0.42f, 0.23f, 0.12f, 1f));
+
+        CreateCapsule("Handle", root, new Vector3(0f, -0.08f, 0f), Quaternion.identity, new Vector3(0.09f, 0.62f, 0.09f), handle);
+        CreateCube("HammerHead", root, new Vector3(0f, 0.5f, 0f), Quaternion.identity, new Vector3(0.62f, 0.24f, 0.24f), metal);
     }
 
     private static void CreateCapsule(string objectName, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)

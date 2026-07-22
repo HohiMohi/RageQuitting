@@ -113,11 +113,16 @@ public class PlayerActionController : MonoBehaviour
         {
             if (collider.transform.root == transform.root)
             {
-                Debug.Log("Trying to interact with self. Continue");
                 continue;
             }
 
-            IDamageable damageable = collider.GetComponent<IDamageable>();
+            BridgeConstructionSite constructionSite = collider.GetComponentInParent<BridgeConstructionSite>();
+            bool constructionSiteHandlesAction = constructionSite != null &&
+                                                 (constructionSite.CurrentStage == BridgeConstructionStage.Clearing ||
+                                                  constructionSite.CurrentStage == BridgeConstructionStage.Digging);
+            IDamageable damageable = constructionSiteHandlesAction
+                ? constructionSite
+                : collider.GetComponent<IDamageable>();
             damageable ??= collider.GetComponentInParent<IDamageable>();
             print(damageable);
 

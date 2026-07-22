@@ -3,6 +3,7 @@ using UnityEngine;
 
 public enum PlayerInputActionKind
 {
+    Information,
     Interact,
     Action,
     ActionAlt

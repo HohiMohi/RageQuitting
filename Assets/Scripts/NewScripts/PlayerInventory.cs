@@ -231,6 +231,19 @@ public class PlayerInventory : NetworkBehaviour
         }
     }
 
+    public EquippableItemSO GetSelectedItemForServerValidation()
+    {
+        if (IsNetworkStateActive() && IsServer)
+        {
+            int itemTypeValue = GetNetworkSlotItemTypeValue(0);
+            return itemTypeValue == EmptySlotItemTypeValue
+                ? null
+                : GetEquippableItemSO((EquippableItemType)itemTypeValue);
+        }
+
+        return GetCurrentSelectedItem();
+    }
+
     public EquippableItemSO GetItemInSlot(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= inventoryItems.Length)

@@ -12,6 +12,7 @@ public class BridgeComponentSO : ScriptableObject
     public List<EquippableItemType> supportedEquippableItemTypeList;
     public float assemblingProgressNeeded;
     public bool needAssembling;
+    public BridgeConstructionWorkflowSO constructionWorkflow;
 
 }
 

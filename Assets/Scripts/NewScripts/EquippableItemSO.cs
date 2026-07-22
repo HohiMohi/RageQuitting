@@ -10,9 +10,12 @@ public class EquippableItemSO : ScriptableObject
     public float actionRange;
     public float actionCooldown;
     public float damage;
+    [Min(0f)] public float constructionWorkPower;
     public float movementSpeedPenalty;
     public bool actionRepeatability;
     public EquippableItemType itemType;
+
+    public float ConstructionWorkPower => constructionWorkPower > 0f ? constructionWorkPower : damage;
 }
 
 public enum EquippableItemType

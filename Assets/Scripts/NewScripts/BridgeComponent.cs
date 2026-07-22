@@ -18,6 +18,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     private float currentAssemblingProgress;
     private bool needAssembling;
     private Collider[] readyForMountingInteractionColliders = Array.Empty<Collider>();
+    private BridgeConstructionSite constructionSite;
 
     public EventHandler<ComponentMountedEventArgs> ComponentMounted;
     public EventHandler<ComponentAsembledEventArgs> ComponentAsembled;
@@ -78,10 +79,12 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         if (equippableItemSO != null && bridgeComponentSO.supportedEquippableItemTypeList.Contains(equippableItemSO.itemType))
         {
             currentAssemblingProgress += damage;
+            constructionSite?.ApplyAssemblyProgress(currentAssemblingProgress);
             if (currentAssemblingProgress >= assemblingProgressNeeded)
             {
                 ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
                 isAssembled = true;
+                constructionSite?.NotifyAssembled();
             }
         }
         else
@@ -95,6 +98,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     private void Awake()
     {
+        constructionSite = GetComponent<BridgeConstructionSite>();
         CacheBridgeComponentColliders();
         ConfigureReadyForMountingInteractionColliders();
         ApplyVisualAndColliderState();
@@ -202,7 +206,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         if (isMounted && !isAssembled && needAssembling && equippableItemSO != null)
         {
-            HandleAssembling(equippableItemSO, damage);
+            HandleAssembling(equippableItemSO, equippableItemSO.ConstructionWorkPower);
         }
         else if (equippableItemSO == null)
         {
@@ -216,7 +220,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     }
 
     public bool IsMounted => isMounted;
-    public bool CanBeMounted => canBeMounted;
+    public bool CanBeMounted => canBeMounted && (constructionSite == null || constructionSite.CanAcceptMountedComponent);
     public bool IsAssembled => isAssembled;
     public bool NeedAssembling => needAssembling;
     public int ComponentID => componentID;
@@ -246,6 +250,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         isMounted = true;
         canBeMounted = false;
+        constructionSite?.NotifyMounted();
         ApplyVisualAndColliderState();
         ComponentMounted?.Invoke(this, new ComponentMountedEventArgs { componentID = componentID });
         if (!needAssembling)
@@ -268,6 +273,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         isAssembled = state.isAssembled;
         canBeMounted = state.canBeMounted;
         currentAssemblingProgress = state.currentAssemblingProgress;
+        constructionSite?.ApplyNetworkState((BridgeConstructionStage)state.constructionStage, state.constructionProgress);
 
         ApplyVisualAndColliderState();
 
@@ -311,7 +317,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         List<Collider> physicalColliders = new List<Collider>();
         foreach (Collider collider in GetComponentsInChildren<Collider>(true))
         {
-            if (collider == null || IsReadyForMountingInteractionCollider(collider))
+            if (collider == null || IsReadyForMountingInteractionCollider(collider) ||
+                (constructionSite != null && constructionSite.IsConstructionInteractionCollider(collider)))
             {
                 continue;
             }
@@ -351,7 +358,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         if (readyForMountingVisualsGameObject != null)
         {
-            readyForMountingVisualsGameObject.SetActive(canBeMounted && !isMounted);
+            readyForMountingVisualsGameObject.SetActive(CanBeMounted && !isMounted);
         }
 
         if (mountedComponentVisualsGameObject != null)
@@ -371,5 +378,12 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
                 physicalCollider.enabled = isMounted;
             }
         }
+    }
+
+    public BridgeConstructionSite ConstructionSite => constructionSite;
+
+    public void RefreshVisualAndColliderState()
+    {
+        ApplyVisualAndColliderState();
     }
 }

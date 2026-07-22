@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9cc219e69f5c9d4eaceaac22422cb1b, type: 3}
+  m_Name: WoodenMainGirderMountable
+  m_EditorClassIdentifier: Assembly-CSharp::MountableBridgeComponentSO
+  componentName: Wooden Main Girder
+  componentSprite: {fileID: 21300000, guid: 4aaf890b27d202e4a81b0b2956ca6ba8, type: 3}
+  inGameGameObjectPrefab: {fileID: 0}
+  requiredResources:
+  - resourceType: {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
+    amount: 3
+  - resourceType: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
+    amount: 1
+  bridgeComponentSO: {fileID: 0}
+  movementSpeedPenalty: 0.15
+  minAmountOfPlayersNeeded: 3
+  allowMultipleCarriers: 1
+  recommendedCarriers: 3
+  maxCarriers: 3
+  underStaffedPenaltyMultiplier: 0.4
+  sharedCarryUnderstaffedStaminaDrainPerSecond: 1
+  carryMoveSpeed: 4
+  carryPlayerClearance: 0.35
+  carryAttachLocalPoints: []
+  carryPhysicsProfile: {fileID: 0}
+  meltingPoint: 0
+  combustionTemperature: 0
+  neededProgress: 0
+  neededCombustionProgress: 0
+  componentWidth: 50
+  componentLength: 200

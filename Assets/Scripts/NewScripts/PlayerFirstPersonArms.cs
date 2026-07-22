@@ -649,7 +649,10 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
     private static bool IsSupportedToolType(EquippableItemType itemType)
     {
-        return itemType == EquippableItemType.Axe || itemType == EquippableItemType.Pickaxe;
+        return itemType == EquippableItemType.Axe ||
+               itemType == EquippableItemType.Pickaxe ||
+               itemType == EquippableItemType.Shovel ||
+               itemType == EquippableItemType.IndustrialHammer;
     }
 
     private void ClearToolVisual()

@@ -71,6 +71,20 @@ public class LookingAtComponentUI : MonoBehaviour
 
         if (playerInteraction.IsHoldingObject)
         {
+            if (target is BridgeComponent bridgeComponent && bridgeComponent.CanBeMounted)
+            {
+                GameObject heldObject = playerInteraction.GetPickedUpGameObject();
+                if (heldObject != null &&
+                    heldObject.TryGetComponent(out MountableBridgeComponent heldBridgeComponent) &&
+                    heldBridgeComponent.GetMountableBridgeComponentSO() != null &&
+                    heldBridgeComponent.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponent.GetBridgeComponentSO())
+                {
+                    string componentName = heldBridgeComponent.GetMountableBridgeComponentSO().componentName;
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, $"Deliver {componentName}"));
+                    return;
+                }
+            }
+
             if (target is BaseStorageNew storage)
             {
                 AddStoragePrompts(storage);
@@ -205,10 +219,15 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void UpdateProgressVisual(IInteractableNew currentInteractable)
     {
-        bool showProgress = currentInteractable is BridgeComponent bridgeComponent &&
-                            bridgeComponent.IsMounted &&
-                            !bridgeComponent.IsAssembled &&
-                            bridgeComponent.NeedAssembling;
+        bool showConstructionProgress = currentInteractable is BridgeComponent constructionBridge &&
+                                        constructionBridge.ConstructionSite != null &&
+                                        (constructionBridge.ConstructionSite.CurrentStage == BridgeConstructionStage.Digging ||
+                                         constructionBridge.ConstructionSite.CurrentStage == BridgeConstructionStage.Hammering);
+        bool showAssemblyProgress = currentInteractable is BridgeComponent bridgeComponent &&
+                                    bridgeComponent.IsMounted &&
+                                    !bridgeComponent.IsAssembled &&
+                                    bridgeComponent.NeedAssembling;
+        bool showProgress = showConstructionProgress || showAssemblyProgress;
 
         if (progressCircleHolder != null)
         {
@@ -217,7 +236,16 @@ public class LookingAtComponentUI : MonoBehaviour
 
         if (showProgress && assemblingProgressBar != null && currentInteractable is BridgeComponent progressBridgeComponent)
         {
-            assemblingProgressBar.fillAmount = progressBridgeComponent.GetAssemblingProgressNormalized();
+            if (showConstructionProgress && progressBridgeComponent.ConstructionSite.RequiredWorkProgress > 0f)
+            {
+                assemblingProgressBar.fillAmount = Mathf.Clamp01(
+                    progressBridgeComponent.ConstructionSite.CurrentWorkProgress /
+                    progressBridgeComponent.ConstructionSite.RequiredWorkProgress);
+            }
+            else
+            {
+                assemblingProgressBar.fillAmount = progressBridgeComponent.GetAssemblingProgressNormalized();
+            }
         }
     }
 
@@ -227,6 +255,12 @@ public class LookingAtComponentUI : MonoBehaviour
         string[] lines = new string[promptCount];
         for (int i = 0; i < promptCount; i++)
         {
+            if (prompts[i].ActionKind == PlayerInputActionKind.Information)
+            {
+                lines[i] = prompts[i].Description;
+                continue;
+            }
+
             string inputName = playerInput != null ? playerInput.GetInputDisplayName(prompts[i].ActionKind) : prompts[i].ActionKind.ToString();
             lines[i] = $"{inputName} - {prompts[i].Description}";
         }
