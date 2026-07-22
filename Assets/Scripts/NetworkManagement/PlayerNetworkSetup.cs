@@ -16,6 +16,17 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
     public GameObject PlayerBodyVisual => playerBodyVisual;
 
+    public void ConfirmInitialSpawnPlacement(Vector3 position, Quaternion rotation)
+    {
+        if (!IsServer || !IsSpawned)
+        {
+            return;
+        }
+
+        transform.SetPositionAndRotation(position, rotation);
+        ConfirmInitialSpawnPlacementClientRpc(position, rotation, CreateTargetClientRpcParams(OwnerClientId));
+    }
+
     public void SetPlayerBodyVisual(GameObject visual)
     {
         playerBodyVisual = visual;
@@ -244,6 +255,43 @@ public class PlayerNetworkSetup : NetworkBehaviour
         }
 
         DisableOwnerOnlyUi();
+    }
+
+    [ClientRpc]
+    private void ConfirmInitialSpawnPlacementClientRpc(
+        Vector3 position,
+        Quaternion rotation,
+        ClientRpcParams clientRpcParams = default)
+    {
+        if (!IsOwner)
+        {
+            return;
+        }
+
+        CharacterController characterController = GetComponent<CharacterController>();
+        bool wasEnabled = characterController != null && characterController.enabled;
+        if (wasEnabled)
+        {
+            characterController.enabled = false;
+        }
+
+        transform.SetPositionAndRotation(position, rotation);
+
+        if (wasEnabled)
+        {
+            characterController.enabled = true;
+        }
+    }
+
+    private static ClientRpcParams CreateTargetClientRpcParams(ulong clientId)
+    {
+        return new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { clientId }
+            }
+        };
     }
 
     private void DisableOwnerOnlyUi()

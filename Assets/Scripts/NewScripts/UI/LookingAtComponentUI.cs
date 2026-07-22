@@ -13,6 +13,7 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private PlayerInputNew playerInput;
     private PlayerHealth playerHealth;
+    private PlayerActionController playerActionController;
     private readonly List<InteractionPrompt> prompts = new List<InteractionPrompt>();
 
     private void Start()
@@ -24,6 +25,7 @@ public class LookingAtComponentUI : MonoBehaviour
 
         playerInput = GetComponentInParent<PlayerInputNew>();
         playerHealth = GetComponentInParent<PlayerHealth>();
+        playerActionController = GetComponentInParent<PlayerActionController>();
         Hide();
     }
 
@@ -48,6 +50,7 @@ public class LookingAtComponentUI : MonoBehaviour
         if (currentInteractable is MonoBehaviour currentBehaviour)
         {
             AddPromptsForCurrentState(currentBehaviour);
+            FilterUnavailableActionPrompts(currentBehaviour);
         }
 
         if (prompts.Count == 0)
@@ -59,6 +62,16 @@ public class LookingAtComponentUI : MonoBehaviour
         componentInfoText.text = FormatPrompts();
         UpdateProgressVisual(currentInteractable);
         Show();
+    }
+
+    private void FilterUnavailableActionPrompts(MonoBehaviour target)
+    {
+        if (playerActionController == null || playerActionController.CanPerformActionOn(target))
+        {
+            return;
+        }
+
+        prompts.RemoveAll(prompt => prompt.ActionKind == PlayerInputActionKind.Action);
     }
 
     private void AddPromptsForCurrentState(MonoBehaviour target)

@@ -32,6 +32,7 @@ public class PlayerActionController : MonoBehaviour
     [Tooltip("Base action damage - when player has NOT equipped item.")]
     #endregion
     [SerializeField] private float baseActionDamage = 5f;
+    [SerializeField, Min(0f)] private float serverActionRangeTolerance = 0.15f;
     private float actionRange;
     private float actionCooldown;
     private float actionCooldownTimer = 0f;
@@ -99,8 +100,7 @@ public class PlayerActionController : MonoBehaviour
 
     public void PerformAction()
     {
-        // Add handling for action range depending on holded item
-        Collider[] colliders = Physics.OverlapBox(actionTransformHolder.position, new Vector3(actionRange, actionRange, actionRange), actionTransformHolder.rotation);
+        Collider[] colliders = GetActionAreaColliders(actionRange);
         if (colliders.Length == 0)
         {
             Debug.Log("No 'Action' objects in range");
@@ -116,14 +116,7 @@ public class PlayerActionController : MonoBehaviour
                 continue;
             }
 
-            BridgeConstructionSite constructionSite = collider.GetComponentInParent<BridgeConstructionSite>();
-            bool constructionSiteHandlesAction = constructionSite != null &&
-                                                 (constructionSite.CurrentStage == BridgeConstructionStage.Clearing ||
-                                                  constructionSite.CurrentStage == BridgeConstructionStage.Digging);
-            IDamageable damageable = constructionSiteHandlesAction
-                ? constructionSite
-                : collider.GetComponent<IDamageable>();
-            damageable ??= collider.GetComponentInParent<IDamageable>();
+            IDamageable damageable = ResolveDamageable(collider);
             print(damageable);
 
             if (damageable != null && damagedObjects.Add(damageable))
@@ -155,6 +148,100 @@ public class PlayerActionController : MonoBehaviour
         {
             OnActionPerformed?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    public bool CanPerformActionOn(MonoBehaviour target)
+    {
+        EquippableItemSO selectedItem = _inventory != null ? _inventory.GetItemInSlot(0) : null;
+        float selectedRange = selectedItem != null ? selectedItem.actionRange : baseActionRange;
+        return CanPerformActionOn(target, selectedRange, 0f);
+    }
+
+    public bool CanPerformServerValidatedActionOn(MonoBehaviour target, EquippableItemSO selectedItem)
+    {
+        if (selectedItem == null)
+        {
+            return false;
+        }
+
+        return CanPerformActionOn(target, selectedItem.actionRange, serverActionRangeTolerance);
+    }
+
+    private bool CanPerformActionOn(MonoBehaviour target, float range, float tolerance)
+    {
+        if (target == null || actionTransformHolder == null)
+        {
+            return false;
+        }
+
+        IDamageable expectedDamageable = ResolveTargetDamageable(target);
+        if (expectedDamageable == null)
+        {
+            return false;
+        }
+
+        foreach (Collider collider in GetActionAreaColliders(range + Mathf.Max(0f, tolerance)))
+        {
+            if (collider == null || collider.transform.root == transform.root)
+            {
+                continue;
+            }
+
+            if (ReferenceEquals(ResolveDamageable(collider), expectedDamageable))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Collider[] GetActionAreaColliders(float range)
+    {
+        if (actionTransformHolder == null)
+        {
+            return Array.Empty<Collider>();
+        }
+
+        float safeRange = Mathf.Max(0.01f, range);
+        return Physics.OverlapBox(
+            actionTransformHolder.position,
+            Vector3.one * safeRange,
+            actionTransformHolder.rotation);
+    }
+
+    private static IDamageable ResolveTargetDamageable(MonoBehaviour target)
+    {
+        BridgeConstructionSite constructionSite = target.GetComponentInParent<BridgeConstructionSite>();
+        if (ConstructionSiteHandlesAction(constructionSite))
+        {
+            return constructionSite;
+        }
+
+        return target as IDamageable ?? target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
+    }
+
+    private static IDamageable ResolveDamageable(Collider collider)
+    {
+        if (collider == null)
+        {
+            return null;
+        }
+
+        BridgeConstructionSite constructionSite = collider.GetComponentInParent<BridgeConstructionSite>();
+        if (ConstructionSiteHandlesAction(constructionSite))
+        {
+            return constructionSite;
+        }
+
+        return collider.GetComponent<IDamageable>() ?? collider.GetComponentInParent<IDamageable>();
+    }
+
+    private static bool ConstructionSiteHandlesAction(BridgeConstructionSite constructionSite)
+    {
+        return constructionSite != null &&
+               (constructionSite.CurrentStage == BridgeConstructionStage.Clearing ||
+                constructionSite.CurrentStage == BridgeConstructionStage.Digging);
     }
 
     private void SpawnImpactEffect(Collider hitCollider)

@@ -493,7 +493,7 @@ public class GameplayManager : MonoBehaviour
         if (!NetworkManager.Singleton.IsServer ||
             !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent) ||
             bridgeComponent.ConstructionSite == null ||
-            !TryGetValidatedPlayerTool(senderClientId, bridgeComponent.ConstructionSite.transform, requestedToolType, out EquippableItemSO selectedTool))
+            !TryGetValidatedPlayerTool(senderClientId, bridgeComponent.ConstructionSite, requestedToolType, out EquippableItemSO selectedTool))
         {
             return;
         }
@@ -515,7 +515,7 @@ public class GameplayManager : MonoBehaviour
 
     private bool TryGetValidatedPlayerTool(
         ulong senderClientId,
-        Transform target,
+        MonoBehaviour target,
         EquippableItemType requestedToolType,
         out EquippableItemSO selectedTool)
     {
@@ -535,8 +535,8 @@ public class GameplayManager : MonoBehaviour
             return false;
         }
 
-        float maximumDistance = Mathf.Max(0.1f, selectedTool.actionRange) + 1f;
-        return (client.PlayerObject.transform.position - target.position).sqrMagnitude <= maximumDistance * maximumDistance;
+        PlayerActionController actionController = client.PlayerObject.GetComponent<PlayerActionController>();
+        return actionController != null && actionController.CanPerformServerValidatedActionOn(target, selectedTool);
     }
 
     private void TryMountBridgeComponentLocal(BridgeComponent bridgeComponent, MountableBridgeComponent heldComponent)
@@ -626,7 +626,7 @@ public class GameplayManager : MonoBehaviour
     {
         if (!NetworkManager.Singleton.IsServer ||
             !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent) ||
-            !TryGetValidatedPlayerTool(senderClientId, bridgeComponent.transform, equippableItemType, out EquippableItemSO selectedTool))
+            !TryGetValidatedPlayerTool(senderClientId, bridgeComponent, equippableItemType, out EquippableItemSO selectedTool))
         {
             return;
         }

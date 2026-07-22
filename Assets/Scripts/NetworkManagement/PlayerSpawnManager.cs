@@ -152,6 +152,10 @@ public class PlayerSpawnManager : MonoBehaviour
         }
 
         networkObject.SpawnAsPlayerObject(clientId, true);
+        if (player.TryGetComponent(out PlayerNetworkSetup networkSetup))
+        {
+            networkSetup.ConfirmInitialSpawnPlacement(spawnPoint.position, spawnPoint.rotation);
+        }
     }
 
     private static Transform[] FindSpawnPoints()
