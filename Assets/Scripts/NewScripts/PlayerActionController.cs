@@ -212,6 +212,12 @@ public class PlayerActionController : MonoBehaviour
 
     private static IDamageable ResolveTargetDamageable(MonoBehaviour target)
     {
+        BridgeGirderWorkPoint girderWorkPoint = target.GetComponentInParent<BridgeGirderWorkPoint>();
+        if (girderWorkPoint != null)
+        {
+            return girderWorkPoint;
+        }
+
         BridgeAbutmentWorkPoint workPoint = target.GetComponentInParent<BridgeAbutmentWorkPoint>();
         if (workPoint != null)
         {
@@ -232,6 +238,12 @@ public class PlayerActionController : MonoBehaviour
         if (collider == null)
         {
             return null;
+        }
+
+        BridgeGirderWorkPoint girderWorkPoint = collider.GetComponentInParent<BridgeGirderWorkPoint>();
+        if (girderWorkPoint != null)
+        {
+            return girderWorkPoint;
         }
 
         BridgeAbutmentWorkPoint workPoint = collider.GetComponentInParent<BridgeAbutmentWorkPoint>();

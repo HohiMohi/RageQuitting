@@ -332,7 +332,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         {
             if (collider == null || IsReadyForMountingInteractionCollider(collider) ||
                 (constructionSite != null && constructionSite.IsConstructionInteractionCollider(collider)) ||
-                collider.GetComponentInParent<BridgeAbutmentWorkPoint>() != null)
+                collider.GetComponentInParent<BridgeAbutmentWorkPoint>() != null ||
+                collider.GetComponentInParent<BridgeGirderWorkPoint>() != null)
             {
                 continue;
             }

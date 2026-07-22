@@ -14,6 +14,7 @@ public class BridgeComponentSO : ScriptableObject
     public bool needAssembling;
     public BridgeConstructionWorkflowSO constructionWorkflow;
     public BridgeAbutmentConstructionWorkflowSO abutmentConstructionWorkflow;
+    public BridgeGirderConstructionWorkflowSO girderConstructionWorkflow;
 
 }
 

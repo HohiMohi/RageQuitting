@@ -20,5 +20,7 @@ public enum BridgeConstructionStage
     WaitingForFoundation,
     Leveling,
     Anchoring,
-    Backfilling
+    Backfilling,
+    WaitingForSupports,
+    Fastening
 }

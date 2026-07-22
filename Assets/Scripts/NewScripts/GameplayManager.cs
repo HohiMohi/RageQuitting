@@ -129,6 +129,7 @@ public class GameplayManager : MonoBehaviour
     [SerializeField] private bool isFullyAsembled;
 
     private readonly List<BridgeComponentNetworkState> bridgeComponentStates = new List<BridgeComponentNetworkState>();
+    private readonly HashSet<int> reportedInvalidStageComponentIndexes = new HashSet<int>();
     private BridgeComponent[] bridgeComponents;
     private bool bridgeComponentEventsSubscribed;
     private bool bridgeFullyAssembledEventInvoked;
@@ -328,6 +329,11 @@ public class GameplayManager : MonoBehaviour
             return;
         }
 
+        if (!IsValidComponentDataIndex(e.componentID))
+        {
+            return;
+        }
+
         bridgeComponentDataArray[e.componentID].isAssembled = true;
         CheckCurrentStageMountingProgress();
         NotifyBridgeRequirementsChanged();
@@ -340,6 +346,11 @@ public class GameplayManager : MonoBehaviour
             return;
         }
 
+        if (!IsValidComponentDataIndex(e.componentID))
+        {
+            return;
+        }
+
         bridgeComponentDataArray[e.componentID].isMounted = true;
         CheckCurrentStageMountingProgress();
         NotifyBridgeRequirementsChanged();
@@ -348,6 +359,11 @@ public class GameplayManager : MonoBehaviour
     private void UpdateComponentsCanBeMountedProperty()
     {
         if (isFullyAsembled || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
+        {
+            return;
+        }
+
+        if (!ValidateStageComponentIndexes(currentBridgeBuildingStageIndex))
         {
             return;
         }
@@ -370,6 +386,11 @@ public class GameplayManager : MonoBehaviour
     private void CheckCurrentStageMountingProgress()
     {
         if (isFullyAsembled || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
+        {
+            return;
+        }
+
+        if (!ValidateStageComponentIndexes(currentBridgeBuildingStageIndex))
         {
             return;
         }
@@ -581,6 +602,12 @@ public class GameplayManager : MonoBehaviour
 
         bridgeComponent.ApplyMountedState();
         heldComponent.RemoveFromWorld();
+        if (!IsValidComponentDataIndex(bridgeComponent.ComponentID))
+        {
+            Debug.LogError($"Cannot mount bridge component {bridgeComponent.ComponentID}: bridgeComponentDataArray has {bridgeComponentDataArray?.Length ?? 0} entries.", this);
+            return;
+        }
+
         bridgeComponentDataArray[bridgeComponent.ComponentID].isMounted = true;
         if (!bridgeComponent.NeedAssembling)
         {
@@ -932,6 +959,46 @@ public class GameplayManager : MonoBehaviour
 
             counters[componentName] = counter;
         }
+    }
+
+    private bool ValidateStageComponentIndexes(int stageIndex)
+    {
+        if (bridgeBuildingStages == null || stageIndex < 0 || stageIndex >= bridgeBuildingStages.Length)
+        {
+            return false;
+        }
+
+        int[] componentIndexes = bridgeBuildingStages[stageIndex].bridgeComponentDataIndexes;
+        if (componentIndexes == null)
+        {
+            return true;
+        }
+
+        bool isValid = true;
+        foreach (int componentIndex in componentIndexes)
+        {
+            if (IsValidComponentDataIndex(componentIndex))
+            {
+                continue;
+            }
+
+            isValid = false;
+            int reportKey = (stageIndex * 397) ^ componentIndex;
+            if (reportedInvalidStageComponentIndexes.Add(reportKey))
+            {
+                Debug.LogError(
+                    $"Bridge stage {stageIndex} references component index {componentIndex}, but bridgeComponentDataArray contains {bridgeComponentDataArray?.Length ?? 0} entries. " +
+                    "Add the missing component data and holder, or remove the index from this stage.",
+                    this);
+            }
+        }
+
+        return isValid;
+    }
+
+    private bool IsValidComponentDataIndex(int componentIndex)
+    {
+        return bridgeComponentDataArray != null && componentIndex >= 0 && componentIndex < bridgeComponentDataArray.Length;
     }
 
     private void NotifyBridgeRequirementsChanged()
