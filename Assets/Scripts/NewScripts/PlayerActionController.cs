@@ -212,6 +212,12 @@ public class PlayerActionController : MonoBehaviour
 
     private static IDamageable ResolveTargetDamageable(MonoBehaviour target)
     {
+        BridgeCrossBeamWorkPoint crossBeamWorkPoint = target.GetComponentInParent<BridgeCrossBeamWorkPoint>();
+        if (crossBeamWorkPoint != null)
+        {
+            return crossBeamWorkPoint;
+        }
+
         BridgeGirderWorkPoint girderWorkPoint = target.GetComponentInParent<BridgeGirderWorkPoint>();
         if (girderWorkPoint != null)
         {
@@ -238,6 +244,12 @@ public class PlayerActionController : MonoBehaviour
         if (collider == null)
         {
             return null;
+        }
+
+        BridgeCrossBeamWorkPoint crossBeamWorkPoint = collider.GetComponentInParent<BridgeCrossBeamWorkPoint>();
+        if (crossBeamWorkPoint != null)
+        {
+            return crossBeamWorkPoint;
         }
 
         BridgeGirderWorkPoint girderWorkPoint = collider.GetComponentInParent<BridgeGirderWorkPoint>();

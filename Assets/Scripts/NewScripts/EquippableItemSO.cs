@@ -27,5 +27,6 @@ public enum EquippableItemType
     Weapon, // Fighting
     IndustrialHammer, // Mounting Bridge Components
     Shovel, // Mounting Bridge Roadway - roadway compaction
-    None // for object-object and object-NPC interaction
+    None, // for object-object and object-NPC interaction
+    Wrench // Tightening bridge construction connections
 }

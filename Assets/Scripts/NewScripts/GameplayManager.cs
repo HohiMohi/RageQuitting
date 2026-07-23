@@ -20,6 +20,8 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
     public float constructionAnchor1;
     public float constructionAnchor2;
     public float constructionAnchor3;
+    public float constructionAux0;
+    public float constructionAux1;
 
     public BridgeComponentNetworkState(int componentID)
     {
@@ -36,6 +38,8 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
         constructionAnchor1 = 0f;
         constructionAnchor2 = 0f;
         constructionAnchor3 = 0f;
+        constructionAux0 = 0f;
+        constructionAux1 = 0f;
     }
 
     public bool Equals(BridgeComponentNetworkState other)
@@ -52,7 +56,9 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
             && constructionAnchor0.Equals(other.constructionAnchor0)
             && constructionAnchor1.Equals(other.constructionAnchor1)
             && constructionAnchor2.Equals(other.constructionAnchor2)
-            && constructionAnchor3.Equals(other.constructionAnchor3);
+            && constructionAnchor3.Equals(other.constructionAnchor3)
+            && constructionAux0.Equals(other.constructionAux0)
+            && constructionAux1.Equals(other.constructionAux1);
     }
 
     public override bool Equals(object obj)
@@ -69,7 +75,8 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
             constructionAnchor0,
             constructionAnchor1,
             constructionAnchor2,
-            constructionAnchor3);
+            constructionAnchor3,
+            HashCode.Combine(constructionAux0, constructionAux1));
     }
 }
 
@@ -115,7 +122,7 @@ public class GameplayManager : MonoBehaviour
     private const string RequestConstructionWorkMessageName = "GameplayManager_RequestConstructionWork";
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
     private const int StateMessageBaseSize = sizeof(int);
-    private const int StateMessageItemSize = sizeof(int) * 4 + sizeof(bool) * 3 + sizeof(float) * 6;
+    private const int StateMessageItemSize = sizeof(int) * 4 + sizeof(bool) * 3 + sizeof(float) * 8;
     private const int MountRequestMessageSize = sizeof(int) + sizeof(ulong);
     private const int AssembleRequestMessageSize = sizeof(int) * 2;
     private const int ConstructionWorkRequestMessageSize = sizeof(int) * 3;
@@ -810,6 +817,8 @@ public class GameplayManager : MonoBehaviour
         writer.WriteValueSafe(state.constructionAnchor1);
         writer.WriteValueSafe(state.constructionAnchor2);
         writer.WriteValueSafe(state.constructionAnchor3);
+        writer.WriteValueSafe(state.constructionAux0);
+        writer.WriteValueSafe(state.constructionAux1);
     }
 
     private BridgeComponentNetworkState ReadState(FastBufferReader reader)
@@ -827,6 +836,8 @@ public class GameplayManager : MonoBehaviour
         reader.ReadValueSafe(out float constructionAnchor1);
         reader.ReadValueSafe(out float constructionAnchor2);
         reader.ReadValueSafe(out float constructionAnchor3);
+        reader.ReadValueSafe(out float constructionAux0);
+        reader.ReadValueSafe(out float constructionAux1);
 
         return new BridgeComponentNetworkState(componentID)
         {
@@ -841,7 +852,9 @@ public class GameplayManager : MonoBehaviour
             constructionAnchor0 = constructionAnchor0,
             constructionAnchor1 = constructionAnchor1,
             constructionAnchor2 = constructionAnchor2,
-            constructionAnchor3 = constructionAnchor3
+            constructionAnchor3 = constructionAnchor3,
+            constructionAux0 = constructionAux0,
+            constructionAux1 = constructionAux1
         };
     }
 

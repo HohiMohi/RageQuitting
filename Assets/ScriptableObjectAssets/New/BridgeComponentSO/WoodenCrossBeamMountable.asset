@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountableBridgeComponentSO
   componentName: Wooden Cross Beam
   componentSprite: {fileID: 21300000, guid: 4aaf890b27d202e4a81b0b2956ca6ba8, type: 3}
-  inGameGameObjectPrefab: {fileID: 0}
+  inGameGameObjectPrefab: {fileID: 6327741556297219627, guid: 3d912e3721b4fb445bfdfdff4fcfa28c, type: 3}
   requiredResources:
   - resourceType: {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
     amount: 1
   - resourceType: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
     amount: 2
-  bridgeComponentSO: {fileID: 0}
+  bridgeComponentSO: {fileID: 11400000, guid: 12d9e4ecb93ef464eb2cbcbbcf3b917b, type: 2}
   movementSpeedPenalty: 0.1
   minAmountOfPlayersNeeded: 2
   allowMultipleCarriers: 1
@@ -30,7 +30,9 @@ MonoBehaviour:
   sharedCarryUnderstaffedStaminaDrainPerSecond: 1
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
-  carryAttachLocalPoints: []
+  carryAttachLocalPoints:
+  - {x: -0.55, y: 0.22, z: -1.15}
+  - {x: 0.55, y: 0.22, z: 1.15}
   carryPhysicsProfile: {fileID: 0}
   meltingPoint: 0
   combustionTemperature: 0

@@ -97,6 +97,9 @@ public class EquippableToolVisualBuilder : MonoBehaviour
             case EquippableItemType.IndustrialHammer:
                 BuildIndustrialHammer(generatedRoot.transform, materials);
                 break;
+            case EquippableItemType.Wrench:
+                BuildWrench(generatedRoot.transform, materials);
+                break;
             default:
                 Destroy(generatedRoot);
                 return null;
@@ -258,6 +261,17 @@ public class EquippableToolVisualBuilder : MonoBehaviour
 
         CreateCapsule("Handle", root, new Vector3(0f, -0.08f, 0f), Quaternion.identity, new Vector3(0.09f, 0.62f, 0.09f), handle);
         CreateCube("HammerHead", root, new Vector3(0f, 0.5f, 0f), Quaternion.identity, new Vector3(0.62f, 0.24f, 0.24f), metal);
+    }
+
+    private static void BuildWrench(Transform root, ToolVisualMaterials materials)
+    {
+        Material metal = GetMaterial(materials.pickaxeMaterial, new Color(0.42f, 0.45f, 0.48f, 1f));
+
+        CreateCube("Handle", root, new Vector3(0f, -0.08f, 0f), Quaternion.identity, new Vector3(0.13f, 0.85f, 0.08f), metal);
+        CreateCube("LowerGrip", root, new Vector3(0f, -0.52f, 0f), Quaternion.identity, new Vector3(0.22f, 0.18f, 0.1f), metal);
+        CreateCube("JawLeft", root, new Vector3(-0.16f, 0.43f, 0f), Quaternion.Euler(0f, 0f, -25f), new Vector3(0.12f, 0.34f, 0.1f), metal);
+        CreateCube("JawRight", root, new Vector3(0.16f, 0.43f, 0f), Quaternion.Euler(0f, 0f, 25f), new Vector3(0.12f, 0.34f, 0.1f), metal);
+        CreateCube("JawBase", root, new Vector3(0f, 0.31f, 0f), Quaternion.identity, new Vector3(0.32f, 0.16f, 0.1f), metal);
     }
 
     private static void CreateCapsule(string objectName, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)

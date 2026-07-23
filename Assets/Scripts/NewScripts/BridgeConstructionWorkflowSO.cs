@@ -22,5 +22,8 @@ public enum BridgeConstructionStage
     Anchoring,
     Backfilling,
     WaitingForSupports,
-    Fastening
+    Fastening,
+    WaitingForGirders,
+    Aligning,
+    Clamping
 }
