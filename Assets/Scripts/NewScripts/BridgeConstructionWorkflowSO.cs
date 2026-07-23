@@ -25,5 +25,7 @@ public enum BridgeConstructionStage
     Fastening,
     WaitingForGirders,
     Aligning,
-    Clamping
+    Clamping,
+    WaitingForCrossBeams,
+    TemporaryFixing
 }

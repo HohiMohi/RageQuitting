@@ -104,13 +104,13 @@ public class BridgeCrossBeamConstructionSite : BridgeConstructionSite
         {
             if (workPointId == (int)BridgeCrossBeamWorkPointId.MoveLeft)
             {
-                if (alignmentStep <= -settings.MaximumAlignmentStep) return false;
-                alignmentStep--;
+                if (alignmentStep >= settings.MaximumAlignmentStep) return false;
+                alignmentStep++;
             }
             else if (workPointId == (int)BridgeCrossBeamWorkPointId.MoveRight)
             {
-                if (alignmentStep >= settings.MaximumAlignmentStep) return false;
-                alignmentStep++;
+                if (alignmentStep <= -settings.MaximumAlignmentStep) return false;
+                alignmentStep--;
             }
             else
             {
@@ -184,9 +184,10 @@ public class BridgeCrossBeamConstructionSite : BridgeConstructionSite
 
         if (currentStage == BridgeConstructionStage.Aligning)
         {
-            string direction = pointId == BridgeCrossBeamWorkPointId.MoveLeft ? "left" : "right";
+            string struckSide = pointId == BridgeCrossBeamWorkPointId.MoveLeft ? "left" : "right";
+            string direction = pointId == BridgeCrossBeamWorkPointId.MoveLeft ? "right" : "left";
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
-                $"Move beam {direction} - offset {alignmentStep}"));
+                $"Strike {struckSide} side - move beam {direction} - offset {alignmentStep}"));
             return;
         }
 

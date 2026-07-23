@@ -334,7 +334,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
                 (constructionSite != null && constructionSite.IsConstructionInteractionCollider(collider)) ||
                 collider.GetComponentInParent<BridgeAbutmentWorkPoint>() != null ||
                 collider.GetComponentInParent<BridgeGirderWorkPoint>() != null ||
-                collider.GetComponentInParent<BridgeCrossBeamWorkPoint>() != null)
+                collider.GetComponentInParent<BridgeCrossBeamWorkPoint>() != null ||
+                collider.GetComponentInParent<BridgeDiagonalBracingWorkPoint>() != null)
             {
                 continue;
             }
@@ -379,7 +380,9 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
         if (mountedComponentVisualsGameObject != null)
         {
-            mountedComponentVisualsGameObject.SetActive(isMounted);
+            mountedComponentVisualsGameObject.SetActive(constructionSite != null
+                ? constructionSite.ShouldShowMountedComponentVisuals(isMounted)
+                : isMounted);
         }
 
         if (mountedPhysicalColliders == null)

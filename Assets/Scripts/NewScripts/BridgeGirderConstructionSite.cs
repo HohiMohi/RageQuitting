@@ -109,11 +109,13 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         {
             if (workPointId == (int)BridgeGirderWorkPointId.StartWedge)
             {
-                startLevelStep = Mathf.Min(settings.MaximumLevelStep, startLevelStep + 1);
+                if (startLevelStep <= 0) return false;
+                startLevelStep--;
             }
             else if (workPointId == (int)BridgeGirderWorkPointId.EndWedge)
             {
-                endLevelStep = Mathf.Min(settings.MaximumLevelStep, endLevelStep + 1);
+                if (endLevelStep <= 0) return false;
+                endLevelStep--;
             }
             else
             {
@@ -166,8 +168,9 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         {
             bool isStart = pointId == BridgeGirderWorkPointId.StartWedge;
             int step = isStart ? startLevelStep : endLevelStep;
+            string suffix = step <= 0 ? " - already at minimum" : string.Empty;
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
-                $"Raise {(isStart ? "start" : "end")} end - step {step} / {settings.MaximumLevelStep}"));
+                $"Lower {(isStart ? "start" : "end")} end - step {step} / {settings.MaximumLevelStep}{suffix}"));
             return;
         }
 
@@ -242,6 +245,25 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
 
     protected override void ApplyVisualState()
     {
+        bool showLevelIndicator = currentStage == BridgeConstructionStage.Leveling ||
+                                  currentStage == BridgeConstructionStage.Fastening;
+        if (levelIndicatorRenderer != null)
+        {
+            levelIndicatorRenderer.gameObject.SetActive(showLevelIndicator);
+        }
+
+        if (workPoints != null)
+        {
+            foreach (BridgeGirderWorkPoint point in workPoints)
+            {
+                if (point == null) continue;
+                int id = (int)point.WorkPointId;
+                bool active = (currentStage == BridgeConstructionStage.Leveling && id <= 1) ||
+                              (currentStage == BridgeConstructionStage.Fastening && id >= 10 && id <= 13);
+                point.gameObject.SetActive(active);
+            }
+        }
+
         BridgeGirderConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null)
         {
@@ -261,7 +283,6 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         bool isLevel = startLevelStep == endLevelStep;
         if (levelIndicatorRenderer != null)
         {
-            levelIndicatorRenderer.gameObject.SetActive(currentStage == BridgeConstructionStage.Leveling || currentStage == BridgeConstructionStage.Fastening);
             levelIndicatorPropertyBlock ??= new MaterialPropertyBlock();
             levelIndicatorRenderer.GetPropertyBlock(levelIndicatorPropertyBlock);
             Color indicatorColor = isLevel ? levelColor : unlevelColor;
@@ -270,17 +291,6 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
             levelIndicatorRenderer.SetPropertyBlock(levelIndicatorPropertyBlock);
         }
 
-        if (workPoints != null)
-        {
-            foreach (BridgeGirderWorkPoint point in workPoints)
-            {
-                if (point == null) continue;
-                int id = (int)point.WorkPointId;
-                bool active = (currentStage == BridgeConstructionStage.Leveling && id <= 1) ||
-                              (currentStage == BridgeConstructionStage.Fastening && id >= 10 && id <= 13);
-                point.gameObject.SetActive(active);
-            }
-        }
     }
 
     private BridgeGirderConstructionWorkflowSO GetWorkflow()

@@ -16,6 +16,7 @@ public class BridgeComponentSO : ScriptableObject
     public BridgeAbutmentConstructionWorkflowSO abutmentConstructionWorkflow;
     public BridgeGirderConstructionWorkflowSO girderConstructionWorkflow;
     public BridgeCrossBeamConstructionWorkflowSO crossBeamConstructionWorkflow;
+    public BridgeDiagonalBracingConstructionWorkflowSO diagonalBracingConstructionWorkflow;
 
 }
 

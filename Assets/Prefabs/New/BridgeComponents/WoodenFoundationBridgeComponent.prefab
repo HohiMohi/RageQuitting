@@ -773,7 +773,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4532265631167866084
 Transform:
   m_ObjectHideFlags: 0
@@ -1042,6 +1042,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: WoodenFoundationBridgeComponent
       objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5443309124495000264, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1125,3 +1145,5 @@ MonoBehaviour:
   markedGroundVisual: {fileID: 1916214839854335225}
   diggingVisual: {fileID: 8057205231521549403}
   completedDigVisual: {fileID: 7828844214827394567}
+  hideMountedVisualsWhenComplete: 1
+  disablePhysicalCollidersWhenComplete: 1

@@ -116,11 +116,13 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
         {
             if (workPointId == (int)BridgeAbutmentWorkPointId.LeftWedge)
             {
-                leftLevelStep = Mathf.Min(settings.MaximumLevelStep, leftLevelStep + 1);
+                if (leftLevelStep <= 0) return false;
+                leftLevelStep--;
             }
             else if (workPointId == (int)BridgeAbutmentWorkPointId.RightWedge)
             {
-                rightLevelStep = Mathf.Min(settings.MaximumLevelStep, rightLevelStep + 1);
+                if (rightLevelStep <= 0) return false;
+                rightLevelStep--;
             }
             else
             {
@@ -186,7 +188,9 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
         {
             string side = pointId == BridgeAbutmentWorkPointId.LeftWedge ? "left" : "right";
             int step = pointId == BridgeAbutmentWorkPointId.LeftWedge ? leftLevelStep : rightLevelStep;
-            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action, $"Raise {side} side - step {step} / {settings.MaximumLevelStep}"));
+            string suffix = step <= 0 ? " - already at minimum" : string.Empty;
+            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
+                $"Lower {side} side - step {step} / {settings.MaximumLevelStep}{suffix}"));
         }
         else if (currentStage == BridgeConstructionStage.Anchoring)
         {
@@ -264,6 +268,26 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
 
     protected override void ApplyVisualState()
     {
+        bool showLevelIndicator = currentStage == BridgeConstructionStage.Leveling ||
+                                  currentStage == BridgeConstructionStage.Anchoring;
+        if (levelIndicatorRenderer != null)
+        {
+            levelIndicatorRenderer.gameObject.SetActive(showLevelIndicator);
+        }
+
+        if (workPoints != null)
+        {
+            foreach (BridgeAbutmentWorkPoint point in workPoints)
+            {
+                if (point == null) continue;
+                int id = (int)point.WorkPointId;
+                bool active = (currentStage == BridgeConstructionStage.Leveling && id <= 1) ||
+                              (currentStage == BridgeConstructionStage.Anchoring && id >= 10 && id <= 13) ||
+                              (currentStage == BridgeConstructionStage.Backfilling && id == 20);
+                point.gameObject.SetActive(active);
+            }
+        }
+
         BridgeAbutmentConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null)
         {
@@ -283,7 +307,6 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
         bool isLevel = leftLevelStep == rightLevelStep;
         if (levelIndicatorRenderer != null)
         {
-            levelIndicatorRenderer.gameObject.SetActive(currentStage == BridgeConstructionStage.Leveling || currentStage == BridgeConstructionStage.Anchoring);
             levelIndicatorPropertyBlock ??= new MaterialPropertyBlock();
             levelIndicatorRenderer.GetPropertyBlock(levelIndicatorPropertyBlock);
             Color indicatorColor = isLevel ? levelColor : unlevelColor;
@@ -292,18 +315,6 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
             levelIndicatorRenderer.SetPropertyBlock(levelIndicatorPropertyBlock);
         }
 
-        if (workPoints != null)
-        {
-            foreach (BridgeAbutmentWorkPoint point in workPoints)
-            {
-                if (point == null) continue;
-                int id = (int)point.WorkPointId;
-                bool active = (currentStage == BridgeConstructionStage.Leveling && id <= 1) ||
-                              (currentStage == BridgeConstructionStage.Anchoring && id >= 10 && id <= 13) ||
-                              (currentStage == BridgeConstructionStage.Backfilling && id == 20);
-                point.gameObject.SetActive(active);
-            }
-        }
     }
 
     private BridgeAbutmentConstructionWorkflowSO GetWorkflow()

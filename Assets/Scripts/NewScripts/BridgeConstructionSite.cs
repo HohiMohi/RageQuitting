@@ -15,6 +15,8 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     [SerializeField] private GameObject markedGroundVisual;
     [SerializeField] private GameObject diggingVisual;
     [SerializeField] private GameObject completedDigVisual;
+    [SerializeField] private bool hideMountedVisualsWhenComplete;
+    [SerializeField] private bool disablePhysicalCollidersWhenComplete;
 
     protected BridgeComponent bridgeComponent;
     protected BridgeConstructionWorkflowSO workflow;
@@ -256,7 +258,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
         if (completedDigVisual != null)
         {
-            completedDigVisual.SetActive(currentStage >= BridgeConstructionStage.ReadyForMount && currentStage < BridgeConstructionStage.Complete);
+            completedDigVisual.SetActive(currentStage == BridgeConstructionStage.ReadyForMount);
         }
     }
 
@@ -285,7 +287,12 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     public virtual bool ShouldEnablePhysicalColliders(bool isMounted)
     {
-        return isMounted;
+        return isMounted && (!disablePhysicalCollidersWhenComplete || currentStage != BridgeConstructionStage.Complete);
+    }
+
+    public virtual bool ShouldShowMountedComponentVisuals(bool isMounted)
+    {
+        return isMounted && (!hideMountedVisualsWhenComplete || currentStage != BridgeConstructionStage.Complete);
     }
 
     public virtual MonoBehaviour GetWorkValidationTarget(int workPointId)
