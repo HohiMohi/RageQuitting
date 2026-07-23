@@ -1,0 +1,664 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7125871901322295663
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1933284680296888610}
+  - component: {fileID: 4151932931569482909}
+  m_Layer: 0
+  m_Name: BridgeDeckSection
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1933284680296888610
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7125871901322295663}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1358848486126256462}
+  - {fileID: 6358244969357705435}
+  - {fileID: 3835539272177907421}
+  - {fileID: 786779502550959559}
+  - {fileID: 2718610611340715606}
+  - {fileID: 5525314530630278124}
+  - {fileID: 7714243195800389281}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4151932931569482909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7125871901322295663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8675471251c86e49b43da6c12dfa2bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckSection
+  sectionLength: 14
+  panelGap: 0.04
+  nominalPanelLength: 2
+  prerequisites: []
+  panelSlots:
+  - {fileID: 6803493251873344923}
+  - {fileID: 1480631443279612942}
+  - {fileID: 8758330066824788488}
+  - {fileID: 5069495888436807954}
+  - {fileID: 7569202547976415875}
+  - {fileID: 5525314530630278125}
+  - {fileID: 2864073033527036532}
+--- !u!1001 &1615205170835429830
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1933284680296888610}
+    m_Modifications:
+    - target: {fileID: 3045501216062563860, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_Name
+      value: DeckPanelSlot_6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: slotIndex
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: deckSection
+      value: 
+      objectReference: {fileID: 4151932931569482909}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: usesFullFastening
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6042836152505572824, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.98285717
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 6.0171437
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+--- !u!114 &2864073033527036532 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 1615205170835429830}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a77dc56e33e13749b55837adf770148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelConstructionSite
+--- !u!4 &7714243195800389281 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 1615205170835429830}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2691223791691243452
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1933284680296888610}
+    m_Modifications:
+    - target: {fileID: 3045501216062563860, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_Name
+      value: DeckPanelSlot_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: slotIndex
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: deckSection
+      value: 
+      objectReference: {fileID: 4151932931569482909}
+    - target: {fileID: 6042836152505572824, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.98285717
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4.0114284
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+--- !u!114 &1480631443279612942 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 2691223791691243452}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a77dc56e33e13749b55837adf770148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelConstructionSite
+--- !u!4 &6358244969357705435 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 2691223791691243452}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &5214800575875803578
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1933284680296888610}
+    m_Modifications:
+    - target: {fileID: 3045501216062563860, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_Name
+      value: DeckPanelSlot_2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: slotIndex
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: deckSection
+      value: 
+      objectReference: {fileID: 4151932931569482909}
+    - target: {fileID: 6042836152505572824, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.98285717
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -2.005714
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+--- !u!4 &3835539272177907421 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 5214800575875803578}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8758330066824788488 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 5214800575875803578}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a77dc56e33e13749b55837adf770148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelConstructionSite
+--- !u!1001 &5525314530630278123
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1933284680296888610}
+    m_Modifications:
+    - target: {fileID: 3045501216062563860, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_Name
+      value: DeckPanelSlot_5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: slotIndex
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: deckSection
+      value: 
+      objectReference: {fileID: 4151932931569482909}
+    - target: {fileID: 6042836152505572824, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.98285717
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 4.0114293
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+--- !u!4 &5525314530630278124 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 5525314530630278123}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5525314530630278125 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 5525314530630278123}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a77dc56e33e13749b55837adf770148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelConstructionSite
+--- !u!1001 &6403646057829316913
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1933284680296888610}
+    m_Modifications:
+    - target: {fileID: 3045501216062563860, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_Name
+      value: DeckPanelSlot_4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: slotIndex
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: deckSection
+      value: 
+      objectReference: {fileID: 4151932931569482909}
+    - target: {fileID: 6042836152505572824, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.98285717
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 2.005715
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+--- !u!4 &2718610611340715606 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 6403646057829316913}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7569202547976415875 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 6403646057829316913}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a77dc56e33e13749b55837adf770148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelConstructionSite
+--- !u!1001 &8052359875462635049
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1933284680296888610}
+    m_Modifications:
+    - target: {fileID: 3045501216062563860, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_Name
+      value: DeckPanelSlot_0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: deckSection
+      value: 
+      objectReference: {fileID: 4151932931569482909}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: usesFullFastening
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6042836152505572824, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.98285717
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -6.017143
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+--- !u!4 &1358848486126256462 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 8052359875462635049}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6803493251873344923 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 8052359875462635049}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a77dc56e33e13749b55837adf770148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelConstructionSite
+--- !u!1001 &8615122285532469920
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1933284680296888610}
+    m_Modifications:
+    - target: {fileID: 3045501216062563860, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_Name
+      value: DeckPanelSlot_3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: slotIndex
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: deckSection
+      value: 
+      objectReference: {fileID: 4151932931569482909}
+    - target: {fileID: 6042836152505572824, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.98285717
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.00000047683716
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+--- !u!4 &786779502550959559 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9035386176381198183, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 8615122285532469920}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5069495888436807954 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3590890302050833330, guid: 10cc35a95f066f24aaaf17c4da22c366, type: 3}
+  m_PrefabInstance: {fileID: 8615122285532469920}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a77dc56e33e13749b55837adf770148, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelConstructionSite

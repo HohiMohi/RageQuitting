@@ -335,7 +335,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
                 collider.GetComponentInParent<BridgeAbutmentWorkPoint>() != null ||
                 collider.GetComponentInParent<BridgeGirderWorkPoint>() != null ||
                 collider.GetComponentInParent<BridgeCrossBeamWorkPoint>() != null ||
-                collider.GetComponentInParent<BridgeDiagonalBracingWorkPoint>() != null)
+                collider.GetComponentInParent<BridgeDiagonalBracingWorkPoint>() != null ||
+                collider.GetComponentInParent<BridgeDeckPanelWorkPoint>() != null)
             {
                 continue;
             }

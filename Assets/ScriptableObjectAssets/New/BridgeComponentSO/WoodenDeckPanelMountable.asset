@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountableBridgeComponentSO
   componentName: Wooden Deck Panel
   componentSprite: {fileID: 21300000, guid: 4aaf890b27d202e4a81b0b2956ca6ba8, type: 3}
-  inGameGameObjectPrefab: {fileID: 0}
+  inGameGameObjectPrefab: {fileID: 4142331829999909174, guid: b9998524b9bb284479579e303e6bf09c, type: 3}
   requiredResources:
   - resourceType: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
     amount: 4
-  bridgeComponentSO: {fileID: 0}
+  bridgeComponentSO: {fileID: 11400000, guid: ccf15358972f0704385ec5d608ff91f4, type: 2}
   movementSpeedPenalty: 0.1
   minAmountOfPlayersNeeded: 2
   allowMultipleCarriers: 1
@@ -28,7 +28,9 @@ MonoBehaviour:
   sharedCarryUnderstaffedStaminaDrainPerSecond: 1
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
-  carryAttachLocalPoints: []
+  carryAttachLocalPoints:
+  - {x: 0, y: 0, z: -1.45}
+  - {x: 0, y: 0, z: 1.45}
   carryPhysicsProfile: {fileID: 0}
   meltingPoint: 0
   combustionTemperature: 0
