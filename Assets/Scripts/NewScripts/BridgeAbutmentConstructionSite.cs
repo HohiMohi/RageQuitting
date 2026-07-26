@@ -176,6 +176,30 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
         return false;
     }
 
+    public override bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
+    {
+        BridgeAbutmentConstructionWorkflowSO settings = GetWorkflow();
+        if (settings == null || workPower <= 0f) return false;
+
+        if (currentStage == BridgeConstructionStage.Leveling && toolType == settings.LevelingTool)
+        {
+            return workPointId == (int)BridgeAbutmentWorkPointId.LeftWedge
+                ? leftLevelStep > 0
+                : workPointId == (int)BridgeAbutmentWorkPointId.RightWedge && rightLevelStep > 0;
+        }
+
+        if (currentStage == BridgeConstructionStage.Anchoring && toolType == settings.AnchoringTool)
+        {
+            int index = workPointId - (int)BridgeAbutmentWorkPointId.Anchor0;
+            return index >= 0 && index < AnchorCount && anchorProgress[index] < settings.AnchorProgressNeeded;
+        }
+
+        return currentStage == BridgeConstructionStage.Backfilling &&
+               toolType == settings.BackfillingTool &&
+               workPointId == (int)BridgeAbutmentWorkPointId.Backfill &&
+               currentWorkProgress < settings.BackfillProgressNeeded;
+    }
+
     public void GetWorkPointPrompts(BridgeAbutmentWorkPointId pointId, List<InteractionPrompt> prompts)
     {
         BridgeAbutmentConstructionWorkflowSO settings = GetWorkflow();

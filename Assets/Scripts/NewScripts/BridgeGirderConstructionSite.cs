@@ -156,6 +156,25 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         return true;
     }
 
+    public override bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
+    {
+        BridgeGirderConstructionWorkflowSO settings = GetWorkflow();
+        if (settings == null || workPower <= 0f) return false;
+
+        if (currentStage == BridgeConstructionStage.Leveling && toolType == settings.LevelingTool)
+        {
+            return workPointId == (int)BridgeGirderWorkPointId.StartWedge
+                ? startLevelStep > 0
+                : workPointId == (int)BridgeGirderWorkPointId.EndWedge && endLevelStep > 0;
+        }
+
+        int index = workPointId - (int)BridgeGirderWorkPointId.Fastener0;
+        return currentStage == BridgeConstructionStage.Fastening &&
+               toolType == settings.FasteningTool &&
+               index >= 0 && index < FastenerCount &&
+               fastenerProgress[index] < settings.FastenerProgressNeeded;
+    }
+
     public void GetWorkPointPrompts(BridgeGirderWorkPointId pointId, List<InteractionPrompt> prompts)
     {
         BridgeGirderConstructionWorkflowSO settings = GetWorkflow();

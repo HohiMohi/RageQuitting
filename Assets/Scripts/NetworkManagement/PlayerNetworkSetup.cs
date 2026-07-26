@@ -241,6 +241,7 @@ public class PlayerNetworkSetup : NetworkBehaviour
         SetComponentEnabled<PlayerActionController>(false);
         SetComponentEnabled<PlayerInventory>(false);
         SetComponentEnabled<PlayerMovementFeedback>(false);
+        SetComponentEnabled<PlayerTargetHighlightController>(false);
         SetComponentEnabled<PlayerInput>(false);
         SetComponentEnabled<StarterAssetsInputs>(false);
 

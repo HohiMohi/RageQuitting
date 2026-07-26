@@ -11,6 +11,7 @@ public class PlayerInteractionNew : MonoBehaviour
 
     [Header("Interaction Parameters")]
     private IInteractableNew _currentInteractable = null;
+    private MonoBehaviour _currentTarget;
     [SerializeField] private Transform interactionOrigin;
     [SerializeField] private float interactDistance = 2f;
     [SerializeField] private float interactSphereRadius = 0.25f;
@@ -51,6 +52,8 @@ public class PlayerInteractionNew : MonoBehaviour
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
     public event EventHandler OnInteractionPerformed;
     public event EventHandler OnHeldObjectChanged;
+    public event EventHandler OnCurrentTargetChanged;
+    public MonoBehaviour CurrentTarget => _currentTarget;
     public class UpdateHoldedItemMovementSpeedPenaltyEventArgs : EventArgs
     {
         public float currentMovementSpeedPenaltyMultiplier;
@@ -503,20 +506,15 @@ public class PlayerInteractionNew : MonoBehaviour
             return;
         }
 
-        IInteractableNew newInteractableObject = null;
+        MonoBehaviour newTarget = null;
         foreach (RaycastHit raycastHit in raycasts)
         {
             if (raycastHit.transform.root == transform.root)
                 continue;
 
-            IInteractableNew interactable = raycastHit.transform.GetComponent<IInteractableNew>();
-            interactable ??= raycastHit.transform.GetComponentInParent<IInteractableNew>();
-            if (interactable != null)
+            newTarget = BridgeTargetResolver.Resolve(raycastHit.collider);
+            if (newTarget != null)
             {
-                newInteractableObject = interactable;
-                if (interactable == _currentInteractable)
-                    break;
-                interactable.LookedAt(transform);
                 break;
             }
 
@@ -526,22 +524,19 @@ public class PlayerInteractionNew : MonoBehaviour
                 break;
             }
         }
-        if (newInteractableObject != null)
+        if (newTarget != _currentTarget)
         {
-            if (_currentInteractable != null && newInteractableObject != _currentInteractable)
-            {
-                _currentInteractable.LookedAway(transform);
-                _currentInteractable = newInteractableObject;
-            }
-            else if (_currentInteractable == null)
-            {
-                _currentInteractable = newInteractableObject;
-            }
+            SetCurrentTarget(newTarget);
         }
-        else if (_currentInteractable != null)
-        {
-            ClearCurrentInteractable();
-        }
+    }
+
+    private void SetCurrentTarget(MonoBehaviour target)
+    {
+        _currentInteractable?.LookedAway(transform);
+        _currentTarget = target;
+        _currentInteractable = target as IInteractableNew;
+        _currentInteractable?.LookedAt(transform);
+        OnCurrentTargetChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private bool TryGetInteractionHits(out RaycastHit[] raycasts)
@@ -560,13 +555,12 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void ClearCurrentInteractable()
     {
-        if (_currentInteractable == null)
+        if (_currentTarget == null)
         {
             return;
         }
 
-        _currentInteractable.LookedAway(transform);
-        _currentInteractable = null;
+        SetCurrentTarget(null);
     }
 
 
@@ -632,7 +626,7 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void EquippableItem_OnAnyItemEquipped(object sender, EventArgs e)
     {
-        _currentInteractable = null;
+        ClearCurrentInteractable();
     }
 
     void Update()

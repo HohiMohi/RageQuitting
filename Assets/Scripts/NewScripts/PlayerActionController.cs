@@ -5,6 +5,27 @@ using UnityEngine;
 
 public class PlayerActionController : MonoBehaviour
 {
+    public readonly struct ActionAvailability
+    {
+        public readonly bool IsInRange;
+        public readonly bool HasCorrectTool;
+        public readonly bool HasRequiredTool;
+        public readonly EquippableItemType RequiredTool;
+        public bool CanExecute => IsInRange && HasCorrectTool;
+
+        public ActionAvailability(
+            bool isInRange,
+            bool hasCorrectTool,
+            bool hasRequiredTool,
+            EquippableItemType requiredTool)
+        {
+            IsInRange = isInRange;
+            HasCorrectTool = hasCorrectTool;
+            HasRequiredTool = hasRequiredTool;
+            RequiredTool = requiredTool;
+        }
+    }
+
     public event EventHandler OnActionPerformed;
     public event EventHandler OnActionAltPerformed;
 
@@ -138,9 +159,9 @@ public class PlayerActionController : MonoBehaviour
         }
 
         IDamageable aimedDamageable = null;
-        if (_playerInteraction?.GetCurrentInteractable() is MonoBehaviour aimedBehaviour)
+        if (_playerInteraction != null && _playerInteraction.CurrentTarget != null)
         {
-            aimedDamageable = ResolveTargetDamageable(aimedBehaviour);
+            aimedDamageable = ResolveTargetDamageable(_playerInteraction.CurrentTarget);
         }
 
         if (aimedDamageable != null &&
@@ -241,6 +262,99 @@ public class PlayerActionController : MonoBehaviour
         return CanPerformActionOn(target, selectedRange, 0f);
     }
 
+    public bool CanUseSelectedToolOn(MonoBehaviour target)
+    {
+        return GetActionAvailability(target).HasCorrectTool;
+    }
+
+    public ActionAvailability GetActionAvailability(MonoBehaviour target)
+    {
+        if (target == null)
+        {
+            return new ActionAvailability(false, false, false, EquippableItemType.None);
+        }
+
+        EquippableItemSO selectedItem = _inventory != null ? _inventory.GetItemInSlot(0) : null;
+        bool hasRequiredTool = TryGetRequiredTool(target, out EquippableItemType requiredTool);
+        bool hasCorrectTool;
+
+        if (target is BaseResourceNew baseResource)
+        {
+            hasCorrectTool = selectedItem != null && baseResource.CanBeDestroyedWith(selectedItem.itemType);
+        }
+        else if (target is BridgeComponent bridgeComponent)
+        {
+            hasCorrectTool = selectedItem != null &&
+                             bridgeComponent.IsMounted &&
+                             !bridgeComponent.IsAssembled &&
+                             bridgeComponent.NeedAssembling &&
+                             bridgeComponent.SupportsEquippableItemType(selectedItem.itemType);
+        }
+        else if (BridgeTargetResolver.TryGetConstructionWorkTarget(
+                     target,
+                     out BridgeConstructionSite site,
+                     out int workPointId))
+        {
+            hasCorrectTool = selectedItem != null &&
+                             site.CanApplyToolWork(
+                                 selectedItem.itemType,
+                                 selectedItem.ConstructionWorkPower,
+                                 workPointId);
+        }
+        else
+        {
+            float selectedDamage = selectedItem != null ? selectedItem.damage : baseActionDamage;
+            hasCorrectTool = target is IDamageable && selectedDamage > 0f;
+        }
+
+        float range = selectedItem != null ? selectedItem.actionRange : baseActionRange;
+        return new ActionAvailability(
+            CanPerformActionOn(target, range, 0f),
+            hasCorrectTool,
+            hasRequiredTool,
+            requiredTool);
+    }
+
+    private static bool TryGetRequiredTool(MonoBehaviour target, out EquippableItemType requiredTool)
+    {
+        foreach (EquippableItemType toolType in Enum.GetValues(typeof(EquippableItemType)))
+        {
+            if (toolType == EquippableItemType.None)
+            {
+                continue;
+            }
+
+            if (target is BaseResourceNew baseResource && baseResource.CanBeDestroyedWith(toolType))
+            {
+                requiredTool = toolType;
+                return true;
+            }
+
+            if (target is BridgeComponent bridgeComponent &&
+                bridgeComponent.IsMounted &&
+                !bridgeComponent.IsAssembled &&
+                bridgeComponent.NeedAssembling &&
+                bridgeComponent.SupportsEquippableItemType(toolType))
+            {
+                requiredTool = toolType;
+                return true;
+            }
+
+            if (BridgeTargetResolver.TryGetConstructionWorkTarget(
+                    target,
+                    out BridgeConstructionSite site,
+                    out int workPointId) &&
+                site.CanApplyToolWork(toolType, 1f, workPointId))
+            {
+                requiredTool = toolType;
+                return true;
+            }
+        }
+
+        requiredTool = EquippableItemType.None;
+        return false;
+    }
+
     public bool CanPerformServerValidatedActionOn(MonoBehaviour target, EquippableItemSO selectedItem)
     {
         if (selectedItem == null)
@@ -296,84 +410,12 @@ public class PlayerActionController : MonoBehaviour
 
     private static IDamageable ResolveTargetDamageable(MonoBehaviour target)
     {
-        BridgeDiagonalBracingWorkPoint diagonalBracingWorkPoint = target.GetComponentInParent<BridgeDiagonalBracingWorkPoint>();
-        if (diagonalBracingWorkPoint != null)
-        {
-            return diagonalBracingWorkPoint;
-        }
-
-        BridgeCrossBeamWorkPoint crossBeamWorkPoint = target.GetComponentInParent<BridgeCrossBeamWorkPoint>();
-        if (crossBeamWorkPoint != null)
-        {
-            return crossBeamWorkPoint;
-        }
-
-        BridgeGirderWorkPoint girderWorkPoint = target.GetComponentInParent<BridgeGirderWorkPoint>();
-        if (girderWorkPoint != null)
-        {
-            return girderWorkPoint;
-        }
-
-        BridgeAbutmentWorkPoint workPoint = target.GetComponentInParent<BridgeAbutmentWorkPoint>();
-        if (workPoint != null)
-        {
-            return workPoint;
-        }
-
-        BridgeConstructionSite constructionSite = target.GetComponentInParent<BridgeConstructionSite>();
-        if (ConstructionSiteHandlesAction(constructionSite))
-        {
-            return constructionSite;
-        }
-
-        return target as IDamageable ?? target.GetComponent<IDamageable>() ?? target.GetComponentInParent<IDamageable>();
+        return BridgeTargetResolver.ResolveDamageable(target);
     }
 
     private static IDamageable ResolveDamageable(Collider collider)
     {
-        if (collider == null)
-        {
-            return null;
-        }
-
-        BridgeDiagonalBracingWorkPoint diagonalBracingWorkPoint = collider.GetComponentInParent<BridgeDiagonalBracingWorkPoint>();
-        if (diagonalBracingWorkPoint != null)
-        {
-            return diagonalBracingWorkPoint;
-        }
-
-        BridgeCrossBeamWorkPoint crossBeamWorkPoint = collider.GetComponentInParent<BridgeCrossBeamWorkPoint>();
-        if (crossBeamWorkPoint != null)
-        {
-            return crossBeamWorkPoint;
-        }
-
-        BridgeGirderWorkPoint girderWorkPoint = collider.GetComponentInParent<BridgeGirderWorkPoint>();
-        if (girderWorkPoint != null)
-        {
-            return girderWorkPoint;
-        }
-
-        BridgeAbutmentWorkPoint workPoint = collider.GetComponentInParent<BridgeAbutmentWorkPoint>();
-        if (workPoint != null)
-        {
-            return workPoint;
-        }
-
-        BridgeConstructionSite constructionSite = collider.GetComponentInParent<BridgeConstructionSite>();
-        if (ConstructionSiteHandlesAction(constructionSite))
-        {
-            return constructionSite;
-        }
-
-        return collider.GetComponent<IDamageable>() ?? collider.GetComponentInParent<IDamageable>();
-    }
-
-    private static bool ConstructionSiteHandlesAction(BridgeConstructionSite constructionSite)
-    {
-        return constructionSite != null &&
-               (constructionSite.CurrentStage == BridgeConstructionStage.Clearing ||
-                constructionSite.CurrentStage == BridgeConstructionStage.Digging);
+        return BridgeTargetResolver.ResolveDamageable(BridgeTargetResolver.Resolve(collider));
     }
 
     private void SpawnImpactEffect(Collider hitCollider)

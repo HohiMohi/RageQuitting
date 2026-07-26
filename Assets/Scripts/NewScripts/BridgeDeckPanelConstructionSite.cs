@@ -206,6 +206,40 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
         return true;
     }
 
+    public override bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
+    {
+        BridgeDeckPanelConstructionWorkflowSO settings = GetWorkflow();
+        if (settings == null || workPower <= 0f) return false;
+
+        BridgeDeckPanelWorkPointId point = (BridgeDeckPanelWorkPointId)workPointId;
+        if (currentStage == BridgeConstructionStage.Aligning && toolType == settings.AlignmentTool)
+        {
+            return point switch
+            {
+                BridgeDeckPanelWorkPointId.StrikeLeft => lateralAlignmentStep < settings.MaximumAlignmentStep,
+                BridgeDeckPanelWorkPointId.StrikeRight => lateralAlignmentStep > -settings.MaximumAlignmentStep,
+                BridgeDeckPanelWorkPointId.StrikeClockwiseSide => rotationAlignmentStep > -settings.MaximumAlignmentStep,
+                BridgeDeckPanelWorkPointId.StrikeCounterClockwiseSide => rotationAlignmentStep < settings.MaximumAlignmentStep,
+                _ => false
+            };
+        }
+
+        if (currentStage == BridgeConstructionStage.GapSetting && toolType == settings.GapTool)
+        {
+            return point == BridgeDeckPanelWorkPointId.LeftGap
+                ? leftGapStep > 0
+                : point == BridgeDeckPanelWorkPointId.RightGap && rightGapStep > 0;
+        }
+
+        BridgeDeckPanelWorkPointId[] order = GetFasteningOrder();
+        int activeIndex = GetActiveFastenerIndex(settings.FastenerProgressNeeded);
+        return currentStage == BridgeConstructionStage.Fastening &&
+               toolType == settings.FasteningTool &&
+               activeIndex >= 0 &&
+               activeIndex < order.Length &&
+               point == order[activeIndex];
+    }
+
     private bool ApplyAlignmentWork(BridgeDeckPanelConstructionWorkflowSO settings, BridgeDeckPanelWorkPointId point)
     {
         switch (point)

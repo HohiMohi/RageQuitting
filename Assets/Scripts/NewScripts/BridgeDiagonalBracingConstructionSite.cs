@@ -203,6 +203,36 @@ public class BridgeDiagonalBracingConstructionSite : BridgeConstructionSite
         return true;
     }
 
+    public override bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
+    {
+        BridgeDiagonalBracingConstructionWorkflowSO settings = GetWorkflow();
+        if (settings == null || workPower <= 0f) return false;
+
+        if (currentStage == BridgeConstructionStage.Aligning && toolType == settings.AlignmentTool)
+        {
+            return workPointId == (int)BridgeDiagonalBracingWorkPointId.RotateCounterClockwise
+                ? alignmentStep < settings.MaximumAlignmentStep
+                : workPointId == (int)BridgeDiagonalBracingWorkPointId.RotateClockwise &&
+                  alignmentStep > -settings.MaximumAlignmentStep;
+        }
+
+        if (currentStage == BridgeConstructionStage.TemporaryFixing &&
+            toolType == settings.TemporaryFixingTool)
+        {
+            return workPointId == (int)BridgeDiagonalBracingWorkPointId.StartTemporaryFix
+                ? startTemporaryFixProgress < settings.TemporaryFixProgressNeeded
+                : workPointId == (int)BridgeDiagonalBracingWorkPointId.EndTemporaryFix &&
+                  endTemporaryFixProgress < settings.TemporaryFixProgressNeeded;
+        }
+
+        return currentStage == BridgeConstructionStage.Fastening &&
+               toolType == settings.FasteningTool &&
+               currentFasteningIndex >= 0 &&
+               currentFasteningIndex < FastenerCount &&
+               workPointId == (int)FasteningOrder[currentFasteningIndex] &&
+               fastenerProgress[currentFasteningIndex] < settings.FastenerProgressNeeded;
+    }
+
     public void GetWorkPointPrompts(BridgeDiagonalBracingWorkPointId pointId, List<InteractionPrompt> prompts)
     {
         BridgeDiagonalBracingConstructionWorkflowSO settings = GetWorkflow();

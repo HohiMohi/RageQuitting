@@ -177,6 +177,38 @@ public class BridgeCrossBeamConstructionSite : BridgeConstructionSite
         return true;
     }
 
+    public override bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
+    {
+        BridgeCrossBeamConstructionWorkflowSO settings = GetWorkflow();
+        if (settings == null || workPower <= 0f) return false;
+
+        if (currentStage == BridgeConstructionStage.Aligning && toolType == settings.AlignmentTool)
+        {
+            return workPointId == (int)BridgeCrossBeamWorkPointId.MoveLeft
+                ? alignmentStep < settings.MaximumAlignmentStep
+                : workPointId == (int)BridgeCrossBeamWorkPointId.MoveRight &&
+                  alignmentStep > -settings.MaximumAlignmentStep;
+        }
+
+        if (currentStage == BridgeConstructionStage.Clamping && toolType == settings.ClampingTool)
+        {
+            bool left = workPointId == (int)BridgeCrossBeamWorkPointId.LeftClamp;
+            bool right = workPointId == (int)BridgeCrossBeamWorkPointId.RightClamp;
+            if (!left && !right) return false;
+            float current = left ? leftClampProgress : rightClampProgress;
+            float other = left ? rightClampProgress : leftClampProgress;
+            float next = Mathf.Min(settings.ClampProgressNeeded, current + workPower);
+            return current < settings.ClampProgressNeeded &&
+                   next - other <= settings.MaximumClampProgressDifference + Mathf.Epsilon;
+        }
+
+        int index = workPointId - (int)BridgeCrossBeamWorkPointId.Fastener0;
+        return currentStage == BridgeConstructionStage.Fastening &&
+               toolType == settings.FasteningTool &&
+               index >= 0 && index < FastenerCount &&
+               fastenerProgress[index] < settings.FastenerProgressNeeded;
+    }
+
     public void GetWorkPointPrompts(BridgeCrossBeamWorkPointId pointId, List<InteractionPrompt> prompts)
     {
         BridgeCrossBeamConstructionWorkflowSO settings = GetWorkflow();

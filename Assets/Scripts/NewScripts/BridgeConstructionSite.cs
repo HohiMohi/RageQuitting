@@ -33,6 +33,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         ? workflow.DiggingProgressNeeded
         : bridgeComponent != null ? bridgeComponent.GetAssemblingProgressNeeded() : 0f;
     public virtual bool CanAcceptMountedComponent => currentStage == BridgeConstructionStage.ReadyForMount;
+    public BridgeComponent BridgeComponent => bridgeComponent;
 
     protected virtual void Awake()
     {
@@ -105,6 +106,14 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         }
 
         return false;
+    }
+
+    public virtual bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
+    {
+        return workPower > 0f &&
+               currentStage == BridgeConstructionStage.Digging &&
+               workflow != null &&
+               toolType == workflow.DiggingTool;
     }
 
     public void DamageReceived(EquippableItemSO equippableItemSO, float damage)

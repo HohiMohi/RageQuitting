@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
 
+[DefaultExecutionOrder(100)]
 public class LookingAtComponentUI : MonoBehaviour
 {
     [SerializeField] private TMP_Text componentInfoText;
@@ -15,6 +16,8 @@ public class LookingAtComponentUI : MonoBehaviour
     private PlayerHealth playerHealth;
     private PlayerActionController playerActionController;
     private readonly List<InteractionPrompt> prompts = new List<InteractionPrompt>();
+    public MonoBehaviour EvaluatedTarget { get; private set; }
+    public bool CurrentTargetHasActionablePrompt { get; private set; }
 
     private void Start()
     {
@@ -39,19 +42,19 @@ public class LookingAtComponentUI : MonoBehaviour
             return;
         }
 
-        IInteractableNew currentInteractable = playerInteraction.GetCurrentInteractable();
-        if (currentInteractable == null)
+        MonoBehaviour currentTarget = playerInteraction.CurrentTarget;
+        if (currentTarget == null)
         {
             Hide();
             return;
         }
 
         prompts.Clear();
-        if (currentInteractable is MonoBehaviour currentBehaviour)
-        {
-            AddPromptsForCurrentState(currentBehaviour);
-            FilterUnavailableActionPrompts(currentBehaviour);
-        }
+        AddPromptsForCurrentState(currentTarget);
+        FilterUnavailableActionPrompts(currentTarget);
+        EvaluatedTarget = currentTarget;
+        CurrentTargetHasActionablePrompt = prompts.Exists(
+            prompt => prompt.ActionKind != PlayerInputActionKind.Information);
 
         if (prompts.Count == 0)
         {
@@ -60,18 +63,49 @@ public class LookingAtComponentUI : MonoBehaviour
         }
 
         componentInfoText.text = FormatPrompts();
-        UpdateProgressVisual(currentInteractable);
+        UpdateProgressVisual(currentTarget);
         Show();
     }
 
     private void FilterUnavailableActionPrompts(MonoBehaviour target)
     {
-        if (playerActionController == null || playerActionController.CanPerformActionOn(target))
+        if (playerActionController == null)
         {
             return;
         }
 
-        prompts.RemoveAll(prompt => prompt.ActionKind == PlayerInputActionKind.Action);
+        PlayerActionController.ActionAvailability availability =
+            playerActionController.GetActionAvailability(target);
+        if (availability.CanExecute)
+        {
+            return;
+        }
+
+        for (int i = 0; i < prompts.Count; i++)
+        {
+            if (prompts[i].ActionKind != PlayerInputActionKind.Action)
+            {
+                continue;
+            }
+
+            string unavailableReason;
+            if (!availability.HasCorrectTool && availability.HasRequiredTool)
+            {
+                unavailableReason = $"Equip {FormatToolName(availability.RequiredTool)}";
+            }
+            else if (availability.HasCorrectTool && !availability.IsInRange)
+            {
+                unavailableReason = "Move closer";
+            }
+            else
+            {
+                unavailableReason = "Action unavailable";
+            }
+
+            prompts[i] = new InteractionPrompt(
+                PlayerInputActionKind.Information,
+                $"{unavailableReason} - {prompts[i].Description}");
+        }
     }
 
     private void AddPromptsForCurrentState(MonoBehaviour target)
@@ -139,7 +173,7 @@ public class LookingAtComponentUI : MonoBehaviour
                 AddStoragePrompts(baseStorage);
                 break;
             case BaseResourceNew baseResource:
-                if (baseResource.CanBeCarried)
+                if (baseResource.CanBeCarried && !baseResource.IsPickedUp)
                 {
                     prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Pick up"));
                 }
@@ -149,7 +183,10 @@ public class LookingAtComponentUI : MonoBehaviour
                 prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Pick up"));
                 break;
             default:
-                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Interact"));
+                if (target is IInteractableNew)
+                {
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Interact"));
+                }
                 break;
         }
 
@@ -230,13 +267,18 @@ public class LookingAtComponentUI : MonoBehaviour
         }
     }
 
-    private void UpdateProgressVisual(IInteractableNew currentInteractable)
+    private void UpdateProgressVisual(MonoBehaviour currentTarget)
     {
-        bool showConstructionProgress = currentInteractable is BridgeComponent constructionBridge &&
-                                        constructionBridge.ConstructionSite != null &&
-                                        (constructionBridge.ConstructionSite.CurrentStage == BridgeConstructionStage.Digging ||
-                                         constructionBridge.ConstructionSite.CurrentStage == BridgeConstructionStage.Hammering);
-        bool showAssemblyProgress = currentInteractable is BridgeComponent bridgeComponent &&
+        BridgeConstructionSite constructionSite = currentTarget as BridgeConstructionSite;
+        if (constructionSite == null && currentTarget is BridgeComponent constructionBridge)
+        {
+            constructionSite = constructionBridge.ConstructionSite;
+        }
+
+        bool showConstructionProgress = constructionSite != null &&
+                                        (constructionSite.CurrentStage == BridgeConstructionStage.Digging ||
+                                         constructionSite.CurrentStage == BridgeConstructionStage.Hammering);
+        bool showAssemblyProgress = currentTarget is BridgeComponent bridgeComponent &&
                                     bridgeComponent.IsMounted &&
                                     !bridgeComponent.IsAssembled &&
                                     bridgeComponent.NeedAssembling;
@@ -247,19 +289,26 @@ public class LookingAtComponentUI : MonoBehaviour
             progressCircleHolder.SetActive(showProgress);
         }
 
-        if (showProgress && assemblingProgressBar != null && currentInteractable is BridgeComponent progressBridgeComponent)
+        if (showProgress && assemblingProgressBar != null)
         {
-            if (showConstructionProgress && progressBridgeComponent.ConstructionSite.RequiredWorkProgress > 0f)
+            if (showConstructionProgress && constructionSite.RequiredWorkProgress > 0f)
             {
                 assemblingProgressBar.fillAmount = Mathf.Clamp01(
-                    progressBridgeComponent.ConstructionSite.CurrentWorkProgress /
-                    progressBridgeComponent.ConstructionSite.RequiredWorkProgress);
+                    constructionSite.CurrentWorkProgress /
+                    constructionSite.RequiredWorkProgress);
             }
-            else
+            else if (currentTarget is BridgeComponent progressBridgeComponent)
             {
                 assemblingProgressBar.fillAmount = progressBridgeComponent.GetAssemblingProgressNormalized();
             }
         }
+    }
+
+    private static string FormatToolName(EquippableItemType toolType)
+    {
+        return toolType == EquippableItemType.IndustrialHammer
+            ? "Industrial Hammer"
+            : toolType.ToString();
     }
 
     private string FormatPrompts()
@@ -291,6 +340,8 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void Hide()
     {
+        EvaluatedTarget = null;
+        CurrentTargetHasActionablePrompt = false;
         if (visualRoot != null)
         {
             visualRoot.SetActive(false);
