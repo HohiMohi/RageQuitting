@@ -140,6 +140,7 @@ public class PlayerNetworkSetup : NetworkBehaviour
         if (TryGetComponent(out PlayerInteractionNew playerInteraction))
         {
             playerInteraction.SetInteractionOrigin(targetTransform);
+            playerInteraction.SetAimCamera(Camera.main);
         }
     }
 
@@ -196,6 +197,11 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
     private void ClearLocalCameraBinding()
     {
+        if (TryGetComponent(out PlayerInteractionNew playerInteraction))
+        {
+            playerInteraction.SetAimCamera(null);
+        }
+
         if (sharedVirtualCamera != null
             && TryGetComponent(out FirstPersonController firstPersonController)
             && firstPersonController.CinemachineCameraTarget != null)

@@ -14,7 +14,8 @@ public class PlayerInteractionNew : MonoBehaviour
     private MonoBehaviour _currentTarget;
     [SerializeField] private Transform interactionOrigin;
     [SerializeField] private float interactDistance = 2f;
-    [SerializeField] private float interactSphereRadius = 0.25f;
+    [SerializeField, Min(0f)] private float aimAssistRadius = 0.04f;
+    private Camera aimCamera;
     
     
     [Header("PickUp Parameters")]
@@ -84,14 +85,14 @@ public class PlayerInteractionNew : MonoBehaviour
             return;
         }
 
-        if (_currentInteractable is DownedPlayerCarryable downedPlayerCarryable)
+        if (_currentTarget is DownedPlayerCarryable downedPlayerCarryable)
         {
             downedPlayerCarryable.RequestRevive(transform);
             OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
             return;
         }
 
-        if (_currentInteractable is PlayerHealth playerHealth)
+        if (_currentTarget is PlayerHealth playerHealth)
         {
             NetworkObject reviverNetworkObject = GetComponent<NetworkObject>();
             playerHealth.RequestRevive(reviverNetworkObject);
@@ -115,92 +116,72 @@ public class PlayerInteractionNew : MonoBehaviour
             return;
         }
 
-        if (!TryGetInteractionHits(out RaycastHit[] raycasts))
+        MonoBehaviour target = _currentTarget;
+        if (target == null || target.transform.root == transform.root)
         {
+            TryDropHeldObject();
             return;
         }
 
-        foreach (RaycastHit raycastHit in raycasts)
+        if (_pickedUpGameObject == target.gameObject)
         {
-            if (raycastHit.transform.root == transform.root)
-                continue;
+            TryDropHeldObject();
+            return;
+        }
 
-            IInteractableNew interactable = raycastHit.transform.GetComponent<IInteractableNew>();
-            interactable ??= raycastHit.transform.GetComponentInParent<IInteractableNew>();
-            if (interactable != null)
+        BaseStorageNew baseStorage = target.GetComponent<BaseStorageNew>();
+        baseStorage ??= target.GetComponentInParent<BaseStorageNew>();
+        if (baseStorage != null && pickedUpObject != null)
+        {
+            if (baseStorage is MainStorageNew mainStorage)
             {
-                // If raycast hit object is same as currently holded object, continue
-                if (_pickedUpGameObject == raycastHit.transform.gameObject)
-                    continue;
-                // Check if looking at storage and have object to store, if yes try to store object
-                raycastHit.transform.TryGetComponent<BaseStorageNew>(out BaseStorageNew baseStorage);
-                if (baseStorage != null && pickedUpObject != null)
+                if (!TryStoreObject(mainStorage))
                 {
-                    //Check if the storage is instance of MainStorageNew, if yes try to store object in main storage, if no try to store object in normal storage
-                    raycastHit.transform.TryGetComponent<MainStorageNew>(out MainStorageNew mainStorage);
-                    if (mainStorage != null)
-                    {
-                        if (TryStoreObject(mainStorage))
-                        {
-                            return;
-                        }
-                        else
-                        {
-                            Debug.Log("Cannot store object in main storage");
-                            //Add feedback for player that the object cannot be stored in main storage
-                            return;
-                        }
-                    }
-
-                    // If not main storage, try to store in normal storage
-                    if (TryStoreObject(baseStorage))
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        Debug.Log("Cannot store object in this storage");
-                        //Add feedback for player that the object cannot be stored in this storage
-                        return;
-                    }
+                    Debug.Log("Cannot store object in main storage");
                 }
-                // If looking at pickable object, pick it up
-                IPIckableNew pickableObject = raycastHit.transform.GetComponent<IPIckableNew>();
-                pickableObject ??= raycastHit.transform.GetComponentInParent<IPIckableNew>();
-                if (pickableObject != null)
-                {
-                    if (_pickedUpGameObject == null)
-                    {
-                        if (pickableObject is BaseResourceNew baseResource && !baseResource.CanBeCarried)
-                        {
-                            return;
-                        }
-
-                        pickableObject.PickedUp(transform);
-                        OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
-                    }
-                    return;
-                }
-
-                // If looking at interactable object, interact with it
-                interactable.Interact(transform);
-                OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
-            // Block interaction if we hit a solid, non-trigger physical obstacle closer than any interactable
-            if (raycastHit.collider != null && !raycastHit.collider.isTrigger)
+            if (!TryStoreObject(baseStorage))
             {
-                break;
+                Debug.Log("Cannot store object in this storage");
             }
+            return;
         }
-        // Try to drop object - objects need to be affected by gravity - now Objects are just dropped and stay in the air, player has to jump to pick them up again - to change
-        if (DropObject())
+
+        IPIckableNew pickableObject = target.GetComponent<IPIckableNew>();
+        pickableObject ??= target.GetComponentInParent<IPIckableNew>();
+        if (pickableObject != null)
         {
+            if (_pickedUpGameObject == null)
+            {
+                if (pickableObject is BaseResourceNew baseResource && !baseResource.CanBeCarried)
+                {
+                    return;
+                }
+
+                pickableObject.PickedUp(transform);
+                OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+            }
+            return;
+        }
+
+        if (target is IInteractableNew interactable)
+        {
+            interactable.Interact(transform);
             OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
             return;
         }
 
+        TryDropHeldObject();
+    }
+
+    private void TryDropHeldObject()
+    {
+        if (DropObject())
+        {
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public void PickUpObject(GameObject pickUpObject, IPIckableNew pIckableObject)
@@ -464,6 +445,11 @@ public class PlayerInteractionNew : MonoBehaviour
         interactionOrigin = origin;
     }
 
+    public void SetAimCamera(Camera camera)
+    {
+        aimCamera = camera;
+    }
+
     public bool TryStoreObject(BaseStorageNew storage)
     {
         BaseResourceNew baseResourceNewObject;
@@ -500,34 +486,83 @@ public class PlayerInteractionNew : MonoBehaviour
 
     private void CheckLookAtInteractable()
     {
-        if (!TryGetInteractionHits(out RaycastHit[] raycasts))
+        if (!TryGetAimRay(out Ray aimRay))
         {
             ClearCurrentInteractable();
             return;
         }
 
-        MonoBehaviour newTarget = null;
-        foreach (RaycastHit raycastHit in raycasts)
+        MonoBehaviour newTarget = FindTarget(
+            Physics.RaycastAll(aimRay, interactDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide),
+            out bool exactRayBlocked);
+
+        if (newTarget == null && !exactRayBlocked && aimAssistRadius > 0f)
         {
-            if (raycastHit.transform.root == transform.root)
-                continue;
-
-            newTarget = BridgeTargetResolver.Resolve(raycastHit.collider);
-            if (newTarget != null)
-            {
-                break;
-            }
-
-            // Block sight if we hit a solid, non-trigger physical obstacle closer than any interactable
-            if (raycastHit.collider != null && !raycastHit.collider.isTrigger)
-            {
-                break;
-            }
+            newTarget = FindTarget(
+                Physics.SphereCastAll(
+                    aimRay,
+                    aimAssistRadius,
+                    interactDistance,
+                    Physics.DefaultRaycastLayers,
+                    QueryTriggerInteraction.Collide),
+                out _);
         }
+
         if (newTarget != _currentTarget)
         {
             SetCurrentTarget(newTarget);
         }
+    }
+
+    private MonoBehaviour FindTarget(RaycastHit[] hits, out bool blocked)
+    {
+        blocked = false;
+        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.transform.root == transform.root)
+            {
+                continue;
+            }
+
+            MonoBehaviour target = BridgeTargetResolver.Resolve(hit.collider);
+            if (target != null)
+            {
+                return target;
+            }
+
+            if (hit.collider != null && !hit.collider.isTrigger)
+            {
+                blocked = true;
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private bool TryGetAimRay(out Ray aimRay)
+    {
+        if (aimCamera == null || !aimCamera.isActiveAndEnabled)
+        {
+            aimCamera = Camera.main;
+        }
+
+        if (aimCamera != null)
+        {
+            aimRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+            return true;
+        }
+
+        if (interactionOrigin != null)
+        {
+            aimRay = new Ray(interactionOrigin.position, interactionOrigin.forward);
+            return true;
+        }
+
+        aimRay = default;
+        return false;
     }
 
     private void SetCurrentTarget(MonoBehaviour target)
@@ -537,20 +572,6 @@ public class PlayerInteractionNew : MonoBehaviour
         _currentInteractable = target as IInteractableNew;
         _currentInteractable?.LookedAt(transform);
         OnCurrentTargetChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    private bool TryGetInteractionHits(out RaycastHit[] raycasts)
-    {
-        raycasts = Array.Empty<RaycastHit>();
-
-        if (interactionOrigin == null)
-        {
-            return false;
-        }
-
-        raycasts = Physics.SphereCastAll(interactionOrigin.position, interactSphereRadius, interactionOrigin.forward, interactDistance);
-        Array.Sort(raycasts, (a, b) => a.distance.CompareTo(b.distance));
-        return true;
     }
 
     private void ClearCurrentInteractable()
@@ -638,6 +659,15 @@ public class PlayerInteractionNew : MonoBehaviour
         }
 
         MovePickedUpObjectToHoldPosition();
+    }
+
+    private void LateUpdate()
+    {
+        if (_playerHealth != null && _playerHealth.IsDowned)
+        {
+            return;
+        }
+
         CheckLookAtInteractable();
     }
 

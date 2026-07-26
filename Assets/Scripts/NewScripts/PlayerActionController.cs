@@ -152,70 +152,21 @@ public class PlayerActionController : MonoBehaviour
         damageable = null;
         hitCollider = null;
 
-        Collider[] colliders = GetActionAreaColliders(range);
-        if (colliders.Length == 0)
+        if (_playerInteraction == null || _playerInteraction.CurrentTarget == null)
         {
             return false;
         }
 
-        IDamageable aimedDamageable = null;
-        if (_playerInteraction != null && _playerInteraction.CurrentTarget != null)
+        Collider[] colliders = GetActionAreaColliders(range);
+        IDamageable aimedDamageable = ResolveTargetDamageable(_playerInteraction.CurrentTarget);
+        if (aimedDamageable == null ||
+            !TryFindColliderForDamageable(colliders, aimedDamageable, out hitCollider))
         {
-            aimedDamageable = ResolveTargetDamageable(_playerInteraction.CurrentTarget);
+            return false;
         }
 
-        if (aimedDamageable != null &&
-            TryFindColliderForDamageable(colliders, aimedDamageable, out hitCollider))
-        {
-            damageable = aimedDamageable;
-            return true;
-        }
-
-        Vector3 origin = actionTransformHolder != null ? actionTransformHolder.position : transform.position;
-        Vector3 forward = actionTransformHolder != null ? actionTransformHolder.forward : transform.forward;
-        float bestScore = float.PositiveInfinity;
-        HashSet<IDamageable> evaluatedTargets = new HashSet<IDamageable>();
-
-        foreach (Collider collider in colliders)
-        {
-            if (collider == null || collider.transform.root == transform.root)
-            {
-                continue;
-            }
-
-            IDamageable candidate = ResolveDamageable(collider);
-            if (candidate == null || !evaluatedTargets.Add(candidate))
-            {
-                continue;
-            }
-
-            Collider candidateCollider = FindClosestColliderForDamageable(colliders, candidate, origin);
-            if (candidateCollider == null)
-            {
-                continue;
-            }
-
-            Vector3 closestPoint = candidateCollider.ClosestPoint(origin);
-            Vector3 toTarget = closestPoint - origin;
-            float distance = toTarget.magnitude;
-            float alignment = distance > 0.0001f
-                ? Vector3.Dot(forward, toTarget / distance)
-                : 1f;
-            if (alignment <= 0f)
-            {
-                continue;
-            }
-
-            float score = (1f - alignment) * 10f + distance;
-            if (score < bestScore)
-            {
-                bestScore = score;
-                damageable = candidate;
-                hitCollider = candidateCollider;
-            }
-        }
-
-        return damageable != null && hitCollider != null;
+        damageable = aimedDamageable;
+        return true;
     }
 
     private bool TryFindColliderForDamageable(
