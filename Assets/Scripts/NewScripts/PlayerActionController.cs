@@ -12,6 +12,7 @@ public class PlayerActionController : MonoBehaviour
     private PlayerInputNew _playerInputNew;
     private NetworkObject _networkObject;
     private PlayerHealth _playerHealth;
+    private PlayerInteractionNew _playerInteraction;
     private ActionImpactEffectSpawner _impactEffectSpawner;
     [Header("Action Parameters")]
     #region Tooltip
@@ -49,6 +50,7 @@ public class PlayerActionController : MonoBehaviour
         _playerInputNew = GetComponent<PlayerInputNew>();
         _networkObject = GetComponent<NetworkObject>();
         _playerHealth = GetComponent<PlayerHealth>();
+        _playerInteraction = GetComponent<PlayerInteractionNew>();
         _impactEffectSpawner = GetComponent<ActionImpactEffectSpawner>();
         _playerInputNew.OnAction += HandleAction;
         _playerInputNew.OnActionAlt += HandleActionAlt;
@@ -100,54 +102,136 @@ public class PlayerActionController : MonoBehaviour
 
     public void PerformAction()
     {
-        Collider[] colliders = GetActionAreaColliders(actionRange);
-        if (colliders.Length == 0)
+        if (!TryGetSingleActionTarget(actionRange, out IDamageable damageable, out Collider hitCollider))
         {
             Debug.Log("No 'Action' objects in range");
             return;
         }
 
-        HashSet<IDamageable> damagedObjects = new HashSet<IDamageable>();
-        bool actionPerformed = false;
+        if (damageable is PlayerHealth playerHealth && ShouldRequestPlayerDamageOnServer(playerHealth))
+        {
+            playerHealth.DamageReceived(actionDamage, _networkObject);
+        }
+        else if (damageable is NPCHealth npcHealth)
+        {
+            npcHealth.DamageReceived(actionDamage, _networkObject);
+        }
+        else
+        {
+            damageable.DamageReceived(_inventory.GetCurrentSelectedItem(), actionDamage);
+        }
+
+        Debug.Log($"Action performed on {hitCollider.gameObject.name}");
+        SpawnImpactEffect(hitCollider);
+        OnActionPerformed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool TryGetSingleActionTarget(float range, out IDamageable damageable, out Collider hitCollider)
+    {
+        damageable = null;
+        hitCollider = null;
+
+        Collider[] colliders = GetActionAreaColliders(range);
+        if (colliders.Length == 0)
+        {
+            return false;
+        }
+
+        IDamageable aimedDamageable = null;
+        if (_playerInteraction?.GetCurrentInteractable() is MonoBehaviour aimedBehaviour)
+        {
+            aimedDamageable = ResolveTargetDamageable(aimedBehaviour);
+        }
+
+        if (aimedDamageable != null &&
+            TryFindColliderForDamageable(colliders, aimedDamageable, out hitCollider))
+        {
+            damageable = aimedDamageable;
+            return true;
+        }
+
+        Vector3 origin = actionTransformHolder != null ? actionTransformHolder.position : transform.position;
+        Vector3 forward = actionTransformHolder != null ? actionTransformHolder.forward : transform.forward;
+        float bestScore = float.PositiveInfinity;
+        HashSet<IDamageable> evaluatedTargets = new HashSet<IDamageable>();
+
         foreach (Collider collider in colliders)
         {
-            if (collider.transform.root == transform.root)
+            if (collider == null || collider.transform.root == transform.root)
             {
                 continue;
             }
 
-            IDamageable damageable = ResolveDamageable(collider);
-            print(damageable);
-
-            if (damageable != null && damagedObjects.Add(damageable))
+            IDamageable candidate = ResolveDamageable(collider);
+            if (candidate == null || !evaluatedTargets.Add(candidate))
             {
-                if (damageable is PlayerHealth playerHealth && ShouldRequestPlayerDamageOnServer(playerHealth))
-                {
-                    playerHealth.DamageReceived(actionDamage, _networkObject);
-                }
-                else if (damageable is NPCHealth npcHealth)
-                {
-                    npcHealth.DamageReceived(actionDamage, _networkObject);
-                }
-                else
-                {
-                    damageable.DamageReceived(_inventory.GetCurrentSelectedItem(), actionDamage); // Example damage amount, can be changed or made variable
-                }
-
-                Debug.Log($"Action performed on {collider.transform.gameObject.name}");
-                SpawnImpactEffect(collider);
-                actionPerformed = true;
+                continue;
             }
-            else if (damageable == null)
+
+            Collider candidateCollider = FindClosestColliderForDamageable(colliders, candidate, origin);
+            if (candidateCollider == null)
             {
-                Debug.Log($"Collider {collider.gameObject.name} is in range but does not implement IDamageableNew");
+                continue;
+            }
+
+            Vector3 closestPoint = candidateCollider.ClosestPoint(origin);
+            Vector3 toTarget = closestPoint - origin;
+            float distance = toTarget.magnitude;
+            float alignment = distance > 0.0001f
+                ? Vector3.Dot(forward, toTarget / distance)
+                : 1f;
+            if (alignment <= 0f)
+            {
+                continue;
+            }
+
+            float score = (1f - alignment) * 10f + distance;
+            if (score < bestScore)
+            {
+                bestScore = score;
+                damageable = candidate;
+                hitCollider = candidateCollider;
             }
         }
 
-        if (actionPerformed)
+        return damageable != null && hitCollider != null;
+    }
+
+    private bool TryFindColliderForDamageable(
+        Collider[] colliders,
+        IDamageable expectedDamageable,
+        out Collider matchingCollider)
+    {
+        Vector3 origin = actionTransformHolder != null ? actionTransformHolder.position : transform.position;
+        matchingCollider = FindClosestColliderForDamageable(colliders, expectedDamageable, origin);
+        return matchingCollider != null;
+    }
+
+    private Collider FindClosestColliderForDamageable(
+        Collider[] colliders,
+        IDamageable expectedDamageable,
+        Vector3 origin)
+    {
+        Collider closestCollider = null;
+        float closestDistanceSqr = float.PositiveInfinity;
+
+        foreach (Collider collider in colliders)
         {
-            OnActionPerformed?.Invoke(this, EventArgs.Empty);
+            if (collider == null || collider.transform.root == transform.root ||
+                !ReferenceEquals(ResolveDamageable(collider), expectedDamageable))
+            {
+                continue;
+            }
+
+            float distanceSqr = (collider.ClosestPoint(origin) - origin).sqrMagnitude;
+            if (distanceSqr < closestDistanceSqr)
+            {
+                closestDistanceSqr = distanceSqr;
+                closestCollider = collider;
+            }
         }
+
+        return closestCollider;
     }
 
     public bool CanPerformActionOn(MonoBehaviour target)
