@@ -27,6 +27,7 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     [SerializeField] protected Transform mountableBridgeComponentSpawnPoint;
     [SerializeField] protected SpriteRenderer bridgeComponentSpriteRenderer;
     [SerializeField] private float productionDuration = 1f;
+    [SerializeField] private int defaultSelectedComponentIndex = -1;
 
     private readonly NetworkVariable<int> selectedComponentIndexNetwork = new NetworkVariable<int>(-1);
     private readonly NetworkVariable<bool> isProducingNetwork = new NetworkVariable<bool>(false);
@@ -90,8 +91,29 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
         }
 
         InitializeStorageStorableResourcesList();
+        InitializeDefaultSelection();
         UpdateCachedSelectedComponent();
         RefreshSelectedVisual();
+    }
+
+    private void InitializeDefaultSelection()
+    {
+        if (!IsValidComponentIndex(defaultSelectedComponentIndex) || SelectedComponentIndex >= 0)
+        {
+            return;
+        }
+
+        if (IsNetworkSessionActive())
+        {
+            if (IsServer)
+            {
+                selectedComponentIndexNetwork.Value = defaultSelectedComponentIndex;
+            }
+
+            return;
+        }
+
+        localSelectedComponentIndex = defaultSelectedComponentIndex;
     }
 
     public override void OnNetworkSpawn()

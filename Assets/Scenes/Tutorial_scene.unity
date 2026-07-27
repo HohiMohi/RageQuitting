@@ -3333,20 +3333,36 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: mountableBridgeComponentSOArray.Array.size
-      value: 3
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[0]'
       value: 
-      objectReference: {fileID: 11400000, guid: 9c1e7fcbba447974193389a1230b761b, type: 2}
+      objectReference: {fileID: 11400000, guid: 4c390055c6d8e0f4896c9ed3e9f950b1, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[1]'
       value: 
-      objectReference: {fileID: 11400000, guid: 9fa6cb6c61419394fae67d6286faa6de, type: 2}
+      objectReference: {fileID: 11400000, guid: 0343c3b28c3f4e14ebb0d9238ac7251a, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[2]'
       value: 
+      objectReference: {fileID: 11400000, guid: d0a70d3f1606a9540a94e913d66046d7, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'mountableBridgeComponentSOArray.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 36ee768b8f5bb8f41a6e20f851869252, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'mountableBridgeComponentSOArray.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 02de348a3aecf8c48af099d5429623cb, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'mountableBridgeComponentSOArray.Array.data[5]'
+      value: 
       objectReference: {fileID: 11400000, guid: efe9a838721d1314cbcea199a5221532, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: defaultSelectedComponentIndex
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1729528994032473016, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
