@@ -19,12 +19,12 @@ public class FactoryInteractionUI : MonoBehaviour
     [SerializeField] private FurnaceFuelPanelUI furnaceFuelPanelUI;
     [SerializeField] private Button confirmButton;
     [SerializeField] private TextMeshProUGUI currentlySelectedBridgeComponentNameText;
-    private MountableBridgeComponentSO selectedMountableBridgeComponentSO;
+    private ProductionRecipeSO selectedProductionRecipeSO;
     public static EventHandler OnAnyUIClosed;
     public EventHandler<OnConfirmButtonClickEventArgs> OnConfirmButtonClick;
     public class OnConfirmButtonClickEventArgs : EventArgs
     {
-        public MountableBridgeComponentSO mountableBridgeComponentSO;
+        public ProductionRecipeSO productionRecipeSO;
     }
 
     private void Awake()
@@ -41,9 +41,9 @@ public class FactoryInteractionUI : MonoBehaviour
             Hide();
             HideCursor();
             OnAnyUIClosed?.Invoke(this, EventArgs.Empty);
-            if (selectedMountableBridgeComponentSO != null)
+            if (selectedProductionRecipeSO != null)
             {
-                OnConfirmButtonClick?.Invoke(this, new OnConfirmButtonClickEventArgs { mountableBridgeComponentSO = selectedMountableBridgeComponentSO });
+                OnConfirmButtonClick?.Invoke(this, new OnConfirmButtonClickEventArgs { productionRecipeSO = selectedProductionRecipeSO });
             }
         });
     }
@@ -121,12 +121,11 @@ public class FactoryInteractionUI : MonoBehaviour
 
     public void CreateUIButtons()
     {
-        foreach (MountableBridgeComponentSO mountableBridgeComponentSO in baseFactory.GetMountableBridgeComponentSOArray())
+        foreach (ProductionRecipeSO productionRecipeSO in baseFactory.GetProductionRecipeSOArray())
         {
             Transform buttonTransform = Instantiate(buttonTemplate, container);
             buttonTransform.gameObject.SetActive(true);
-            buttonTransform.GetComponent<FactoryInteractionUISingleButton>().SetMountableBridgeComponentSO(mountableBridgeComponentSO);
-            //factoryInteractionUISingleButtons.Add()
+            buttonTransform.GetComponent<FactoryInteractionUISingleButton>().SetProductionRecipeSO(productionRecipeSO);
             buttonTransform.GetComponent<FactoryInteractionUISingleButton>().OnButtonClick += Button_OnClick;
         }
         Destroy(buttonTemplate.gameObject);
@@ -134,8 +133,8 @@ public class FactoryInteractionUI : MonoBehaviour
 
     private void Button_OnClick(object sender, FactoryInteractionUISingleButton.OnButtonClickEventArgs e)
     {
-        selectedMountableBridgeComponentSO = e.mountableBridgeComponentSO;
-        currentlySelectedBridgeComponentNameText.text = selectedMountableBridgeComponentSO.bridgeComponentSO.componentName;
+        selectedProductionRecipeSO = e.productionRecipeSO;
+        currentlySelectedBridgeComponentNameText.text = selectedProductionRecipeSO.RecipeName;
         RefreshFactoryInformations();
         confirmButton.Select();
         //Hide();
@@ -160,18 +159,18 @@ public class FactoryInteractionUI : MonoBehaviour
 
     private void RefreshFactoryInformations()
     {
-        MountableBridgeComponentSO componentToDisplay = selectedMountableBridgeComponentSO != null
-            ? selectedMountableBridgeComponentSO
-            : baseFactory.SelectedComponent;
+        ProductionRecipeSO recipeToDisplay = selectedProductionRecipeSO != null
+            ? selectedProductionRecipeSO
+            : baseFactory.SelectedRecipe;
 
-        if (componentToDisplay != null && currentlySelectedBridgeComponentNameText != null)
+        if (recipeToDisplay != null && currentlySelectedBridgeComponentNameText != null)
         {
-            currentlySelectedBridgeComponentNameText.text = componentToDisplay.bridgeComponentSO.componentName;
+            currentlySelectedBridgeComponentNameText.text = recipeToDisplay.RecipeName;
         }
 
         if (requiredResourcesPanelUI != null)
         {
-            requiredResourcesPanelUI.SetRequiredResourcesInformations(componentToDisplay, baseFactory.Storage);
+            requiredResourcesPanelUI.SetRequiredResourcesInformations(recipeToDisplay, baseFactory.Storage);
         }
 
         if (storageResourcesPanelUI != null)

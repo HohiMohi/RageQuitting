@@ -46,7 +46,7 @@ public class FurnaceStorage : BaseStorageNew
     private float localCombustionProgress;
     private int localSelectedComponentIndex = -1;
     private float furnaceReferencePressureHolder;
-    private MountableBridgeComponentSO selectedMountableBridgeComponentSO;
+    private ProductionRecipeSO selectedProductionRecipeSO;
 
     private float neededProgress;
     private float meltingPoint;
@@ -70,7 +70,7 @@ public class FurnaceStorage : BaseStorageNew
     public float CurrentFuel => IsNetworkSessionActive() ? furnaceFuelNetwork.Value : localFurnaceFuel;
     public float CurrentMeltingPoint => meltingPoint;
     public float CurrentCombustionTemperature => combustionTemperature;
-    public bool HasSelectedComponent => selectedMountableBridgeComponentSO != null;
+    public bool HasSelectedComponent => selectedProductionRecipeSO != null;
     public bool IsFurnaceOn => IsNetworkSessionActive() ? furnaceIsOnNetwork.Value : localFurnaceIsOn;
     public bool IsFurnaceOnFire => IsNetworkSessionActive() ? furnaceIsOnFireNetwork.Value : localFurnaceIsOnFire;
 
@@ -170,10 +170,10 @@ public class FurnaceStorage : BaseStorageNew
         SimulateFurnace(Time.fixedDeltaTime);
     }
 
-    public void SetSelectedMountableBridgeComponent(MountableBridgeComponentSO mountableBridgeComponentSO)
+    public void SetSelectedProductionRecipe(ProductionRecipeSO productionRecipeSO)
     {
         int selectedIndex = blastFurnaceFactory != null
-            ? blastFurnaceFactory.GetMountableBridgeComponentSOIndex(mountableBridgeComponentSO)
+            ? blastFurnaceFactory.GetProductionRecipeSOIndex(productionRecipeSO)
             : -1;
 
         if (IsNetworkSessionActive())
@@ -308,9 +308,9 @@ public class FurnaceStorage : BaseStorageNew
             return;
         }
 
-        if (selectedMountableBridgeComponentSO == null || blastFurnaceFactory == null)
+        if (selectedProductionRecipeSO == null || blastFurnaceFactory == null)
         {
-            Debug.Log("No Mountable Bridge Component currently selected");
+            Debug.Log("No production recipe currently selected");
             return;
         }
 
@@ -334,9 +334,9 @@ public class FurnaceStorage : BaseStorageNew
             return;
         }
 
-        if (selectedMountableBridgeComponentSO == null || blastFurnaceFactory == null)
+        if (selectedProductionRecipeSO == null || blastFurnaceFactory == null)
         {
-            Debug.Log("No Mountable Bridge Component currently selected");
+            Debug.Log("No production recipe currently selected");
             return;
         }
 
@@ -593,7 +593,9 @@ public class FurnaceStorage : BaseStorageNew
         bool fuelAdded = false;
         foreach (BaseResourceSO baseResourceSO in storableBaseResourcesSOList)
         {
-            if (baseResourceSO != null && CheckBaseResourceAmount(baseResourceSO) > 0)
+            if (baseResourceSO != null
+                && baseResourceSO.furnaceFuelAmount > 0f
+                && CheckBaseResourceAmount(baseResourceSO) > 0)
             {
                 SetFuel(CurrentFuel + baseResourceSO.furnaceFuelAmount);
                 fuelAdded = true;
@@ -626,7 +628,7 @@ public class FurnaceStorage : BaseStorageNew
 
     private void BlastFurnaceFactory_OnBridgeComponentSelectionConfirm(object sender, BlastFurnaceFactory.BridgeComponentSelectionConfirmEventArgs e)
     {
-        SetSelectedMountableBridgeComponent(e.mountableBridgeComponentSO);
+        SetSelectedProductionRecipe(e.productionRecipeSO);
     }
 
     private void VentilationGrille_OnVentilationGrilleClosed(object sender, EventArgs e)
@@ -681,11 +683,11 @@ public class FurnaceStorage : BaseStorageNew
 
     private void UpdateSelectedComponentFromIndex(int selectedIndex)
     {
-        selectedMountableBridgeComponentSO = blastFurnaceFactory != null
-            ? blastFurnaceFactory.GetMountableBridgeComponentSOByIndex(selectedIndex)
+        selectedProductionRecipeSO = blastFurnaceFactory != null
+            ? blastFurnaceFactory.GetProductionRecipeSOByIndex(selectedIndex)
             : null;
 
-        if (selectedMountableBridgeComponentSO == null)
+        if (selectedProductionRecipeSO == null)
         {
             neededProgress = 0f;
             meltingPoint = 0f;
@@ -694,10 +696,10 @@ public class FurnaceStorage : BaseStorageNew
             return;
         }
 
-        neededProgress = selectedMountableBridgeComponentSO.neededProgress;
-        meltingPoint = selectedMountableBridgeComponentSO.meltingPoint;
-        combustionTemperature = selectedMountableBridgeComponentSO.combustionTemperature;
-        neededCombustionProgress = selectedMountableBridgeComponentSO.neededCombustionProgress;
+        neededProgress = selectedProductionRecipeSO.NeededProgress;
+        meltingPoint = selectedProductionRecipeSO.MeltingPoint;
+        combustionTemperature = selectedProductionRecipeSO.CombustionTemperature;
+        neededCombustionProgress = selectedProductionRecipeSO.NeededCombustionProgress;
     }
 
     private void ResetProductionValues()

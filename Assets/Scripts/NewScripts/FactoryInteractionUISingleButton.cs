@@ -8,14 +8,14 @@ using UnityEngine.UI;
 public class FactoryInteractionUISingleButton : MonoBehaviour
 {
     [SerializeField] private Button button;
-    [SerializeField] private MountableBridgeComponentSO mountableBridgeComponentSO;
+    [SerializeField] private ProductionRecipeSO productionRecipeSO;
     [SerializeField] private Image bridgeComponentImage;
     [SerializeField] private TextMeshProUGUI bridgeComponentNameText;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public EventHandler<OnButtonClickEventArgs> OnButtonClick;
     public class OnButtonClickEventArgs : EventArgs
     {
-        public MountableBridgeComponentSO mountableBridgeComponentSO;
+        public ProductionRecipeSO productionRecipeSO;
     }
 
     private void Awake()
@@ -27,10 +27,10 @@ public class FactoryInteractionUISingleButton : MonoBehaviour
         button.onClick.AddListener(() =>
         {
             button.Select();
-            OnButtonClick?.Invoke(this, new OnButtonClickEventArgs { mountableBridgeComponentSO = mountableBridgeComponentSO });
+            OnButtonClick?.Invoke(this, new OnButtonClickEventArgs { productionRecipeSO = productionRecipeSO });
         });
-        bridgeComponentImage.sprite = mountableBridgeComponentSO.componentSprite;
-        bridgeComponentNameText.text = mountableBridgeComponentSO.bridgeComponentSO.componentName;
+        bridgeComponentImage.sprite = productionRecipeSO != null ? productionRecipeSO.RecipeIcon : null;
+        bridgeComponentNameText.text = productionRecipeSO != null ? productionRecipeSO.RecipeName : "Missing recipe";
     }
 
     // Update is called once per frame
@@ -39,9 +39,9 @@ public class FactoryInteractionUISingleButton : MonoBehaviour
         
     }
 
-    public void SetMountableBridgeComponentSO(MountableBridgeComponentSO mountableBridgeComponentSO)
+    public void SetProductionRecipeSO(ProductionRecipeSO productionRecipeSO)
     {
-        this.mountableBridgeComponentSO = mountableBridgeComponentSO;
+        this.productionRecipeSO = productionRecipeSO;
     }
 
     

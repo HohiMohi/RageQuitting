@@ -17,17 +17,21 @@ public class FactorySelectedComponentStatusUI : MonoBehaviour
             return;
         }
 
+        ProductionRecipeSO selectedRecipe = factory.SelectedRecipe;
         MountableBridgeComponentSO selectedComponent = factory.SelectedComponent;
         if (componentImage != null)
         {
-            componentImage.sprite = selectedComponent != null ? selectedComponent.componentSprite : null;
-            componentImage.enabled = selectedComponent != null && selectedComponent.componentSprite != null;
+            componentImage.sprite = selectedRecipe != null ? selectedRecipe.RecipeIcon : null;
+            componentImage.enabled = selectedRecipe != null && selectedRecipe.RecipeIcon != null;
         }
 
-        string componentName = selectedComponent != null ? selectedComponent.bridgeComponentSO.componentName : "None";
-        string status = GetFactoryStatusText(factory, selectedComponent);
+        string componentName = selectedRecipe != null
+            ? selectedRecipe.RecipeName + (selectedRecipe.OutputAmount > 1 ? $" x{selectedRecipe.OutputAmount}" : string.Empty)
+            : "None";
+        string status = GetFactoryStatusText(factory, selectedRecipe);
         string dimensions = GetDimensionsText(factory, selectedComponent);
-        statusText.text = $"Selected: {componentName}\nStatus: {status}{dimensions}";
+        string furnaceProcess = GetFurnaceProcessText(factory, selectedRecipe);
+        statusText.text = $"Selected: {componentName}\nStatus: {status}{dimensions}{furnaceProcess}";
     }
 
     public static FactorySelectedComponentStatusUI CreateRuntimePanel(Transform parent)
@@ -70,19 +74,19 @@ public class FactorySelectedComponentStatusUI : MonoBehaviour
         return panel;
     }
 
-    private string GetFactoryStatusText(BaseFactory factory, MountableBridgeComponentSO selectedComponent)
+    private string GetFactoryStatusText(BaseFactory factory, ProductionRecipeSO selectedRecipe)
     {
         if (factory.IsProducing)
         {
             return $"Producing {factory.ProductionProgressNormalized:P0}";
         }
 
-        if (selectedComponent == null)
+        if (selectedRecipe == null)
         {
             return "No component selected";
         }
 
-        if (!factory.CheckRequiredBaseResources(selectedComponent))
+        if (!factory.CheckRequiredBaseResources(selectedRecipe))
         {
             return "Missing resources";
         }
@@ -106,6 +110,16 @@ public class FactorySelectedComponentStatusUI : MonoBehaviour
         Vector2 currentDimensions = carpenterTableFactory.GetCurrentDimensions();
         Vector2 requiredDimensions = carpenterTableFactory.GetRequiredDimensionsForSelectedComponent();
         return $"\nCurrent dimensions: W {currentDimensions.x:0.##}, L {currentDimensions.y:0.##}\nRequired dimensions: W {requiredDimensions.x:0.##}, L {requiredDimensions.y:0.##}";
+    }
+
+    private string GetFurnaceProcessText(BaseFactory factory, ProductionRecipeSO selectedRecipe)
+    {
+        if (!(factory is BlastFurnaceFactory) || selectedRecipe == null)
+        {
+            return string.Empty;
+        }
+
+        return $"\nRequired temperature: {selectedRecipe.MeltingPoint:0}\nRequired progress: {selectedRecipe.NeededProgress:0}";
     }
 
     private void EnsureText()

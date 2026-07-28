@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 825521eef67554f40a02a36995769296, type: 3}
+  m_Name: Carpenter_WoodenBasicRoadway
+  m_EditorClassIdentifier: Assembly-CSharp::ProductionRecipeSO
+  recipeName: WoodenBasicRoadwayMountable
+  recipeIcon: {fileID: 741899376876123942, guid: 02757d04723893e4b9ed1f9f0f4249f7, type: 3}
+  requiredResources:
+  - resourceType: {fileID: 11400000, guid: 59cb7f33c89966747a8e01f704f5bfbc, type: 2}
+    amount: 3
+  productType: 0
+  mountableBridgeComponentOutput: {fileID: 11400000, guid: 9fa6cb6c61419394fae67d6286faa6de, type: 2}
+  baseResourceOutput: {fileID: 0}
+  outputAmount: 1
+  meltingPoint: 900
+  combustionTemperature: 950
+  neededProgress: 800
+  neededCombustionProgress: 1000

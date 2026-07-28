@@ -10,21 +10,21 @@ public class BlastFurnaceFactory : BaseFactory
     public EventHandler<BridgeComponentSelectionConfirmEventArgs> BridgeComponentSelectionConfirm;
     public class BridgeComponentSelectionConfirmEventArgs : EventArgs
     {
-        public MountableBridgeComponentSO mountableBridgeComponentSO;
+        public ProductionRecipeSO productionRecipeSO;
     }
 
     protected override void Start()
     {
         base.Start();
-        SyncSelectedComponentToFurnace(SelectedComponent);
+        SyncSelectedRecipeToFurnace(SelectedRecipe);
     }
 
-    protected override void HandleSelectedComponentChanged(MountableBridgeComponentSO selectedComponent)
+    protected override void HandleSelectedRecipeChanged(ProductionRecipeSO selectedRecipe)
     {
-        SyncSelectedComponentToFurnace(selectedComponent);
+        SyncSelectedRecipeToFurnace(selectedRecipe);
         BridgeComponentSelectionConfirm?.Invoke(this, new BridgeComponentSelectionConfirmEventArgs
         {
-            mountableBridgeComponentSO = selectedComponent
+            productionRecipeSO = selectedRecipe
         });
     }
 
@@ -46,8 +46,8 @@ public class BlastFurnaceFactory : BaseFactory
             return false;
         }
 
-        MountableBridgeComponentSO selectedComponent = SelectedComponent;
-        if (!TryConsumeRequiredResources(selectedComponent))
+        ProductionRecipeSO selectedRecipe = SelectedRecipe;
+        if (!TryConsumeRequiredResources(selectedRecipe))
         {
             ReportFurnaceProductionFailureServer(FactoryProductionFailureReason.MissingResources);
             return false;
@@ -103,11 +103,11 @@ public class BlastFurnaceFactory : BaseFactory
         SetManualProductionProgressLocal(progressNormalized);
     }
 
-    public void SyncSelectedComponentToFurnace(MountableBridgeComponentSO selectedComponent)
+    public void SyncSelectedRecipeToFurnace(ProductionRecipeSO selectedRecipe)
     {
         if (furnaceStorage != null)
         {
-            furnaceStorage.SetSelectedMountableBridgeComponent(selectedComponent);
+            furnaceStorage.SetSelectedProductionRecipe(selectedRecipe);
         }
     }
 
@@ -119,8 +119,8 @@ public class BlastFurnaceFactory : BaseFactory
             return false;
         }
 
-        MountableBridgeComponentSO selectedComponent = SelectedComponent;
-        if (!TryConsumeRequiredResources(selectedComponent))
+        ProductionRecipeSO selectedRecipe = SelectedRecipe;
+        if (!TryConsumeRequiredResources(selectedRecipe))
         {
             ReportFurnaceProductionFailureLocal(FactoryProductionFailureReason.MissingResources);
             return false;

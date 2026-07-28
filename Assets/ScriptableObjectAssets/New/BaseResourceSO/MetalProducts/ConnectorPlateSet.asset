@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c0995a3182a1464a89a990f501066fb, type: 3}
+  m_Name: ConnectorPlateSet
+  m_EditorClassIdentifier: Assembly-CSharp::BaseResourceSO
+  resourceName: Connector Plate Set
+  resourcePrefab: {fileID: 7772069368780306150, guid: 1efcf9599d7e0064d9cc5aadf6597c8d, type: 3}
+  icon: {fileID: 21300000, guid: 0aea6da8a0f80f244894c623649ec1cc, type: 3}
+  baseResourceDestructionRecipeArray: []
+  resourceDurability: 20
+  movementSpeedPenalty: 0.02
+  canBeCarried: 1
+  minAmountOfPlayersNeeded: 1
+  allowMultipleCarriers: 0
+  recommendedCarriers: 1
+  maxCarriers: 1
+  underStaffedPenaltyMultiplier: 1
+  sharedCarryUnderstaffedStaminaDrainPerSecond: 0
+  carryMoveSpeed: 4
+  carryPlayerClearance: 0.35
+  carryAttachLocalPoints: []
+  sharedCarryRotationOffsetEuler: {x: 0, y: 0, z: 0}
+  carryPhysicsProfile: {fileID: 0}
+  furnaceFuelAmount: 0

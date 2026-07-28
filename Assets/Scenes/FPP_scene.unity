@@ -301,7 +301,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6470153986924767027, guid: 0d3fb1b5e4a45f14481610b66c091675, type: 3}
       propertyPath: m_renderer
-      value: 
+      value:
       objectReference: {fileID: 0}
     - target: {fileID: 8964850643171789788, guid: 0d3fb1b5e4a45f14481610b66c091675, type: 3}
       propertyPath: m_LocalPosition.x
@@ -362,7 +362,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -864,11 +864,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9129826428557026998, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[3].bridgeComponentSO
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
     - target: {fileID: 9129826428557026998, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[4].bridgeComponentSO
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
     - target: {fileID: 9129826428557026998, guid: 841cf3e776a377247ace7013427c4d9f, type: 3}
       propertyPath: bridgeComponentDataArray.Array.data[3].bridgeComponentType
@@ -2223,12 +2223,15 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   factoryInteractionUI: {fileID: 0}
   InteractionOutlineGameobject: {fileID: 875189547}
+  productionRecipeSOArray: []
+  currentlySelectedProductionRecipeSO: {fileID: 0}
   mountableBridgeComponentSOArray: []
   currentlySelectedMountableBridgeComponentSO: {fileID: 0}
   baseStorageNew: {fileID: 0}
   mountableBridgeComponentSpawnPoint: {fileID: 0}
   bridgeComponentSpriteRenderer: {fileID: 0}
   productionDuration: 1
+  defaultSelectedComponentIndex: -1
 --- !u!1 &1028513131
 GameObject:
   m_ObjectHideFlags: 0
@@ -2548,12 +2551,28 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: defaultSelectedComponentIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: productionRecipeSOArray.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: currentlySelectedProductionRecipeSO
+      value:
+      objectReference: {fileID: 11400000, guid: 06261d77892ddb744822144490daa2cb, type: 2}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[0]'
+      value:
+      objectReference: {fileID: 11400000, guid: 06261d77892ddb744822144490daa2cb, type: 2}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: mountableBridgeComponentSOArray.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[0]'
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 9fa6cb6c61419394fae67d6286faa6de, type: 2}
     - target: {fileID: 4928779315400324619, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: m_IsActive
@@ -2847,7 +2866,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -3155,7 +3174,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: a79c9dbd1bcae3649a3046972eba8183, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -4072,7 +4091,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4401831225066671519, guid: d14f305e42b6f474f9e3be5d6bd50377, type: 3}
       propertyPath: m_renderer
-      value: 
+      value:
       objectReference: {fileID: 0}
     - target: {fileID: 4949820984914456861, guid: d14f305e42b6f474f9e3be5d6bd50377, type: 3}
       propertyPath: m_AnchorMax.y
@@ -4185,7 +4204,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: bridgeComponentSO
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 41b76828b5e7a0a4496e2101435ef566, type: 2}
     - target: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       propertyPath: m_Name
@@ -4333,7 +4352,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1663187150, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: thirdPersonInputs
-      value: 
+      value:
       objectReference: {fileID: 0}
     - target: {fileID: 1663187150, guid: 2f7f3dde7ae722a4aafffe20691ad702, type: 3}
       propertyPath: starterAssetsInputs
@@ -4472,6 +4491,26 @@ PrefabInstance:
       propertyPath: componentLenghtStep
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: defaultSelectedComponentIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: productionRecipeSOArray.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: currentlySelectedProductionRecipeSO
+      value:
+      objectReference: {fileID: 11400000, guid: 9686d2230e57e4747bbfff93ae3046ab, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[0]'
+      value:
+      objectReference: {fileID: 11400000, guid: 9686d2230e57e4747bbfff93ae3046ab, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[1]'
+      value:
+      objectReference: {fileID: 11400000, guid: 06261d77892ddb744822144490daa2cb, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: mountableBridgeComponentSOArray.Array.size
       value: 2
@@ -4628,18 +4667,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 0}
     - targetCorrespondingSourceObject: {fileID: 935545722759535720, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 7560269022802816103, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 1364808860420232375, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 789514530155996042, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 7702544583475789570, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}

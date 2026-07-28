@@ -19,7 +19,9 @@ MonoBehaviour:
   - resourceType: {fileID: 11400000, guid: 73b2361f58241804caa2fd64fddc3bfb, type: 2}
     amount: 4
   - resourceType: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
-    amount: 4
+    amount: 3
+  - resourceType: {fileID: 11400000, guid: c208d884f86e27648b37d6d871d5059f, type: 2}
+    amount: 1
   bridgeComponentSO: {fileID: 11400000, guid: 43e6a23a14d975d46927ef4c7c4a9df7, type: 2}
   movementSpeedPenalty: 0.15
   minAmountOfPlayersNeeded: 3

@@ -16,10 +16,20 @@ public class RequiredResourcesPanelUI : MonoBehaviour
 
     public void SetRequiredResourcesInformations(MountableBridgeComponentSO mountableBridgeComponentSO)
     {
-        SetRequiredResourcesInformations(mountableBridgeComponentSO, null);
+        SetRequiredResourcesInformations(mountableBridgeComponentSO != null ? mountableBridgeComponentSO.requiredResources : null, null);
     }
 
     public void SetRequiredResourcesInformations(MountableBridgeComponentSO mountableBridgeComponentSO, BaseStorageNew storage)
+    {
+        SetRequiredResourcesInformations(mountableBridgeComponentSO != null ? mountableBridgeComponentSO.requiredResources : null, storage);
+    }
+
+    public void SetRequiredResourcesInformations(ProductionRecipeSO productionRecipeSO, BaseStorageNew storage)
+    {
+        SetRequiredResourcesInformations(productionRecipeSO != null ? productionRecipeSO.RequiredResources : null, storage);
+    }
+
+    private void SetRequiredResourcesInformations(RequiredResource[] requiredResources, BaseStorageNew storage)
     {
         if (instantiatedRequiredResourceObjectHolderList.Count != 0)
         {
@@ -29,12 +39,12 @@ public class RequiredResourcesPanelUI : MonoBehaviour
             }
             instantiatedRequiredResourceObjectHolderList.Clear();
         }
-        if (mountableBridgeComponentSO == null)
+        if (requiredResources == null)
         {
             return;
         }
 
-        foreach(RequiredResource requiredResource in mountableBridgeComponentSO.requiredResources)
+        foreach(RequiredResource requiredResource in requiredResources)
         {
             GameObject requiredResourceInformationHolder = Instantiate(requiredResourceObjectHolderTemplate, contentHolder);
             instantiatedRequiredResourceObjectHolderList.Add(requiredResourceInformationHolder);

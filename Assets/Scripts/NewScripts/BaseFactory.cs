@@ -21,7 +21,11 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     public GameObject InteractionOutlineGameobject;
 
     [Header("Production")]
+    [SerializeField] protected ProductionRecipeSO[] productionRecipeSOArray;
+    [SerializeField] protected ProductionRecipeSO currentlySelectedProductionRecipeSO;
+    [Tooltip("Deprecated catalog kept for migration of older scene overrides.")]
     [SerializeField] protected MountableBridgeComponentSO[] mountableBridgeComponentSOArray;
+    [Tooltip("Deprecated selected value kept for backwards-compatible inspector data.")]
     [SerializeField] protected MountableBridgeComponentSO currentlySelectedMountableBridgeComponentSO;
     [SerializeField] protected BaseStorageNew baseStorageNew;
     [SerializeField] protected Transform mountableBridgeComponentSpawnPoint;
@@ -58,7 +62,10 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     public static EventHandler OnInteractBaseFactory;
 
     public BaseStorageNew Storage => baseStorageNew;
-    public MountableBridgeComponentSO SelectedComponent => GetMountableBridgeComponentSOByIndex(SelectedComponentIndex);
+    public ProductionRecipeSO SelectedRecipe => GetProductionRecipeSOByIndex(SelectedComponentIndex);
+    public MountableBridgeComponentSO SelectedComponent => SelectedRecipe != null
+        ? SelectedRecipe.MountableBridgeComponentOutput
+        : GetLegacyMountableBridgeComponentSOByIndex(SelectedComponentIndex);
     public bool IsProducing => IsNetworkSessionActive() ? isProducingNetwork.Value : localIsProducing;
     public float ProductionProgressNormalized => IsNetworkSessionActive() ? productionProgressNetwork.Value : localProductionProgress;
     public FactoryProductionFailureReason LastFailureReason => IsNetworkSessionActive()
@@ -158,7 +165,12 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
 
     protected virtual void FactoryInteractionUI_OnBridgeComponentSelectionConfirm(object sender, FactoryInteractionUI.OnConfirmButtonClickEventArgs e)
     {
-        RequestSelectComponent(e.mountableBridgeComponentSO);
+        RequestSelectRecipe(e.productionRecipeSO);
+    }
+
+    public void RequestSelectRecipe(ProductionRecipeSO productionRecipeSO)
+    {
+        RequestSelectComponent(GetProductionRecipeSOIndex(productionRecipeSO));
     }
 
     public void RequestSelectComponent(MountableBridgeComponentSO mountableBridgeComponentSO)
@@ -225,8 +237,8 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
             return false;
         }
 
-        MountableBridgeComponentSO selectedComponent = SelectedComponent;
-        if (!TryConsumeRequiredResources(selectedComponent))
+        ProductionRecipeSO selectedRecipe = SelectedRecipe;
+        if (!TryConsumeRequiredResources(selectedRecipe))
         {
             SetFailureReasonServer(FactoryProductionFailureReason.MissingResources);
             return false;
@@ -246,7 +258,7 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
         return CanProduceSelectedComponentShared(out reason);
     }
 
-    protected virtual bool CanProduceAdditionalConditions(MountableBridgeComponentSO mountableBridgeComponentSO, out FactoryProductionFailureReason reason)
+    protected virtual bool CanProduceAdditionalConditions(ProductionRecipeSO productionRecipeSO, out FactoryProductionFailureReason reason)
     {
         reason = FactoryProductionFailureReason.None;
         return true;
@@ -255,7 +267,7 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     private bool CanProduceSelectedComponentShared(out FactoryProductionFailureReason reason)
     {
         reason = FactoryProductionFailureReason.None;
-        MountableBridgeComponentSO selectedComponent = SelectedComponent;
+        ProductionRecipeSO selectedRecipe = SelectedRecipe;
 
         if (IsProducing)
         {
@@ -263,19 +275,19 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
             return false;
         }
 
-        if (selectedComponent == null)
+        if (selectedRecipe == null || !selectedRecipe.HasValidOutput)
         {
             reason = FactoryProductionFailureReason.NoSelectedComponent;
             return false;
         }
 
-        if (!CheckRequiredBaseResources(selectedComponent))
+        if (!CheckRequiredBaseResources(selectedRecipe))
         {
             reason = FactoryProductionFailureReason.MissingResources;
             return false;
         }
 
-        if (!CanProduceAdditionalConditions(selectedComponent, out reason))
+        if (!CanProduceAdditionalConditions(selectedRecipe, out reason))
         {
             return false;
         }
@@ -285,8 +297,7 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
 
     protected void FinishProductionServer()
     {
-        MountableBridgeComponentSO selectedComponent = SelectedComponent;
-        bool spawned = SpawnMountableBridgeComponent(selectedComponent) != null;
+        bool spawned = SpawnProductionOutput(SelectedRecipe);
         isProducingNetwork.Value = false;
         productionProgressNetwork.Value = 0f;
         productionEndTime = 0f;
@@ -295,8 +306,7 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
 
     protected void FinishProductionLocal()
     {
-        MountableBridgeComponentSO selectedComponent = SelectedComponent;
-        bool spawned = SpawnMountableBridgeComponent(selectedComponent) != null;
+        bool spawned = SpawnProductionOutput(SelectedRecipe);
         localIsProducing = false;
         localProductionProgress = 0f;
         productionEndTime = 0f;
@@ -371,6 +381,43 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
         return Instantiate(mountableBridgeComponentSO.inGameGameObjectPrefab, GetSpawnPosition(), GetSpawnRotation());
     }
 
+    protected bool SpawnProductionOutput(ProductionRecipeSO productionRecipeSO)
+    {
+        if (productionRecipeSO == null)
+        {
+            return false;
+        }
+
+        if (productionRecipeSO.ProductType == FactoryProductType.MountableBridgeComponent)
+        {
+            return SpawnMountableBridgeComponent(productionRecipeSO.MountableBridgeComponentOutput) != null;
+        }
+
+        BaseResourceSO resourceSO = productionRecipeSO.BaseResourceOutput;
+        if (resourceSO == null)
+        {
+            return false;
+        }
+
+        const float outputSpacing = 0.7f;
+        int outputAmount = productionRecipeSO.OutputAmount;
+        for (int i = 0; i < outputAmount; i++)
+        {
+            float centeredIndex = i - (outputAmount - 1) * 0.5f;
+            Vector3 offset = GetSpawnRotation() * (Vector3.right * centeredIndex * outputSpacing);
+            if (!BaseResourceSpawnUtility.TrySpawnResource(
+                    resourceSO,
+                    GetSpawnPosition() + offset,
+                    GetSpawnRotation(),
+                    out _))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     protected virtual GameObject SpawnNetworkMountableBridgeComponent(MountableBridgeComponentSO mountableBridgeComponentSO)
     {
         GameObject networkSpawnedGameObject = Instantiate(mountableBridgeComponentSO.inGameGameObjectPrefab, GetSpawnPosition(), GetSpawnRotation());
@@ -385,14 +432,14 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
         return null;
     }
 
-    public bool CheckRequiredBaseResources(MountableBridgeComponentSO mountableBridgeComponentSO)
+    public bool CheckRequiredBaseResources(ProductionRecipeSO productionRecipeSO)
     {
-        if (mountableBridgeComponentSO == null || baseStorageNew == null)
+        if (productionRecipeSO == null || baseStorageNew == null)
         {
             return false;
         }
 
-        foreach (RequiredResource requiredResource in mountableBridgeComponentSO.requiredResources)
+        foreach (RequiredResource requiredResource in productionRecipeSO.RequiredResources)
         {
             if (baseStorageNew.CheckBaseResourceAmount(requiredResource.resourceType) < requiredResource.amount)
             {
@@ -405,23 +452,25 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
 
     public void RemoveBaseResourcesFromStorage(MountableBridgeComponentSO mountableBridgeComponentSO)
     {
-        TryConsumeRequiredResources(mountableBridgeComponentSO);
+        int componentIndex = GetMountableBridgeComponentSOIndex(mountableBridgeComponentSO);
+        ProductionRecipeSO recipe = GetProductionRecipeSOByIndex(componentIndex);
+        TryConsumeRequiredResources(recipe);
     }
 
-    protected bool TryConsumeRequiredResources(MountableBridgeComponentSO mountableBridgeComponentSO)
+    protected bool TryConsumeRequiredResources(ProductionRecipeSO productionRecipeSO)
     {
-        if (!CheckRequiredBaseResources(mountableBridgeComponentSO))
+        if (!CheckRequiredBaseResources(productionRecipeSO))
         {
             return false;
         }
 
         int consumedCount = 0;
-        foreach (RequiredResource requiredResource in mountableBridgeComponentSO.requiredResources)
+        foreach (RequiredResource requiredResource in productionRecipeSO.RequiredResources)
         {
             if (!baseStorageNew.TryRemoveBaseResourceAmount(requiredResource.resourceType, requiredResource.amount))
             {
-                Debug.LogWarning($"Failed to consume {requiredResource.resourceType.resourceName} for {mountableBridgeComponentSO.name}.");
-                RollbackConsumedResources(mountableBridgeComponentSO, consumedCount);
+                Debug.LogWarning($"Failed to consume {requiredResource.resourceType.resourceName} for {productionRecipeSO.name}.");
+                RollbackConsumedResources(productionRecipeSO, consumedCount);
                 return false;
             }
 
@@ -431,22 +480,72 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
         return true;
     }
 
-    private void RollbackConsumedResources(MountableBridgeComponentSO mountableBridgeComponentSO, int consumedCount)
+    private void RollbackConsumedResources(ProductionRecipeSO productionRecipeSO, int consumedCount)
     {
         for (int i = 0; i < consumedCount; i++)
         {
-            RequiredResource consumedResource = mountableBridgeComponentSO.requiredResources[i];
+            RequiredResource consumedResource = productionRecipeSO.RequiredResources[i];
             baseStorageNew.StoreBaseResource(consumedResource.resourceType, consumedResource.amount);
         }
     }
 
     public MountableBridgeComponentSO[] GetMountableBridgeComponentSOArray()
     {
+        if (productionRecipeSOArray != null)
+        {
+            MountableBridgeComponentSO[] components = new MountableBridgeComponentSO[productionRecipeSOArray.Length];
+            for (int i = 0; i < productionRecipeSOArray.Length; i++)
+            {
+                components[i] = productionRecipeSOArray[i] != null
+                    ? productionRecipeSOArray[i].MountableBridgeComponentOutput
+                    : null;
+            }
+
+            return components;
+        }
+
         return mountableBridgeComponentSOArray;
+    }
+
+    public ProductionRecipeSO[] GetProductionRecipeSOArray()
+    {
+        return productionRecipeSOArray ?? Array.Empty<ProductionRecipeSO>();
+    }
+
+    public int GetProductionRecipeSOIndex(ProductionRecipeSO productionRecipeSO)
+    {
+        if (productionRecipeSOArray == null)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < productionRecipeSOArray.Length; i++)
+        {
+            if (productionRecipeSOArray[i] == productionRecipeSO)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     public int GetMountableBridgeComponentSOIndex(MountableBridgeComponentSO mountableBridgeComponentSO)
     {
+        if (productionRecipeSOArray != null)
+        {
+            for (int i = 0; i < productionRecipeSOArray.Length; i++)
+            {
+                if (productionRecipeSOArray[i] != null
+                    && productionRecipeSOArray[i].MountableBridgeComponentOutput == mountableBridgeComponentSO)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         if (mountableBridgeComponentSOArray == null)
         {
             return -1;
@@ -465,6 +564,27 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
 
     public MountableBridgeComponentSO GetMountableBridgeComponentSOByIndex(int index)
     {
+        ProductionRecipeSO recipe = GetProductionRecipeSOByIndex(index);
+        if (recipe != null)
+        {
+            return recipe.MountableBridgeComponentOutput;
+        }
+
+        return GetLegacyMountableBridgeComponentSOByIndex(index);
+    }
+
+    public ProductionRecipeSO GetProductionRecipeSOByIndex(int index)
+    {
+        if (productionRecipeSOArray == null || index < 0 || index >= productionRecipeSOArray.Length)
+        {
+            return null;
+        }
+
+        return productionRecipeSOArray[index];
+    }
+
+    private MountableBridgeComponentSO GetLegacyMountableBridgeComponentSOByIndex(int index)
+    {
         if (mountableBridgeComponentSOArray == null || index < 0 || index >= mountableBridgeComponentSOArray.Length)
         {
             return null;
@@ -475,21 +595,26 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
 
     public void InitializeStorageStorableResourcesList()
     {
-        if (baseStorageNew == null || mountableBridgeComponentSOArray == null)
+        if (baseStorageNew == null || productionRecipeSOArray == null)
         {
             return;
         }
 
-        foreach (MountableBridgeComponentSO mountableBridgeComponentSO in mountableBridgeComponentSOArray)
+        foreach (ProductionRecipeSO productionRecipeSO in productionRecipeSOArray)
         {
-            if (mountableBridgeComponentSO == null)
+            if (productionRecipeSO == null)
             {
                 continue;
             }
 
-            foreach (RequiredResource requiredResource in mountableBridgeComponentSO.requiredResources)
+            foreach (RequiredResource requiredResource in productionRecipeSO.RequiredResources)
             {
                 baseStorageNew.AddStorableBaseResource(requiredResource.resourceType);
+            }
+
+            if (productionRecipeSO.ProductType == FactoryProductType.BaseResource)
+            {
+                baseStorageNew.AddStorableBaseResource(productionRecipeSO.BaseResourceOutput);
             }
         }
     }
@@ -509,7 +634,7 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
         return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
     }
 
-    protected virtual void HandleSelectedComponentChanged(MountableBridgeComponentSO selectedComponent)
+    protected virtual void HandleSelectedRecipeChanged(ProductionRecipeSO selectedRecipe)
     {
     }
 
@@ -559,7 +684,7 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
         localSelectedComponentIndex = mountableBridgeComponentSOIndex;
         UpdateCachedSelectedComponent();
         RefreshSelectedVisual();
-        HandleSelectedComponentChanged(currentlySelectedMountableBridgeComponentSO);
+        HandleSelectedRecipeChanged(currentlySelectedProductionRecipeSO);
         SetFailureReasonLocal(FactoryProductionFailureReason.None);
         OnMountableBridgeComponentSOSelected?.Invoke(this, EventArgs.Empty);
         OnFactoryStateChanged?.Invoke(this, EventArgs.Empty);
@@ -574,8 +699,8 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
             return false;
         }
 
-        MountableBridgeComponentSO selectedComponent = SelectedComponent;
-        if (!TryConsumeRequiredResources(selectedComponent))
+        ProductionRecipeSO selectedRecipe = SelectedRecipe;
+        if (!TryConsumeRequiredResources(selectedRecipe))
         {
             SetFailureReasonLocal(FactoryProductionFailureReason.MissingResources);
             return false;
@@ -659,7 +784,7 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     {
         UpdateCachedSelectedComponent();
         RefreshSelectedVisual();
-        HandleSelectedComponentChanged(currentlySelectedMountableBridgeComponentSO);
+        HandleSelectedRecipeChanged(currentlySelectedProductionRecipeSO);
         OnMountableBridgeComponentSOSelected?.Invoke(this, EventArgs.Empty);
         OnFactoryStateChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -705,13 +830,15 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     private bool IsValidComponentIndex(int mountableBridgeComponentSOIndex)
     {
         return mountableBridgeComponentSOIndex >= 0
-            && mountableBridgeComponentSOArray != null
-            && mountableBridgeComponentSOIndex < mountableBridgeComponentSOArray.Length
-            && mountableBridgeComponentSOArray[mountableBridgeComponentSOIndex] != null;
+            && productionRecipeSOArray != null
+            && mountableBridgeComponentSOIndex < productionRecipeSOArray.Length
+            && productionRecipeSOArray[mountableBridgeComponentSOIndex] != null
+            && productionRecipeSOArray[mountableBridgeComponentSOIndex].HasValidOutput;
     }
 
     private void UpdateCachedSelectedComponent()
     {
+        currentlySelectedProductionRecipeSO = SelectedRecipe;
         currentlySelectedMountableBridgeComponentSO = SelectedComponent;
     }
 
@@ -719,8 +846,8 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     {
         if (bridgeComponentSpriteRenderer != null)
         {
-            bridgeComponentSpriteRenderer.sprite = currentlySelectedMountableBridgeComponentSO != null
-                ? currentlySelectedMountableBridgeComponentSO.componentSprite
+            bridgeComponentSpriteRenderer.sprite = currentlySelectedProductionRecipeSO != null
+                ? currentlySelectedProductionRecipeSO.RecipeIcon
                 : null;
         }
     }

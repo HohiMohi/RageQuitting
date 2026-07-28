@@ -171,7 +171,7 @@ public class CarpenterTableFactory : BaseFactory
         }
     }
 
-    protected override bool CanProduceAdditionalConditions(MountableBridgeComponentSO mountableBridgeComponentSO, out FactoryProductionFailureReason reason)
+    protected override bool CanProduceAdditionalConditions(ProductionRecipeSO productionRecipeSO, out FactoryProductionFailureReason reason)
     {
         if (!CheckSettedComponentDimensions())
         {
@@ -183,11 +183,13 @@ public class CarpenterTableFactory : BaseFactory
         return true;
     }
 
-    protected override void HandleSelectedComponentChanged(MountableBridgeComponentSO selectedComponent)
+    protected override void HandleSelectedRecipeChanged(ProductionRecipeSO selectedRecipe)
     {
         BridgeComponentSelectionConfirm?.Invoke(this, new BridgeComponentSelectionConfirmEventArgs
         {
-            mountableBridgeComponentSO = selectedComponent
+            mountableBridgeComponentSO = selectedRecipe != null
+                ? selectedRecipe.MountableBridgeComponentOutput
+                : null
         });
     }
 

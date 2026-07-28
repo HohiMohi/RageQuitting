@@ -1381,11 +1381,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4151932931569482909, guid: 77a4b4fbfceefde409957079502fda96, type: 3}
       propertyPath: 'prerequisites.Array.data[0]'
-      value: 
+      value:
       objectReference: {fileID: 612967137}
     - target: {fileID: 4151932931569482909, guid: 77a4b4fbfceefde409957079502fda96, type: 3}
       propertyPath: 'prerequisites.Array.data[1]'
-      value: 
+      value:
       objectReference: {fileID: 1044301235}
     - target: {fileID: 5322447845113119152, guid: 77a4b4fbfceefde409957079502fda96, type: 3}
       propertyPath: m_AnchorMax.y
@@ -2834,7 +2834,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7301199775807734505, guid: cb0da5cee111893439cb2af1ced3cd69, type: 3}
       propertyPath: 'clearingObstacles.Array.data[0]'
-      value: 
+      value:
       objectReference: {fileID: 1973837563}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3440,32 +3440,64 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: productionRecipeSOArray.Array.size
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: currentlySelectedProductionRecipeSO
+      value:
+      objectReference: {fileID: 11400000, guid: 648594d5b56cbb74bb46f4448f173bb7, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[0]'
+      value:
+      objectReference: {fileID: 11400000, guid: 648594d5b56cbb74bb46f4448f173bb7, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[1]'
+      value:
+      objectReference: {fileID: 11400000, guid: c3b57e0f45dc6db4eae8c84abcfa8070, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[2]'
+      value:
+      objectReference: {fileID: 11400000, guid: 7bf2287dc33cb0643981d12e8381e9a5, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[3]'
+      value:
+      objectReference: {fileID: 11400000, guid: 84bd93dce01aaae44a52686fbbedca42, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[4]'
+      value:
+      objectReference: {fileID: 11400000, guid: 2c4169bb4e94c6a4c856bd6a014ae941, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[5]'
+      value:
+      objectReference: {fileID: 11400000, guid: d6319977ae539864db52e5f0748ea9a1, type: 2}
+    - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: mountableBridgeComponentSOArray.Array.size
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[0]'
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 4c390055c6d8e0f4896c9ed3e9f950b1, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[1]'
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 0343c3b28c3f4e14ebb0d9238ac7251a, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[2]'
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: d0a70d3f1606a9540a94e913d66046d7, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[3]'
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 36ee768b8f5bb8f41a6e20f851869252, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[4]'
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 02de348a3aecf8c48af099d5429623cb, type: 2}
     - target: {fileID: 246577966056562001, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: 'mountableBridgeComponentSOArray.Array.data[5]'
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: efe9a838721d1314cbcea199a5221532, type: 2}
     - target: {fileID: 1729528994032473016, guid: f6d51be24ca9b634ab827994c36c600d, type: 3}
       propertyPath: m_SizeDelta.y
@@ -6849,6 +6881,34 @@ PrefabInstance:
       value: 0.000015258789
       objectReference: {fileID: 0}
     - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: defaultSelectedComponentIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: productionRecipeSOArray.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: currentlySelectedProductionRecipeSO
+      value:
+      objectReference: {fileID: 11400000, guid: 8ab9e03dbe2f5984088b3cf20e2a1b31, type: 2}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[0]'
+      value:
+      objectReference: {fileID: 11400000, guid: 8ab9e03dbe2f5984088b3cf20e2a1b31, type: 2}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[1]'
+      value:
+      objectReference: {fileID: 11400000, guid: ffc20c6e966ec194794524dbe45c0469, type: 2}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[2]'
+      value:
+      objectReference: {fileID: 11400000, guid: 6ee892a8b22046b4cb8230be1fce9696, type: 2}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
+      propertyPath: 'productionRecipeSOArray.Array.data[3]'
+      value:
+      objectReference: {fileID: 11400000, guid: d6571f3ca348be743a63dc66ddefb6de, type: 2}
+    - target: {fileID: 4807982504743458985, guid: 72aa0173d5b82ee439b617acf60dcdc7, type: 3}
       propertyPath: mountableBridgeComponentSOArray.Array.size
       value: 1
       objectReference: {fileID: 0}
@@ -9590,12 +9650,24 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3974033819670228483, guid: 5ad926efbf4048245aa9af818ceb5150, type: 3}
       propertyPath: zoneSize.z
-      value: 10
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 3974033819670228483, guid: 5ad926efbf4048245aa9af818ceb5150, type: 3}
       propertyPath: resourceType
       value: 
       objectReference: {fileID: 11400000, guid: 0603da15035368645805691e40633fda, type: 2}
+    - target: {fileID: 3974033819670228483, guid: 5ad926efbf4048245aa9af818ceb5150, type: 3}
+      propertyPath: spawnVerticalOffset
+      value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 3974033819670228483, guid: 5ad926efbf4048245aa9af818ceb5150, type: 3}
+      propertyPath: spawnClearanceHeight
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 3974033819670228483, guid: 5ad926efbf4048245aa9af818ceb5150, type: 3}
+      propertyPath: spawnClearanceRadius
+      value: 1.25
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -17,7 +17,9 @@ MonoBehaviour:
   inGameGameObjectPrefab: {fileID: 4142331829999909174, guid: b9998524b9bb284479579e303e6bf09c, type: 3}
   requiredResources:
   - resourceType: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
-    amount: 4
+    amount: 3
+  - resourceType: {fileID: 11400000, guid: ecedb839fbd21624bb7e3acc2a89c837, type: 2}
+    amount: 1
   bridgeComponentSO: {fileID: 11400000, guid: ccf15358972f0704385ec5d608ff91f4, type: 2}
   movementSpeedPenalty: 0.1
   minAmountOfPlayersNeeded: 2
