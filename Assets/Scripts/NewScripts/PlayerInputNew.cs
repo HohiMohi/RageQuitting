@@ -31,6 +31,7 @@ public class PlayerInputNew : NetworkBehaviour
     public EventHandler OnUI_Left;
     public EventHandler OnUI_Right;
     public EventHandler OnUI_Back;
+    public EventHandler OnDismissInfoOverlay;
 
     [SerializeField]
     private bool IsUIOpened;
@@ -151,7 +152,10 @@ public class PlayerInputNew : NetworkBehaviour
         if (IsUIOpened)
         {
             OnUI_Back?.Invoke(this, EventArgs.Empty);
+            return;
         }
+
+        OnDismissInfoOverlay?.Invoke(this, EventArgs.Empty);
     }
 
     private void UI_Right_performed(InputAction.CallbackContext context)

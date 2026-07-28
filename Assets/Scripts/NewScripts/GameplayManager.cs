@@ -114,6 +114,23 @@ public readonly struct BridgeRequirementsSnapshot
     }
 }
 
+public sealed class BridgeConstructionStageChangedEventArgs : EventArgs
+{
+    public BridgeComponent Component { get; }
+    public BridgeConstructionStage PreviousStage { get; }
+    public BridgeConstructionStage CurrentStage { get; }
+
+    public BridgeConstructionStageChangedEventArgs(
+        BridgeComponent component,
+        BridgeConstructionStage previousStage,
+        BridgeConstructionStage currentStage)
+    {
+        Component = component;
+        PreviousStage = previousStage;
+        CurrentStage = currentStage;
+    }
+}
+
 public class GameplayManager : MonoBehaviour
 {
     private const string RequestFullStateMessageName = "GameplayManager_RequestBridgeState";
@@ -137,10 +154,13 @@ public class GameplayManager : MonoBehaviour
 
     private readonly List<BridgeComponentNetworkState> bridgeComponentStates = new List<BridgeComponentNetworkState>();
     private readonly HashSet<int> reportedInvalidStageComponentIndexes = new HashSet<int>();
+    private readonly Dictionary<int, BridgeConstructionStage> observedConstructionStages =
+        new Dictionary<int, BridgeConstructionStage>();
     private BridgeComponent[] bridgeComponents;
     private bool bridgeComponentEventsSubscribed;
     private bool bridgeFullyAssembledEventInvoked;
     private bool networkMessagingRegistered;
+    private bool hasAppliedInitialNetworkBridgeState;
 
     public EventHandler<BridgeComponentMountableStatusUpdateEventArgs> BridgeComponentMountableStatusUpdate;
     public class BridgeComponentMountableStatusUpdateEventArgs : EventArgs
@@ -152,6 +172,7 @@ public class GameplayManager : MonoBehaviour
     public bool IsFullyAssembled => isFullyAsembled;
     public event EventHandler OnBridgeFullyAssembled;
     public event EventHandler OnBridgeRequirementsChanged;
+    public event EventHandler<BridgeConstructionStageChangedEventArgs> OnConstructionStageChanged;
 
     private void Awake()
     {
@@ -181,6 +202,7 @@ public class GameplayManager : MonoBehaviour
         }
 
         CacheBridgeComponents();
+        SeedObservedConstructionStages();
         SubscribeBridgeComponentEvents();
         yield return null;
 
@@ -342,6 +364,7 @@ public class GameplayManager : MonoBehaviour
         }
 
         bridgeComponentDataArray[e.componentID].isAssembled = true;
+        ObserveConstructionStage(e.componentID);
         CheckCurrentStageMountingProgress();
         NotifyBridgeRequirementsChanged();
     }
@@ -359,6 +382,7 @@ public class GameplayManager : MonoBehaviour
         }
 
         bridgeComponentDataArray[e.componentID].isMounted = true;
+        ObserveConstructionStage(e.componentID);
         CheckCurrentStageMountingProgress();
         NotifyBridgeRequirementsChanged();
     }
@@ -459,6 +483,7 @@ public class GameplayManager : MonoBehaviour
         if (!IsNetworkSessionActive())
         {
             bridgeComponent.HandleAssemblingLocal(equippableItemSO, damage);
+            ObserveConstructionStage(bridgeComponent.ComponentID);
             return;
         }
 
@@ -491,6 +516,7 @@ public class GameplayManager : MonoBehaviour
         {
             if (bridgeComponent.ConstructionSite != null && bridgeComponent.ConstructionSite.TryApplyToolWork(equippableItemSO.itemType, workPower, workPointId))
             {
+                ObserveConstructionStage(bridgeComponent.ComponentID);
                 NotifyBridgeRequirementsChanged();
             }
             return;
@@ -519,6 +545,7 @@ public class GameplayManager : MonoBehaviour
         bridgeComponent.RefreshVisualAndColliderState();
         if (!IsNetworkSessionActive())
         {
+            ObserveConstructionStage(bridgeComponent.ComponentID);
             NotifyBridgeRequirementsChanged();
             return;
         }
@@ -787,14 +814,16 @@ public class GameplayManager : MonoBehaviour
     {
         reader.ReadValueSafe(out int stateCount);
         bridgeComponentStates.Clear();
+        bool suppressStageEvents = !hasAppliedInitialNetworkBridgeState;
 
         for (int i = 0; i < stateCount; i++)
         {
             BridgeComponentNetworkState state = ReadState(reader);
             bridgeComponentStates.Add(state);
-            ApplyNetworkState(state);
+            ApplyNetworkState(state, suppressStageEvents);
         }
 
+        hasAppliedInitialNetworkBridgeState = true;
         NotifyBridgeRequirementsChanged();
         if (IsBridgeFullyAssembledFromStateList())
         {
@@ -858,7 +887,7 @@ public class GameplayManager : MonoBehaviour
         };
     }
 
-    private void ApplyNetworkState(BridgeComponentNetworkState state)
+    private void ApplyNetworkState(BridgeComponentNetworkState state, bool suppressStageEvent = false)
     {
         if (!TryGetBridgeComponent(state.componentID, out BridgeComponent bridgeComponent))
         {
@@ -876,6 +905,48 @@ public class GameplayManager : MonoBehaviour
         if (state.canBeMounted)
         {
             BridgeComponentMountableStatusUpdate?.Invoke(this, new BridgeComponentMountableStatusUpdateEventArgs { canBeMounted = true, componentID = state.componentID });
+        }
+
+        ObserveConstructionStage(state.componentID, suppressStageEvent);
+    }
+
+    private void SeedObservedConstructionStages()
+    {
+        observedConstructionStages.Clear();
+        if (bridgeComponents == null)
+        {
+            return;
+        }
+
+        foreach (BridgeComponent component in bridgeComponents)
+        {
+            if (component != null && component.ConstructionSite != null)
+            {
+                observedConstructionStages[component.ComponentID] = component.ConstructionSite.CurrentStage;
+            }
+        }
+    }
+
+    private void ObserveConstructionStage(int componentID, bool suppressEvent = false)
+    {
+        if (!TryGetBridgeComponent(componentID, out BridgeComponent component) || component.ConstructionSite == null)
+        {
+            return;
+        }
+
+        BridgeConstructionStage currentStage = component.ConstructionSite.CurrentStage;
+        if (!observedConstructionStages.TryGetValue(componentID, out BridgeConstructionStage previousStage))
+        {
+            observedConstructionStages[componentID] = currentStage;
+            return;
+        }
+
+        observedConstructionStages[componentID] = currentStage;
+        if (!suppressEvent && previousStage != currentStage)
+        {
+            OnConstructionStageChanged?.Invoke(
+                this,
+                new BridgeConstructionStageChangedEventArgs(component, previousStage, currentStage));
         }
     }
 

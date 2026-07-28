@@ -343,6 +343,11 @@ public class PlayerNetworkSetup : NetworkBehaviour
             restartLevelUi.gameObject.SetActive(false);
         }
 
+        foreach (var bridgeStageInfoUi in GetComponentsInChildren<PlayerBridgeStageInfoUI>(true))
+        {
+            bridgeStageInfoUi.gameObject.SetActive(false);
+        }
+
         foreach (var canvas in GetComponentsInChildren<Canvas>(true))
         {
             canvas.gameObject.SetActive(false);
