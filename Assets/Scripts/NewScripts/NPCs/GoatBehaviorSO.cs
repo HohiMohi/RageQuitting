@@ -31,6 +31,8 @@ public class GoatBehaviorSO : NPCBehaviorSO
     [SerializeField] private float idleDurationMax = 3.5f;
     [SerializeField] private float wanderArrivalDistance = 0.6f;
     [SerializeField] private int wanderPointAttempts = 8;
+    [SerializeField] private int wanderMovesBeforeHomeCorrection = 6;
+    [SerializeField] private float homeCorrectionNavMeshSampleRadius = 1.5f;
 
     [Header("Standing targets")]
     [SerializeField] private GoatStandingTargetProfileSO standingTargetProfile;
@@ -78,6 +80,8 @@ public class GoatBehaviorSO : NPCBehaviorSO
     public float IdleDurationMax => Mathf.Max(IdleDurationMin, idleDurationMax);
     public float WanderArrivalDistance => Mathf.Max(0.1f, wanderArrivalDistance);
     public int WanderPointAttempts => Mathf.Max(1, wanderPointAttempts);
+    public int WanderMovesBeforeHomeCorrection => Mathf.Max(1, wanderMovesBeforeHomeCorrection);
+    public float HomeCorrectionNavMeshSampleRadius => Mathf.Max(0.1f, homeCorrectionNavMeshSampleRadius);
     public GoatStandingTargetProfileSO StandingTargetProfile => standingTargetProfile;
     public float StandingSearchRadius => Mathf.Max(0.1f, standingSearchRadius);
     public float StandingSearchInterval => Mathf.Max(0.05f, standingSearchInterval);
@@ -147,7 +151,7 @@ public class GoatBehaviorSO : NPCBehaviorSO
         private Vector3 standingTargetStartPosition;
         private Quaternion standingTargetStartRotation;
         private Vector3 standingLocalPosition;
-        private Vector3 homePosition;
+        private int selectedWanderMoveCount;
         private GoatStandingMotionDriver motionDriver;
         private GoatChargeController chargeController;
         private NPCAnimationController animationController;
@@ -178,7 +182,6 @@ public class GoatBehaviorSO : NPCBehaviorSO
 
         public override void Enter()
         {
-            homePosition = Brain.transform.position;
             animationController = Brain.GetComponent<NPCAnimationController>();
             motionDriver = Brain.GetComponent<GoatStandingMotionDriver>();
             if (motionDriver == null)
@@ -1179,19 +1182,54 @@ public class GoatBehaviorSO : NPCBehaviorSO
         private bool TrySelectWanderTarget(out Vector3 target)
         {
             target = Brain.transform.position;
+            bool requiresHomeCorrection =
+                selectedWanderMoveCount + 1 >= config.WanderMovesBeforeHomeCorrection;
+            if (requiresHomeCorrection)
+            {
+                if (!TrySelectHomeCorrectionTarget(out target))
+                {
+                    return false;
+                }
+
+                selectedWanderMoveCount = 0;
+                return true;
+            }
+
             float radius = Mathf.Max(0.1f, Brain.PatrolRadius);
             int areaMask = Brain.Agent != null ? Brain.Agent.areaMask : NavMesh.AllAreas;
             for (int i = 0; i < config.WanderPointAttempts; i++)
             {
                 Vector2 randomCircle = Random.insideUnitCircle * radius;
-                Vector3 candidate = homePosition + new Vector3(randomCircle.x, 0f, randomCircle.y);
-                if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, radius, areaMask))
+                Vector3 candidate = Brain.transform.position + new Vector3(randomCircle.x, 0f, randomCircle.y);
+                if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, radius, areaMask)
+                    && HasCompletePath(Brain.transform.position, hit.position))
                 {
                     target = hit.position;
+                    selectedWanderMoveCount++;
                     return true;
                 }
             }
 
+            return false;
+        }
+
+        private bool TrySelectHomeCorrectionTarget(out Vector3 target)
+        {
+            Vector3 currentPosition = Brain.transform.position;
+            Vector3 midpoint = Vector3.Lerp(currentPosition, Brain.SpawnPosition, 0.5f);
+            int areaMask = Brain.Agent != null ? Brain.Agent.areaMask : NavMesh.AllAreas;
+            if (NavMesh.SamplePosition(
+                    midpoint,
+                    out NavMeshHit hit,
+                    config.HomeCorrectionNavMeshSampleRadius,
+                    areaMask)
+                && HasCompletePath(currentPosition, hit.position))
+            {
+                target = hit.position;
+                return true;
+            }
+
+            target = currentPosition;
             return false;
         }
 

@@ -23,6 +23,7 @@ public class NPCBrain : NetworkBehaviour
     private NPCStorageInteractor storageInteractor;
     private NPCBehaviorController behaviorController;
     private NPCSpawner originSpawner;
+    private Vector3 spawnPosition;
     private float tickTimer;
     private bool isUnderExternalControl;
 
@@ -35,6 +36,7 @@ public class NPCBrain : NetworkBehaviour
     public NPCAttackController AttackController => attackController;
     public NPCStorageInteractor StorageInteractor => storageInteractor;
     public NPCSpawner OriginSpawner => originSpawner;
+    public Vector3 SpawnPosition => spawnPosition;
     public float DetectionRadius => definition != null ? definition.detectionRadius : 12f;
     public float InteractionDistance => definition != null ? definition.interactionDistance : 1.4f;
     public float PatrolRadius => definition != null ? definition.patrolRadius : 8f;
@@ -42,6 +44,7 @@ public class NPCBrain : NetworkBehaviour
 
     private void Awake()
     {
+        spawnPosition = transform.position;
         agent = GetComponent<NavMeshAgent>();
         carrier = GetComponent<NPCCarrier>();
         health = GetComponent<NPCHealth>();

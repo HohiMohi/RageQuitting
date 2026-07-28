@@ -16,6 +16,8 @@ MonoBehaviour:
   idleDurationMax: 3.5
   wanderArrivalDistance: 0.6
   wanderPointAttempts: 8
+  wanderMovesBeforeHomeCorrection: 6
+  homeCorrectionNavMeshSampleRadius: 1.5
   standingTargetProfile: {fileID: 11400000, guid: ef3b9f899e3015e459be3c1fa48fefbf, type: 2}
   standingSearchRadius: 10
   standingSearchInterval: 0.5
