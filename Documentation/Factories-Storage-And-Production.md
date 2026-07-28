@@ -2,8 +2,10 @@
 
 ## Status
 
-**Gotowe dla aktywnego contentu.** Fabryki i magazyny są synchronizowane przez
-serwer. Tutorial używa scenowego override'u katalogu Carpenter Table.
+**Gotowe dla aktywnego contentu.** Wspólnym źródłem prawdy dla produkcji jest
+`ProductionRecipeSO`. Carpenter Table produkuje części mostu, a Blast Furnace
+produkuje zasoby. Wybór receptury, zużycie składników i spawn produktów są
+autorytatywne po stronie serwera.
 
 ## `BaseStorageNew`
 
@@ -16,8 +18,12 @@ Interakcja gracza może odłożyć trzymany zasób albo wycofać egzemplarz.
 | `withdrawSpawnPoint` | Miejsce tworzenia wycofanego zasobu |
 | `withdrawSpawnFallbackOffset` | Lokalny fallback, gdy punkt nie jest przypisany |
 
-Stan ilości jest sieciowy. `BaseResourceAmountChanged` odświeża UI oraz systemy
-fabryk. Prefab zasobu wycofywanego z magazynu musi być sieciowo zarejestrowany.
+Stan ilości jest sieciowy. `BaseResourceAmountChanged` odświeża UI oraz fabryki.
+Prefab wycofywanego zasobu musi być zarejestrowany jako NetworkPrefab.
+
+Fabryka automatycznie rozszerza whitelistę magazynu o wejścia wszystkich swoich
+receptur. Dla receptury produkującej `BaseResourceSO` dodaje również jej produkt,
+dzięki czemu piec może przechowywać wytworzone półprodukty.
 
 ## `MainStorageNew`
 
@@ -28,17 +34,41 @@ Główny magazyn mostu przyjmuje gotowe `MountableBridgeComponent`.
 | `allRequiredResourcesStored` | Stan runtime ukończenia wymagań |
 | `requiredBridgeComponents` | Lista `BridgeComponentSO` i wymaganych ilości |
 
-`BridgeComponentStored` informuje `GameplayManager`/UI o zmianie. Nie należy
-mieszać tej listy z katalogiem produkcji fabryki.
+`BridgeComponentStored` informuje `GameplayManager` i UI o zmianie. Lista ta nie
+jest katalogiem produkcji fabryki.
+
+## `ProductionRecipeSO`
+
+Asset tworzy się z menu `Create > Scriptable Objects > Production Recipe`.
+
+| Pole | Znaczenie |
+|---|---|
+| `recipeName` | Nazwa wyświetlana w UI fabryki |
+| `recipeIcon` | Ikona listy i wybranego produktu |
+| `requiredResources` | Lista `BaseResourceSO + amount` zużywana przy starcie |
+| `productType` | `MountableBridgeComponent` albo `BaseResource` |
+| `mountableBridgeComponentOutput` | Wyjście używane dla części mostu |
+| `baseResourceOutput` | Wyjście używane dla zwykłego zasobu |
+| `outputAmount` | Liczba produktów; kod wymusza minimum `1` |
+| `meltingPoint` | Temperatura, od której piec nalicza właściwy progress |
+| `combustionTemperature` | Temperatura, od której materiał zaczyna się przepalać |
+| `neededProgress` | Wymagany progress prawidłowej obróbki |
+| `neededCombustionProgress` | Limit progressu przegrzania przed zniszczeniem wsadu |
+
+Tylko pole wyjścia zgodne z `productType` powinno być przypisane. `HasValidOutput`
+pozwala fabryce odrzucić niekompletną recepturę przed zużyciem składników.
+Parametry pieca są ignorowane przez Carpenter Table.
 
 ## Wspólny flow fabryki
 
 ```mermaid
 flowchart LR
-    S["Wybór receptury"] --> R["Walidacja magazynu"]
-    R --> C["Zużycie zasobów"]
-    C --> P["Produkcja/minigame"]
-    P --> N["Server spawn mountable"]
+    S["Wybór ProductionRecipeSO"] --> V["Walidacja receptury i magazynu"]
+    V --> C["Serwer zużywa składniki"]
+    C --> P["Produkcja lub proces pieca"]
+    P --> O{"Typ wyjścia"}
+    O -->|Mountable| M["Spawn części mostu"]
+    O -->|BaseResource| R["Spawn 1..N zasobów"]
 ```
 
 ### `BaseFactory`
@@ -46,137 +76,130 @@ flowchart LR
 | Pole | Znaczenie |
 |---|---|
 | `factoryInteractionUI` | Panel wyboru i statusu |
-| `InteractionOutlineGameobject` | Tymczasowy visual interakcji; pole legacy |
-| `mountableBridgeComponentSOArray` | Katalog dostępny w danej fabryce/poziomie |
-| `currentlySelectedMountableBridgeComponentSO` | Stan początkowy/runtime |
+| `InteractionOutlineGameobject` | Visual legacy; nie jest nowym systemem outline |
+| `productionRecipeSOArray` | Aktywny katalog receptur danej instancji/poziomu |
+| `currentlySelectedProductionRecipeSO` | Startowa i diagnostyczna referencja wyboru |
+| `mountableBridgeComponentSOArray` | Pole kompatybilności legacy; nie jest źródłem prawdy |
+| `currentlySelectedMountableBridgeComponentSO` | Widok kompatybilności dla starszego kodu |
 | `baseStorageNew` | Magazyn wejściowy |
-| `mountableBridgeComponentSpawnPoint` | Miejsce produktu |
-| `bridgeComponentSpriteRenderer` | World-space podgląd receptury |
-| `productionDuration` | Czas standardowej produkcji |
-| `defaultSelectedComponentIndex` | Pozycja wybrana po inicjalizacji; `-1` oznacza brak |
+| `mountableBridgeComponentSpawnPoint` | Wspólny punkt spawnu obu typów produktów |
+| `bridgeComponentSpriteRenderer` | World-space podgląd ikony receptury |
+| `productionDuration` | Czas standardowej produkcji poza procesem pieca |
+| `defaultSelectedComponentIndex` | Początkowy indeks; `-1` oznacza brak wyboru |
 
-Serwer waliduje indeks, zasoby, brak aktywnej produkcji i prefab produktu.
-UI klienta nie może samodzielnie zużyć zasobów ani zespawnować części.
+Serwer waliduje indeks, typ wyjścia, komplet składników, brak aktywnej produkcji
+i prefab produktu. Zużycie składników ma rollback, jeśli nie może zostać
+dokończone.
+
+Wyjście `BaseResourceSO` jest spawnowane przez `BaseResourceSpawnUtility`.
+Produkty partii są rozstawiane wokół spawn pointu z odstępem około `0.7 m`.
+Losowanie i spawn odbywają się tylko na serwerze.
 
 ## Carpenter Table
 
-`CarpenterTableFactory` dodaje sprawdzenie długości i szerokości.
+`CarpenterTableFactory` akceptuje receptury z wyjściem
+`MountableBridgeComponentSO` i dodatkowo sprawdza długość oraz szerokość.
 
 | Pole | Znaczenie |
 |---|---|
 | `tableSwitch` | Fizyczne uruchomienie produkcji |
-| `dimensionCranks` | Width i Length; każda ma niezależną blokadę użytkownika |
+| `dimensionCranks` | Width i Length; niezależne blokady użytkownika |
 | `carpenterTableMinigame` | Opcjonalne zadanie produkcyjne |
 | `dimensionInteractionDistance` | Serwerowa walidacja użycia korby |
 | `componentLengthMin/Max` | Zakres długości |
-| `componentLenghtStep` | Zmiana długości na krok; nazwa zawiera historyczną literówkę |
+| `componentLenghtStep` | Zmiana długości na krok; nazwa ma historyczną literówkę |
 | `componentWidthMin/Max` | Zakres szerokości |
 | `componentWidthStep` | Zmiana szerokości na krok |
 
-Wartość ma postać `min + index * step`. Produkcja jest możliwa, gdy ustawione
-wymiary odpowiadają wybranemu `MountableBridgeComponentSO`.
+Wartość wymiaru ma postać `min + index * step`. Produkcja jest dostępna, gdy
+ustawienia odpowiadają `MountableBridgeComponentSO` wskazanemu przez recepturę.
 
-### `CarpenterDimensionCrank`
+### Korby i dial UI
 
-| Pole | Znaczenie |
-|---|---|
-| `factory` | Obsługiwany stół |
-| `dimension` | `Width` albo `Length` |
-| `rotatingVisual` | Fizyczny visual pozycji zatwierdzonej |
-| `rotationAxis` | Lokalna oś obrotu |
-| `degreesPerStep` | Kąt jednego kroku, zwykle 30° |
+`CarpenterDimensionCrank` wskazuje fabrykę, wymiar, obracany visual, oś obrotu
+i `degreesPerStep` (zwykle 30 stopni). `CarpenterDimensionDialUI` zapewnia
+lokalny płynny drag, ale wysyła request dopiero po zmianie dyskretnego indeksu.
+Zamknięcie panelu zwalnia blokadę i nie cofa zatwierdzonych zmian.
 
-### `CarpenterDimensionDialUI`
+### Katalog tutorialowy i koszty
 
-| Pole | Znaczenie |
-|---|---|
-| `factory` | Źródło wartości i requestów |
-| `visualRoot` | Cały lokalny panel |
-| `dialCenter`, `marker` | Geometria drag |
-| `closeButton` | Zamknięcie i zwolnienie blokady |
-| TMP title/current/min/max/status | Teksty wymiaru i komunikatów |
-| `markerRadius` | Promień ruchu markera w pikselach Canvas |
-| `degreesPerStep` | Musi odpowiadać korbie |
-| `deniedMessageDuration` | Czas informacji o odmowie |
+| Kolejność | Receptura |
+|---:|---|
+| 1 | Wooden Foundation: 4 Log + 3 Board + 1 Foundation Anchor Kit |
+| 2 | Wooden Abutment: 4 Log + 3 Board + 1 Connector Plate Set |
+| 3 | Wooden Main Girder: 2 Log + 1 Board + 1 Connector Plate Set |
+| 4 | Wooden Cross Beam: 1 Log + 1 Board + 1 Bolt & Nut Set |
+| 5 | Wooden Diagonal Bracing: 1 Log + 1 Board + 1 Bolt & Nut Set |
+| 6 | Wooden Deck Panel: 3 Board + 1 Forged Nail Bundle |
 
-Drag jest płynny lokalnie, ale requesty sieciowe wysyłane są tylko po zmianie
-dyskretnego indeksu. Zamknięcie nie cofa zatwierdzonych wartości.
-
-### Katalog tutorialowy
-
-Scenowy Carpenter Table powinien zawierać:
-
-1. Wooden Foundation
-2. Wooden Abutment
-3. Wooden Main Girder
-4. Wooden Cross Beam
-5. Wooden Diagonal Bracing
-6. Wooden Deck Panel
-
-Jest to override instancji w `Tutorial_scene`; prefab bazowy i `FPP_scene`
-mogą mieć inne katalogi.
+To override instancji w `Tutorial_scene`. `FPP_scene` używa osobnych receptur
+legacy dla Basic Support i Basic Roadway.
 
 ## Blast Furnace
 
-`BlastFurnaceFactory` korzysta z `FurnaceStorage` i parametrów pieca zapisanych
-w `MountableBridgeComponentSO`.
+`BlastFurnaceFactory` akceptuje receptury z wyjściem `BaseResourceSO`.
+`FurnaceStorage` pobiera parametry procesu z aktualnego `ProductionRecipeSO`,
+nie z `MountableBridgeComponentSO`.
 
-| Pole | Znaczenie |
-|---|---|
-| `furnaceStorage` | Magazyn zasobów i paliwa |
-| katalog BaseFactory | Produkty dostępne w konkretnym piecu |
+| Receptura | Wejście | Wyjście | Temperatura | Progress |
+|---|---:|---:|---:|---:|
+| Forged Nail Bundle | 1 Iron Nugget | 3 | 650 | 400 |
+| Bolt & Nut Set | 1 Iron Nugget | 2 | 750 | 550 |
+| Connector Plate Set | 1 Iron Nugget | 2 | 850 | 700 |
+| Foundation Anchor Kit | 1 Iron Nugget | 2 | 900 | 800 |
 
-Paliwo pochodzi z `BaseResourceSO.furnaceFuelAmount`. Temperatura i progress
-muszą być synchronizowane przez serwer.
+Progi spalania wynoszą odpowiednio `900`, `950`, `1000` i `1050`, a wymagany
+progress spalania `900`, `950`, `1000` i `1100`. Wraz z trudniejszym produktem
+rośnie wymagana temperatura, a margines do przegrzania maleje.
+
+Paliwo pozostaje niezależne od składników receptury. `FurnaceStorage` zużywa
+wyłącznie zasoby z `BaseResourceSO.furnaceFuelAmount > 0`, więc Iron Nugget ani
+metalowy produkt nie mogą zostać przypadkowo potraktowane jako paliwo.
+
+### Metalowe półprodukty
+
+`Forged Nail Bundle`, `Bolt & Nut Set`, `Connector Plate Set` i
+`Foundation Anchor Kit` są dynamicznymi zasobami single-carry. Nie mają
+receptur niszczenia ani wartości paliwowej. Ich placeholderowe prefaby są
+NetworkPrefabami i można je fizycznie przenieść z pieca do Carpenter Table.
 
 ### `BlastFurnaceMinigame`
 
-| Pole | Znaczenie |
-|---|---|
-| `productionMinigameUI` | Lokalna prezentacja minigry |
-| `furnaceStorage` | Temperatura/paliwo |
-| `minigamePanelHeight` | Skala UI |
-| `requiredValueObjectHeight` | Pozycja wartości wymaganej |
-| `playerValueObjectHeight` | Pozycja bieżącej wartości |
-| `perfectValueObjectHeight` | Strefa idealna |
-| `criticalFailureObjectHeight` | Strefa krytyczna |
-| `minigameCompleteTime` | Czas utrzymania poprawnej wartości |
-| `perfectValueProgressMultiplier` | Bonus idealnego zakresu |
-| `minigameFailureTime` | Czas do zwykłej porażki |
-| `minigameCriticalFailureTime` | Czas do krytycznej porażki |
-
-W klasie nadal znajduje się `NotImplementedException`; ten minigame należy
-traktować jako **częściowy**, nawet jeśli bazowa produkcja pieca działa.
+Minigame prezentuje temperaturę, wartość wymaganą, strefę idealną i krytyczną
+oraz czasy ukończenia/porażki. W klasie nadal znajduje się
+`NotImplementedException`, dlatego minigame jest **częściowy**, mimo że bazowy
+flow temperatury, paliwa, postępu, przegrzania i spawnu produktów działa.
 
 ## UI fabryk
 
-`FactoryInteractionUI` i child components pokazują:
+`FactoryInteractionUI` i jego child components pokazują:
 
-- katalog receptur;
-- wybrany komponent;
-- wymagane zasoby i stan storage;
-- wymiary;
-- production progress i failure reason.
+- katalog `ProductionRecipeSO`;
+- nazwę, ikonę i wielkość partii;
+- wymagane składniki oraz stan storage;
+- wymiary Carpenter Table;
+- temperaturę, wymagany progress i stan pieca;
+- production progress oraz failure reason.
 
-Wszystkie referencje TMP, Image, Button, panel roots i prefab wiersza są
-referencjami technicznymi. UI powinno odświeżać się z eventów fabryki, nie
-zmieniać bezpośrednio danych storage.
+UI odświeża się z eventów fabryki. Nie zmienia bezpośrednio magazynu ani stanu
+produkcji.
 
 ## Dodawanie receptury
 
-1. Utwórz lub wybierz kompletne `MountableBridgeComponentSO`.
-2. Przypisz `requiredResources`, prefab produktu i `BridgeComponentSO`.
-3. Dodaj SO do katalogu właściwej instancji fabryki.
-4. Upewnij się, że storage przyjmuje wszystkie wymagane resource SO.
-5. Dodaj prefab produktu do `DefaultNetworkPrefabs`.
-6. Sprawdź spawn point i clearance.
-7. Dla Carpenter Table ustaw osiągalne Width/Length.
+1. Utwórz `ProductionRecipeSO`.
+2. Wybierz właściwy `productType` i przypisz dokładnie jedno wyjście.
+3. Dodaj `requiredResources` i ustaw `outputAmount`.
+4. Dla pieca skonfiguruj temperatury i oba wymagane progresy.
+5. Dodaj recepturę do `productionRecipeSOArray` właściwej instancji fabryki.
+6. Sprawdź automatycznie rozszerzoną whitelistę storage.
+7. Upewnij się, że prefab wyjścia jest przypisany w SO i zarejestrowany.
+8. Dla Carpenter Table ustaw osiągalne Width/Length.
+9. Przetestuj hosta i klienta, w tym brak podwójnego spawnu.
 
 ## Ograniczenia
 
-- Stare `DimensionChangeSwitch` i przyciski W/L pozostają w kodzie, lecz
-  aktualny flow korzysta z korb.
-- Katalogi scenowe są łatwe do utracenia przy przypadkowym `Revert Override`.
-- Minigry Carpenter/Furnace mają nieukończone metody i wymagają audytu przed
-  uznaniem ich za finalny gameplay.
-
+- Pola receptury i parametrów pieca w `MountableBridgeComponentSO` pozostają
+  tymczasowo dla kompatybilności, ale fabryki nie używają ich jako źródła prawdy.
+- Stare `DimensionChangeSwitch` pozostają w kodzie, lecz aktualny flow używa korb.
+- Katalogi scenowe można utracić przez przypadkowy `Revert Override`.
+- Minigry Carpenter/Furnace wymagają dokończenia przed uznaniem ich za finalne.

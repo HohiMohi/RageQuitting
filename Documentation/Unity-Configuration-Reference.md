@@ -23,6 +23,7 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 |---|---|
 | `BaseResourceSO` | identity/prefab/icon, durability, carryability, carrier counts, speed/stamina penalties, anchors, rotation offset, physics profile, fuel, destruction recipes |
 | `MountableBridgeComponentSO` | identity/prefab, recipe, bridge type, carry, furnace i carpenter dimensions |
+| `ProductionRecipeSO` | identity/icon, składniki, typ i ilość wyjścia oraz opcjonalne parametry pieca |
 | `BridgeComponentSO` | identity/final prefab, category, simple assembly i sześć opcjonalnych workflow |
 | `EquippableItemSO` | identity/prefab, slots, range, cooldown, damage, work power, movement penalty, repeatability i enum |
 | `CarryPhysicsProfileSO` | Rigidbody, movement, yaw, horizontal constraint i vertical support |
@@ -107,12 +108,30 @@ a attach points uwzględniać jego rzeczywistą orientację shared-carry.
 | Prefab | Wymagane referencje |
 |---|---|
 | Base storage | whitelist i withdraw point |
-| Carpenter Table | BaseFactory refs, switch, dwie korby, dial UI, minigame, zakresy wymiarów |
-| Blast Furnace | BaseFactory refs, FurnaceStorage, temperatura/fuel UI, bellows/switch |
+| Carpenter Table | `productionRecipeSOArray`, BaseFactory refs, switch, dwie korby, dial UI, minigame, zakresy wymiarów |
+| Blast Furnace | `productionRecipeSOArray`, BaseFactory refs, FurnaceStorage, temperatura/fuel UI, bellows/switch |
 | Main Storage | wymagane typy części i UI |
 
-Catalog fabryki jest tablicą `MountableBridgeComponentSO`. W tutorialu
-pozostaje scene override'em.
+Katalog fabryki jest tablicą `ProductionRecipeSO`. `productType` ogranicza typ
+wyjścia: Carpenter Table oczekuje części mostu, a Blast Furnace zasobu.
+Tutorialowe katalogi pozostają scene override'ami. Pola
+`mountableBridgeComponentSOArray` są obecnie wyłącznie warstwą kompatybilności.
+
+### `ProductionRecipeSO`
+
+| Pole | Typ/jednostka | Znaczenie |
+|---|---|---|
+| `recipeName` | string | Nazwa w UI |
+| `recipeIcon` | Sprite | Ikona receptury |
+| `requiredResources` | `RequiredResource[]` | Składniki pobierane z magazynu |
+| `productType` | enum | `MountableBridgeComponent` albo `BaseResource` |
+| `mountableBridgeComponentOutput` | SO | Wyjście Carpenter Table |
+| `baseResourceOutput` | SO | Wyjście Blast Furnace |
+| `outputAmount` | sztuki | Wielkość partii, minimum runtime `1` |
+| `meltingPoint` | temperatura | Próg naliczania produkcji w piecu |
+| `combustionTemperature` | temperatura | Próg naliczania przegrzania |
+| `neededProgress` | progress | Ilość prawidłowej obróbki |
+| `neededCombustionProgress` | progress | Ilość przegrzania niszcząca wsad |
 
 ## Bridge holder
 
@@ -231,6 +250,17 @@ Przy zmianie warstw zweryfikuj równocześnie:
 6. Dodaj NetworkPrefab.
 7. Dodaj do storage/fabryki/population profile według potrzeb.
 
+### Nowa receptura fabryki
+
+1. Utwórz `ProductionRecipeSO`.
+2. Ustaw nazwę, ikonę i składniki.
+3. Wybierz `productType` i przypisz wyłącznie odpowiadające mu wyjście.
+4. Ustaw wielkość partii.
+5. Dla pieca ustaw temperatury i wymagane progresy.
+6. Dodaj asset do `productionRecipeSOArray` instancji fabryki.
+7. Zweryfikuj prefab wyjścia, NetworkPrefab i spawn point.
+8. Sprawdź wygenerowaną whitelistę magazynu.
+
 ### Nowe narzędzie
 
 1. Dodaj wartość enuma na końcu, aby nie przesunąć serializacji.
@@ -260,4 +290,3 @@ Przy zmianie warstw zweryfikuj równocześnie:
 - population zone runtime debug;
 - current NPC target/state/reservations;
 - aktualne UI preview i local drag state.
-

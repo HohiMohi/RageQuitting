@@ -81,7 +81,9 @@ Rekomendacja nie oznacza istniejącej funkcjonalności.
 ### Produkcja i zasoby
 
 - Dokończyć minigry Carpenter/Furnace.
-- Rozszerzyć receptury o wykorzystanie żelaza i kolejne materiały.
+- Dostrajać koszty, temperatury i wielkości partii metalowych półproduktów.
+- Rozszerzyć `ProductionRecipeSO` o kolejne materiały i typy procesów, jeśli
+  pojawią się fabryki inne niż Carpenter Table i Blast Furnace.
 - Dodać finalne modele zasobów i narzędzi.
 
 ## Rekomendacje audytu
@@ -118,6 +120,8 @@ Automatyczna walidacja powinna wykrywać:
 - nieaktywne lub widoczne w złym stage visuale;
 - collider ghosta niebędący triggerem;
 - katalog fabryki z niekompletnym produktem;
+- recepturę z niezgodnym `productType` i polem wyjścia;
+- recepturę pieca bez sensownego zakresu między melting i combustion;
 - brakujące inventory catalog entries.
 
 ### 5. Dodać testy
@@ -155,4 +159,3 @@ Nie używać jako podstawy nowego contentu bez osobnego audytu:
 - stare przyciski `DimensionChangeSwitch`;
 - historyczne sceny/testy spoza aktualnego flow;
 - `Assets/Project_Overview.md` oraz plany opisujące dawną architekturę.
-

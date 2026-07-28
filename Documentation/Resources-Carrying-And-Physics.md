@@ -70,17 +70,28 @@ pokazuje promptu ataku.
 |---|---|
 | `componentName`, `componentSprite` | Nazwa i ikona |
 | `inGameGameObjectPrefab` | Sieciowy prefab przenoszonego produktu |
-| `requiredResources` | Receptura fabryki |
+| `requiredResources` | Dane kompatybilności legacy; aktywna fabryka używa `ProductionRecipeSO` |
 | `bridgeComponentSO` | Typ holdera/finalnej części |
 | `movementSpeedPenalty` | Kara single-carry |
 | pola carrierów | Takie samo znaczenie jak w `BaseResourceSO` |
-| `meltingPoint` | Temperatura wymagana przez piec |
-| `combustionTemperature` | Temperatura spalania/produkcji |
-| `neededProgress` | Wymagany ogólny progress produkcji |
-| `neededCombustionProgress` | Wymagany progress w warunkach spalania |
+| `meltingPoint` | Parametr legacy; aktywny piec odczytuje go z `ProductionRecipeSO` |
+| `combustionTemperature` | Parametr legacy; aktywny piec odczytuje go z `ProductionRecipeSO` |
+| `neededProgress` | Parametr legacy; aktywny piec odczytuje go z `ProductionRecipeSO` |
+| `neededCombustionProgress` | Parametr legacy; aktywny piec odczytuje go z `ProductionRecipeSO` |
 | `componentWidth/Length` | Wymiary wybierane/porównywane przez stół stolarski |
 
 `RequiredResource.resourceType` wskazuje SO, a `amount` wymaganą liczbę.
+
+## Metalowe półprodukty
+
+Piec produkuje cztery zwykłe `BaseResourceSO`: `Forged Nail Bundle`,
+`Bolt & Nut Set`, `Connector Plate Set` oraz `Foundation Anchor Kit`.
+Są dynamiczne, przenośne przez jednego gracza, nie mają receptur niszczenia i
+nie są paliwem. Carpenter Table zużywa je jako składniki części nowego mostu.
+
+Koszty produkcji, wielkości partii oraz parametry temperatury znajdują się w
+`ProductionRecipeSO`, opisanym w
+[Factories-Storage-And-Production](Factories-Storage-And-Production.md).
 
 ## Single-carry
 
@@ -201,4 +212,3 @@ inne zasoby, w tym produkty rozpadu.
 - Anchory fallbackowe są wystarczające dla prostych brył; finalne modele
   powinny dostać jawne punkty.
 - Rotation offset shared-carry nie przywraca orientacji spawn po dropie.
-

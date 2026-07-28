@@ -45,6 +45,18 @@ Główne strefy:
 Rzeka i meta nie stanowią samodzielnego warunku zakończenia. Victory wynika z
 ukończenia etapów mostu.
 
+### Łańcuch produkcji metalu
+
+Tutorialowy Blast Furnace ma cztery receptury zasobów: paczki gwoździ, zestawy
+śrub i nakrętek, zestawy płyt łączących oraz zestawy kotew fundamentowych.
+Produkty trzeba fizycznie przenieść do Carpenter Table, gdzie są składnikami
+sześciu aktywnych rodzajów części mostu.
+
+W kopalni znajduje się `IronResourcePopulationZone` skonfigurowana dla
+`Iron Vein`: minimum `1`, kontrola co `2 s`, cooldown `15 s` i box około
+`12 x 4 x 12 m`. Dwie początkowe żyły dają sześć samorodków; po ich wydobyciu
+strefa odtwarza kolejną żyłę, aby brak żelaza nie powodował softlocka.
+
 ## Managery wymagane w scenie gameplayowej
 
 | Obiekt/komponent | Rola |
@@ -128,6 +140,7 @@ zastępuje poprzednią. Escape zamyka ją tylko lokalnie i nie blokuje gameplayu
 W tutorialu override'ami są między innymi:
 
 - katalog Carpenter Table;
+- katalog Blast Furnace z czterema metalowymi półproduktami;
 - lista i kolejność etapów mostu;
 - component IDs;
 - prerequisites workflow;
@@ -172,4 +185,3 @@ Late join:
 - Meta i rzeka są głównie elementami blockoutu.
 - World-space markery/szyldy wymagają ręcznej kontroli wysokości i orientacji.
 - Część nowych rodzajów mostu ma SO, ale nie pełną integrację scenową.
-
