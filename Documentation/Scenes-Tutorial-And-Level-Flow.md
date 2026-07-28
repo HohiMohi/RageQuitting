@@ -1,0 +1,175 @@
+# Sceny, tutorial i przepływ poziomu
+
+## Status
+
+**Gotowe dla dwóch scen gameplayowych.** `Tutorial_scene` jest blockoutem
+pełnego nowego mostu i zawiera dodatkowe systemy edukacyjne oraz testowe.
+
+## `MultiplayerStartScene`
+
+Zawiera NetworkManager/lobby, lokalny limit FPS i Camera Motion. Host po
+utworzeniu pokoju wybiera:
+
+- `FPP_scene` - wcześniejszy poziom;
+- `Tutorial` - nowy blockout.
+
+Klient widzi stan lobby, ale nie może rozpocząć ładowania.
+
+## `FPP_scene`
+
+- podstawowy gameplay multiplayer/singleplayer;
+- scenowy fallback `PlayerNew`;
+- kamera i Cinemachine;
+- spawn points;
+- level manager, timer i stary katalog mostu/fabryk;
+- NavMesh oraz sieciowe obiekty scenowe.
+
+Scena nie powinna przejmować tutorialowych katalogów i tekstów przez zmiany
+prefabów bazowych.
+
+## `Tutorial_scene`
+
+Główne strefy:
+
+- obóz i cztery spawn pointy;
+- zagajnik oraz `ResourcePopulationZone`;
+- Carpenter Table;
+- stojak Axe, Pickaxe, Shovel, Industrial Hammer i Wrench;
+- kopalnia Iron/Coal;
+- Blast Furnace;
+- północny i południowy spawner Beaver;
+- testowa koza oraz GoatPushZone;
+- budowa mostu i sekcja siedmiu paneli;
+- dekoracyjna rzeka oraz marker mety.
+
+Rzeka i meta nie stanowią samodzielnego warunku zakończenia. Victory wynika z
+ukończenia etapów mostu.
+
+## Managery wymagane w scenie gameplayowej
+
+| Obiekt/komponent | Rola |
+|---|---|
+| Main Camera + Cinemachine | Widok lokalnego ownera |
+| `PlayerNew` scene fallback | Bezpośredni singleplayer |
+| `PlayerSpawnManager` | Dynamiczni gracze NGO |
+| `GameplayManager` | Etapy mostu |
+| `GameTimerManager` | Waiting/Running/Victory/Defeat |
+| `Bridge` | Kontener holderów |
+| `EventSystem` | UGUI |
+| `NavMeshSurface` | AI |
+| level-specific managers | Restart, spawners, stage info |
+
+## Timer tutorialu
+
+Tutorial ma `waitForStartSignal = true`, dlatego:
+
+- stan początkowy to `Waiting`;
+- HUD timera jest ukryty;
+- tylko host może użyć `Start timer` w menu Tab;
+- klient widzi nieaktywny przycisk;
+- wielokrotne wywołanie nie resetuje czasu;
+- restart sceny przywraca pełny czas i Waiting.
+
+### `GameTimerUI`
+
+| Pole | Znaczenie |
+|---|---|
+| `timerText` | Tekst czasu |
+| `timerProgressBar` | Image z poprawnym Fill Method |
+| `timerVisualRoot` | Cały HUD ukrywany w Waiting |
+| `targetCanvas` | Lokalny Canvas playera |
+| `anchoredPosition`, `hudSize` | Runtime layout |
+| `normalColor`, `warningColor` | Kolory |
+| `warningThreshold` | Sekundy do trybu ostrzegawczego |
+| `pulseSpeed` | Częstotliwość pulsowania |
+
+### `RestartLevelUI`
+
+| Pole | Znaczenie |
+|---|---|
+| `playerInput` | Toggle menu i blokada lokalnego gameplayu |
+| `restartController` | Request restartu |
+| `panelRoot` | Level Controls |
+| `restartButton` | Host-only restart |
+| `startTimerButton` | Host-only start |
+| `availabilityText` | Stan host/client/timer |
+| `panelSize` | Stabilny rozmiar panelu |
+
+## Tekstowe instrukcje etapów
+
+`BridgeStageInfoManager` istnieje tylko w tutorialu i subskrybuje lokalny event
+zmiany zsynchronizowanego etapu.
+
+Każdy `BridgeStageInfoEntry` ma:
+
+| Pole | Znaczenie |
+|---|---|
+| `componentType` | `BridgeComponentSO` |
+| `stage` | Docelowy etap |
+| `title` | Nagłówek |
+| `message` | Tekst wieloliniowy |
+
+Wiadomość pokazuje się raz na typ części i stage podczas jednego uruchomienia
+sceny. Late join nie odtwarza historycznych wiadomości. Nowa wiadomość
+zastępuje poprzednią. Escape zamyka ją tylko lokalnie i nie blokuje gameplayu.
+
+## NavMesh
+
+- Każda scena z aktywnym NPC musi mieć wypieczony NavMesh.
+- Agent parameters muszą odpowiadać rozmiarowi prefaba.
+- Mountable i dynamiczne zasoby nie powinny przypadkowo wejść do bake jako
+  stała geometria.
+- Rampy gotowego mostu muszą mieć collider umożliwiający wejście i NavMesh
+  odpowiedni do zamierzonego ruchu NPC.
+- Goat charge dodatkowo sprawdza krawędzie NavMesh.
+
+## Scene overrides
+
+W tutorialu override'ami są między innymi:
+
+- katalog Carpenter Table;
+- lista i kolejność etapów mostu;
+- component IDs;
+- prerequisites workflow;
+- BridgeDeckSection;
+- NPC spawners i testowa koza;
+- population zone;
+- stage info entries;
+- timer waiting.
+
+Nie używaj `Apply All` bez sprawdzenia `FPP_scene`, ponieważ część różnic jest
+celowym ustawieniem poziomu.
+
+## Restart i late join
+
+Restart:
+
+- usuwa dynamiczne obiekty sceny;
+- przeładowuje aktualną gameplay scene;
+- tworzy świeżych graczy bez rozłączenia;
+- resetuje timer, stage info memory, NPC, zasoby i fabryki.
+
+Late join:
+
+- otrzymuje aktualny stan timer/bridge/fabryk;
+- dostaje nowy player object w obozie;
+- nie otrzymuje historycznych tutorial messages.
+
+## Kontrola przed zapisaniem sceny
+
+1. Sprawdź unikalność `componentID`.
+2. Sprawdź NetworkObjects i prefab registration.
+3. Sprawdź wszystkie spawn pointy.
+4. Sprawdź katalogi fabryk i storage whitelist.
+5. Sprawdź ghost/final/work point visuals w stanie początkowym.
+6. Wypiecz i przetestuj NavMesh.
+7. Uruchom hosta oraz klienta.
+
+## Ograniczenia
+
+- Tutorial nie ma jeszcze pełnego systemu kroków wymuszających kolejność
+  edukacyjną; stage info jest informacyjne.
+- Meta i rzeka są głównie elementami blockoutu.
+- World-space markery/szyldy wymagają ręcznej kontroli wysokości i orientacji.
+- Część nowych rodzajów mostu ma SO, ale nie pełną integrację scenową.
+
