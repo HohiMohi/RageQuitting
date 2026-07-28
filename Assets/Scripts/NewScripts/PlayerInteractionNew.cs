@@ -53,6 +53,7 @@ public class PlayerInteractionNew : MonoBehaviour
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
     public event EventHandler OnInteractionPerformed;
     public event EventHandler OnHeldObjectChanged;
+    public event EventHandler OnHeldObjectForcedRelease;
     public event EventHandler OnCurrentTargetChanged;
     public MonoBehaviour CurrentTarget => _currentTarget;
     public class UpdateHoldedItemMovementSpeedPenaltyEventArgs : EventArgs
@@ -264,6 +265,7 @@ public class PlayerInteractionNew : MonoBehaviour
         ClearSharedCarryStaminaLoad();
         SetHoldedItemProperties(null);
         OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
+        OnHeldObjectForcedRelease?.Invoke(this, EventArgs.Empty);
     }
 
     public bool DropObject()
@@ -313,7 +315,10 @@ public class PlayerInteractionNew : MonoBehaviour
 
     public void DropHeldObjectForStateChange()
     {
-        DropObject();
+        if (DropObject())
+        {
+            OnHeldObjectForcedRelease?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public void RemovePickedUpObject()

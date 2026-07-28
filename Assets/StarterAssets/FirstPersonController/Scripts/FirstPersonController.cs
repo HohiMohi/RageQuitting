@@ -144,6 +144,7 @@ namespace StarterAssets
 		private PlayerInventory _playerInventory;
 		private PlayerHealth _playerHealth;
 		private DownedPlayerCarryable _downedPlayerCarryable;
+		private PlayerExternalImpulseController _externalImpulseController;
 		
 		private const float _threshold = 0.01f;
 
@@ -223,6 +224,11 @@ namespace StarterAssets
 			{
 				_playerHealth.OnDownedStateChanged -= PlayerHealth_OnDownedStateChanged;
 			}
+
+			if (_playerInteractionNew != null)
+			{
+				_playerInteractionNew.OnHeldObjectForcedRelease -= PlayerInteraction_OnHeldObjectForcedRelease;
+			}
 		}
 
 		private void PlayerHealth_OnDownedStateChanged(object sender, EventArgs e)
@@ -286,6 +292,7 @@ namespace StarterAssets
             _playerInput = GetComponent<PlayerInput>();
 			_playerInteractionNew = GetComponent<PlayerInteractionNew>();
 			_playerInventory = GetComponent<PlayerInventory>();
+			_externalImpulseController = GetComponent<PlayerExternalImpulseController>();
 
 #else
 			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
@@ -294,7 +301,18 @@ namespace StarterAssets
             _jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
 			_playerInteractionNew.UpdateHoldedItemMovementSpeedPenalty += PlayerInteraction_OnHoldedItemMovementSpeedPenaltyUpdate;
+			_playerInteractionNew.OnHeldObjectForcedRelease += PlayerInteraction_OnHeldObjectForcedRelease;
 			_playerInventory.MovementSpeedPenaltyUpdated += PlayerInventory_OnInventoryItemMovementSpeedPenaltyUpdate;
+		}
+
+		private void PlayerInteraction_OnHeldObjectForcedRelease(object sender, EventArgs e)
+		{
+			_isSprinting = false;
+			_isJumpPerformed = false;
+			CancelSharedCarryExhaustionWarning();
+			_staminaRegenerationTimeoutCounter = 0f;
+			_canRegenerateStamina = false;
+			_countStaminaTimeout = !IsDowned();
 		}
 
         private void PlayerInventory_OnInventoryItemMovementSpeedPenaltyUpdate(object sender, PlayerInventory.MovementSpeedPenaltyUpdatedEventArgs e)
@@ -339,6 +357,7 @@ namespace StarterAssets
 			JumpAndGravity();
 			GroundedCheck();
 			Move();
+			ApplyExternalImpulseMovement();
 			HandleStaminaRegeneration();
 			HandleCarryingStaminaUsage();
 		}
@@ -472,6 +491,10 @@ namespace StarterAssets
 			float targetSpeed = IsSprinting ? SprintSpeed : MoveSpeed;
 			targetSpeed *= 1f - _holdedItemMovementSpeedPenaltyMultiplier;
 			targetSpeed *= 1f - _inventoryItemMovementSpeedPenaltyMultiplier;
+			if (_externalImpulseController != null)
+			{
+				targetSpeed *= _externalImpulseController.MovementControlMultiplier;
+			}
 
 			Vector3 localDesiredVelocity = new Vector3(
 				moveInput.x * strafeSpeedMultiplier,
@@ -581,6 +604,22 @@ namespace StarterAssets
 			_horizontalVelocity = Vector3.zero;
 		}
 
+		private void ApplyExternalImpulseMovement()
+		{
+			if (_externalImpulseController == null
+				|| !_externalImpulseController.IsImpulseActive
+				|| _controller == null
+				|| !_controller.enabled
+				|| IsBeingCarried())
+			{
+				return;
+			}
+
+			Vector3 impulseVelocity = _externalImpulseController.TickImpulse(Time.deltaTime, Grounded);
+			CollisionFlags collisionFlags = _controller.Move(impulseVelocity * Time.deltaTime);
+			_externalImpulseController.ReportCollision(collisionFlags);
+		}
+
 		private Vector3 GetSharedCarryWorldTranslationInput(float forwardInput)
 		{
 			if (Mathf.Approximately(forwardInput, 0f))
@@ -614,6 +653,16 @@ namespace StarterAssets
 		private void JumpAndGravity()
 		{
 			if (IsBeingCarried())
+			{
+				_isJumpPerformed = false;
+				_verticalVelocity = 0f;
+				return;
+			}
+
+			// External impulses own vertical motion while active. Applying the regular
+			// character gravity as well would make player knockback decay much faster
+			// than the equivalent server-simulated NPC impulse.
+			if (_externalImpulseController != null && _externalImpulseController.IsImpulseActive)
 			{
 				_isJumpPerformed = false;
 				_verticalVelocity = 0f;

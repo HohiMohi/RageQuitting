@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 4819304511543750011}
   - component: {fileID: 6213901842837744107}
   - component: {fileID: 6765276042045917342}
+  - component: {fileID: 7077230155626148678}
   m_Layer: 0
   m_Name: NPC_Base
   m_TagString: Untagged
@@ -190,8 +191,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NPCCarrier
   ShowTopMostFoldoutHeaderGroup: 1
   carryAnchor: {fileID: 0}
+  bodyAnchor: {fileID: 0}
   defaultCarryAnchorLocalPosition: {x: 0, y: 1, z: 0.85}
+  defaultBodyAnchorLocalPosition: {x: 0, y: 1, z: 0}
+  sharedCarryInputStopDistance: 0.35
+  sharedCarryObjectStopDistance: 0.5
+  sharedCarryPathRefreshInterval: 0.25
+  sharedCarryStuckCheckInterval: 0.35
+  sharedCarryStuckMinMovement: 0.03
+  sharedCarryStuckInputPauseDuration: 0.5
+  sharedCarryTargetSampleRadius: 2
   collisionRadius: 0.5
+  sharedCarryAttachmentCorrectionSpeed: 3
+  sharedCarryAttachmentCorrectionMaxStep: 0.2
 --- !u!114 &100008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,7 +289,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 867902ef00358e2489a8e9c9fd30ab73, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCHealthUI
-  ShowTopMostFoldoutHeaderGroup: 1
   npcHealth: {fileID: 100008}
   worldSpaceCanvas: {fileID: 0}
   healthFillImage: {fileID: 0}
@@ -299,6 +310,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4dc60e9aa5ec4ee58e8fc9ba2d55df57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCStorageInteractor
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &7077230155626148678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68e91048b92d65e4eb780c64b8f20596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCExternalImpulseController
+  ShowTopMostFoldoutHeaderGroup: 1
+  navMeshRecoveryRadius: 2
+  offNavMeshDeathDelay: 1
+  maximumAirborneDuration: 5
+  collisionSkin: 0.03
+  groundedProbeDistance: 0.12
 --- !u!1 &100010
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew, IDamageable, ISharedCarryObject, IHeldObjectHudInfoProvider
+public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew, IDamageable, ISharedCarryObject, IHeldObjectHudInfoProvider, ICarriedObjectImpactTargetProvider
 {
     private readonly struct RigidbodyState
     {
@@ -37,6 +37,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [SerializeField] private float sharedCarryGroundVerticalFollowSpeed = 12f;
     [SerializeField] private float sharedCarryMaxVerticalPlacementDelta = 0.75f;
     public bool IsPickedUp => isPickedUp;
+    public bool IsActivelyCarried => isPickedUp;
     public bool CanBeCarried => baseResourceSO != null && baseResourceSO.canBeCarried;
     public bool CanBeDestroyed => baseResourceSO != null
         && baseResourceSO.baseResourceDestructionRecipeArray != null
@@ -1788,6 +1789,78 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
 
         return false;
+    }
+
+    public void CollectActiveCarrierRoots(ICollection<GameObject> targets)
+    {
+        if (!isPickedUp || targets == null)
+        {
+            return;
+        }
+
+        int initialTargetCount = targets.Count;
+        foreach (ulong holderClientId in holderClientIds)
+        {
+            if (holderClientId == NoHolderClientId)
+            {
+                AddLocalPlayerHoldingThisObject(targets);
+                continue;
+            }
+
+            if (TryGetPlayerObject(holderClientId, out NetworkObject playerNetworkObject))
+            {
+                AddUniqueCarrierRoot(targets, playerNetworkObject.gameObject);
+            }
+        }
+
+        foreach (ICarryActor carryActor in npcHolderActors.Values)
+        {
+            AddCarryActorRoot(targets, carryActor);
+        }
+
+        AddCarryActorRoot(targets, externalCarryActor);
+
+        // Ordinary local single-carry does not populate holderClientIds.
+        if (targets.Count == initialTargetCount)
+        {
+            AddLocalPlayerHoldingThisObject(targets);
+        }
+    }
+
+    private void AddLocalPlayerHoldingThisObject(ICollection<GameObject> targets)
+    {
+        PlayerInteractionNew[] playerInteractions =
+            FindObjectsByType<PlayerInteractionNew>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        foreach (PlayerInteractionNew playerInteraction in playerInteractions)
+        {
+            if (playerInteraction != null && playerInteraction.GetPickedUpGameObject() == gameObject)
+            {
+                AddUniqueCarrierRoot(targets, playerInteraction.transform.root.gameObject);
+            }
+        }
+    }
+
+    private static void AddCarryActorRoot(ICollection<GameObject> targets, ICarryActor carryActor)
+    {
+        if (carryActor == null)
+        {
+            return;
+        }
+
+        GameObject actorRoot = carryActor.NetworkObject != null
+            ? carryActor.NetworkObject.gameObject
+            : carryActor.BodyAnchor != null
+                ? carryActor.BodyAnchor.root.gameObject
+                : null;
+        AddUniqueCarrierRoot(targets, actorRoot);
+    }
+
+    private static void AddUniqueCarrierRoot(ICollection<GameObject> targets, GameObject carrierRoot)
+    {
+        if (carrierRoot != null && !targets.Contains(carrierRoot))
+        {
+            targets.Add(carrierRoot);
+        }
     }
 
     public override void OnDestroy()

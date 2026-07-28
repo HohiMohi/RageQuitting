@@ -24,6 +24,7 @@ public class NPCBrain : NetworkBehaviour
     private NPCBehaviorController behaviorController;
     private NPCSpawner originSpawner;
     private float tickTimer;
+    private bool isUnderExternalControl;
 
     public NPCDefinitionSO Definition => definition;
     public NPCFactionRelationshipMatrixSO RelationshipMatrix => relationshipMatrix;
@@ -37,6 +38,7 @@ public class NPCBrain : NetworkBehaviour
     public float DetectionRadius => definition != null ? definition.detectionRadius : 12f;
     public float InteractionDistance => definition != null ? definition.interactionDistance : 1.4f;
     public float PatrolRadius => definition != null ? definition.patrolRadius : 8f;
+    public bool IsUnderExternalControl => isUnderExternalControl;
 
     private void Awake()
     {
@@ -97,6 +99,33 @@ public class NPCBrain : NetworkBehaviour
     {
         behaviorOverride = behavior;
         RebuildBehavior();
+    }
+
+    public void BeginExternalControl()
+    {
+        if (isUnderExternalControl)
+        {
+            return;
+        }
+
+        isUnderExternalControl = true;
+        behaviorController?.Exit();
+        tickTimer = 0f;
+    }
+
+    public void EndExternalControl()
+    {
+        if (!isUnderExternalControl)
+        {
+            return;
+        }
+
+        isUnderExternalControl = false;
+        tickTimer = 0f;
+        if (health != null && !health.IsDead)
+        {
+            behaviorController?.Enter();
+        }
     }
 
     public NPCFactionRelation GetRelationTo(NPCFactionSO targetFaction)
@@ -160,7 +189,10 @@ public class NPCBrain : NetworkBehaviour
 
     private bool ShouldRunBrain()
     {
-        return behaviorController != null && !health.IsDead && (!IsNetworkSessionActive() || IsServer);
+        return behaviorController != null
+            && !isUnderExternalControl
+            && !health.IsDead
+            && (!IsNetworkSessionActive() || IsServer);
     }
 
     private bool IsNetworkSessionActive()

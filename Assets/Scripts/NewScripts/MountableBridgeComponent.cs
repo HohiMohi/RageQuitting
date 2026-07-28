@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInteractableNew, ISharedCarryObject, IHeldObjectHudInfoProvider
+public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInteractableNew, ISharedCarryObject, IHeldObjectHudInfoProvider, ICarriedObjectImpactTargetProvider
 {
     private const ulong NoHolderClientId = ulong.MaxValue;
     private const float SharedCarryInputStaleTime = 0.2f;
@@ -17,6 +17,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     [SerializeField] private float sharedCarryGroundVerticalFollowSpeed = 12f;
     [SerializeField] private float sharedCarryMaxVerticalPlacementDelta = 0.75f;
     public bool IsPickedUp => isPickedUp;
+    public bool IsActivelyCarried => isPickedUp;
 
     private Rigidbody _rigidbody;
     private SharedCarryPhysicsBody _sharedCarryPhysicsBody;
@@ -1348,6 +1349,77 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         }
 
         return false;
+    }
+
+    public void CollectActiveCarrierRoots(ICollection<GameObject> targets)
+    {
+        if (!isPickedUp || targets == null)
+        {
+            return;
+        }
+
+        int initialTargetCount = targets.Count;
+        foreach (ulong holderClientId in holderClientIds)
+        {
+            if (holderClientId == NoHolderClientId)
+            {
+                AddLocalPlayerHoldingThisObject(targets);
+                continue;
+            }
+
+            if (TryGetPlayerObject(holderClientId, out NetworkObject playerNetworkObject))
+            {
+                AddUniqueCarrierRoot(targets, playerNetworkObject.gameObject);
+            }
+        }
+
+        foreach (ICarryActor carryActor in npcHolderActors.Values)
+        {
+            AddCarryActorRoot(targets, carryActor);
+        }
+
+        AddCarryActorRoot(targets, externalCarryActor);
+
+        if (targets.Count == initialTargetCount)
+        {
+            AddLocalPlayerHoldingThisObject(targets);
+        }
+    }
+
+    private void AddLocalPlayerHoldingThisObject(ICollection<GameObject> targets)
+    {
+        PlayerInteractionNew[] playerInteractions =
+            FindObjectsByType<PlayerInteractionNew>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        foreach (PlayerInteractionNew playerInteraction in playerInteractions)
+        {
+            if (playerInteraction != null && playerInteraction.GetPickedUpGameObject() == gameObject)
+            {
+                AddUniqueCarrierRoot(targets, playerInteraction.transform.root.gameObject);
+            }
+        }
+    }
+
+    private static void AddCarryActorRoot(ICollection<GameObject> targets, ICarryActor carryActor)
+    {
+        if (carryActor == null)
+        {
+            return;
+        }
+
+        GameObject actorRoot = carryActor.NetworkObject != null
+            ? carryActor.NetworkObject.gameObject
+            : carryActor.BodyAnchor != null
+                ? carryActor.BodyAnchor.root.gameObject
+                : null;
+        AddUniqueCarrierRoot(targets, actorRoot);
+    }
+
+    private static void AddUniqueCarrierRoot(ICollection<GameObject> targets, GameObject carrierRoot)
+    {
+        if (carrierRoot != null && !targets.Contains(carrierRoot))
+        {
+            targets.Add(carrierRoot);
+        }
     }
 
     [ClientRpc]

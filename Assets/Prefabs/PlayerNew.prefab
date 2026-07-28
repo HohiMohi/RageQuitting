@@ -405,6 +405,7 @@ GameObject:
   - component: {fileID: 4680480229104245975}
   - component: {fileID: 8697235149423384611}
   - component: {fileID: 4275400787586022788}
+  - component: {fileID: 2238749534897486511}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -1133,6 +1134,19 @@ MonoBehaviour:
   outlineWidth: 3
   fadeInDuration: 0.12
   fadeOutDuration: 0.18
+--- !u!114 &2238749534897486511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48dccd58149c8854286d20e21ec6c5c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerExternalImpulseController
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0

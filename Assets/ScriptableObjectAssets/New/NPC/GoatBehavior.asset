@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1751aafa48ce635468760098cb901f35, type: 3}
+  m_Name: GoatBehavior
+  m_EditorClassIdentifier: Assembly-CSharp::GoatBehaviorSO
+  idleDurationMin: 1.5
+  idleDurationMax: 3.5
+  wanderArrivalDistance: 0.6
+  wanderPointAttempts: 8
+  standingTargetProfile: {fileID: 11400000, guid: ef3b9f899e3015e459be3c1fa48fefbf, type: 2}
+  standingSearchRadius: 10
+  standingSearchInterval: 0.5
+  standingDuration: 15
+  standingApproachDistance: 0.35
+  jumpDuration: 0.65
+  jumpArcHeight: 0.65
+  maxJumpHeight: 2
+  maxJumpHorizontalDistance: 2.75
+  targetMovementTolerance: 0.15
+  stationaryLinearVelocity: 0.15
+  stationaryAngularVelocity: 10
+  landingClearance: 0.03
+  playerFaction: {fileID: 11400000, guid: 4bae5ec511184baa8a3d2ff9e76710bd, type: 2}
+  chargeImpulseProfile: {fileID: 11400000, guid: 3f20ec8154826144c9d16221fad0d04a, type: 2}
+  proximityThreatRange: 6
+  proximityThreatDuration: 2
+  chargeTelegraphDuration: 1.2
+  chargeMaxSpeed: 13.5
+  chargeAcceleration: 9
+  chargeSteeringDegreesPerSecond: 360
+  chargeCommittedDuration: 2.25
+  chargeDeceleration: 18
+  chargeDamage: 20
+  chargeCooldown: 5
+  chargeCollisionSkin: 0.05
+  chargeBlockedRecoveryDuration: 0.35
+  pushZoneSearchRadius: 30
+  pushZoneSearchInterval: 0.5
+  pushApproachDistance: 0.75
+  pushSetupDistance: 1.1
+  pushPositionUpdateInterval: 0.2
+  pushPositionTolerance: 0.2
+  pushFacingToleranceDegrees: 10
+  pushRecoveryDuration: 0.75
+  pushAttemptCooldown: 5

@@ -9,7 +9,8 @@ public class NPCAttackController : NetworkBehaviour
     {
         None,
         Combat,
-        Resource
+        Resource,
+        TargetedPlayer
     }
 
     [SerializeField] private Transform attackOrigin;
@@ -28,6 +29,9 @@ public class NPCAttackController : NetworkBehaviour
     private float pendingAttackTime;
     private BaseResourceNew pendingResourceTarget;
     private EquippableItemType pendingResourceToolType;
+    private PlayerHealth pendingPlayerTarget;
+    private Func<PlayerHealth, bool> pendingPlayerValidation;
+    private Action<PlayerHealth, bool> pendingTargetedAttackCompleted;
 
     public float AttackRange => Mathf.Max(0.1f, attackRange);
 
@@ -50,6 +54,12 @@ public class NPCAttackController : NetworkBehaviour
         if (attackType == PendingAttackType.Resource)
         {
             PerformResourceAttackImmediate();
+            return;
+        }
+
+        if (attackType == PendingAttackType.TargetedPlayer)
+        {
+            PerformTargetedPlayerAttackImmediate();
             return;
         }
 
@@ -83,6 +93,29 @@ public class NPCAttackController : NetworkBehaviour
         pendingResourceTarget = target;
         pendingResourceToolType = toolType;
         pendingAttackType = PendingAttackType.Resource;
+        pendingAttackTime = Time.time + Mathf.Max(0f, attackDamageDelay);
+        return true;
+    }
+
+    public bool StartTargetedAttack(PlayerHealth target, Action<PlayerHealth, bool> completed)
+    {
+        return StartTargetedAttack(target, null, completed);
+    }
+
+    public bool StartTargetedAttack(
+        PlayerHealth target,
+        Func<PlayerHealth, bool> additionalValidation,
+        Action<PlayerHealth, bool> completed)
+    {
+        if (!CanRunServerAuthoritativeAttack() || target == null || target.IsDowned)
+        {
+            return false;
+        }
+
+        pendingPlayerTarget = target;
+        pendingPlayerValidation = additionalValidation;
+        pendingTargetedAttackCompleted = completed;
+        pendingAttackType = PendingAttackType.TargetedPlayer;
         pendingAttackTime = Time.time + Mathf.Max(0f, attackDamageDelay);
         return true;
     }
@@ -183,6 +216,49 @@ public class NPCAttackController : NetworkBehaviour
         target.TryDamageFromNpc(toolType, attackDamage);
     }
 
+    private void PerformTargetedPlayerAttackImmediate()
+    {
+        PlayerHealth target = pendingPlayerTarget;
+        Func<PlayerHealth, bool> additionalValidation = pendingPlayerValidation;
+        Action<PlayerHealth, bool> completed = pendingTargetedAttackCompleted;
+        ClearPendingTargetedAttack();
+
+        bool hit = CanRunServerAuthoritativeAttack()
+            && target != null
+            && !target.IsDowned
+            && (additionalValidation == null || additionalValidation(target))
+            && TryValidateTargetedPlayerHit(target);
+        if (hit)
+        {
+            target.DamageReceived(attackDamage, NetworkObject);
+        }
+
+        completed?.Invoke(target, hit);
+    }
+
+    private bool TryValidateTargetedPlayerHit(PlayerHealth target)
+    {
+        Collider targetCollider = target.GetComponent<Collider>();
+        targetCollider ??= target.GetComponentInChildren<Collider>();
+        Vector3 origin = GetAttackOrigin();
+        Vector3 targetPoint = targetCollider != null
+            ? GetTargetPoint(targetCollider, target.transform, origin)
+            : target.transform.position;
+        Vector3 directionToTarget = targetPoint - origin;
+        if (directionToTarget.magnitude > Mathf.Max(0.1f, attackRange))
+        {
+            return false;
+        }
+
+        float minimumDot = Mathf.Cos(Mathf.Deg2Rad * Mathf.Clamp(attackAngle, 1f, 360f) * 0.5f);
+        if (!IsInAttackCone(directionToTarget, transform.forward, minimumDot))
+        {
+            return false;
+        }
+
+        return !requireLineOfSight || HasLineOfSight(origin, directionToTarget, target.transform.root);
+    }
+
     private bool CanRunServerAuthoritativeAttack()
     {
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned && !IsServer)
@@ -197,6 +273,19 @@ public class NPCAttackController : NetworkBehaviour
     {
         pendingAttackType = PendingAttackType.None;
         pendingResourceTarget = null;
+        ClearPendingTargetedAttack();
+    }
+
+    private void ClearPendingTargetedAttack()
+    {
+        pendingPlayerTarget = null;
+        pendingPlayerValidation = null;
+        pendingTargetedAttackCompleted = null;
+    }
+
+    public void CancelPendingAttacks()
+    {
+        CancelPendingAttack();
     }
 
     private Vector3 GetAttackOrigin()

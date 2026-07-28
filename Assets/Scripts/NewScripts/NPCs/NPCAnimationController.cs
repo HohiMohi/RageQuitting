@@ -52,6 +52,8 @@ public class NPCAnimationController : NetworkBehaviour
 
     private float localSpeedNormalized;
     private float speedVelocity;
+    private bool hasExternalMovementSpeedOverride;
+    private float externalMovementSpeedNormalized;
     private int lastHandledTriggerSequence;
     private PlayableGraph playableGraph;
     private AnimationMixerPlayable rootMixer;
@@ -85,6 +87,18 @@ public class NPCAnimationController : NetworkBehaviour
     public void PlayHitReaction()
     {
         PlayTrigger(NPCAnimationTrigger.HitReaction);
+    }
+
+    public void SetExternalMovementSpeedNormalized(float normalizedSpeed)
+    {
+        hasExternalMovementSpeedOverride = true;
+        externalMovementSpeedNormalized = Mathf.Clamp01(normalizedSpeed);
+    }
+
+    public void ClearExternalMovementSpeedOverride()
+    {
+        hasExternalMovementSpeedOverride = false;
+        externalMovementSpeedNormalized = 0f;
     }
 
     private void Awake()
@@ -207,6 +221,11 @@ public class NPCAnimationController : NetworkBehaviour
         if (health != null && health.IsDead)
         {
             return 0f;
+        }
+
+        if (hasExternalMovementSpeedOverride)
+        {
+            return externalMovementSpeedNormalized;
         }
 
         Vector3 velocity = agent != null ? agent.velocity : Vector3.zero;
