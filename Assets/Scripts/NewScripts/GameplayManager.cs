@@ -156,6 +156,8 @@ public class GameplayManager : MonoBehaviour
     private readonly HashSet<int> reportedInvalidStageComponentIndexes = new HashSet<int>();
     private readonly Dictionary<int, BridgeConstructionStage> observedConstructionStages =
         new Dictionary<int, BridgeConstructionStage>();
+    private readonly Dictionary<int, HashSet<BridgeConstructionStage>> reachedConstructionStages =
+        new Dictionary<int, HashSet<BridgeConstructionStage>>();
     private BridgeComponent[] bridgeComponents;
     private bool bridgeComponentEventsSubscribed;
     private bool bridgeFullyAssembledEventInvoked;
@@ -170,6 +172,7 @@ public class GameplayManager : MonoBehaviour
     }
 
     public bool IsFullyAssembled => isFullyAsembled;
+    public int CurrentBridgeStageIndex => currentBridgeBuildingStageIndex;
     public event EventHandler OnBridgeFullyAssembled;
     public event EventHandler OnBridgeRequirementsChanged;
     public event EventHandler<BridgeConstructionStageChangedEventArgs> OnConstructionStageChanged;
@@ -913,6 +916,7 @@ public class GameplayManager : MonoBehaviour
     private void SeedObservedConstructionStages()
     {
         observedConstructionStages.Clear();
+        reachedConstructionStages.Clear();
         if (bridgeComponents == null)
         {
             return;
@@ -922,7 +926,9 @@ public class GameplayManager : MonoBehaviour
         {
             if (component != null && component.ConstructionSite != null)
             {
-                observedConstructionStages[component.ComponentID] = component.ConstructionSite.CurrentStage;
+                BridgeConstructionStage currentStage = component.ConstructionSite.CurrentStage;
+                observedConstructionStages[component.ComponentID] = currentStage;
+                RecordReachedConstructionStage(component.ComponentID, currentStage);
             }
         }
     }
@@ -935,6 +941,7 @@ public class GameplayManager : MonoBehaviour
         }
 
         BridgeConstructionStage currentStage = component.ConstructionSite.CurrentStage;
+        RecordReachedConstructionStage(componentID, currentStage);
         if (!observedConstructionStages.TryGetValue(componentID, out BridgeConstructionStage previousStage))
         {
             observedConstructionStages[componentID] = currentStage;
@@ -967,6 +974,58 @@ public class GameplayManager : MonoBehaviour
         }
 
         return true;
+    }
+
+    public bool HasReachedConstructionStage(
+        BridgeComponentSO componentType,
+        BridgeConstructionStage requiredStage,
+        bool requireAll)
+    {
+        if (componentType == null)
+        {
+            return false;
+        }
+
+        CacheBridgeComponents();
+        int matchingCount = 0;
+        int reachedCount = 0;
+        foreach (BridgeComponent component in bridgeComponents)
+        {
+            if (component == null || component.GetBridgeComponentSO() != componentType)
+            {
+                continue;
+            }
+
+            matchingCount++;
+            BridgeConstructionSite site = component.ConstructionSite;
+            bool hasReached = site != null
+                && (site.CurrentStage == BridgeConstructionStage.Complete
+                    || site.CurrentStage == requiredStage
+                    || HasRecordedConstructionStage(component.ComponentID, requiredStage));
+            if (hasReached)
+            {
+                reachedCount++;
+            }
+        }
+
+        return matchingCount > 0 && (requireAll ? reachedCount == matchingCount : reachedCount > 0);
+    }
+
+    private void RecordReachedConstructionStage(int componentID, BridgeConstructionStage stage)
+    {
+        if (!reachedConstructionStages.TryGetValue(componentID, out HashSet<BridgeConstructionStage> stages))
+        {
+            stages = new HashSet<BridgeConstructionStage>();
+            reachedConstructionStages[componentID] = stages;
+        }
+
+        stages.Add(stage);
+    }
+
+    private bool HasRecordedConstructionStage(int componentID, BridgeConstructionStage stage)
+    {
+        return reachedConstructionStages.TryGetValue(componentID, out HashSet<BridgeConstructionStage> stages)
+            && stages.Contains(stage);
     }
 
     private void InvokeBridgeFullyAssembledOnce()

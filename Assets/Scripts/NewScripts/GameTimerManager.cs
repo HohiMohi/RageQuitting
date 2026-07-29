@@ -60,6 +60,9 @@ public class GameTimerManager : NetworkBehaviour
     public bool IsWaiting => State == GameTimerState.Waiting;
     public bool IsRunning => State == GameTimerState.Running;
     public bool CanStartTimer => IsWaiting && (!IsNetworkStateActive || IsServer);
+    public float ElapsedRunningTime => IsRunning
+        ? Mathf.Max(0f, levelDuration - GetTimeRemaining())
+        : 0f;
 
     private bool IsNetworkStateActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
 

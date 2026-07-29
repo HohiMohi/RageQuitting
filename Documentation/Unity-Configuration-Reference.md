@@ -29,6 +29,9 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 | `CarryPhysicsProfileSO` | Rigidbody, movement, yaw, horizontal constraint i vertical support |
 | `ExternalImpulseProfileSO` | initial velocity, decay, gravity, control, clamps i forced drop |
 | `NPCDefinitionSO` | identity, faction, behavior, prefab/visual, stats i AI ranges |
+| `NPCSpawnGroupSO` | nazwa, waga, limit, ważone definicje, tryb `All/Any` i warunki |
+| `NPCSpawnUnlockConditionSO` | Always, timer, globalny etap, etap części, manual signal albo historyczny spawn count |
+| `NPCSpawnSignalSO` | Typowany identyfikator ręcznego odblokowania grupy |
 | `NPCInterestProfileSO` | allow-any oraz whitelist zasobów/części |
 | `NPCDestructionProfileSO` | resource-to-tool rules |
 | `NPCFactionSO` | stabilny ID i nazwa |
@@ -215,7 +218,31 @@ Wymagane:
 | `PlayerSpawnManager` | player prefab i spawn points |
 | `BridgeStageInfoManager` | stage info entries |
 | `ResourcePopulationZone` | resource, minimum, box, cooldown, masks i clearance |
-| `NPCSpawner` | prefab, definitions, spawn points, intervals i limit |
+| `NPCSpawner` | prefab, legacy definitions, spawn groups, points, intervals i global limit |
+
+### NPC spawn groups
+
+| Asset/pole | Setup |
+|---|---|
+| `NPCSpawnGroupSO.spawnWeight` | Wartość dodatnia; jest względna wobec innych odblokowanych grup |
+| `maxActiveNPCs` | Limit grupy, dodatkowy względem globalnego limitu spawnera |
+| `entries` | Każdy wpis wymaga definicji i dodatniej wagi |
+| `conditionMode` | `All` albo `Any` |
+| `unlockConditions` | Pusta lista odblokowuje grupę od początku |
+| timer condition | Czas w sekundach od stanu `Running` |
+| global bridge condition | Indeks w `GameplayManager.bridgeBuildingStages` |
+| component stage condition | `BridgeComponentSO`, właściwy stage i opcja wszystkich instancji |
+| signal condition | Referencja do `NPCSpawnSignalSO` |
+| spawn count condition | Zakres globalny/grupowy, ścisły próg `count > threshold` i opcjonalna grupa |
+
+Nie należy używać `NPCFactionSO` jako grupy spawnu. Frakcja definiuje relacje,
+a `NPCSpawnGroupSO` skład i progresję populacji.
+
+`NPCSpawner.ActiveNPCCount` jest licznikiem bieżącym.
+`TotalSpawnedNPCCount` oraz `GetTotalSpawnedCountForGroup()` są licznikami
+historycznymi, resetowanymi przy ponownym uruchomieniu sceny. Pole
+`totalSpawnedNPCCount` jest widoczne w Inspectorze wyłącznie diagnostycznie i
+nie powinno być konfigurowane jako wartość startowa.
 
 ## Lokalne ustawienia
 
@@ -279,6 +306,17 @@ Przy zmianie warstw zweryfikuj równocześnie:
 5. Dodaj NetworkPrefab.
 6. Dodaj definition do spawnera albo instancję testową.
 7. Wypiecz/sprawdź NavMesh.
+
+### Nowa grupa spawnów NPC
+
+1. Utwórz warunki przez `Create > Scriptable Objects > NPC > Spawn Conditions`.
+2. Utwórz `NPCSpawnGroupSO`.
+3. Dodaj ważone `NPCDefinitionSO`.
+4. Ustaw limit grupy oraz tryb `All/Any`.
+5. Przypisz grupę do `NPCSpawner.spawnGroups`.
+6. Dla manualnego odblokowania wywołaj na serwerze
+   `NotifySpawnSignal(NPCSpawnSignalSO)`.
+7. Uruchom `Validate Spawn Configuration`.
 
 ## Pola runtime, których nie należy stroić
 

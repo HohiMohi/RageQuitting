@@ -36,6 +36,9 @@ Rekomendacja nie oznacza istniejącej funkcjonalności.
 
 - `GameplayManager` przechowuje polimorficzny construction state w ogólnych
   polach `constructionValue/Anchor/Aux`.
+- Wielogrupowy `NPCSpawner` jest zaimplementowany, ale istniejące spawnery
+  scenowe nadal używają legacy `npcDefinitions`, dopóki nie otrzymają assetów
+  `NPCSpawnGroupSO`.
 - `BridgeComponentType` nie odpowiada pełnemu katalogowi nowych elementów.
 - Część klas zachowuje pola lub komentarze tymczasowe, np.
   `PlayerInteractionNew.temp` i `InteractionOutlineGameobject`.
@@ -67,6 +70,8 @@ Rekomendacja nie oznacza istniejącej funkcjonalności.
 ### NPC
 
 - Dostrajać Goat standing, charge, push i external impulse.
+- Skonfigurować właściwe grupy, wagi i warunki progresji spawnerów dla
+  docelowego przebiegu poziomów.
 - Dodać finalne modele, telegraph, animacje, audio i VFX.
 - Rozbudować neutralne NPC i świadomie zdecydować o ponownym włączeniu
   shared-carry NPC.

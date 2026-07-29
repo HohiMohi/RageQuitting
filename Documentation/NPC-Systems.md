@@ -59,14 +59,102 @@ dystans lub otrzymane obrażenia.
 | Pole `NPCSpawner` | Znaczenie |
 |---|---|
 | `npcBasePrefab` | Bazowy sieciowy prefab |
-| `npcDefinitions` | Losowane/dozwolone definicje |
+| `npcDefinitions` | Legacy fallback używany wyłącznie, gdy `spawnGroups` jest puste |
+| `spawnGroups` | Kumulujące się grupy NPC z wagami, limitami i warunkami |
 | `spawnPoints` | Jawne miejsca spawnu |
 | `initialSpawnDelay` | Opóźnienie startowe |
 | `spawnIntervalMin/Max` | Zakres kolejnych spawnów |
-| `maxNPCCount` | Limit żywych NPC tego spawnera |
+| `maxNPCCount` | Globalny limit aktywnych NPC tego spawnera |
 
-Spawner przekazuje NPC referencję `OriginSpawner`. Osobne spawners mają osobną
-pamięć i limity.
+Spawner przekazuje NPC referencję `OriginSpawner`. Losowanie grupowe odbywa się
+dwustopniowo: najpierw grupa według `spawnWeight`, następnie jej
+`NPCSpawnEntry` według wagi wpisu. Grupy po odblokowaniu kumulują się.
+`maxNPCCount` pozostaje twardym limitem globalnym, a
+`NPCSpawnGroupSO.maxActiveNPCs` ogranicza konkretną grupę.
+
+Logika działa tylko w singleplayerze albo na serwerze NGO. Klienci otrzymują
+gotowe `NetworkObject`; stan odblokowań nie wymaga osobnej synchronizacji.
+Śmierć, despawn albo zniszczenie instancji zwalniają jej miejsce w obu limitach.
+
+Spawner utrzymuje dwa różne rodzaje liczników:
+
+- `ActiveNPCCount` pokazuje bieżącą populację i maleje po śmierci/despawnie;
+- `TotalSpawnedNPCCount` jest historyczny, zwiększa się po każdym udanym
+  spawnie i nie maleje przed restartem sceny.
+
+`GetTotalSpawnedCountForGroup(group)` udostępnia analogiczny licznik historyczny
+dla konkretnej grupy. Spawny legacy zwiększają wyłącznie licznik globalny.
+
+### `NPCSpawnGroupSO`
+
+| Pole | Znaczenie |
+|---|---|
+| `displayName` | Nazwa diagnostyczna grupy |
+| `spawnWeight` | Względna szansa wyboru spośród dostępnych grup |
+| `maxActiveNPCs` | Limit aktywnych NPC pochodzących z grupy |
+| `entries` | Lista `NPCDefinitionSO + weight`; nowy wpis startuje z wagą `1` |
+| `conditionMode` | `All` wymaga wszystkich warunków, `Any` dowolnego |
+| `unlockConditions` | Lista assetów `NPCSpawnUnlockConditionSO` |
+
+Pusta lista warunków oznacza grupę dostępną od początku. Odblokowanie jest
+trwałe do restartu sceny i nie powoduje natychmiastowej fali. Jeśli żadna grupa
+nie jest dostępna albo wszystkie osiągnęły limit, spawner czeka do następnego
+zwykłego interwału.
+
+### Warunki odblokowania
+
+| Typ assetu | Pola i działanie |
+|---|---|
+| `NPCSpawnAlwaysConditionSO` | Zawsze zwraca `true` |
+| `NPCSpawnTimerConditionSO` | `requiredRunningTime`; liczy wyłącznie stan `Running`, nie `Waiting` |
+| `NPCSpawnGlobalBridgeStageConditionSO` | `requiredStageIndex`; porównuje globalny etap `GameplayManager` |
+| `NPCSpawnComponentStageConditionSO` | Typ części, etap oraz `requireAllInstances` |
+| `NPCSpawnSignalConditionSO` | Oczekuje wskazanego `NPCSpawnSignalSO` |
+| `NPCSpawnCountConditionSO` | Licznik globalny albo wskazanej grupy musi przekroczyć ustawiony próg |
+
+`GameplayManager` przechowuje historię osiągniętych etapów per component ID.
+Nie porównuje numerycznie `BridgeConstructionStage`, ponieważ wartości enuma
+nie tworzą jednej chronologicznej sekwencji dla wszystkich workflow.
+Stan `Complete` spełnia warunek wcześniejszego etapu poprawnie skonfigurowanego
+dla danego typu części.
+
+Ręczny sygnał przekazuje się przez:
+
+```csharp
+spawner.NotifySpawnSignal(signalAsset);
+```
+
+Wywołanie klienta nie zmienia stanu. Sygnały są zapamiętywane przez konkretny
+spawner do restartu sceny.
+
+Warunek licznika używa ścisłego porównania `count > spawnCountThreshold`.
+Przykładowo próg `5` odblokowuje grupę po szóstym udanym spawnie. Zakres
+`AllSpawnerNPCs` liczy również spawny legacy, a `SpecificGroup` wyłącznie
+instancje pochodzące ze wskazanego `NPCSpawnGroupSO`.
+
+### Publiczne API i diagnostyka
+
+- `ActiveNPCCount` zwraca aktualny globalny licznik.
+- `TotalSpawnedNPCCount` zwraca historyczną liczbę udanych spawnów.
+- `IsGroupUnlocked(group)` pozwala sprawdzić trwały stan grupy.
+- `GetActiveCountForGroup(group)` zwraca licznik konkretnej grupy.
+- `GetTotalSpawnedCountForGroup(group)` zwraca historyczny licznik grupy.
+- `HasReceivedSignal(signal)` służy warunkowi sygnałowemu i diagnostyce.
+- `Validate Spawn Configuration` w menu kontekstowym komponentu wykrywa brak
+  prefabów, puste grupy, niepoprawne limity, wagi i warunki.
+
+### Konfiguracja nowego spawnera grupowego
+
+1. Utwórz potrzebne `NPCDefinitionSO`.
+2. Utwórz assety warunków oraz opcjonalny `NPCSpawnSignalSO`.
+3. Utwórz `NPCSpawnGroupSO`, ustaw wpisy, wagi, limit i `All/Any`.
+4. Dodaj grupy do `NPCSpawner.spawnGroups`.
+5. Zachowaj globalny `maxNPCCount` nie mniejszy od oczekiwanej populacji.
+6. Uruchom walidację z menu kontekstowego.
+7. Przetestuj odblokowanie na serwerze i zwalnianie limitu po śmierci NPC.
+
+Istniejące spawnery scenowe nie zostały automatycznie zmigrowane. Dopóki
+`spawnGroups` jest puste, zachowują wcześniejsze losowanie z `npcDefinitions`.
 
 ## Zdrowie, atak i animacja
 
@@ -279,4 +367,3 @@ jest wyłączony. Po lądowaniu NPC wykonuje Warp i ponownie `Enter()` behavioru
 - Standing opiera się na collider bounds; skomplikowane modele powinny dostać
   `GoatStandingSurface`.
 - Jawne GoatPushZone są wymagane; system nie wykrywa automatycznie przepaści.
-
