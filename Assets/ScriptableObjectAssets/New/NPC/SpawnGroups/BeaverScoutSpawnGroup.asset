@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 017406993ac2a854fb6e13826756f207, type: 3}
-  m_Name: BeaverSpawnDefinitionTest
+  m_Name: BeaverScoutSpawnGroup
   m_EditorClassIdentifier: Assembly-CSharp::NPCSpawnGroupSO
-  displayName: BeaverScoutSpawn
+  displayName: Beaver Scouts
   spawnWeight: 1
   maxActiveNPCs: 1
   entries:

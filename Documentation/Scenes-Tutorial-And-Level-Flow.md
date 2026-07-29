@@ -145,13 +145,26 @@ W tutorialu override'ami są między innymi:
 - component IDs;
 - prerequisites workflow;
 - BridgeDeckSection;
-- NPC spawners i testowa koza;
+- dwa grupowe spawnery bobrów oraz testowa koza;
 - population zone;
 - stage info entries;
 - timer waiting.
 
 Nie używaj `Apply All` bez sprawdzenia `FPP_scene`, ponieważ część różnic jest
 celowym ustawieniem poziomu.
+
+### Bobry w tutorialu
+
+`BeaverSpawner_North` i `BeaverSpawner_South` używają dwóch kumulujących się
+grup. `Beaver Scouts` jest dostępna od początku, a `Beaver Defenders` odblokowuje
+się po przekroczeniu progu dwóch historycznych spawnów grupy skautów, czyli po
+trzecim udanym spawnie skauta przez dany spawner.
+
+Każda grupa ma limit jednej aktywnej instancji, a spawner globalny limit dwóch
+NPC. Historia i odblokowanie są lokalne dla instancji spawnera oraz resetują się
+po restarcie sceny. Obrońca używa tej samej `BeaversFaction`, więc może reagować
+na zaatakowanie skauta także pochodzącego z drugiego spawnera, jeśli zdarzenie
+znajduje się w jego zasięgu alarmu.
 
 ## Restart i late join
 

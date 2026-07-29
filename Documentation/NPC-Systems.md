@@ -2,7 +2,7 @@
 
 ## Status
 
-**Gotowe dla Beaver Scout i Goat, z placeholderowymi modelami/animacjami.**
+**Gotowe dla Beaver Scout, Beaver Defender i Goat, z placeholderowymi modelami/animacjami.**
 AI podejmuje decyzje wyłącznie na serwerze. Klienci otrzymują transform,
 zdrowie, animacje i stan istotnych zachowań.
 
@@ -251,6 +251,67 @@ recepturę destruction.
 Priorytet idle: gracze, storage, carry targets, destruction targets, patrol.
 Patrol radius rośnie wtedy, gdy skaut nie znajduje interesującego celu, a nie
 przy każdym literalnym wejściu do Idle.
+
+## Beaver Defender
+
+`BeaverDefenderBehaviorSO` realizuje trzy wysokopoziomowe stany:
+`Idle`, `FollowingScout` i `AttackMode`. Obrońca należy do `BeaversFaction`,
+korzysta z tego samego rigu i animacji co skaut, ale ma osobny prefab, ciemniejsze
+materiały oraz visual powiększony z `0.32` do `0.4`.
+
+| Pole | Znaczenie |
+|---|---|
+| `idleDecisionDelay` | Odstęp pomiędzy próbami znalezienia skauta |
+| `scoutDefinition` | Dokładny typ NPC, który może być eskortowany |
+| `followSearchRadius` | Maksymalna odległość wyboru skauta |
+| `followStoppingDistance` | Dystans utrzymywany za skautem |
+| `followDestinationRefreshInterval` | Częstotliwość aktualizacji ścieżki |
+| `maxDefendersPerScout` | Limit rezerwacji eskorty jednego skauta |
+| `familyAlertRadius` | Zasięg odbioru alarmu o zaatakowaniu bobra |
+| `attackPrepareDuration` | Przygotowanie przed uderzeniem |
+| `attackRecoveryDuration` | Przerwa po uderzeniu |
+| `attackApproachRefreshInterval` | Częstotliwość aktualizacji pościgu |
+| `unreachableTargetTimeout` | Czas bez pełnej ścieżki przed porzuceniem celu |
+
+`NPCRegistry` przechowuje aktywne `NPCBrain`, dzięki czemu obrońca może znaleźć
+skauta także z innego spawnera. `BeaverDefenderEscortRegistry` rozdziela
+rezerwacje zgodnie z limitem z BehaviorSO.
+
+`NPCHealth` publikuje server-only `NPCFactionDamageAlert` po otrzymaniu obrażeń
+ze znanym attackerem. Obrońca reaguje na alarm swojej frakcji bez sprawdzania
+line-of-sight. Cel może być graczem albo wrogim NPC. W aktywnym `AttackMode`
+nowe alarmy są ignorowane do pokonania, despawnu lub utraty bieżącego celu.
+
+`NPCAttackController.StartTargetedAttack(NetworkObject, ...)` wykonuje
+pojedynczy, walidowany atak na wskazanego gracza lub NPC. Istniejący overload
+`PlayerHealth` pozostaje używany przez kozę.
+
+Tutorialowe `BeaverSpawner_North` i `BeaverSpawner_South` mają:
+
+- grupę `Beaver Scouts`, aktywną od początku, z limitem jednej instancji;
+- grupę `Beaver Defenders`, z limitem jednej instancji;
+- globalny limit dwóch NPC;
+- warunek obrońcy `SpecificGroup`, threshold `2`, czyli odblokowanie po trzecim
+  historycznym spawnie skauta danego spawnera.
+
+Oba spawnery liczą historię niezależnie. Aby ręcznie przetestować odblokowanie,
+pozwól temu samemu spawnerowi utworzyć trzech skautów, zwalniając jego limit
+aktywnych NPC między spawnami. Następny zwykły cykl spawnera może już wybrać
+grupę obrońców; odblokowanie nie tworzy obrońcy natychmiast.
+
+### Diagnostyka Beaver Defender
+
+- `FollowingScout` wymaga aktywnego skauta zgodnego z `scoutDefinition`.
+- `maxDefendersPerScout` jest limitem globalnej rezerwacji celu eskorty, a nie
+  limitem całego spawnera.
+- Zaatakowanie dowolnego żywego członka `BeaversFaction` w promieniu
+  `familyAlertRadius` powinno natychmiast przełączyć obrońcę do `AttackMode`.
+- Alarm nie jest synchronizowany do klientów; sprawdzaj wynik przez stan AI,
+  ruch i wybór celu na serwerze.
+- Po śmierci napastnika, obrońcy albo po utracie poprawnego celu behavior wraca
+  do `Idle` i zwalnia rezerwację eskorty.
+- Zwykły targeted attack obsługuje teraz zarówno `PlayerHealth`, jak i
+  `NPCHealth`, dzięki czemu obrońca może walczyć z wrogim NPC.
 
 ## Goat
 

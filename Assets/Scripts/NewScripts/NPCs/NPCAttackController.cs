@@ -10,7 +10,7 @@ public class NPCAttackController : NetworkBehaviour
         None,
         Combat,
         Resource,
-        TargetedPlayer
+        TargetedCombat
     }
 
     [SerializeField] private Transform attackOrigin;
@@ -29,9 +29,9 @@ public class NPCAttackController : NetworkBehaviour
     private float pendingAttackTime;
     private BaseResourceNew pendingResourceTarget;
     private EquippableItemType pendingResourceToolType;
-    private PlayerHealth pendingPlayerTarget;
-    private Func<PlayerHealth, bool> pendingPlayerValidation;
-    private Action<PlayerHealth, bool> pendingTargetedAttackCompleted;
+    private NetworkObject pendingCombatTarget;
+    private Func<NetworkObject, bool> pendingCombatValidation;
+    private Action<NetworkObject, bool> pendingTargetedAttackCompleted;
 
     public float AttackRange => Mathf.Max(0.1f, attackRange);
 
@@ -57,9 +57,9 @@ public class NPCAttackController : NetworkBehaviour
             return;
         }
 
-        if (attackType == PendingAttackType.TargetedPlayer)
+        if (attackType == PendingAttackType.TargetedCombat)
         {
-            PerformTargetedPlayerAttackImmediate();
+            PerformTargetedCombatAttackImmediate();
             return;
         }
 
@@ -107,15 +107,36 @@ public class NPCAttackController : NetworkBehaviour
         Func<PlayerHealth, bool> additionalValidation,
         Action<PlayerHealth, bool> completed)
     {
-        if (!CanRunServerAuthoritativeAttack() || target == null || target.IsDowned)
+        if (target == null)
         {
             return false;
         }
 
-        pendingPlayerTarget = target;
-        pendingPlayerValidation = additionalValidation;
+        return StartTargetedAttack(
+            target.NetworkObject,
+            networkTarget => additionalValidation == null || additionalValidation(target),
+            (networkTarget, hit) => completed?.Invoke(target, hit));
+    }
+
+    public bool StartTargetedAttack(NetworkObject target, Action<NetworkObject, bool> completed)
+    {
+        return StartTargetedAttack(target, null, completed);
+    }
+
+    public bool StartTargetedAttack(
+        NetworkObject target,
+        Func<NetworkObject, bool> additionalValidation,
+        Action<NetworkObject, bool> completed)
+    {
+        if (!CanRunServerAuthoritativeAttack() || !IsValidTargetedCombatTarget(target))
+        {
+            return false;
+        }
+
+        pendingCombatTarget = target;
+        pendingCombatValidation = additionalValidation;
         pendingTargetedAttackCompleted = completed;
-        pendingAttackType = PendingAttackType.TargetedPlayer;
+        pendingAttackType = PendingAttackType.TargetedCombat;
         pendingAttackTime = Time.time + Mathf.Max(0f, attackDamageDelay);
         return true;
     }
@@ -216,27 +237,26 @@ public class NPCAttackController : NetworkBehaviour
         target.TryDamageFromNpc(toolType, attackDamage);
     }
 
-    private void PerformTargetedPlayerAttackImmediate()
+    private void PerformTargetedCombatAttackImmediate()
     {
-        PlayerHealth target = pendingPlayerTarget;
-        Func<PlayerHealth, bool> additionalValidation = pendingPlayerValidation;
-        Action<PlayerHealth, bool> completed = pendingTargetedAttackCompleted;
+        NetworkObject target = pendingCombatTarget;
+        Func<NetworkObject, bool> additionalValidation = pendingCombatValidation;
+        Action<NetworkObject, bool> completed = pendingTargetedAttackCompleted;
         ClearPendingTargetedAttack();
 
         bool hit = CanRunServerAuthoritativeAttack()
-            && target != null
-            && !target.IsDowned
+            && IsValidTargetedCombatTarget(target)
             && (additionalValidation == null || additionalValidation(target))
-            && TryValidateTargetedPlayerHit(target);
+            && TryValidateTargetedCombatHit(target);
         if (hit)
         {
-            target.DamageReceived(attackDamage, NetworkObject);
+            DamageTargetedCombatTarget(target);
         }
 
         completed?.Invoke(target, hit);
     }
 
-    private bool TryValidateTargetedPlayerHit(PlayerHealth target)
+    private bool TryValidateTargetedCombatHit(NetworkObject target)
     {
         Collider targetCollider = target.GetComponent<Collider>();
         targetCollider ??= target.GetComponentInChildren<Collider>();
@@ -278,9 +298,47 @@ public class NPCAttackController : NetworkBehaviour
 
     private void ClearPendingTargetedAttack()
     {
-        pendingPlayerTarget = null;
-        pendingPlayerValidation = null;
+        pendingCombatTarget = null;
+        pendingCombatValidation = null;
         pendingTargetedAttackCompleted = null;
+    }
+
+    private bool IsValidTargetedCombatTarget(NetworkObject target)
+    {
+        if (target == null || target.transform.root == transform.root)
+        {
+            return false;
+        }
+
+        if (target.TryGetComponent(out PlayerHealth playerHealth))
+        {
+            return !playerHealth.IsDowned
+                && playerHealth.gameObject.activeInHierarchy
+                && CanDamageFaction(playerHealth.GetComponent<NPCFactionMember>());
+        }
+
+        if (target.TryGetComponent(out NPCHealth npcHealth))
+        {
+            return !npcHealth.IsDead
+                && npcHealth.gameObject.activeInHierarchy
+                && CanDamageFaction(npcHealth.GetComponent<NPCFactionMember>());
+        }
+
+        return false;
+    }
+
+    private void DamageTargetedCombatTarget(NetworkObject target)
+    {
+        if (target.TryGetComponent(out PlayerHealth playerHealth))
+        {
+            playerHealth.DamageReceived(attackDamage, NetworkObject);
+            return;
+        }
+
+        if (target.TryGetComponent(out NPCHealth npcHealth))
+        {
+            npcHealth.DamageReceived(attackDamage, NetworkObject);
+        }
     }
 
     public void CancelPendingAttacks()

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a32fce5f8cb4ed14abff23014d96a3c3, type: 3}
+  m_Name: BeaverDefenderBehavior
+  m_EditorClassIdentifier: Assembly-CSharp::BeaverDefenderBehaviorSO
+  idleDecisionDelay: 0.75
+  scoutDefinition: {fileID: 11400000, guid: 8503cbf27b16914448a636f35b31f913, type: 2}
+  followSearchRadius: 30
+  followStoppingDistance: 2.25
+  followDestinationRefreshInterval: 0.25
+  maxDefendersPerScout: 1
+  familyAlertRadius: 20
+  attackPrepareDuration: 0.35
+  attackRecoveryDuration: 0.8
+  attackApproachRefreshInterval: 0.2
+  unreachableTargetTimeout: 5

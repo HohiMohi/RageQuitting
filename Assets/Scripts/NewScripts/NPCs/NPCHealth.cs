@@ -123,6 +123,7 @@ public class NPCHealth : NetworkBehaviour, IDamageable, INPCTarget
         currentHealthNetwork.Value = Mathf.Clamp(currentHealthNetwork.Value - damage, 0f, maxHealth);
         OnHealthChanged?.Invoke(this, EventArgs.Empty);
         OnDamaged?.Invoke(this, new DamageEventArgs(previousHealth, currentHealthNetwork.Value, attackerNetworkObject));
+        NPCFactionDamageAlertSystem.Publish(this, attackerNetworkObject);
 
         if (currentHealthNetwork.Value <= 0f)
         {
@@ -136,6 +137,7 @@ public class NPCHealth : NetworkBehaviour, IDamageable, INPCTarget
         currentHealthLocal = Mathf.Clamp(currentHealthLocal - damage, 0f, maxHealth);
         OnHealthChanged?.Invoke(this, EventArgs.Empty);
         OnDamaged?.Invoke(this, new DamageEventArgs(previousHealth, currentHealthLocal, attackerNetworkObject));
+        NPCFactionDamageAlertSystem.Publish(this, attackerNetworkObject);
 
         if (currentHealthLocal <= 0f)
         {

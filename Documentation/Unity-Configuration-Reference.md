@@ -206,8 +206,34 @@ Wymagane:
 ### Beaver-only
 
 - `BeaverScoutBehaviorSO`;
+- `BeaverDefenderBehaviorSO`;
 - interest/destruction profiles;
 - spawner memory, jeśli ma pamiętać znane storage.
+
+Prefab `NPC_BeaverDefender` używa osobnego `BeaverDefenderVisual`, ale tego
+samego rigu i Animatora co skaut. Root pozostaje w skali `1`; `ModelRoot` ma
+skalę `0.4`. `NavMeshAgent` i `CapsuleCollider` należy stroić jawnie, obecnie
+mają radius `0.5625` i height `1.5`.
+
+W `BeaverDefenderBehaviorSO` obowiązkowo przypisz `scoutDefinition`.
+`maxDefendersPerScout` kontroluje współdzieloną rezerwację eskorty, a
+`familyAlertRadius` odległość odbioru serverowego alarmu frakcji.
+
+| Pole `BeaverDefenderBehaviorSO` | Znaczenie |
+|---|---|
+| `scoutDefinition` | Jedyny typ NPC, który może zostać celem `FollowingScout` |
+| `playerFaction` | Rozpoznanie graczy jako kandydatów do walki |
+| `idleDecisionDelay` | Zwłoka przed wyborem skauta albo pozostaniem w idle |
+| `followDistance`, `followStopDistance` | Dystans formacji i próg zatrzymania |
+| `followRepathInterval` | Częstotliwość aktualizacji celu NavMesh |
+| `maxDefendersPerScout` | Maksymalna liczba globalnych rezerwacji jednego skauta |
+| `attackRepathInterval` | Częstotliwość aktualizacji pościgu w `AttackMode` |
+| `targetLostTimeout` | Czas tolerowania utraconego lub nieosiągalnego celu |
+| `familyAlertRadius` | Maksymalna odległość od pozycji alarmu rodzinnego |
+
+Asset `BeaverDefenderDefinition` wskazuje `NPC_BeaverDefender`, visual
+`BeaverDefenderVisual`, `BeaversFaction` oraz behavior obrońcy. Prefab musi
+pozostać wpisany w `DefaultNetworkPrefabs`.
 
 ## Managery sceny
 
@@ -243,6 +269,15 @@ a `NPCSpawnGroupSO` skład i progresję populacji.
 historycznymi, resetowanymi przy ponownym uruchomieniu sceny. Pole
 `totalSpawnedNPCCount` jest widoczne w Inspectorze wyłącznie diagnostycznie i
 nie powinno być konfigurowane jako wartość startowa.
+
+W tutorialu grupa obrońców używa `NPCSpawnCountConditionSO` wskazującego grupę
+skautów. Ponieważ porównanie jest ścisłe (`count > threshold`), wartość `2`
+odblokowuje grupę po trzecim spawnie skauta.
+
+Konfiguracja używa assetów `BeaverScoutSpawnGroup`,
+`BeaverDefenderSpawnGroup` i `BeaverDefenderAfterThreeScouts`. Obie instancje
+spawnera mają osobne liczniki historyczne; nie należy oczekiwać, że spawny
+północnego spawnera odblokują grupę południowego.
 
 ## Lokalne ustawienia
 
@@ -306,6 +341,8 @@ Przy zmianie warstw zweryfikuj równocześnie:
 5. Dodaj NetworkPrefab.
 6. Dodaj definition do spawnera albo instancję testową.
 7. Wypiecz/sprawdź NavMesh.
+8. Jeśli NPC reaguje na eventy frakcji, zweryfikuj subskrypcję tylko po stronie
+   serwera i jej czyszczenie przy `Exit`/despawnie.
 
 ### Nowa grupa spawnów NPC
 

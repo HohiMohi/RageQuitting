@@ -29,12 +29,24 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 1950823448381037894, guid: 34adb550240754e41a6a2b5f22bd212b, type: 3}
-      propertyPath: npcDefinitions.Array.size
-      value: 1
+      propertyPath: spawnGroups.Array.size
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1950823448381037894, guid: 34adb550240754e41a6a2b5f22bd212b, type: 3}
+      propertyPath: npcDefinitions.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1950823448381037894, guid: 34adb550240754e41a6a2b5f22bd212b, type: 3}
+      propertyPath: 'spawnGroups.Array.data[0]'
+      value:
+      objectReference: {fileID: 11400000, guid: 7dd53e38258208f49b51d7a470630530, type: 2}
+    - target: {fileID: 1950823448381037894, guid: 34adb550240754e41a6a2b5f22bd212b, type: 3}
+      propertyPath: 'spawnGroups.Array.data[1]'
+      value:
+      objectReference: {fileID: 11400000, guid: fef62355f906c12409fb451625587ca7, type: 2}
+    - target: {fileID: 1950823448381037894, guid: 34adb550240754e41a6a2b5f22bd212b, type: 3}
       propertyPath: 'npcDefinitions.Array.data[0]'
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 8503cbf27b16914448a636f35b31f913, type: 2}
     - target: {fileID: 3390392565057540466, guid: 34adb550240754e41a6a2b5f22bd212b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -99,6 +111,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c1d2bf32b019cbc409579ebed3932079, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::BeaverSpawnerStorageMemory
   debugKnownStorages: []

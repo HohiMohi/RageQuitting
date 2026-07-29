@@ -35,6 +35,7 @@ public class NPCBrain : NetworkBehaviour
     public NPCFactionMember FactionMember => factionMember;
     public NPCAttackController AttackController => attackController;
     public NPCStorageInteractor StorageInteractor => storageInteractor;
+    public NPCBehaviorController BehaviorController => behaviorController;
     public NPCSpawner OriginSpawner => originSpawner;
     public Vector3 SpawnPosition => spawnPosition;
     public float DetectionRadius => definition != null ? definition.detectionRadius : 12f;
@@ -52,6 +53,18 @@ public class NPCBrain : NetworkBehaviour
         attackController = GetComponent<NPCAttackController>();
         storageInteractor = GetComponent<NPCStorageInteractor>();
         ApplyDefinition();
+    }
+
+    private void OnEnable()
+    {
+        NPCRegistry.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        NPCRegistry.Unregister(this);
+        behaviorController?.Exit();
+        behaviorController = null;
     }
 
     public override void OnNetworkSpawn()

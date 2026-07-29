@@ -33,6 +33,7 @@ flowchart TD
 | Pickup/drop i holderzy | serwer |
 | Shared-carry Rigidbody | serwer |
 | AI i NavMesh | serwer |
+| Alarmy frakcji NPC i rezerwacje eskorty | serwer, runtime-only |
 | Damage, durability i construction work | serwer w sesji NGO |
 | Produkcja i magazyny | serwer |
 | Timer i wynik poziomu | serwer |
@@ -129,6 +130,20 @@ Stanami są `Waiting`, `Running`, `Victory` i `Defeat`. Serwer synchronizuje
 stan oraz czas zakończenia, a klienci obliczają pozostały czas względem
 `ServerTime`. Nie jest potrzebny RPC co klatkę.
 
+## Komunikacja AI bez dodatkowej synchronizacji
+
+Decyzje NPC są wykonywane na serwerze, dlatego krótkotrwałe sygnały między AI
+nie wymagają `NetworkVariable` ani RPC. `NPCHealth` publikuje
+`NPCFactionDamageAlert` po prawidłowym otrzymaniu obrażeń. Alarm zawiera
+zaatakowanego członka frakcji, napastnika i pozycję zdarzenia.
+
+`BeaverDefenderBehaviorSO` odbiera alarm tylko na serwerze, filtruje go według
+`BeaversFaction` oraz własnego `familyAlertRadius`, a następnie przechodzi do
+`AttackMode`. Klienci obserwują rezultat przez standardową synchronizację ruchu,
+animacji i zdrowia NPC. `NPCRegistry` oraz
+`BeaverDefenderEscortRegistry` również są rejestrami runtime-only resetowanymi
+przy ponownym załadowaniu sceny.
+
 ## Network lifecycle - reguły
 
 - Nie odczytuj `IsServer` jako jedynego warunku singleplayera. Najpierw
@@ -139,6 +154,8 @@ stan oraz czas zakończenia, a klienci obliczają pozostały czas względem
   etap przed zmianą stanu.
 - Targeted ClientRpc służy do owner-only UI i lokalnych korekt.
 - Nie opieraj serwerowego holder state na owner-only flagach klienta.
+- Eventy AI publikuj po ostatecznej walidacji obrażeń i czyść subskrypcje przy
+  `Exit`, śmierci oraz despawnie behavioru.
 
 ## Ograniczenia
 
@@ -149,4 +166,3 @@ stan oraz czas zakończenia, a klienci obliczają pozostały czas względem
   od prefaba bazowego.
 - Nie ma ogólnego `NetworkRigidbody`; shared-carry korzysta z własnej
   synchronizacji.
-

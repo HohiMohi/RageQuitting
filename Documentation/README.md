@@ -1,6 +1,6 @@
 # RageQuitting - dokumentacja projektu
 
-> Stan dokumentacji: 2026-07-28
+> Stan dokumentacji: 2026-07-29
 >
 > Unity: `6000.3.18f1`
 >
@@ -39,7 +39,7 @@ flowchart LR
 | [Resources-Carrying-And-Physics](Resources-Carrying-And-Physics.md) | zasoby, destruction, single/shared-carry i impulsy |
 | [Factories-Storage-And-Production](Factories-Storage-And-Production.md) | magazyny, stół stolarski i piec |
 | [Bridge-Construction](Bridge-Construction.md) | komponenty mostu i wszystkie workflow montażu |
-| [NPC-Systems](NPC-Systems.md) | wspólne AI, Beaver Scout i Goat |
+| [NPC-Systems](NPC-Systems.md) | wspólne AI, Beaver Scout, Beaver Defender i Goat |
 | [Scenes-Tutorial-And-Level-Flow](Scenes-Tutorial-And-Level-Flow.md) | aktywne sceny, timer i tutorial |
 | [Unity-Configuration-Reference](Unity-Configuration-Reference.md) | indeks komponentów, pól i procedury tworzenia contentu |
 | [Roadmap-And-Audit](Roadmap-And-Audit.md) | ograniczenia, roadmap oraz rekomendacje techniczne |

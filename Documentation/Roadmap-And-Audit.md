@@ -70,6 +70,10 @@ Rekomendacja nie oznacza istniejącej funkcjonalności.
 ### NPC
 
 - Dostrajać Goat standing, charge, push i external impulse.
+- Dostrajać Beaver Defender: dystans eskorty, czas utraty celu, zasięg alarmu,
+  obrażenia oraz docelową liczbę obrońców na skauta.
+- Zastąpić placeholderowe przyciemnione materiały obrońcy finalnym wariantem
+  modelu i przygotować czytelny feedback wejścia w `AttackMode`.
 - Skonfigurować właściwe grupy, wagi i warunki progresji spawnerów dla
   docelowego przebiegu poziomów.
 - Dodać finalne modele, telegraph, animacje, audio i VFX.
@@ -137,7 +141,7 @@ Priorytet:
 2. transition tests każdego workflow;
 3. server validation pickup/action/production;
 4. forced drop i stamina recovery;
-5. NPC state transitions;
+5. NPC state transitions, family alerts i rezerwacje eskorty;
 6. restart i late join.
 
 ### 6. Ograniczyć scene overrides
