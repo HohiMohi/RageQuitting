@@ -23,3 +23,10 @@ MonoBehaviour:
   attackRecoveryDuration: 0.8
   attackApproachRefreshInterval: 0.2
   unreachableTargetTimeout: 5
+  pushZoneSearchRadius: 30
+  downedPlayerApproachRefreshInterval: 0.2
+  carryingMoveSpeedMultiplier: 0.7
+  dropArrivalDistance: 0.65
+  pushZoneArrivalDistance: 0.15
+  dropRetryInterval: 0.5
+  dropAttemptTimeout: 1

@@ -158,6 +158,20 @@ preferowanym miejscem tuningu.
   `ICarriedObjectImpactTargetProvider`.
 - Wymuszony drop musi wyczyścić carry strain i przywrócić regenerację staminy.
 
+### Powalony gracz jako obiekt carry
+
+`DownedPlayerCarryable` może być niesiony przez `PlayerInteractionNew` albo
+`NPCCarrier`. Wspólny `ICarriedPlayerAnchorProvider` zwraca anchor pozycji;
+obrońca używa osobnego punktu nad grzbietem i poziomej rotacji visuala.
+Rejestr holderów używa `NetworkObjectId`, a `DownedPlayerCarryReservation`
+zapobiega jednoczesnemu pickupowi przez kilka NPC.
+
+Pickup NPC wyłącza `CharacterController` gracza, ignoruje kolizje z carrierem
+i zatrzymuje timer respawnu. Każda centralna ścieżka dropu przywraca kontroler,
+kolizje, visual override, timer oraz oba końce relacji carry. Operacje są
+idempotentne, aby śmierć, despawn i external impulse mogły bezpiecznie wykonać
+force release.
+
 ## External impulse
 
 `IExternalImpulseReceiver` oddziela obrażenia od odrzutu. Gracz dodaje

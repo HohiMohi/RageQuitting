@@ -6,7 +6,9 @@ public enum BeaverDefenderState
 {
     Idle,
     FollowingScout,
-    AttackMode
+    AttackMode,
+    ApproachingDownedPlayer,
+    CarryingDownedPlayer
 }
 
 [CreateAssetMenu(fileName = "BeaverDefenderBehavior", menuName = "Scriptable Objects/NPC/Behaviors/Beaver Defender")]
@@ -31,6 +33,15 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
     [SerializeField, Min(0.05f)] private float attackApproachRefreshInterval = 0.2f;
     [SerializeField, Min(0.1f)] private float unreachableTargetTimeout = 5f;
 
+    [Header("Downed Player Carry")]
+    [SerializeField, Min(0.1f)] private float pushZoneSearchRadius = 30f;
+    [SerializeField, Min(0.05f)] private float downedPlayerApproachRefreshInterval = 0.2f;
+    [SerializeField, Range(0.1f, 1f)] private float carryingMoveSpeedMultiplier = 0.7f;
+    [SerializeField, Min(0.1f)] private float dropArrivalDistance = 0.65f;
+    [SerializeField, Min(0.05f)] private float pushZoneArrivalDistance = 0.15f;
+    [SerializeField, Min(0.05f)] private float dropRetryInterval = 0.5f;
+    [SerializeField, Min(0.1f)] private float dropAttemptTimeout = 1f;
+
     public NPCDefinitionSO ScoutDefinition => scoutDefinition;
     public float IdleDecisionDelay => Mathf.Max(0.05f, idleDecisionDelay);
     public float FollowSearchRadius => Mathf.Max(0.1f, followSearchRadius);
@@ -42,6 +53,13 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
     public float AttackRecoveryDuration => Mathf.Max(0f, attackRecoveryDuration);
     public float AttackApproachRefreshInterval => Mathf.Max(0.05f, attackApproachRefreshInterval);
     public float UnreachableTargetTimeout => Mathf.Max(0.1f, unreachableTargetTimeout);
+    public float PushZoneSearchRadius => Mathf.Max(0.1f, pushZoneSearchRadius);
+    public float DownedPlayerApproachRefreshInterval => Mathf.Max(0.05f, downedPlayerApproachRefreshInterval);
+    public float CarryingMoveSpeedMultiplier => Mathf.Clamp(carryingMoveSpeedMultiplier, 0.1f, 1f);
+    public float DropArrivalDistance => Mathf.Max(0.1f, dropArrivalDistance);
+    public float PushZoneArrivalDistance => Mathf.Max(0.05f, pushZoneArrivalDistance);
+    public float DropRetryInterval => Mathf.Max(0.05f, dropRetryInterval);
+    public float DropAttemptTimeout => Mathf.Max(0.1f, dropAttemptTimeout);
 
     public override NPCBehaviorController CreateController(NPCBrain brain)
     {
@@ -64,6 +82,15 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
         private NPCBrain followedScout;
         private NetworkObject combatTarget;
         private NPCAnimationController animationController;
+        private DownedPlayerCarryable downedPlayerTarget;
+        private GoatPushZone selectedPushZone;
+        private NPCDownedPlayerDropPoint denDropPoint;
+        private Vector3 carryDestination;
+        private Quaternion carryDestinationRotation = Quaternion.identity;
+        private bool carryDestinationIsPushZone;
+        private float defaultAgentSpeed;
+        private float dropAttemptStartedAt = -1f;
+        private float nextDropAttemptTime;
         private float stateEndTime;
         private float nextDestinationRefreshTime;
         private float unreachableSince = -1f;
@@ -81,6 +108,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
         public override void Enter()
         {
             animationController = Brain.GetComponent<NPCAnimationController>();
+            defaultAgentSpeed = Brain.Definition != null ? Brain.Definition.moveSpeed : Brain.Agent.speed;
             NPCFactionDamageAlertSystem.OnNpcFactionMemberDamaged += HandleFactionDamageAlert;
             EnterIdle();
         }
@@ -98,12 +126,19 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
                 case BeaverDefenderState.AttackMode:
                     TickAttackMode();
                     break;
+                case BeaverDefenderState.ApproachingDownedPlayer:
+                    TickApproachingDownedPlayer();
+                    break;
+                case BeaverDefenderState.CarryingDownedPlayer:
+                    TickCarryingDownedPlayer();
+                    break;
             }
         }
 
         public override void Exit()
         {
             NPCFactionDamageAlertSystem.OnNpcFactionMemberDamaged -= HandleFactionDamageAlert;
+            ClearDownedPlayerCarryState(dropCarriedPlayer: true);
             BeaverDefenderEscortRegistry.Release(Brain);
             Brain.AttackController?.CancelPendingAttacks();
             followedScout = null;
@@ -130,6 +165,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
 
         private void EnterIdle()
         {
+            ClearDownedPlayerCarryState(dropCarriedPlayer: true);
             BeaverDefenderEscortRegistry.Release(Brain);
             followedScout = null;
             combatTarget = null;
@@ -246,11 +282,13 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
                 return;
             }
 
+            ClearDownedPlayerCarryState(dropCarriedPlayer: true);
             EnterAttackMode(alert.Attacker);
         }
 
         private void EnterAttackMode(NetworkObject target)
         {
+            ClearDownedPlayerCarryState(dropCarriedPlayer: true);
             BeaverDefenderEscortRegistry.Release(Brain);
             followedScout = null;
             combatTarget = target;
@@ -263,6 +301,12 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
 
         private void TickAttackMode()
         {
+            if (TryGetDownedPlayerTarget(combatTarget, out DownedPlayerCarryable carryable))
+            {
+                BeginApproachingDownedPlayer(carryable);
+                return;
+            }
+
             if (!IsValidCombatTarget(combatTarget))
             {
                 EnterIdle();
@@ -363,6 +407,419 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
             {
                 combatPhase = CombatPhase.Approaching;
             }
+        }
+
+        private bool TryGetDownedPlayerTarget(NetworkObject target, out DownedPlayerCarryable carryable)
+        {
+            carryable = null;
+            if (target == null
+                || !target.TryGetComponent(out PlayerHealth playerHealth)
+                || !playerHealth.IsDowned
+                || !playerHealth.gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+
+            carryable = target.GetComponent<DownedPlayerCarryable>();
+            return carryable != null && (carryable.CanBeCarried || carryable.IsCarriedBy(Brain.Carrier.ActorId));
+        }
+
+        private void BeginApproachingDownedPlayer(DownedPlayerCarryable carryable)
+        {
+            if (carryable == null
+                || Brain.Carrier == null
+                || !Brain.Carrier.CanCarryObject
+                || DownedPlayerCarryReservation.IsReservedByOther(carryable, Brain.Carrier)
+                || !DownedPlayerCarryReservation.TryReserve(carryable, Brain.Carrier))
+            {
+                EnterIdle();
+                return;
+            }
+
+            BeaverDefenderEscortRegistry.Release(Brain);
+            Brain.AttackController?.CancelPendingAttacks();
+            downedPlayerTarget = carryable;
+            combatTarget = carryable.NetworkObject;
+            currentState = BeaverDefenderState.ApproachingDownedPlayer;
+            nextDestinationRefreshTime = 0f;
+            unreachableSince = -1f;
+            dropAttemptStartedAt = -1f;
+            RestoreAgentSpeed();
+        }
+
+        private void TickApproachingDownedPlayer()
+        {
+            if (!IsDownedCarryTargetValid(requireCarriedByThisNpc: false))
+            {
+                EnterIdle();
+                return;
+            }
+
+            float distance = Vector3.Distance(Brain.transform.position, downedPlayerTarget.transform.position);
+            if (distance <= Brain.InteractionDistance)
+            {
+                SelectCarryDestination();
+                if (!Brain.Carrier.TryPickup(downedPlayerTarget.gameObject))
+                {
+                    EnterIdle();
+                    return;
+                }
+
+                currentState = BeaverDefenderState.CarryingDownedPlayer;
+                Brain.Agent.speed = defaultAgentSpeed * config.CarryingMoveSpeedMultiplier;
+                nextDestinationRefreshTime = 0f;
+                dropAttemptStartedAt = -1f;
+                nextDropAttemptTime = 0f;
+                if (!TrySetCarryDestination())
+                {
+                    SwitchCarryDestinationToDen();
+                }
+
+                return;
+            }
+
+            if (Time.time < nextDestinationRefreshTime)
+            {
+                return;
+            }
+
+            nextDestinationRefreshTime = Time.time + config.DownedPlayerApproachRefreshInterval;
+            if (!TrySetDestination(downedPlayerTarget.transform.position, Brain.InteractionDistance * 0.85f))
+            {
+                TrackUnreachableTarget();
+                return;
+            }
+
+            unreachableSince = -1f;
+        }
+
+        private void TickCarryingDownedPlayer()
+        {
+            if (!IsDownedCarryTargetValid(requireCarriedByThisNpc: true))
+            {
+                EnterIdle();
+                return;
+            }
+
+            if (carryDestinationIsPushZone
+                && (selectedPushZone == null
+                    || !selectedPushZone.CanAcceptCarriedPlayerDrop
+                    || !HasCompletePath(carryDestination)))
+            {
+                SwitchCarryDestinationToDen();
+            }
+
+            if (Time.time >= nextDestinationRefreshTime)
+            {
+                nextDestinationRefreshTime = Time.time + config.DownedPlayerApproachRefreshInterval;
+                if (TrySetCarryDestination())
+                {
+                    unreachableSince = -1f;
+                }
+                else if (carryDestinationIsPushZone)
+                {
+                    SwitchCarryDestinationToDen();
+                }
+                else
+                {
+                    TrackUnreachableCarryDestination();
+                }
+            }
+
+            Vector3 delta = carryDestination - Brain.transform.position;
+            delta.y = 0f;
+            float arrivalDistance = GetCurrentCarryArrivalDistance();
+            if (delta.sqrMagnitude > arrivalDistance * arrivalDistance)
+            {
+                return;
+            }
+
+            StopAgent();
+            if (carryDestinationIsPushZone)
+            {
+                Brain.transform.rotation = carryDestinationRotation;
+                ThrowCarriedPlayer();
+                return;
+            }
+
+            TryDropCarriedPlayerAtDen();
+        }
+
+        private void SelectCarryDestination()
+        {
+            selectedPushZone = null;
+            carryDestinationIsPushZone = false;
+            float bestPathLength = float.PositiveInfinity;
+
+            foreach (GoatPushZone zone in GoatPushZone.Zones)
+            {
+                if (zone == null
+                    || !zone.CanAcceptCarriedPlayerDrop
+                    || Vector3.Distance(Brain.transform.position, zone.ApproachPosition) > config.PushZoneSearchRadius
+                    || !zone.TryGetCarrierThrowPose(Brain.Agent, out Vector3 position, out Quaternion rotation))
+                {
+                    continue;
+                }
+
+                NavMeshPath path = new NavMeshPath();
+                if (!Brain.Agent.CalculatePath(position, path) || path.status != NavMeshPathStatus.PathComplete)
+                {
+                    continue;
+                }
+
+                float pathLength = GetPathLength(path, Brain.transform.position);
+                if (pathLength >= bestPathLength)
+                {
+                    continue;
+                }
+
+                bestPathLength = pathLength;
+                selectedPushZone = zone;
+                carryDestination = position;
+                carryDestinationRotation = rotation;
+                carryDestinationIsPushZone = true;
+            }
+
+            if (!carryDestinationIsPushZone)
+            {
+                ResolveDenDestination();
+            }
+        }
+
+        private void SwitchCarryDestinationToDen()
+        {
+            selectedPushZone = null;
+            carryDestinationIsPushZone = false;
+            ResolveDenDestination();
+            if (TrySetCarryDestination())
+            {
+                unreachableSince = -1f;
+            }
+            else if (unreachableSince < 0f)
+            {
+                unreachableSince = Time.time;
+            }
+        }
+
+        private void ResolveDenDestination()
+        {
+            denDropPoint = Brain.OriginSpawner != null
+                ? Brain.OriginSpawner.GetComponent<NPCDownedPlayerDropPoint>()
+                : null;
+            carryDestination = denDropPoint != null ? denDropPoint.Position : Brain.SpawnPosition;
+            Vector3 direction = Vector3.ProjectOnPlane(carryDestination - Brain.transform.position, Vector3.up);
+            carryDestinationRotation = direction.sqrMagnitude > 0.0001f
+                ? Quaternion.LookRotation(direction.normalized, Vector3.up)
+                : Brain.transform.rotation;
+        }
+
+        private bool TrySetCarryDestination()
+        {
+            return TrySetDestination(carryDestination, GetCurrentCarryArrivalDistance());
+        }
+
+        private float GetCurrentCarryArrivalDistance()
+        {
+            return carryDestinationIsPushZone
+                ? config.PushZoneArrivalDistance
+                : config.DropArrivalDistance;
+        }
+
+        private void ThrowCarriedPlayer()
+        {
+            if (selectedPushZone == null || !selectedPushZone.CanAcceptCarriedPlayerDrop)
+            {
+                SwitchCarryDestinationToDen();
+                return;
+            }
+
+            DownedPlayerCarryable target = downedPlayerTarget;
+            Vector3 releasePosition = selectedPushZone.GetCarriedPlayerReleasePosition(Brain.transform.position);
+            Quaternion releaseRotation = Quaternion.LookRotation(selectedPushZone.PushDirection, Vector3.up);
+            ExternalImpulseProfileSO impulseProfile = selectedPushZone.PushImpulseProfile;
+            Vector3 pushDirection = selectedPushZone.PushDirection;
+
+            if (!Brain.Carrier.DropHeldObject(releasePosition, releaseRotation))
+            {
+                EnterIdle();
+                return;
+            }
+
+            if (target != null && impulseProfile != null)
+            {
+                foreach (MonoBehaviour behaviour in target.GetComponents<MonoBehaviour>())
+                {
+                    if (behaviour is IExternalImpulseReceiver receiver)
+                    {
+                        receiver.TryApplyExternalImpulse(
+                            impulseProfile.CreateImpulse(pushDirection),
+                            Brain.NetworkObject);
+                        break;
+                    }
+                }
+            }
+
+            FinishDownedPlayerTransport();
+        }
+
+        private void TryDropCarriedPlayerAtDen()
+        {
+            if (Time.time < nextDropAttemptTime)
+            {
+                return;
+            }
+
+            nextDropAttemptTime = Time.time + config.DropRetryInterval;
+            if (dropAttemptStartedAt < 0f)
+            {
+                dropAttemptStartedAt = Time.time;
+            }
+
+            bool hasSafePosition = denDropPoint != null
+                ? denDropPoint.TryGetSafeDropPosition(downedPlayerTarget, Brain.transform, out Vector3 dropPosition)
+                : TryGetFallbackDropPosition(carryDestination, out dropPosition);
+            if (!hasSafePosition && Time.time - dropAttemptStartedAt < config.DropAttemptTimeout)
+            {
+                return;
+            }
+
+            if (!hasSafePosition)
+            {
+                dropPosition = Brain.transform.position + Brain.transform.forward * 1.1f + Vector3.up * 0.1f;
+            }
+
+            if (!Brain.Carrier.DropHeldObject(dropPosition, carryDestinationRotation))
+            {
+                EnterIdle();
+                return;
+            }
+
+            FinishDownedPlayerTransport();
+        }
+
+        private void TrackUnreachableCarryDestination()
+        {
+            if (unreachableSince < 0f)
+            {
+                unreachableSince = Time.time;
+                return;
+            }
+
+            if (Time.time - unreachableSince < config.DropAttemptTimeout)
+            {
+                return;
+            }
+
+            TryDropCarriedPlayerNearCarrier();
+        }
+
+        private void TryDropCarriedPlayerNearCarrier()
+        {
+            Vector3 desiredPosition = Brain.transform.position
+                + Brain.transform.forward * 1.1f;
+            Vector3 dropPosition = TryGetFallbackDropPosition(desiredPosition, out Vector3 safePosition)
+                ? safePosition
+                : desiredPosition + Vector3.up * 0.1f;
+
+            if (!Brain.Carrier.DropHeldObject(dropPosition, Brain.transform.rotation))
+            {
+                EnterIdle();
+                return;
+            }
+
+            FinishDownedPlayerTransport();
+        }
+
+        private bool TryGetFallbackDropPosition(Vector3 desiredPosition, out Vector3 position)
+        {
+            position = default;
+            if (!NavMesh.SamplePosition(desiredPosition, out NavMeshHit hit, 2f, Brain.Agent.areaMask))
+            {
+                return false;
+            }
+
+            position = hit.position;
+            return true;
+        }
+
+        private bool IsDownedCarryTargetValid(bool requireCarriedByThisNpc)
+        {
+            if (downedPlayerTarget == null
+                || downedPlayerTarget.NetworkObject == null
+                || !downedPlayerTarget.gameObject.activeInHierarchy
+                || downedPlayerTarget.GetComponent<PlayerHealth>() is not PlayerHealth health
+                || !health.IsDowned
+                || !DownedPlayerCarryReservation.IsReservedBy(downedPlayerTarget, Brain.Carrier))
+            {
+                return false;
+            }
+
+            return requireCarriedByThisNpc
+                ? downedPlayerTarget.IsCarriedBy(Brain.Carrier.ActorId)
+                    && Brain.Carrier.CarriedObject == downedPlayerTarget.gameObject
+                : !downedPlayerTarget.IsCarried;
+        }
+
+        private void FinishDownedPlayerTransport()
+        {
+            DownedPlayerCarryReservation.Release(downedPlayerTarget, Brain.Carrier);
+            downedPlayerTarget = null;
+            selectedPushZone = null;
+            denDropPoint = null;
+            carryDestinationIsPushZone = false;
+            dropAttemptStartedAt = -1f;
+            unreachableSince = -1f;
+            RestoreAgentSpeed();
+            EnterIdle();
+        }
+
+        private void ClearDownedPlayerCarryState(bool dropCarriedPlayer)
+        {
+            if (dropCarriedPlayer
+                && downedPlayerTarget != null
+                && Brain.Carrier != null
+                && Brain.Carrier.CarriedObject == downedPlayerTarget.gameObject)
+            {
+                Brain.Carrier.DropHeldObject();
+            }
+
+            DownedPlayerCarryReservation.Release(downedPlayerTarget, Brain.Carrier);
+            DownedPlayerCarryReservation.ReleaseAll(Brain.Carrier);
+            downedPlayerTarget = null;
+            selectedPushZone = null;
+            denDropPoint = null;
+            carryDestinationIsPushZone = false;
+            dropAttemptStartedAt = -1f;
+            unreachableSince = -1f;
+            RestoreAgentSpeed();
+        }
+
+        private void RestoreAgentSpeed()
+        {
+            if (Brain.Agent != null)
+            {
+                Brain.Agent.speed = defaultAgentSpeed > 0f
+                    ? defaultAgentSpeed
+                    : Brain.Definition != null ? Brain.Definition.moveSpeed : Brain.Agent.speed;
+            }
+        }
+
+        private static float GetPathLength(NavMeshPath path, Vector3 start)
+        {
+            if (path?.corners == null || path.corners.Length == 0)
+            {
+                return float.PositiveInfinity;
+            }
+
+            float length = 0f;
+            Vector3 previous = start;
+            foreach (Vector3 corner in path.corners)
+            {
+                length += Vector3.Distance(previous, corner);
+                previous = corner;
+            }
+
+            return length;
         }
 
         private bool IsValidCombatTarget(NetworkObject target)

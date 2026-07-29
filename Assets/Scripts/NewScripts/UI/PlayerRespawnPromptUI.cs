@@ -8,6 +8,7 @@ public class PlayerRespawnPromptUI : MonoBehaviour
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private string respawnAvailableText = "Press Interact to respawn";
     [SerializeField] private string respawnCountdownFormat = "Respawn available in {0:0}s";
+    [SerializeField] private string carriedByEnemyText = "Carried by enemy";
     [SerializeField] private Vector2 anchoredPosition = new Vector2(0f, 140f);
     [SerializeField] private Vector2 size = new Vector2(420f, 54f);
 
@@ -63,6 +64,12 @@ public class PlayerRespawnPromptUI : MonoBehaviour
         promptRoot.SetActive(shouldShow);
         if (!shouldShow)
         {
+            return;
+        }
+
+        if (playerHealth.IsCarriedByNPC)
+        {
+            promptText.text = carriedByEnemyText;
             return;
         }
 

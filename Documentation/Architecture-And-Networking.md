@@ -34,6 +34,8 @@ flowchart TD
 | Shared-carry Rigidbody | serwer |
 | AI i NavMesh | serwer |
 | Alarmy frakcji NPC i rezerwacje eskorty | serwer, runtime-only |
+| NPC carry powalonego gracza i rezerwacja celu | serwer |
+| Pauza timera respawnu podczas NPC carry | serwerowy timestamp |
 | Damage, durability i construction work | serwer w sesji NGO |
 | Produkcja i magazyny | serwer |
 | Timer i wynik poziomu | serwer |
@@ -42,6 +44,13 @@ flowchart TD
 
 Singleplayer używa tych samych komponentów, ale gdy `NetworkManager` nie
 nasłuchuje, metody wykonują lokalną ścieżkę bez RPC.
+
+Powalony gracz przechowuje carrier przez `NetworkObjectId`, a stan carry jest
+odtwarzany z `NetworkVariable` także dla late join. Owner gracza podąża rootem za
+`ICarriedPlayerAnchorProvider`; pozostali klienci odtwarzają visual override.
+Serwer rozpoczyna i kończy pauzę respawnu razem z NPC carry. Timestamp początku
+pauzy jest synchronizowany, a przy dropie `downedAtTime` zostaje przesunięty o
+czas transportu.
 
 ## Ładowanie scen
 

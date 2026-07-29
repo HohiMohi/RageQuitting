@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerInteractionNew : MonoBehaviour
+public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 {
     private PlayerInputNew _playerInputNew;
     private PlayerHealth _playerHealth;
@@ -43,6 +43,7 @@ public class PlayerInteractionNew : MonoBehaviour
     public bool HasPickedUpObject => _pickedUpGameObject != null;
     public bool IsHoldingObject => _pickedUpGameObject != null;
     public bool IsHoldingDownedPlayer => _pickedUpGameObject != null && _pickedUpGameObject.TryGetComponent(out DownedPlayerCarryable _);
+    public Transform CarriedPlayerAnchor => GetCarriedPlayerAnchor();
     public bool IsHoldingSelfPositionedObject => _pickedUpGameObject != null && pickedUpObjectSelfPositioned;
     public bool IsSharedCarryUnderstaffed => IsSharedCarryMovementActive && sharedCarryPlayerHolderCount < sharedCarryRequiredPlayerCount;
     public float SharedCarryUnderstaffedStaminaDrainPerSecond => sharedCarryUnderstaffedStaminaDrainPerSecond;

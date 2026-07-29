@@ -128,6 +128,18 @@ Zero HP ustawia downed, ale nie usuwa player objectu. Inny gracz może wykonać
 `ActionAlt` revive. Downed player może być również niesiony przez
 `DownedPlayerCarryable`.
 
+`DownedPlayerCarryable` obsługuje carrierów-graczy oraz `NPCCarrier`. NPC jest
+identyfikowany przez `NetworkObjectId`, dzięki czemu wiele server-owned NPC nie
+koliduje ze sobą w mapowaniu holderów. Podczas NPC carry `CanBeRevived` i
+`CanRespawn` zwracają `false`, a prompt pokazuje `Carried by enemy`.
+
+`PlayerHealth` przechowuje synchronizowany timestamp
+`npcCarryRespawnPauseStartedAtNetwork`. `GetRespawnTimeRemaining()` zamraża czas
+na wartości z chwili pickupu. Przy dropie `downedAtTime` jest przesuwany o czas
+transportu, więc odliczanie kontynuuje się bez utraty lub dodania sekund.
+`IsRespawnTimerPausedByNpcCarry` udostępnia stan read-only. Carry przez innego
+gracza nie zatrzymuje timera.
+
 ## Input
 
 `PlayerInputNew` opakowuje Unity Input System i publikuje eventy ruchu,
@@ -261,4 +273,3 @@ crosshaira i elementów dekoracyjnych powinien być wyłączony.
   zmiana hierarchii wymaga sprawdzenia referencji.
 - Interfejs `IDamageable` obsługuje zarówno damage, jak i construction work.
 - Feedback proceduralny nie ma jeszcze pełnego menu dostępności.
-

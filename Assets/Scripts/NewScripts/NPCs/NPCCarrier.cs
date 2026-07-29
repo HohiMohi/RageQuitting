@@ -2,15 +2,18 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class NPCCarrier : NetworkBehaviour, ICarryActor
+public class NPCCarrier : NetworkBehaviour, ICarryActor, ICarriedPlayerAnchorProvider
 {
     // Temporary global feature gate. Keep the shared-carry implementation intact for later re-enablement.
     public static bool IsSharedCarryEnabled => false;
 
     [SerializeField] private Transform carryAnchor;
     [SerializeField] private Transform bodyAnchor;
+    [SerializeField] private Transform downedPlayerCarryAnchor;
     [SerializeField] private Vector3 defaultCarryAnchorLocalPosition = new Vector3(0f, 1f, 0.85f);
     [SerializeField] private Vector3 defaultBodyAnchorLocalPosition = new Vector3(0f, 1f, 0f);
+    [SerializeField] private Vector3 defaultDownedPlayerCarryAnchorLocalPosition = new Vector3(0f, 1.05f, 0f);
+    [SerializeField] private Vector3 defaultDownedPlayerCarryAnchorLocalEuler = new Vector3(0f, 0f, 90f);
     [SerializeField] private float sharedCarryInputStopDistance = 0.35f;
     [SerializeField] private float sharedCarryObjectStopDistance = 0.5f;
     [SerializeField] private float sharedCarryPathRefreshInterval = 0.25f;
@@ -54,6 +57,16 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
         }
     }
 
+    public Transform DownedPlayerCarryAnchor
+    {
+        get
+        {
+            EnsureDownedPlayerCarryAnchor();
+            return downedPlayerCarryAnchor;
+        }
+    }
+
+    public Transform CarriedPlayerAnchor => DownedPlayerCarryAnchor;
     public Vector3 BodyAnchorLocalOffset => BodyAnchor != null ? BodyAnchor.localPosition : defaultBodyAnchorLocalPosition;
     public float CollisionRadius => collisionRadius;
     public bool CanCarryObject => carriedObject == null;
@@ -65,6 +78,7 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
     {
         EnsureCarryAnchor();
         EnsureBodyAnchor();
+        EnsureDownedPlayerCarryAnchor();
         agent = GetComponent<NavMeshAgent>();
         if (TryGetComponent(out CharacterController characterController))
         {
@@ -106,6 +120,11 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
             return bridgeComponent.TryPickupByCarrier(this);
         }
 
+        if (target.TryGetComponent(out DownedPlayerCarryable downedPlayer))
+        {
+            return downedPlayer.TryPickupByCarrier(this);
+        }
+
         return false;
     }
 
@@ -116,9 +135,19 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
             return false;
         }
 
-        GameObject droppedObject = carriedObject;
         Vector3 dropPosition = transform.position + transform.forward * 1.1f + Vector3.up * 0.35f;
         Quaternion dropRotation = transform.rotation;
+        return DropHeldObject(dropPosition, dropRotation);
+    }
+
+    public bool DropHeldObject(Vector3 dropPosition, Quaternion dropRotation)
+    {
+        if (carriedObject == null)
+        {
+            return false;
+        }
+
+        GameObject droppedObject = carriedObject;
 
         if (droppedObject.TryGetComponent(out BaseResourceNew baseResource))
         {
@@ -128,6 +157,11 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
         if (droppedObject.TryGetComponent(out MountableBridgeComponent bridgeComponent))
         {
             return bridgeComponent.DropByCarrier(this, dropPosition, dropRotation);
+        }
+
+        if (droppedObject.TryGetComponent(out DownedPlayerCarryable downedPlayer))
+        {
+            return downedPlayer.DropByCarrier(this, dropPosition, dropRotation);
         }
 
         ForceRelease(droppedObject);
@@ -386,5 +420,19 @@ public class NPCCarrier : NetworkBehaviour, ICarryActor
         bodyAnchor.SetParent(transform);
         bodyAnchor.localPosition = defaultBodyAnchorLocalPosition;
         bodyAnchor.localRotation = Quaternion.identity;
+    }
+
+    private void EnsureDownedPlayerCarryAnchor()
+    {
+        if (downedPlayerCarryAnchor != null)
+        {
+            return;
+        }
+
+        GameObject anchorGameObject = new GameObject("NPCDownedPlayerCarryAnchor");
+        downedPlayerCarryAnchor = anchorGameObject.transform;
+        downedPlayerCarryAnchor.SetParent(transform);
+        downedPlayerCarryAnchor.localPosition = defaultDownedPlayerCarryAnchorLocalPosition;
+        downedPlayerCarryAnchor.localRotation = Quaternion.Euler(defaultDownedPlayerCarryAnchorLocalEuler);
     }
 }

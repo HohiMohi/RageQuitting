@@ -254,10 +254,10 @@ przy każdym literalnym wejściu do Idle.
 
 ## Beaver Defender
 
-`BeaverDefenderBehaviorSO` realizuje trzy wysokopoziomowe stany:
-`Idle`, `FollowingScout` i `AttackMode`. Obrońca należy do `BeaversFaction`,
-korzysta z tego samego rigu i animacji co skaut, ale ma osobny prefab, ciemniejsze
-materiały oraz visual powiększony z `0.32` do `0.4`.
+`BeaverDefenderBehaviorSO` realizuje stany `Idle`, `FollowingScout`,
+`AttackMode`, `ApproachingDownedPlayer` i `CarryingDownedPlayer`. Obrońca należy
+do `BeaversFaction`, korzysta z tego samego rigu i animacji co skaut, ale ma
+osobny prefab, ciemniejsze materiały oraz visual powiększony z `0.32` do `0.4`.
 
 | Pole | Znaczenie |
 |---|---|
@@ -272,6 +272,13 @@ materiały oraz visual powiększony z `0.32` do `0.4`.
 | `attackRecoveryDuration` | Przerwa po uderzeniu |
 | `attackApproachRefreshInterval` | Częstotliwość aktualizacji pościgu |
 | `unreachableTargetTimeout` | Czas bez pełnej ścieżki przed porzuceniem celu |
+| `pushZoneSearchRadius` | Zasięg szukania strefy wyrzutu przed pickupem |
+| `downedPlayerApproachRefreshInterval` | Odświeżanie ścieżki do gracza i destination |
+| `carryingMoveSpeedMultiplier` | Mnożnik prędkości podczas transportu, domyślnie `0.7` |
+| `dropArrivalDistance` | Próg dotarcia do punktu odłożenia przy denie |
+| `pushZoneArrivalDistance` | Dokładniejszy próg dotarcia do punktu wyrzutu, domyślnie `0.15 m` |
+| `dropRetryInterval` | Odstęp prób znalezienia wolnej kapsuły przy denie |
+| `dropAttemptTimeout` | Maksymalny czas prób przed awaryjnym dropem, obecnie `1 s` |
 
 `NPCRegistry` przechowuje aktywne `NPCBrain`, dzięki czemu obrońca może znaleźć
 skauta także z innego spawnera. `BeaverDefenderEscortRegistry` rozdziela
@@ -285,6 +292,27 @@ nowe alarmy są ignorowane do pokonania, despawnu lub utraty bieżącego celu.
 `NPCAttackController.StartTargetedAttack(NetworkObject, ...)` wykonuje
 pojedynczy, walidowany atak na wskazanego gracza lub NPC. Istniejący overload
 `PlayerHealth` pozostaje używany przez kozę.
+
+### Transport powalonego gracza
+
+Jeśli własny cel walki obrońcy przejdzie w downed, AI rezerwuje konkretną
+instancję przez `DownedPlayerCarryReservation`, podchodzi i podnosi ją przez
+rozszerzony `NPCCarrier`. Inni obrońcy nie mogą przejąć tej samej rezerwacji.
+Gracz leży poziomo na `DownedPlayerCarryAnchor`; jego `CharacterController` jest
+wyłączony, a kolizje z carrierem są ignorowane do dropu.
+
+Przed pickupem serwer wybiera najkrótszą osiągalną `GoatPushZone` w
+`pushZoneSearchRadius`. Bóbr idzie do osobnego `CarrierThrowPoint`, obraca się
+w `PushDirection`, odkłada gracza i aplikuje `PushImpulseProfile` bez dodatkowych
+obrażeń. Jeśli strefa jest niepoprawna lub traci ścieżkę, destination przełącza
+się na `NPCDownedPlayerDropPoint` przy spawnerze, a następnie na
+`NPCBrain.SpawnPosition`. Brak wolnej kapsuły przy denie jest tolerowany najwyżej
+przez `dropAttemptTimeout`; później następuje awaryjny drop obok bobra.
+
+Alarm rodzinny, obrażenia, external impulse, śmierć i despawn wymuszają
+idempotentne czyszczenie carry oraz rezerwacji. Revive i respawn są zablokowane
+podczas NPC carry. Timer respawnu jest zamrożony od udanego pickupu do dropu;
+czas lotu po wyrzuceniu ponownie wlicza się do odliczania.
 
 Tutorialowe `BeaverSpawner_North` i `BeaverSpawner_South` mają:
 
@@ -312,6 +340,9 @@ grupę obrońców; odblokowanie nie tworzy obrońcy natychmiast.
   do `Idle` i zwalnia rezerwację eskorty.
 - Zwykły targeted attack obsługuje teraz zarówno `PlayerHealth`, jak i
   `NPCHealth`, dzięki czemu obrońca może walczyć z wrogim NPC.
+- Podczas transportu `PlayerRespawnPromptUI` pokazuje `Carried by enemy`.
+- `CarrierThrowPoint` musi leżeć na NavMesh; brak pełnej ścieżki odrzuca strefę.
+- Obecne punkty tutorialowe leżą `1.5 m` bliżej krawędzi niż `ApproachPoint`.
 
 ## Goat
 
@@ -399,9 +430,11 @@ impulse.
 | Pole | Znaczenie |
 |---|---|
 | `approachPoint` | Pierwszy cel NavMesh |
+| `carrierThrowPoint` | Osobny punkt przy krawędzi dla NPC niosącego gracza |
 | `localPushDirection` | Kierunek przepaści w local space |
 | `pushImpulseProfile` | Damage-independent knockback |
 | `setupPositionSampleRadius` | Dopasowanie pozycji za graczem |
+| `carriedPlayerReleaseDistance/Height` | Offset gracza przed aplikacją impulsu |
 | `requirePlayerOnPushSide` | Wymaga poprawnej strony strefy |
 | `minimumPushSideDot` | Próg iloczynu skalarnego |
 

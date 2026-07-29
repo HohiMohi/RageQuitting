@@ -166,6 +166,17 @@ po restarcie sceny. Obrońca używa tej samej `BeaversFaction`, więc może reag
 na zaatakowanie skauta także pochodzącego z drugiego spawnera, jeśli zdarzenie
 znajduje się w jego zasięgu alarmu.
 
+Każdy spawner ma `NPCDownedPlayerDropPoint` na NavMesh przy denie. Po powaleniu
+własnego celu obrońca może odnieść go do tego punktu albo wybrać jedną z dwóch
+testowych `GoatPushZone`. Strefy posiadają osobne `CarrierThrowPoint` ustawione
+lokalnie około `(0, -0.75, -0.5)`, czyli `1.5 m` bliżej krawędzi niż zachowane
+`ApproachPoint`. Punkt wyrzutu używa progu dotarcia `0.15 m`; den `0.65 m`.
+
+Podczas transportu licznik respawnu gracza jest zatrzymany. Wznawia się przy
+odłożeniu lub wyrzuceniu, przed aplikacją external impulse. Bezpieczny drop przy
+denie jest ponawiany maksymalnie przez `1 s`, po czym używany jest fallback obok
+bobra.
+
 ## Restart i late join
 
 Restart:

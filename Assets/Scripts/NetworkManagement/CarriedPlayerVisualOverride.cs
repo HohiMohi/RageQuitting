@@ -53,14 +53,21 @@ public class CarriedPlayerVisualOverride : MonoBehaviour
         }
 
         Transform anchor = carrierTransform;
-        if (carrierTransform.TryGetComponent(out PlayerInteractionNew playerInteraction))
+        foreach (MonoBehaviour behaviour in carrierTransform.GetComponents<MonoBehaviour>())
         {
-            anchor = playerInteraction.GetCarriedPlayerAnchor();
+            if (behaviour is ICarriedPlayerAnchorProvider provider && provider.CarriedPlayerAnchor != null)
+            {
+                anchor = provider.CarriedPlayerAnchor;
+                break;
+            }
         }
 
         Quaternion yawRotation = Quaternion.Euler(0f, carrierTransform.eulerAngles.y, 0f);
         Vector3 targetPosition = anchor.position + yawRotation * carriedPlayerLocalOffset;
-        playerBodyVisual.SetPositionAndRotation(targetPosition, yawRotation * originalLocalRotation);
+        Quaternion targetRotation = anchor != carrierTransform
+            ? anchor.rotation * originalLocalRotation
+            : yawRotation * originalLocalRotation;
+        playerBodyVisual.SetPositionAndRotation(targetPosition, targetRotation);
     }
 
     private void CachePlayerBodyVisual()

@@ -201,14 +201,17 @@ Wymagane:
 - `GoatChargeController.visualRoot`;
 - `GoatBehaviorSO`;
 - opcjonalne `GoatStandingSurface` na celach;
-- scenowe `GoatPushZone` z approach, direction i impulse profile.
+- scenowe `GoatPushZone` z `approachPoint`, `carrierThrowPoint`, direction i
+  impulse profile.
 
 ### Beaver-only
 
 - `BeaverScoutBehaviorSO`;
 - `BeaverDefenderBehaviorSO`;
 - interest/destruction profiles;
-- spawner memory, jeśli ma pamiętać znane storage.
+- spawner memory, jeśli ma pamiętać znane storage;
+- `NPCCarrier.downedPlayerCarryAnchor` na grzbiecie;
+- `NPCDownedPlayerDropPoint` przy spawnerze/denie.
 
 Prefab `NPC_BeaverDefender` używa osobnego `BeaverDefenderVisual`, ale tego
 samego rigu i Animatora co skaut. Root pozostaje w skali `1`; `ModelRoot` ma
@@ -222,18 +225,29 @@ W `BeaverDefenderBehaviorSO` obowiązkowo przypisz `scoutDefinition`.
 | Pole `BeaverDefenderBehaviorSO` | Znaczenie |
 |---|---|
 | `scoutDefinition` | Jedyny typ NPC, który może zostać celem `FollowingScout` |
-| `playerFaction` | Rozpoznanie graczy jako kandydatów do walki |
 | `idleDecisionDelay` | Zwłoka przed wyborem skauta albo pozostaniem w idle |
-| `followDistance`, `followStopDistance` | Dystans formacji i próg zatrzymania |
-| `followRepathInterval` | Częstotliwość aktualizacji celu NavMesh |
+| `followSearchRadius`, `followStoppingDistance` | Zasięg wyboru i dystans formacji |
+| `followDestinationRefreshInterval` | Częstotliwość aktualizacji celu NavMesh |
 | `maxDefendersPerScout` | Maksymalna liczba globalnych rezerwacji jednego skauta |
-| `attackRepathInterval` | Częstotliwość aktualizacji pościgu w `AttackMode` |
-| `targetLostTimeout` | Czas tolerowania utraconego lub nieosiągalnego celu |
+| `attackPrepareDuration`, `attackRecoveryDuration` | Timing zwykłego ataku |
+| `attackApproachRefreshInterval` | Częstotliwość aktualizacji pościgu |
+| `unreachableTargetTimeout` | Czas tolerowania nieosiągalnego celu |
 | `familyAlertRadius` | Maksymalna odległość od pozycji alarmu rodzinnego |
+| `pushZoneSearchRadius` | Zasięg wyboru GoatPushZone przed pickupem |
+| `downedPlayerApproachRefreshInterval` | Repath podczas podejścia i transportu |
+| `carryingMoveSpeedMultiplier` | Prędkość z niesionym graczem |
+| `dropArrivalDistance` | Próg dotarcia do dena |
+| `pushZoneArrivalDistance` | Próg dotarcia do `CarrierThrowPoint` |
+| `dropRetryInterval`, `dropAttemptTimeout` | Próby i timeout bezpiecznego dropu |
 
 Asset `BeaverDefenderDefinition` wskazuje `NPC_BeaverDefender`, visual
 `BeaverDefenderVisual`, `BeaversFaction` oraz behavior obrońcy. Prefab musi
 pozostać wpisany w `DefaultNetworkPrefabs`.
+
+`GoatPushZone.approachPoint` pozostaje punktem dla zachowania kozy.
+`carrierThrowPoint` jest opcjonalnym, bliższym krawędzi punktem dla NPC
+transportującego gracza; bez niego system używa `approachPoint`. Jawny punkt
+musi dać się dopasować do NavMesh i posiadać kompletną ścieżkę.
 
 ## Managery sceny
 

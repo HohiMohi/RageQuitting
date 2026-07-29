@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractableNew, IHeldObjectHudInfoProvider
 {
     private const ulong NoCarrierNetworkObjectId = ulong.MaxValue;
-    private static readonly Dictionary<ulong, DownedPlayerCarryable> CarriedPlayerByCarrierClientId = new Dictionary<ulong, DownedPlayerCarryable>();
+    private static readonly Dictionary<ulong, DownedPlayerCarryable> CarriedPlayerByCarrierNetworkObjectId = new Dictionary<ulong, DownedPlayerCarryable>();
 
     [SerializeField] private float movementSpeedPenalty = 0.35f;
     [SerializeField] private Vector3 carriedPlayerLocalOffset = new Vector3(0f, 0f, 0.25f);
@@ -32,6 +32,8 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     public bool IsCarried => IsNetworkSessionActive() ? isCarriedNetwork.Value || localCarryFollowActive : isCarriedLocal || localCarryFollowActive;
     public bool IsLocalCarryFollowActive => localCarryFollowActive;
+    public bool IsCarriedByNPC => IsCarried && TryResolveCarrierTransform(GetCarrierNetworkObjectId(), out Transform carrier)
+        && carrier.TryGetComponent(out NPCCarrier _);
     public bool CanBeCarried => playerHealth != null && playerHealth.IsDowned && !IsCarried;
     public string HeldObjectDisplayName => "Downed player";
     public Sprite HeldObjectIcon => null;
@@ -40,6 +42,13 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     {
         playerHealth = GetComponent<PlayerHealth>();
         characterController = GetComponent<CharacterController>();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        isCarriedNetwork.OnValueChanged += IsCarriedNetwork_OnValueChanged;
+        carrierNetworkObjectIdNetwork.OnValueChanged += CarrierNetworkObjectIdNetwork_OnValueChanged;
+        ApplyReplicatedCarryState();
     }
 
     private void LateUpdate()
@@ -59,6 +68,21 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     public override void OnNetworkDespawn()
     {
+        isCarriedNetwork.OnValueChanged -= IsCarriedNetwork_OnValueChanged;
+        carrierNetworkObjectIdNetwork.OnValueChanged -= CarrierNetworkObjectIdNetwork_OnValueChanged;
+        if (IsServer)
+        {
+            playerHealth?.ResumeRespawnTimerAfterNpcCarry();
+        }
+
+        if (IsServer
+            && TryGetCarrierNetworkObject(carrierNetworkObjectIdNetwork.Value) is NetworkObject carrier
+            && carrier.TryGetComponent(out NPCCarrier npcCarrier))
+        {
+            npcCarrier.ForceRelease(gameObject);
+            DownedPlayerCarryReservation.Release(this, npcCarrier);
+        }
+
         ClearServerCarrierRegistration();
         RestoreIgnoredCollisions();
         StopLocalCarryFollow(transform.position, transform.rotation);
@@ -124,6 +148,65 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
         return TryCompleteLocalPickup(carrier);
     }
 
+    public bool TryPickupByCarrier(ICarryActor carrier)
+    {
+        if (carrier == null
+            || carrier.ActorType != CarryActorType.NPC
+            || carrier.NetworkObject == null
+            || !carrier.CanCarryObject
+            || !CanBeCarried)
+        {
+            return false;
+        }
+
+        if (carrier is NPCCarrier npcCarrier
+            && !DownedPlayerCarryReservation.IsReservedBy(this, npcCarrier))
+        {
+            return false;
+        }
+
+        float pickupDistance = 1.5f;
+        if (carrier.NetworkObject.TryGetComponent(out NPCBrain brain))
+        {
+            pickupDistance = brain.InteractionDistance;
+        }
+
+        if (Vector3.Distance(transform.position, carrier.NetworkObject.transform.position) > pickupDistance)
+        {
+            return false;
+        }
+
+        if (IsNetworkSessionActive())
+        {
+            return IsServer && TryCompleteNpcNetworkPickup(carrier);
+        }
+
+        return TryCompleteNpcLocalPickup(carrier);
+    }
+
+    public bool DropByCarrier(ICarryActor carrier, Vector3 position, Quaternion rotation)
+    {
+        if (carrier == null || !IsCarriedBy(carrier.ActorId))
+        {
+            return false;
+        }
+
+        if (IsNetworkSessionActive())
+        {
+            if (!IsServer)
+            {
+                return false;
+            }
+
+            CompleteNetworkDrop(position, rotation);
+            return true;
+        }
+
+        carrier.ForceRelease(gameObject);
+        CompleteLocalDrop(position, rotation);
+        return true;
+    }
+
     public void RequestDrop()
     {
         if (!IsCarried)
@@ -176,7 +259,10 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     public void RequestRevive(Transform reviver)
     {
-        if (playerHealth == null || reviver == null || reviver.root == transform.root)
+        if (playerHealth == null
+            || !playerHealth.CanBeRevived
+            || reviver == null
+            || reviver.root == transform.root)
         {
             return;
         }
@@ -204,14 +290,63 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
             return false;
         }
 
-        isCarriedNetwork.Value = true;
         carrierNetworkObjectIdNetwork.Value = carrierNetworkObject.NetworkObjectId;
-        CarriedPlayerByCarrierClientId[carrierNetworkObject.OwnerClientId] = this;
+        isCarriedNetwork.Value = true;
+        CarriedPlayerByCarrierNetworkObjectId[carrierNetworkObject.NetworkObjectId] = this;
 
         ConfirmPickupClientRpc(CreateTargetClientRpcParams(carrierNetworkObject.OwnerClientId));
         StartCarryOnOwnerClientRpc(carrierNetworkObject.NetworkObjectId, CreateTargetClientRpcParams(OwnerClientId));
-        StartCarrierCollisionIgnoreClientRpc(CreateTargetClientRpcParams(carrierNetworkObject.OwnerClientId));
+        StartCarrierCollisionIgnoreClientRpc(carrierNetworkObject.NetworkObjectId);
         StartCarriedVisualOverrideClientRpc(carrierNetworkObject.NetworkObjectId, carriedPlayerLocalOffset);
+        return true;
+    }
+
+    private bool TryCompleteNpcNetworkPickup(ICarryActor carrier)
+    {
+        if (!IsServer || carrier?.NetworkObject == null || !CanBeCarried || !carrier.CanCarryObject)
+        {
+            return false;
+        }
+
+        ulong carrierId = carrier.NetworkObject.NetworkObjectId;
+        if (CarriedPlayerByCarrierNetworkObjectId.TryGetValue(carrierId, out DownedPlayerCarryable existing)
+            && existing != null
+            && existing != this)
+        {
+            return false;
+        }
+
+        carrierNetworkObjectIdNetwork.Value = carrierId;
+        isCarriedNetwork.Value = true;
+        CarriedPlayerByCarrierNetworkObjectId[carrierId] = this;
+        carrier.ConfirmCarry(gameObject);
+        playerHealth?.PauseRespawnTimerForNpcCarry();
+
+        IgnoreCollisionsWithCarrier(carrier.NetworkObject.transform);
+        StartCarryOnOwnerClientRpc(carrierId, CreateTargetClientRpcParams(OwnerClientId));
+        StartCarrierCollisionIgnoreClientRpc(carrierId);
+        StartCarriedVisualOverrideClientRpc(carrierId, carriedPlayerLocalOffset);
+        return true;
+    }
+
+    private bool TryCompleteNpcLocalPickup(ICarryActor carrier)
+    {
+        if (carrier?.NetworkObject == null && carrier is not Component)
+        {
+            return false;
+        }
+
+        Transform carrierTransform = carrier.NetworkObject != null
+            ? carrier.NetworkObject.transform
+            : ((Component)carrier).transform;
+        isCarriedLocal = true;
+        localCarrierNetworkObjectId = carrier.ActorId;
+        localCarrierTransform = carrierTransform;
+        carrier.ConfirmCarry(gameObject);
+        playerHealth?.PauseRespawnTimerForNpcCarry();
+        IgnoreCollisionsWithCarrier(carrierTransform);
+        StartLocalCarryFollow(carrierTransform);
+        StartCarriedVisualOverride(carrierTransform, carriedPlayerLocalOffset);
         return true;
     }
 
@@ -253,7 +388,7 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
             return false;
         }
 
-        if (CarriedPlayerByCarrierClientId.TryGetValue(carrierNetworkObject.OwnerClientId, out DownedPlayerCarryable carriedPlayer) &&
+        if (CarriedPlayerByCarrierNetworkObjectId.TryGetValue(carrierNetworkObject.NetworkObjectId, out DownedPlayerCarryable carriedPlayer) &&
             carriedPlayer != null &&
             carriedPlayer != this)
         {
@@ -298,21 +433,39 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
         }
 
         ulong previousCarrierNetworkObjectId = carrierNetworkObjectIdNetwork.Value;
-        ulong previousCarrierClientId = TryGetCarrierOwnerClientId(previousCarrierNetworkObjectId, out ulong carrierClientId) ? carrierClientId : OwnerClientId;
-        ClearServerCarrierRegistration(previousCarrierClientId);
+        NetworkObject previousCarrier = TryGetCarrierNetworkObject(previousCarrierNetworkObjectId);
+        ClearServerCarrierRegistration(previousCarrierNetworkObjectId);
+        playerHealth?.ResumeRespawnTimerAfterNpcCarry();
 
         isCarriedNetwork.Value = false;
         carrierNetworkObjectIdNetwork.Value = NoCarrierNetworkObjectId;
         transform.SetPositionAndRotation(dropPosition, dropRotation);
 
-        ConfirmReleaseClientRpc(CreateTargetClientRpcParams(previousCarrierClientId));
-        StopCarrierCollisionIgnoreClientRpc(CreateTargetClientRpcParams(previousCarrierClientId));
+        if (previousCarrier != null && previousCarrier.TryGetComponent(out NPCCarrier npcCarrier))
+        {
+            npcCarrier.ForceRelease(gameObject);
+            DownedPlayerCarryReservation.Release(this, npcCarrier);
+        }
+        else if (previousCarrier != null)
+        {
+            ConfirmReleaseClientRpc(CreateTargetClientRpcParams(previousCarrier.OwnerClientId));
+        }
+
+        StopCarrierCollisionIgnoreClientRpc();
         StopCarryOnOwnerClientRpc(dropPosition, dropRotation, CreateTargetClientRpcParams(OwnerClientId));
         StopCarriedVisualOverrideClientRpc();
     }
 
     private void CompleteLocalDrop(Vector3 dropPosition, Quaternion dropRotation)
     {
+        playerHealth?.ResumeRespawnTimerAfterNpcCarry();
+
+        if (localCarrierTransform != null && localCarrierTransform.TryGetComponent(out NPCCarrier npcCarrier))
+        {
+            npcCarrier.ForceRelease(gameObject);
+            DownedPlayerCarryReservation.Release(this, npcCarrier);
+        }
+
         isCarriedLocal = false;
         localCarrierNetworkObjectId = NoCarrierNetworkObjectId;
         localCarrierTransform = null;
@@ -324,6 +477,11 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     private void StartLocalCarryFollow(Transform carrier)
     {
         localCarrierTransform = carrier;
+        if (localCarryFollowActive)
+        {
+            return;
+        }
+
         localCarryFollowActive = true;
 
         if (characterController == null)
@@ -365,11 +523,7 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     private void ApplyCarryFollow(Transform carrierTransform)
     {
-        Transform anchor = carrierTransform;
-        if (carrierTransform.TryGetComponent(out PlayerInteractionNew playerInteraction))
-        {
-            anchor = playerInteraction.GetCarriedPlayerAnchor();
-        }
+        Transform anchor = ResolveCarriedPlayerAnchor(carrierTransform);
 
         Quaternion yawRotation = Quaternion.Euler(0f, carrierTransform.eulerAngles.y, 0f);
         Vector3 targetPosition = anchor.position + yawRotation * carriedPlayerLocalOffset;
@@ -431,6 +585,18 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
         carrierTransform = carrierNetworkObject.transform;
         return true;
+    }
+
+    private NetworkObject TryGetCarrierNetworkObject(ulong carrierNetworkObjectId)
+    {
+        if (carrierNetworkObjectId == NoCarrierNetworkObjectId || NetworkManager.Singleton == null)
+        {
+            return null;
+        }
+
+        return NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(carrierNetworkObjectId, out NetworkObject carrier)
+            ? carrier
+            : null;
     }
 
     private bool TryGetCarrierOwnerClientId(ulong carrierNetworkObjectId, out ulong ownerClientId)
@@ -527,17 +693,14 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     private void ClearServerCarrierRegistration()
     {
-        if (TryGetCarrierOwnerClientId(carrierNetworkObjectIdNetwork.Value, out ulong carrierClientId))
-        {
-            ClearServerCarrierRegistration(carrierClientId);
-        }
+        ClearServerCarrierRegistration(carrierNetworkObjectIdNetwork.Value);
     }
 
-    private void ClearServerCarrierRegistration(ulong carrierClientId)
+    private void ClearServerCarrierRegistration(ulong carrierNetworkObjectId)
     {
-        if (CarriedPlayerByCarrierClientId.TryGetValue(carrierClientId, out DownedPlayerCarryable carriedPlayer) && carriedPlayer == this)
+        if (CarriedPlayerByCarrierNetworkObjectId.TryGetValue(carrierNetworkObjectId, out DownedPlayerCarryable carriedPlayer) && carriedPlayer == this)
         {
-            CarriedPlayerByCarrierClientId.Remove(carrierClientId);
+            CarriedPlayerByCarrierNetworkObjectId.Remove(carrierNetworkObjectId);
         }
     }
 
@@ -617,18 +780,18 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     }
 
     [ClientRpc]
-    private void StartCarrierCollisionIgnoreClientRpc(ClientRpcParams clientRpcParams = default)
+    private void StartCarrierCollisionIgnoreClientRpc(ulong carrierNetworkObjectId)
     {
-        if (NetworkManager.Singleton == null || NetworkManager.Singleton.LocalClient?.PlayerObject == null)
+        if (!TryResolveCarrierTransform(carrierNetworkObjectId, out Transform carrierTransform))
         {
             return;
         }
 
-        IgnoreCollisionsWithCarrier(NetworkManager.Singleton.LocalClient.PlayerObject.transform);
+        IgnoreCollisionsWithCarrier(carrierTransform);
     }
 
     [ClientRpc]
-    private void StopCarrierCollisionIgnoreClientRpc(ClientRpcParams clientRpcParams = default)
+    private void StopCarrierCollisionIgnoreClientRpc()
     {
         RestoreIgnoredCollisions();
     }
@@ -659,6 +822,57 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
                 TargetClientIds = new[] { clientId }
             }
         };
+    }
+
+    private void IsCarriedNetwork_OnValueChanged(bool previousValue, bool newValue)
+    {
+        ApplyReplicatedCarryState();
+    }
+
+    private void CarrierNetworkObjectIdNetwork_OnValueChanged(ulong previousValue, ulong newValue)
+    {
+        ApplyReplicatedCarryState();
+    }
+
+    private void ApplyReplicatedCarryState()
+    {
+        if (!IsSpawned || !isCarriedNetwork.Value)
+        {
+            StopCarriedVisualOverride();
+            RestoreIgnoredCollisions();
+            return;
+        }
+
+        if (!TryResolveCarrierTransform(carrierNetworkObjectIdNetwork.Value, out Transform carrierTransform))
+        {
+            return;
+        }
+
+        IgnoreCollisionsWithCarrier(carrierTransform);
+        StartCarriedVisualOverride(carrierTransform, carriedPlayerLocalOffset);
+        if (IsOwner)
+        {
+            localCarrierNetworkObjectId = carrierNetworkObjectIdNetwork.Value;
+            StartLocalCarryFollow(carrierTransform);
+        }
+    }
+
+    private static Transform ResolveCarriedPlayerAnchor(Transform carrierTransform)
+    {
+        if (carrierTransform == null)
+        {
+            return null;
+        }
+
+        foreach (MonoBehaviour behaviour in carrierTransform.GetComponents<MonoBehaviour>())
+        {
+            if (behaviour is ICarriedPlayerAnchorProvider provider && provider.CarriedPlayerAnchor != null)
+            {
+                return provider.CarriedPlayerAnchor;
+            }
+        }
+
+        return carrierTransform;
     }
 
     private readonly struct ColliderPair

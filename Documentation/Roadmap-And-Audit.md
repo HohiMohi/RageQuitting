@@ -71,7 +71,10 @@ Rekomendacja nie oznacza istniejącej funkcjonalności.
 
 - Dostrajać Goat standing, charge, push i external impulse.
 - Dostrajać Beaver Defender: dystans eskorty, czas utraty celu, zasięg alarmu,
-  obrażenia oraz docelową liczbę obrońców na skauta.
+  obrażenia, pozycję gracza na grzbiecie, punkty wyrzutu oraz docelową liczbę
+  obrońców na skauta.
+- Dodać finalny telegraph podniesienia i wyrzutu powalonego gracza przez
+  Beaver Defender.
 - Zastąpić placeholderowe przyciemnione materiały obrońcy finalnym wariantem
   modelu i przygotować czytelny feedback wejścia w `AttackMode`.
 - Skonfigurować właściwe grupy, wagi i warunki progresji spawnerów dla
