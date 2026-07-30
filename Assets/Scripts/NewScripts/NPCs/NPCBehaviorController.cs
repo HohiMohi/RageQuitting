@@ -10,4 +10,5 @@ public abstract class NPCBehaviorController
     public virtual void Enter() { }
     public abstract void Tick();
     public virtual void Exit() { }
+    public virtual void HandleDeferredDamage(NPCHealth.DamageEventArgs damageEvent) { }
 }

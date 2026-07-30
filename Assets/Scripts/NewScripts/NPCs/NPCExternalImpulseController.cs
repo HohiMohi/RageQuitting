@@ -76,7 +76,7 @@ public class NPCExternalImpulseController : NetworkBehaviour, IExternalImpulseRe
 
         if (!isActive)
         {
-            BeginExternalControl(impulse.ForceDropHeldObject);
+            BeginExternalControl(impulse.ForceDropHeldObject, source);
         }
         else if (impulse.ForceDropHeldObject)
         {
@@ -97,10 +97,10 @@ public class NPCExternalImpulseController : NetworkBehaviour, IExternalImpulseRe
         return true;
     }
 
-    private void BeginExternalControl(bool forceDrop)
+    private void BeginExternalControl(bool forceDrop, NetworkObject source)
     {
         isActive = true;
-        brain?.BeginExternalControl();
+        brain?.BeginExternalControl(source);
         attackController?.CancelPendingAttacks();
         if (forceDrop)
         {

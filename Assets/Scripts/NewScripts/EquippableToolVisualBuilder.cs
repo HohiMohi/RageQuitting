@@ -24,6 +24,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
     [SerializeField] private bool rebuildOnAwake = true;
 
     public const string GeneratedRootName = "GeneratedToolModel";
+    public const string SecondaryGripName = "SecondaryGrip";
 
 #if UNITY_EDITOR
     private const string AxeModelAssetPath = "Assets/AI_assets/Models/Tools/Axe_LowPoly.fbx";
@@ -252,6 +253,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         CreateCapsule("Handle", root, new Vector3(0f, -0.05f, 0f), Quaternion.identity, new Vector3(0.07f, 0.65f, 0.07f), handle);
         CreateCube("Grip", root, new Vector3(0f, 0.62f, 0f), Quaternion.identity, new Vector3(0.28f, 0.08f, 0.08f), handle);
         CreateCube("Blade", root, new Vector3(0f, -0.68f, 0f), Quaternion.Euler(10f, 0f, 0f), new Vector3(0.34f, 0.32f, 0.08f), metal);
+        CreateSecondaryGrip(root, new Vector3(0f, 0.18f, 0f));
     }
 
     private static void BuildIndustrialHammer(Transform root, ToolVisualMaterials materials)
@@ -261,6 +263,15 @@ public class EquippableToolVisualBuilder : MonoBehaviour
 
         CreateCapsule("Handle", root, new Vector3(0f, -0.08f, 0f), Quaternion.identity, new Vector3(0.09f, 0.62f, 0.09f), handle);
         CreateCube("HammerHead", root, new Vector3(0f, 0.5f, 0f), Quaternion.identity, new Vector3(0.62f, 0.24f, 0.24f), metal);
+        CreateSecondaryGrip(root, new Vector3(0f, 0.12f, 0f));
+    }
+
+    private static void CreateSecondaryGrip(Transform parent, Vector3 localPosition)
+    {
+        GameObject grip = new GameObject(SecondaryGripName);
+        grip.transform.SetParent(parent, false);
+        grip.transform.localPosition = localPosition;
+        grip.transform.localRotation = Quaternion.identity;
     }
 
     private static void BuildWrench(Transform root, ToolVisualMaterials materials)

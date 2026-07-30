@@ -54,11 +54,15 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private Vector3 toolLocalScale = new Vector3(0.5f, 0.5f, 0.5f);
     [SerializeField] private Vector3 toolSwingPositionOffset = new Vector3(0f, 0.02f, 0.08f);
     [SerializeField] private Vector3 toolSwingEulerOffset = new Vector3(24f, -8f, -14f);
+    [SerializeField] private float twoHandedGripBlendSpeed = 14f;
+    [SerializeField] private Vector3 twoHandedHandEulerOffset = new Vector3(0f, 0f, 90f);
 
     private Transform armsRoot;
     private Transform leftArmRoot;
+    private Transform leftHandVisual;
     private Transform rightArmRoot;
     private Transform rightToolAnchor;
+    private Transform secondaryGrip;
     private GameObject rightToolVisual;
     private Material skinMaterial;
     private Material forearmMaterial;
@@ -66,6 +70,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     private float locomotionPhase;
     private float locomotionAmount;
     private float sprintBlend;
+    private float twoHandedGripBlend;
     private Vector3 previousPlayerPosition;
     private bool hasPreviousPlayerPosition;
     private Camera firstPersonCamera;
@@ -265,8 +270,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         armsRoot.localPosition = rootLocalPosition;
         armsRoot.localRotation = Quaternion.Euler(rootLocalEulerAngles);
 
-        leftArmRoot = CreateArm("Left", -armSpacing);
-        rightArmRoot = CreateArm("Right", armSpacing);
+        leftArmRoot = CreateArm("Left", -armSpacing, out leftHandVisual);
+        rightArmRoot = CreateArm("Right", armSpacing, out _);
         rightToolAnchor = CreateToolAnchor(rightArmRoot);
         RefreshToolVisual();
     }
@@ -349,7 +354,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         return Shader.Find("Sprites/Default");
     }
 
-    private Transform CreateArm(string sideName, float xOffset)
+    private Transform CreateArm(string sideName, float xOffset, out Transform handVisual)
     {
         GameObject armObject = new GameObject($"FPP_{sideName}Arm");
         Transform armRoot = armObject.transform;
@@ -359,7 +364,12 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
         CreateArmSegment($"{sideName}_UpperArm", armRoot, new Vector3(0f, -0.015f, 0.08f), new Vector3(0.052f, 0.13f, 0.052f), skinMaterial, new Vector3(72f, 0f, 0f));
         CreateArmSegment($"{sideName}_Forearm", armRoot, new Vector3(0f, -0.085f, 0.2f), new Vector3(0.048f, 0.16f, 0.048f), forearmMaterial, new Vector3(66f, 0f, 0f));
-        CreateHand($"{sideName}_Hand", armRoot, new Vector3(0f, -0.14f, 0.31f), new Vector3(0.082f, 0.055f, 0.072f), skinMaterial);
+        handVisual = CreateHand(
+            $"{sideName}_Hand",
+            armRoot,
+            new Vector3(0f, -0.14f, 0.31f),
+            new Vector3(0.082f, 0.055f, 0.072f),
+            skinMaterial);
 
         return armRoot;
     }
@@ -390,7 +400,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         ApplyVisualObjectSettings(segment, material);
     }
 
-    private void CreateHand(string objectName, Transform parent, Vector3 localPosition, Vector3 localScale, Material material)
+    private Transform CreateHand(string objectName, Transform parent, Vector3 localPosition, Vector3 localScale, Material material)
     {
         GameObject hand = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         hand.name = objectName;
@@ -399,6 +409,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         hand.transform.localRotation = Quaternion.identity;
         hand.transform.localScale = localScale;
         ApplyVisualObjectSettings(hand, material);
+        return hand.transform;
     }
 
     private void ApplyVisualObjectSettings(GameObject visualObject, Material material)
@@ -503,6 +514,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         bool isSprinting = sprintBlend > 0.5f && moveAmount > 0.01f;
         bool isCarrying = playerInteraction != null && playerInteraction.IsHoldingObject;
         bool isDowned = playerHealth != null && playerHealth.IsDowned;
+        bool useTwoHandedGrip = ShouldUseTwoHandedGrip(isCarrying, isDowned);
+        twoHandedGripBlend = Mathf.MoveTowards(
+            twoHandedGripBlend,
+            useTwoHandedGrip ? 1f : 0f,
+            Mathf.Max(0f, twoHandedGripBlendSpeed) * deltaTime);
 
         float movementBobAmplitude = Mathf.Lerp(moveBobAmplitude, sprintBobAmplitude, sprintBlend) * moveAmount;
         float idleWeight = firstPersonController != null && firstPersonController.Grounded && !isDowned
@@ -551,15 +567,6 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         armsRoot.localRotation = Quaternion.Slerp(armsRoot.localRotation, Quaternion.Euler(targetRootEuler), deltaTime * poseLerpSpeed);
 
         UpdateArmPose(
-            leftArmRoot,
-            true,
-            actionCurve,
-            moveAmount,
-            isCarrying,
-            isDowned,
-            profiledRightArmEuler,
-            profiledLeftArmWeight);
-        UpdateArmPose(
             rightArmRoot,
             false,
             actionCurve,
@@ -569,6 +576,15 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             profiledRightArmEuler,
             profiledLeftArmWeight);
         UpdateToolPose(actionCurve, isDowned, profiledToolPosition, profiledToolEuler);
+        UpdateArmPose(
+            leftArmRoot,
+            true,
+            actionCurve,
+            moveAmount,
+            isCarrying,
+            isDowned,
+            profiledRightArmEuler,
+            profiledLeftArmWeight);
     }
 
     private void GetProfiledActionPose(
@@ -664,8 +680,49 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             targetEuler += new Vector3(18f, side * -12f, side * 18f);
         }
 
+        if (isLeft && twoHandedGripBlend > 0f && TryGetTwoHandedGripPose(out Vector3 gripPosition, out Quaternion gripRotation))
+        {
+            targetPosition = Vector3.Lerp(targetPosition, gripPosition, twoHandedGripBlend);
+            Quaternion normalRotation = Quaternion.Euler(targetEuler);
+            armRoot.localPosition = Vector3.Lerp(armRoot.localPosition, targetPosition, Time.deltaTime * poseLerpSpeed);
+            armRoot.localRotation = Quaternion.Slerp(
+                armRoot.localRotation,
+                Quaternion.Slerp(normalRotation, gripRotation, twoHandedGripBlend),
+                Time.deltaTime * poseLerpSpeed);
+            return;
+        }
+
         armRoot.localPosition = Vector3.Lerp(armRoot.localPosition, targetPosition, Time.deltaTime * poseLerpSpeed);
         armRoot.localRotation = Quaternion.Slerp(armRoot.localRotation, Quaternion.Euler(targetEuler), Time.deltaTime * poseLerpSpeed);
+    }
+
+    private bool ShouldUseTwoHandedGrip(bool isCarrying, bool isDowned)
+    {
+        EquippableItemSO selectedItem = playerInventory != null ? playerInventory.GetItemInSlot(0) : null;
+        return !isCarrying &&
+               !isDowned &&
+               selectedItem != null &&
+               selectedItem.IsTwoHanded &&
+               secondaryGrip != null &&
+               rightToolVisual != null &&
+               rightToolVisual.activeInHierarchy;
+    }
+
+    private bool TryGetTwoHandedGripPose(out Vector3 armPosition, out Quaternion armRotation)
+    {
+        armPosition = default;
+        armRotation = Quaternion.identity;
+        if (armsRoot == null || leftHandVisual == null || secondaryGrip == null)
+        {
+            return false;
+        }
+
+        Vector3 gripPosition = armsRoot.InverseTransformPoint(secondaryGrip.position);
+        armRotation = Quaternion.Inverse(armsRoot.rotation) *
+                      secondaryGrip.rotation *
+                      Quaternion.Euler(twoHandedHandEulerOffset);
+        armPosition = gripPosition - armRotation * leftHandVisual.localPosition;
+        return true;
     }
 
     private void UpdateToolPose(
@@ -742,12 +799,48 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         rightToolVisual = EquippableToolVisualBuilder.BuildVisual(itemType, rightToolAnchor, toolVisualMaterials);
         if (rightToolVisual != null)
         {
+            secondaryGrip = FindChildRecursive(rightToolVisual.transform, EquippableToolVisualBuilder.SecondaryGripName);
             SetLayerRecursively(rightToolVisual, firstPersonRenderLayer);
             if (playerHealth != null)
             {
                 rightToolVisual.SetActive(!playerHealth.IsDowned);
             }
+
+#if UNITY_EDITOR
+            EquippableItemSO selectedItem = playerInventory.GetItemInSlot(0);
+            if (selectedItem != null && selectedItem.IsTwoHanded && secondaryGrip == null)
+            {
+                Debug.LogWarning(
+                    $"Two-handed tool '{selectedItem.itemName}' has no {EquippableToolVisualBuilder.SecondaryGripName}. " +
+                    "Falling back to the regular left-arm animation.",
+                    this);
+            }
+#endif
         }
+    }
+
+    private static Transform FindChildRecursive(Transform root, string childName)
+    {
+        if (root == null)
+        {
+            return null;
+        }
+
+        if (root.name == childName)
+        {
+            return root;
+        }
+
+        foreach (Transform child in root)
+        {
+            Transform result = FindChildRecursive(child, childName);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        return null;
     }
 
     private static void SetLayerRecursively(GameObject root, int layer)
@@ -781,6 +874,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
     private void ClearToolVisual()
     {
+        secondaryGrip = null;
+        twoHandedGripBlend = 0f;
         if (rightToolVisual == null)
         {
             return;

@@ -161,6 +161,10 @@ przy ponownym załadowaniu sceny.
   usuwaj w `OnNetworkDespawn`.
 - Serwer waliduje sender client ID, ownership, dystans, narzędzie i aktualny
   etap przed zmianą stanu.
+- Combat impact gracza jest pojedynczym requestem zawierającym NetworkObject
+  celu i typ narzędzia. Serwer odczytuje aktywny slot `0`, ponownie sprawdza
+  overlap oraz limit czasu cyklu, a następnie wspólnie aplikuje damage i
+  opcjonalny `ExternalImpulseProfileSO`.
 - Fazy zamachu, swing audio, hit-stop i camera kick są owner-only. Potwierdzony
   impact rozsyła world-space audio/VFX przez `ActionImpactEffectSpawner`;
   gameplayowy damage/progress nadal przechodzi przez istniejącą walidację celu.
@@ -168,6 +172,9 @@ przy ponownym załadowaniu sceny.
 - Nie opieraj serwerowego holder state na owner-only flagach klienta.
 - Eventy AI publikuj po ostatecznej walidacji obrażeń i czyść subskrypcje przy
   `Exit`, śmierci oraz despawnie behavioru.
+- Przejęcie NPC przez external impulse kończy bieżący behavior. Reakcję na
+  obrażenia pochodzące od tego samego źródła należy odroczyć w `NPCBrain` i
+  odtworzyć po odzyskaniu NavMesha, zamiast tracić combat target.
 
 ## Ograniczenia
 

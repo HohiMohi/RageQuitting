@@ -191,6 +191,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
         }
 
+        public override void HandleDeferredDamage(NPCHealth.DamageEventArgs damageEvent)
+        {
+            BrainHealth_OnDamaged(Brain.Health, damageEvent);
+        }
+
         public override void Tick()
         {
             if (Time.time < reactionLockEndTime)

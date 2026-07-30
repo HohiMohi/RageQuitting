@@ -146,6 +146,14 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
             StopAgent();
         }
 
+        public override void HandleDeferredDamage(NPCHealth.DamageEventArgs damageEvent)
+        {
+            if (damageEvent != null && IsValidCombatTarget(damageEvent.Attacker))
+            {
+                EnterAttackMode(damageEvent.Attacker);
+            }
+        }
+
         private void TickIdle()
         {
             StopAgent();

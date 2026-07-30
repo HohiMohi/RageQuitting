@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerActionController : MonoBehaviour
+public class PlayerActionController : NetworkBehaviour
 {
     public sealed class ToolActionEventArgs : EventArgs
     {
@@ -67,6 +67,7 @@ public class PlayerActionController : MonoBehaviour
     #endregion
     [SerializeField] private float baseActionDamage = 5f;
     [SerializeField, Min(0f)] private float serverActionRangeTolerance = 0.15f;
+    [SerializeField, Min(0f)] private float serverCombatImpactTimingTolerance = 0.1f;
     private float actionRange;
     private float actionCooldown;
     private float actionCooldownTimer = 0f;
@@ -79,6 +80,7 @@ public class PlayerActionController : MonoBehaviour
     private float currentActionPhaseTimer;
     private float currentActionPhaseDuration;
     private EquippableItemSO actionItem;
+    private double nextServerCombatImpactTime;
 
     public bool IsActionInProgress => currentActionPhase != EquippableActionPhase.None;
     public EquippableActionPhase CurrentActionPhase => currentActionPhase;
@@ -162,17 +164,17 @@ public class PlayerActionController : MonoBehaviour
             return false;
         }
 
-        if (damageable is PlayerHealth playerHealth && ShouldRequestPlayerDamageOnServer(playerHealth))
+        EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
+        if (IsCombatTarget(damageable))
         {
-            playerHealth.DamageReceived(actionDamage, _networkObject);
-        }
-        else if (damageable is NPCHealth npcHealth)
-        {
-            npcHealth.DamageReceived(actionDamage, _networkObject);
+            if (!TrySubmitCombatImpact(damageable, selectedItem))
+            {
+                return false;
+            }
         }
         else
         {
-            damageable.DamageReceived(_inventory.GetCurrentSelectedItem(), actionDamage);
+            damageable.DamageReceived(selectedItem, actionDamage);
         }
 
         Debug.Log($"Action performed on {hitCollider.gameObject.name}");
@@ -468,19 +470,227 @@ public class PlayerActionController : MonoBehaviour
         return colliderProvider != null ? colliderProvider.ImpactSurfaceType : ActionImpactSurfaceType.Default;
     }
 
-    private bool ShouldRequestPlayerDamageOnServer(PlayerHealth playerHealth)
+    private static bool IsCombatTarget(IDamageable damageable)
     {
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer)
+        return damageable is PlayerHealth || damageable is NPCHealth;
+    }
+
+    private bool TrySubmitCombatImpact(IDamageable damageable, EquippableItemSO item)
+    {
+        if (damageable is not MonoBehaviour targetBehaviour)
         {
             return false;
         }
 
-        if (!playerHealth.TryGetComponent(out NetworkObject targetNetworkObject))
+        NetworkObject targetNetworkObject = targetBehaviour.GetComponentInParent<NetworkObject>();
+        if (IsNetworkSessionActive())
+        {
+            if (targetNetworkObject == null || !targetNetworkObject.IsSpawned)
+            {
+                return false;
+            }
+
+            if (IsServer)
+            {
+                return TryApplyCombatImpactServer(
+                    targetNetworkObject,
+                    item != null ? item.itemType : EquippableItemType.None);
+            }
+
+            RequestCombatImpactServerRpc(
+                targetNetworkObject.NetworkObjectId,
+                item != null ? (int)item.itemType : (int)EquippableItemType.None);
+            return true;
+        }
+
+        return ApplyCombatDamageAndImpulse(
+            targetBehaviour,
+            item != null ? item.damage : baseActionDamage,
+            item != null ? item.impactImpulseProfile : null);
+    }
+
+    [ServerRpc]
+    private void RequestCombatImpactServerRpc(
+        ulong targetNetworkObjectId,
+        int requestedItemTypeValue,
+        ServerRpcParams serverRpcParams = default)
+    {
+        if (serverRpcParams.Receive.SenderClientId != OwnerClientId ||
+            NetworkManager.Singleton == null ||
+            !NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
+                targetNetworkObjectId,
+                out NetworkObject targetNetworkObject))
+        {
+            return;
+        }
+
+        TryApplyCombatImpactServer(targetNetworkObject, (EquippableItemType)requestedItemTypeValue);
+    }
+
+    private bool TryApplyCombatImpactServer(
+        NetworkObject targetNetworkObject,
+        EquippableItemType requestedItemType)
+    {
+        if (targetNetworkObject == null ||
+            targetNetworkObject == NetworkObject ||
+            _inventory == null)
         {
             return false;
         }
 
-        return _networkObject != null && targetNetworkObject != _networkObject;
+        EquippableItemSO serverItem = _inventory.GetSelectedItemForServerValidation();
+        bool usesBaseAction = requestedItemType == EquippableItemType.None && serverItem == null;
+        if ((!usesBaseAction && (serverItem == null || serverItem.itemType != requestedItemType)) ||
+            !TryResolveCombatTarget(targetNetworkObject, out MonoBehaviour targetBehaviour))
+        {
+            return false;
+        }
+
+        bool isInRange = usesBaseAction
+            ? CanPerformActionOn(targetBehaviour, baseActionRange, serverActionRangeTolerance)
+            : CanPerformServerValidatedActionOn(targetBehaviour, serverItem);
+        float validatedDamage = usesBaseAction ? baseActionDamage : serverItem.damage;
+        double serverTime = NetworkManager.Singleton != null
+            ? NetworkManager.Singleton.ServerTime.Time
+            : Time.timeAsDouble;
+        if (!isInRange || validatedDamage <= 0f || serverTime < nextServerCombatImpactTime)
+        {
+            return false;
+        }
+
+        bool applied = ApplyCombatDamageAndImpulse(
+            targetBehaviour,
+            validatedDamage,
+            serverItem != null ? serverItem.impactImpulseProfile : null);
+        if (applied)
+        {
+            nextServerCombatImpactTime = serverTime + GetMinimumCombatImpactInterval(serverItem);
+        }
+
+        return applied;
+    }
+
+    private float GetMinimumCombatImpactInterval(EquippableItemSO item)
+    {
+        if (item == null || item.actionProfile == null)
+        {
+            return Mathf.Max(0.05f, item != null ? item.actionCooldown : baseActionCooldown);
+        }
+
+        float cycleDuration =
+            item.actionProfile.GetPhaseDuration(EquippableActionPhase.WindUp) +
+            item.actionProfile.GetPhaseDuration(EquippableActionPhase.Strike) +
+            item.actionProfile.GetPhaseDuration(EquippableActionPhase.ImpactFreeze) +
+            item.actionProfile.GetPhaseDuration(EquippableActionPhase.Recovery);
+        return Mathf.Max(0.05f, cycleDuration - serverCombatImpactTimingTolerance);
+    }
+
+    private static bool TryResolveCombatTarget(
+        NetworkObject targetNetworkObject,
+        out MonoBehaviour targetBehaviour)
+    {
+        targetBehaviour = null;
+        if (targetNetworkObject == null)
+        {
+            return false;
+        }
+
+        PlayerHealth playerHealth = targetNetworkObject.GetComponentInChildren<PlayerHealth>();
+        if (playerHealth != null)
+        {
+            if (playerHealth.IsDowned)
+            {
+                return false;
+            }
+
+            targetBehaviour = playerHealth;
+            return true;
+        }
+
+        NPCHealth npcHealth = targetNetworkObject.GetComponentInChildren<NPCHealth>();
+        if (npcHealth == null || npcHealth.IsDead)
+        {
+            return false;
+        }
+
+        targetBehaviour = npcHealth;
+        return true;
+    }
+
+    private bool ApplyCombatDamageAndImpulse(
+        MonoBehaviour targetBehaviour,
+        float damage,
+        ExternalImpulseProfileSO impulseProfile)
+    {
+        if (targetBehaviour == null || damage <= 0f)
+        {
+            return false;
+        }
+
+        if (targetBehaviour is PlayerHealth playerHealth)
+        {
+            if (playerHealth.IsDowned)
+            {
+                return false;
+            }
+
+            playerHealth.DamageReceived(damage, _networkObject);
+        }
+        else if (targetBehaviour is NPCHealth npcHealth)
+        {
+            if (npcHealth.IsDead)
+            {
+                return false;
+            }
+
+            npcHealth.DamageReceived(damage, _networkObject);
+            if (npcHealth == null || npcHealth.IsDead)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+        TryApplyImpactImpulse(targetBehaviour, impulseProfile);
+        return true;
+    }
+
+    private void TryApplyImpactImpulse(
+        MonoBehaviour targetBehaviour,
+        ExternalImpulseProfileSO impulseProfile)
+    {
+        if (targetBehaviour == null || impulseProfile == null)
+        {
+            return;
+        }
+
+        Vector3 horizontalDirection = targetBehaviour.transform.position - transform.position;
+        horizontalDirection.y = 0f;
+        if (horizontalDirection.sqrMagnitude <= 0.0001f)
+        {
+            horizontalDirection = transform.forward;
+        }
+
+        foreach (MonoBehaviour behaviour in targetBehaviour.GetComponentsInParent<MonoBehaviour>(true))
+        {
+            if (behaviour is IExternalImpulseReceiver receiver)
+            {
+                receiver.TryApplyExternalImpulse(
+                    impulseProfile.CreateImpulse(horizontalDirection),
+                    _networkObject);
+                return;
+            }
+        }
+    }
+
+    private bool IsNetworkSessionActive()
+    {
+        return NetworkManager.Singleton != null &&
+               NetworkManager.Singleton.IsListening &&
+               IsSpawned;
     }
 
     public void TryPerformAction()
@@ -614,23 +824,22 @@ public class PlayerActionController : MonoBehaviour
         ActionImpactSurfaceType surfaceType = ActionImpactSurfaceType.Default;
         if (TryGetSingleActionTarget(actionRange, out IDamageable damageable, out Collider hitCollider))
         {
-            if (damageable is PlayerHealth playerHealth && ShouldRequestPlayerDamageOnServer(playerHealth))
+            if (IsCombatTarget(damageable))
             {
-                playerHealth.DamageReceived(actionDamage, _networkObject);
-            }
-            else if (damageable is NPCHealth npcHealth)
-            {
-                npcHealth.DamageReceived(actionDamage, _networkObject);
+                hit = TrySubmitCombatImpact(damageable, impactItem);
             }
             else
             {
                 damageable.DamageReceived(impactItem, actionDamage);
+                hit = true;
             }
 
-            surfaceType = ResolveImpactSurface(damageable, hitCollider);
-            SpawnImpactEffect(hitCollider, surfaceType);
-            OnActionPerformed?.Invoke(this, EventArgs.Empty);
-            hit = true;
+            if (hit)
+            {
+                surfaceType = ResolveImpactSurface(damageable, hitCollider);
+                SpawnImpactEffect(hitCollider, surfaceType);
+                OnActionPerformed?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         OnToolActionImpact?.Invoke(this, CreateToolEventArgs(

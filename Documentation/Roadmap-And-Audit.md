@@ -99,6 +99,9 @@ Rekomendacja nie oznacza istniejącej funkcjonalności.
 - Rozszerzyć `ProductionRecipeSO` o kolejne materiały i typy procesów, jeśli
   pojawią się fabryki inne niż Carpenter Table i Blast Furnace.
 - Dodać finalne modele zasobów i narzędzi.
+- Dostrajać pozycje `SecondaryGrip` oraz `twoHandedHandEulerOffset` po
+  zastąpieniu placeholderowych modeli Shovel i Industrial Hammer finalnymi
+  assetami.
 
 ## Rekomendacje audytu
 

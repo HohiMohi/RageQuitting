@@ -22,6 +22,14 @@ i agent.
 `SpawnPosition` jest zapamiętywane raz w `Awake`; external impulse ani ponowne
 `Enter()` behavioru go nie nadpisuje.
 
+`NPCBrain` buforuje ostatnie poprawne zdarzenie obrażeń wraz z napastnikiem.
+Jeżeli bezpośrednio po obrażeniach kontrolę przejmie
+`NPCExternalImpulseController`, behavior może zostać bezpiecznie zakończony.
+Po odzyskaniu NavMesha brain ponownie uruchamia behavior i przekazuje mu
+odroczoną reakcję przez `HandleDeferredDamage()`. Dzięki temu odrzut młotem nie
+kasuje rage Beaver Scouta ani `AttackMode` Beaver Defendera. Dalsze obrażenia
+otrzymane podczas lotu aktualizują oczekującą reakcję.
+
 ## `NPCDefinitionSO`
 
 | Pole | Znaczenie |
@@ -472,6 +480,9 @@ przerywa go i może uruchomić defensywną szarżę.
 
 Podczas impulsu behavior wychodzi, carrier dropuje zgodnie z profilem, agent
 jest wyłączony. Po lądowaniu NPC wykonuje Warp i ponownie `Enter()` behavioru.
+Jeżeli impuls był następstwem obrażeń od tego samego `NetworkObject`, po
+`Enter()` odtwarzana jest odroczona reakcja bojowa. Impuls niezwiązany z
+obrażeniami nadal restartuje behavior bez sztucznego celu walki.
 
 ## Ograniczenia
 

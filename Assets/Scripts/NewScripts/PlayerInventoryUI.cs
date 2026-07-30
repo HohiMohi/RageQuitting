@@ -9,6 +9,9 @@ public class PlayerInventoryUI : MonoBehaviour
     [SerializeField] private TMP_Text firstItemNameText;
     [SerializeField] private Image secondItemSprite;
     [SerializeField] private TMP_Text secondItemNameText;
+    [SerializeField] private string reservedSlotLabel = "TWO-HANDED";
+    [SerializeField] private Color occupiedSlotTextColor = Color.white;
+    [SerializeField] private Color reservedSlotTextColor = new Color(0.55f, 0.58f, 0.6f, 1f);
 
     private void Awake()
     {
@@ -52,8 +55,16 @@ public class PlayerInventoryUI : MonoBehaviour
     private void RefreshSlots()
     {
         EnsureReferences();
-        SetSlot(firstItemSprite, firstItemNameText, playerInventory != null ? playerInventory.GetItemInSlot(0) : null);
-        SetSlot(secondItemSprite, secondItemNameText, playerInventory != null ? playerInventory.GetItemInSlot(1) : null);
+        SetSlot(
+            firstItemSprite,
+            firstItemNameText,
+            playerInventory != null ? playerInventory.GetItemInSlot(0) : null,
+            playerInventory != null ? playerInventory.GetSlotState(0) : InventorySlotState.Empty);
+        SetSlot(
+            secondItemSprite,
+            secondItemNameText,
+            playerInventory != null ? playerInventory.GetItemInSlot(1) : null,
+            playerInventory != null ? playerInventory.GetSlotState(1) : InventorySlotState.Empty);
     }
 
     private void EnsureReferences()
@@ -69,17 +80,27 @@ public class PlayerInventoryUI : MonoBehaviour
         }
     }
 
-    private static void SetSlot(Image slotImage, TMP_Text itemNameText, EquippableItemSO item)
+    private void SetSlot(
+        Image slotImage,
+        TMP_Text itemNameText,
+        EquippableItemSO item,
+        InventorySlotState slotState)
     {
         if (slotImage != null)
         {
-            slotImage.sprite = item != null ? item.uiSprite : null;
-            slotImage.enabled = item != null && item.uiSprite != null;
+            bool showItem = slotState == InventorySlotState.Occupied && item != null;
+            slotImage.sprite = showItem ? item.uiSprite : null;
+            slotImage.enabled = showItem && item.uiSprite != null;
         }
 
         if (itemNameText != null)
         {
-            itemNameText.text = item != null ? item.itemName : string.Empty;
+            itemNameText.text = slotState == InventorySlotState.Reserved
+                ? reservedSlotLabel
+                : item != null ? item.itemName : string.Empty;
+            itemNameText.color = slotState == InventorySlotState.Reserved
+                ? reservedSlotTextColor
+                : occupiedSlotTextColor;
         }
     }
 }

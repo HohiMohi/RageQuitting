@@ -197,6 +197,14 @@ się serwerowo.
 | `maximumVerticalSpeed` | Clamp pionowy |
 | `forceDropHeldObject` | Drop przed ruchem |
 
+`EquippableItemSO.impactImpulseProfile` pozwala wykorzystać ten sam system przez
+broń lub narzędzie. `PlayerActionController` aplikuje profil dopiero po
+serwerowym potwierdzeniu trafienia żywego `PlayerHealth` albo `NPCHealth`.
+Kierunek poziomy biegnie od atakującego do celu. Industrial Hammer korzysta z
+profilu `IndustrialHammerImpactImpulse`; Shovel i pozostałe obecne narzędzia
+nie mają profilu. Impuls wymuszający drop korzysta z istniejących ścieżek
+single-carry i shared-carry.
+
 ## Resource population zone
 
 Strefa utrzymuje minimalną liczbę wolnych instancji konkretnego SO w boxie.

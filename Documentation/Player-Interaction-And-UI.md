@@ -212,10 +212,15 @@ przytrzymaniu LPM. Wrench wymaga osobnego kliknięcia.
 | `baseRepeatAction` | Czy akcję można powtarzać przy trzymaniu |
 | `baseActionDamage` | Fallback damage/work |
 | `serverActionRangeTolerance` | Mała tolerancja wyłącznie serwera |
+| `serverCombatImpactTimingTolerance` | Tolerancja czasu RPC względem pełnego cyklu zamachu |
 | `actionTransformHolder` | Środek i orientacja obszaru akcji |
 
 Wybrany `EquippableItemSO` zastępuje bazowe parametry. Serwer ponownie
-sprawdza cel, narzędzie, obszar i etap construction workflow.
+sprawdza cel, narzędzie, obszar i etap construction workflow. Trafienia
+`PlayerHealth` i `NPCHealth` przechodzą przez jeden `ServerRpc`, który stosuje
+obrażenia i opcjonalny impuls dokładnie raz. Serwer ogranicza częstotliwość
+zaakceptowanych trafień na podstawie czasu pełnego profilu akcji. Harvesting
+zasobów i construction work zachowują własne wyspecjalizowane ścieżki.
 
 Publiczny stan `IsActionInProgress`, `CurrentActionPhase`,
 `CurrentActionPhaseNormalized` i `ActionMovementMultiplier` jest używany przez
@@ -226,7 +231,11 @@ samego kontrolera.
 ## Inventory i narzędzia
 
 `PlayerInventory` ma dwa sloty. Slot `0` jest aktywny, slot `1` jest
-przedmiotem na plecach; swap zamienia zawartość.
+przedmiotem na plecach; swap zamienia zawartość. Każdy slot ma jawny stan
+`Empty`, `Occupied` albo `Reserved`. Narzędzie wymagające dwóch slotów można
+podnieść wyłącznie do pustego inventory: trafia do slotu `0`, a slot `1`
+otrzymuje sieciowo synchronizowany stan `Reserved`. Nie jest w nim zapisywany
+drugi egzemplarz SO, więc kara ruchu jest liczona tylko raz.
 
 | Pole | Znaczenie |
 |---|---|
@@ -242,7 +251,7 @@ przedmiotem na plecach; swap zamienia zawartość.
 |---|---|
 | `itemName`, `uiSprite` | Nazwa i ikona HUD |
 | `equippableItemPrefab` | Sieciowy obiekt świata |
-| `inventorySlotsRequired` | Zajmowane sloty |
+| `inventorySlotsRequired` | Zajmowane sloty; `>= 2` ustawia `IsTwoHanded` |
 | `actionRange` | Zasięg działania narzędzia |
 | `actionCooldown` | Odstęp akcji |
 | `damage` | Obrażenia graczy i NPC |
@@ -252,6 +261,7 @@ przedmiotem na plecach; swap zamienia zawartość.
 | `actionRepeatability` | Powtarzanie przy przytrzymaniu |
 | `itemType` | Axe, Saw, Pickaxe, Hammer, Weapon, IndustrialHammer, Shovel, None lub Wrench |
 | `actionProfile` | Opcjonalny profil faz, pozy, ruchu, camera kicku i audio |
+| `impactImpulseProfile` | Opcjonalny odrzut żywego gracza lub NPC po potwierdzonym trafieniu |
 
 ### `EquippableActionProfileSO`
 
@@ -278,6 +288,14 @@ Aktualny tuning:
 | Wrench | `1.15` | `5 / 5 / 20` | `0.36 s` | `95%` | nie |
 
 Kary inventory wynoszą odpowiednio `0.02`, `0.04`, `0.03`, `0.06` i `0.01`.
+Shovel i Industrial Hammer mają `inventorySlotsRequired = 2`; pozostałe
+narzędzia z tabeli są jednoslotowe. HUD pokazuje w zarezerwowanym slocie BACK
+tekst `TWO-HANDED`, a swap narzędzia dwuręcznego nie zmienia inventory.
+
+Industrial Hammer ma przypisany `IndustrialHammerImpactImpulse`: `6 m/s`
+poziomo, `2 m/s` w górę, `1.5 s` maksymalnego czasu i `50%` zachowanej kontroli.
+Profil działa tylko na graczy i NPC, wymusza drop i nie jest aplikowany do
+zasobów, części mostu ani work pointów.
 
 ## FPP arms
 
@@ -293,7 +311,7 @@ narzędzia na osobnej warstwie renderowania.
 | Legacy action | `actionDuration`, `actionSwingAngle`, hit reaction i pose lerp |
 | Profiled action | pozycje narzędzia i rąk odczytywane z bieżącej fazy profilu |
 | Turn lag | maksymalne przesunięcie i rotacja |
-| Tool visual | materiały oraz lokalna pozycja, rotacja, skala i swing offset |
+| Tool visual | materiały, lokalna poza, swing offset oraz parametry blendu dwuręcznego chwytu |
 
 Faza ruchu zależy od faktycznie przebytego dystansu. Input przy ścianie nie
 powinien napędzać animacji.
@@ -301,6 +319,12 @@ powinien napędzać animacji.
 Hit-stop zatrzymuje tylko lokalną pozę narzędzia w `ImpactFreeze`; nie zmienia
 `Time.timeScale`. Trafienie dodaje osobny kanał action feedback do
 `PlayerCameraFeedbackComposer`. Proceduralny camera kick jest owner-only.
+
+Proceduralne visuale Shovel i Industrial Hammer zawierają child
+`SecondaryGrip`. Przy aktywnym narzędziu dwuręcznym lewa dłoń jest przeliczana
+do tego punktu po złożeniu bieżącej pozy zamachu, dzięki czemu podąża za
+uchwytem przez `WindUp`, `Strike`, `ImpactFreeze` i `Recovery`. Carry pose,
+downed albo brak narzędzia wyłączają chwyt i płynnie przywracają zwykłą pozę.
 
 ## Impact audio i VFX
 

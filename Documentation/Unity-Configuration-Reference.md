@@ -25,7 +25,7 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 | `MountableBridgeComponentSO` | identity/prefab, recipe, bridge type, carry, furnace i carpenter dimensions |
 | `ProductionRecipeSO` | identity/icon, składniki, typ i ilość wyjścia oraz opcjonalne parametry pieca |
 | `BridgeComponentSO` | identity/final prefab, category, simple assembly i sześć opcjonalnych workflow |
-| `EquippableItemSO` | identity/prefab, slots, range, cooldown, combat/resource damage, work power, action profile, movement penalty, repeatability i enum |
+| `EquippableItemSO` | identity/prefab, slots/two-handed, range, cooldown, combat/resource damage, work power, action profile, impact impulse, movement penalty, repeatability i enum |
 | `EquippableActionProfileSO` | fazy akcji, pozy narzędzia/rąk, movement multiplier, camera kick, feedback strength i swing audio |
 | `CarryPhysicsProfileSO` | Rigidbody, movement, yaw, horizontal constraint i vertical support |
 | `ExternalImpulseProfileSO` | initial velocity, decay, gravity, control, clamps i forced drop |
@@ -50,12 +50,12 @@ scenowej.
 | `FirstPersonController` | speed, acceleration, jump/ground, Cinemachine target, look feel, stamina i shared-carry |
 | `PlayerInputNew` | Input Action Asset i event routing; większość stanu jest runtime |
 | `PlayerInteractionNew` | camera fallback, distance, assist, hold/body/player anchors |
-| `PlayerActionController` | fallback action values, server tolerance i action holder; faza profilowana jest runtime-only |
-| `PlayerInventory` | dwa sloty i pełny catalog enum -> SO |
+| `PlayerActionController` | fallback action values, tolerancja zasięgu/czasu RPC i action holder; faza profilowana jest runtime-only |
+| `PlayerInventory` | dwa sloty, stany `Empty/Occupied/Reserved` i pełny catalog enum -> SO |
 | `PlayerHealth` | HP, regen, delays |
 | `PlayerExternalImpulseController` | referencja controller/interaction/health, jeśli widoczna w Inspectorze |
 | `PlayerNetworkSetup` | camera target, local/remote visual, Canvas i owner-only components |
-| `PlayerFirstPersonArms` | references, render layer, pose, locomotion, legacy action, turn lag, tool visual oraz opcjonalny composer/audio source |
+| `PlayerFirstPersonArms` | references, render layer, pose, locomotion, legacy action, turn lag, tool visual, two-handed grip oraz opcjonalny composer/audio source |
 | feedback components | controller/composer/input/health oraz amplitudy/smoothing |
 
 `PlayerCameraFeedbackComposer` sumuje obecnie kanały movement, turn, damage i
@@ -80,7 +80,7 @@ gracza.
 |---|---|
 | `PlayerHealthUI` | `playerHealth`, fill image, value text, colors |
 | `PlayerStaminaUI` | controller, fill image, value text, normal/warning colors, blink speed |
-| `PlayerInventoryUI` | inventory oraz dwa zestawy slot references |
+| `PlayerInventoryUI` | inventory, dwa zestawy slot references, `reservedSlotLabel` i kolory stanu |
 | `PlayerHeldObjectUI` | interaction, root, icon/name/carry count i kolory |
 | `LookingAtComponentUI` | interaction/action, panel root, prompt prefabs/text i progress UI |
 | `PlayerCrosshairUI` | dot graphic, input, health, diameter/colors/outline |
@@ -374,12 +374,16 @@ Przy zmianie warstw zweryfikuj równocześnie:
 2. Utwórz `EquippableItemSO`.
 3. Ustaw osobno `damage`, `resourceDamage` i `constructionWorkPower`.
 4. Utwórz lub przypisz `EquippableActionProfileSO`; bez niego działa legacy flow.
-5. Ustaw `actionRepeatability` oraz dodatnią `movementSpeedPenalty`.
-6. Utwórz sieciowy prefab świata.
-7. Dodaj visual builder/FPP representation.
-8. Dodaj do inventory catalog wszystkich graczy.
-9. Zarejestruj prefab i umieść source w scenie/storage.
-10. Sprawdź trafienie, pudło, hold/click, cancel, surface feedback i host/client.
+5. Opcjonalnie przypisz `impactImpulseProfile`; działa wyłącznie dla combat targetów.
+6. Dla narzędzia dwuręcznego ustaw `inventorySlotsRequired = 2` i dodaj
+   `SecondaryGrip` do visuala.
+7. Ustaw `actionRepeatability` oraz dodatnią `movementSpeedPenalty`.
+8. Utwórz sieciowy prefab świata.
+9. Dodaj visual builder/FPP representation.
+10. Dodaj do inventory catalog wszystkich graczy.
+11. Zarejestruj prefab i umieść source w scenie/storage.
+12. Sprawdź slot reservation, chwyt obu dłoni, trafienie, impuls, pudło,
+    hold/click, cancel, surface feedback i host/client.
 
 ### Nowy NPC
 

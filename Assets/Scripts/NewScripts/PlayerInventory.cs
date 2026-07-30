@@ -4,8 +4,16 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+public enum InventorySlotState
+{
+    Empty,
+    Occupied,
+    Reserved
+}
+
 public class PlayerInventory : NetworkBehaviour
 {
+    private const int ReservedSlotItemTypeValue = -2;
     private const int EmptySlotItemTypeValue = -1;
 
     private PlayerInputNew playerInputNew;
@@ -50,7 +58,7 @@ public class PlayerInventory : NetworkBehaviour
     private void Awake()
     {
         playerInputNew = GetComponent<PlayerInputNew>();
-        inventoryItems = new EquippableItemSO[_inventorySlots];
+        EnsureInventoryStorage();
         _selectedItemIndex = 0;
     }
     private void Start()
@@ -226,7 +234,6 @@ public class PlayerInventory : NetworkBehaviour
         }
         else
         {
-            Debug.Log("No items in inventory.");
             return null; // No items in inventory
         }
     }
@@ -246,12 +253,52 @@ public class PlayerInventory : NetworkBehaviour
 
     public EquippableItemSO GetItemInSlot(int slotIndex)
     {
+        EnsureInventoryStorage();
         if (slotIndex < 0 || slotIndex >= inventoryItems.Length)
         {
             return null;
         }
 
         return inventoryItems[slotIndex];
+    }
+
+    public InventorySlotState GetSlotState(int slotIndex)
+    {
+        EnsureInventoryStorage();
+        if (slotIndex < 0 || slotIndex >= _inventorySlots)
+        {
+            return InventorySlotState.Empty;
+        }
+
+        if (!IsNetworkStateActive() || IsOwner)
+        {
+            if (inventoryItems[slotIndex] != null)
+            {
+                return InventorySlotState.Occupied;
+            }
+
+            EquippableItemSO primaryItem = inventoryItems.Length > 0 ? inventoryItems[0] : null;
+            return slotIndex > 0 &&
+                   primaryItem != null &&
+                   primaryItem.inventorySlotsRequired > slotIndex
+                ? InventorySlotState.Reserved
+                : InventorySlotState.Empty;
+        }
+
+        int networkValue = slotIndex == 0 ? slot0ItemType.Value : slot1ItemType.Value;
+        if (networkValue == ReservedSlotItemTypeValue)
+        {
+            return InventorySlotState.Reserved;
+        }
+
+        return networkValue == EmptySlotItemTypeValue
+            ? InventorySlotState.Empty
+            : InventorySlotState.Occupied;
+    }
+
+    public bool IsSlotReserved(int slotIndex)
+    {
+        return GetSlotState(slotIndex) == InventorySlotState.Reserved;
     }
 
     public int GetNetworkSlotItemTypeValue(int slotIndex)
@@ -349,7 +396,41 @@ public class PlayerInventory : NetworkBehaviour
     private int GetSlotItemTypeValue(int slotIndex)
     {
         EquippableItemSO item = GetItemInSlot(slotIndex);
-        return item != null ? (int)item.itemType : EmptySlotItemTypeValue;
+        if (item != null)
+        {
+            return (int)item.itemType;
+        }
+
+        return IsLocalSlotReserved(slotIndex)
+            ? ReservedSlotItemTypeValue
+            : EmptySlotItemTypeValue;
+    }
+
+    private bool IsLocalSlotReserved(int slotIndex)
+    {
+        EnsureInventoryStorage();
+        if (slotIndex <= 0 || slotIndex >= inventoryItems.Length)
+        {
+            return false;
+        }
+
+        EquippableItemSO primaryItem = inventoryItems[0];
+        return primaryItem != null && primaryItem.inventorySlotsRequired > slotIndex;
+    }
+
+    private void EnsureInventoryStorage()
+    {
+        int slotCount = Mathf.Max(1, _inventorySlots);
+        if (inventoryItems == null)
+        {
+            inventoryItems = new EquippableItemSO[slotCount];
+            return;
+        }
+
+        if (inventoryItems.Length != slotCount)
+        {
+            Array.Resize(ref inventoryItems, slotCount);
+        }
     }
 
     private void SetNetworkSlotValues(int slot0Value, int slot1Value)

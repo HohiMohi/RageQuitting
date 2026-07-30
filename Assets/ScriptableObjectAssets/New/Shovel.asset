@@ -15,13 +15,14 @@ MonoBehaviour:
   itemName: Shovel
   uiSprite: {fileID: 21300000, guid: 4aaf890b27d202e4a81b0b2956ca6ba8, type: 3}
   equippableItemPrefab: {fileID: 2332549194031454660, guid: 9559d22b4674ce4458ebc497c78a1506, type: 3}
-  inventorySlotsRequired: 1
+  inventorySlotsRequired: 2
   actionRange: 1.25
   actionCooldown: 0.74
   damage: 5
   resourceDamage: 5
   constructionWorkPower: 20
   actionProfile: {fileID: 11400000, guid: 16f9611f77874cdeaa784eefc18e9ab8, type: 2}
+  impactImpulseProfile: {fileID: 0}
   movementSpeedPenalty: 0.03
   actionRepeatability: 1
   itemType: 6

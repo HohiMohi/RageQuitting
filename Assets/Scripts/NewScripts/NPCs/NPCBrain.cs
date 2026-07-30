@@ -26,6 +26,9 @@ public class NPCBrain : NetworkBehaviour
     private Vector3 spawnPosition;
     private float tickTimer;
     private bool isUnderExternalControl;
+    private NPCHealth.DamageEventArgs latestDamageEvent;
+    private NPCHealth.DamageEventArgs deferredDamageEvent;
+    private float latestDamageEventTime = float.NegativeInfinity;
 
     public NPCDefinitionSO Definition => definition;
     public NPCFactionRelationshipMatrixSO RelationshipMatrix => relationshipMatrix;
@@ -49,6 +52,7 @@ public class NPCBrain : NetworkBehaviour
         agent = GetComponent<NavMeshAgent>();
         carrier = GetComponent<NPCCarrier>();
         health = GetComponent<NPCHealth>();
+        health.OnDamaged += Health_OnDamaged;
         factionMember = GetComponent<NPCFactionMember>();
         attackController = GetComponent<NPCAttackController>();
         storageInteractor = GetComponent<NPCStorageInteractor>();
@@ -65,6 +69,14 @@ public class NPCBrain : NetworkBehaviour
         NPCRegistry.Unregister(this);
         behaviorController?.Exit();
         behaviorController = null;
+    }
+
+    private void OnDestroy()
+    {
+        if (health != null)
+        {
+            health.OnDamaged -= Health_OnDamaged;
+        }
     }
 
     public override void OnNetworkSpawn()
@@ -117,7 +129,7 @@ public class NPCBrain : NetworkBehaviour
         RebuildBehavior();
     }
 
-    public void BeginExternalControl()
+    public void BeginExternalControl(NetworkObject source = null)
     {
         if (isUnderExternalControl)
         {
@@ -125,6 +137,14 @@ public class NPCBrain : NetworkBehaviour
         }
 
         isUnderExternalControl = true;
+        if (source != null &&
+            latestDamageEvent != null &&
+            latestDamageEvent.Attacker == source &&
+            Time.time - latestDamageEventTime <= 0.25f)
+        {
+            deferredDamageEvent = latestDamageEvent;
+        }
+
         behaviorController?.Exit();
         tickTimer = 0f;
     }
@@ -141,6 +161,27 @@ public class NPCBrain : NetworkBehaviour
         if (health != null && !health.IsDead)
         {
             behaviorController?.Enter();
+            if (deferredDamageEvent != null)
+            {
+                NPCHealth.DamageEventArgs damageEvent = deferredDamageEvent;
+                deferredDamageEvent = null;
+                behaviorController?.HandleDeferredDamage(damageEvent);
+            }
+        }
+    }
+
+    private void Health_OnDamaged(object sender, NPCHealth.DamageEventArgs damageEvent)
+    {
+        if (damageEvent == null || damageEvent.CurrentHealth >= damageEvent.PreviousHealth)
+        {
+            return;
+        }
+
+        latestDamageEvent = damageEvent;
+        latestDamageEventTime = Time.time;
+        if (isUnderExternalControl)
+        {
+            deferredDamageEvent = damageEvent;
         }
     }
 
@@ -187,6 +228,7 @@ public class NPCBrain : NetworkBehaviour
 
     private void RebuildBehavior()
     {
+        deferredDamageEvent = null;
         behaviorController?.Exit();
         NPCBehaviorSO behavior = behaviorOverride != null ? behaviorOverride : definition != null ? definition.behavior : null;
         behaviorController = behavior != null ? behavior.CreateController(this) : null;
