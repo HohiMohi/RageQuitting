@@ -89,6 +89,8 @@ Rekomendacja nie oznacza istniejącej funkcjonalności.
 - Dodać audio/material mapping do istniejących eventów kroków.
 - Dodać ustawienia dostępności dla bobu, FOV, turn feedback, flashes i outline.
 - Dopracować finalny HUD, ikony i modele FPP arms.
+- Zastąpić proceduralne fallbacki zamachu i impactu docelowymi klipami oraz VFX.
+- Dodać profile akcji przyszłych broni i rozważyć koszt staminy/durability.
 
 ### Produkcja i zasoby
 
@@ -106,15 +108,13 @@ Każde `NotImplementedException` powinno zostać zastąpione implementacją albo
 bezpiecznym, logowanym wynikiem `false`. Wyjątek w gameplayu może zakończyć
 całą sesję testową.
 
-### 2. Rozdzielić typy pracy
+### 2. Dokończyć rozdzielenie kontraktów pracy
 
-Wprowadzić osobne kontrakty dla:
-
-- health damage;
-- resource harvesting;
-- construction work.
-
-Zmniejszy to ryzyko przypadkowego routingu promptu lub obrażeń.
+Wartości zostały rozdzielone na `damage`, `resourceDamage` i
+`constructionWorkPower`. Nadal współdzielą jednak interfejs `IDamageable`.
+Docelowo warto rozważyć osobne kontrakty odbiorników dla health damage,
+resource harvesting i construction work, aby ograniczyć routing oparty o typ
+runtime.
 
 ### 3. Nadać construction state typowaną reprezentację
 

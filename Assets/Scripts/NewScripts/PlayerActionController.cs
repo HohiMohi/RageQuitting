@@ -5,6 +5,15 @@ using UnityEngine;
 
 public class PlayerActionController : MonoBehaviour
 {
+    public sealed class ToolActionEventArgs : EventArgs
+    {
+        public EquippableItemSO Item;
+        public EquippableActionProfileSO Profile;
+        public EquippableActionPhase Phase;
+        public bool Hit;
+        public ActionImpactSurfaceType SurfaceType;
+    }
+
     public readonly struct ActionAvailability
     {
         public readonly bool IsInRange;
@@ -28,6 +37,9 @@ public class PlayerActionController : MonoBehaviour
 
     public event EventHandler OnActionPerformed;
     public event EventHandler OnActionAltPerformed;
+    public event EventHandler<ToolActionEventArgs> OnToolActionStarted;
+    public event EventHandler<ToolActionEventArgs> OnToolActionImpact;
+    public event EventHandler<ToolActionEventArgs> OnToolActionEnded;
 
     private PlayerInventory _inventory;
     private PlayerInputNew _playerInputNew;
@@ -63,6 +75,20 @@ public class PlayerActionController : MonoBehaviour
     private bool repeatAction = true; // If true, the action will be performed repeatedly while the action button is held down.
                                                        // If false, the action will only be performed once per button press.
     private bool performAction = false;
+    private EquippableActionPhase currentActionPhase;
+    private float currentActionPhaseTimer;
+    private float currentActionPhaseDuration;
+    private EquippableItemSO actionItem;
+
+    public bool IsActionInProgress => currentActionPhase != EquippableActionPhase.None;
+    public EquippableActionPhase CurrentActionPhase => currentActionPhase;
+    public float CurrentActionPhaseNormalized => currentActionPhaseDuration > 0f
+        ? Mathf.Clamp01(1f - currentActionPhaseTimer / currentActionPhaseDuration)
+        : 1f;
+    public float ActionMovementMultiplier => IsActionInProgress && actionItem != null && actionItem.actionProfile != null
+        ? Mathf.Clamp01(actionItem.actionProfile.movementMultiplierDuringAction)
+        : 1f;
+    public EquippableItemSO CurrentActionItem => actionItem;
     
 
     private void Awake()
@@ -84,9 +110,16 @@ public class PlayerActionController : MonoBehaviour
         _inventory.OnSelectedItemChanged += Inventory_OnSelectedItemChanged;    
     }
 
+    private void OnDisable()
+    {
+        performAction = false;
+        CancelCurrentAction();
+    }
+
     private void Inventory_OnSelectedItemChanged(object sender, PlayerInventory.OnSelectedItemChangedEventArgs e)
     {
         Debug.Log("Action parameters changed");
+        CancelCurrentAction();
         SetActionParameters(e.selectedItem);
     }
 
@@ -121,12 +154,12 @@ public class PlayerActionController : MonoBehaviour
         performAction = true;
     }
 
-    public void PerformAction()
+    public bool PerformAction()
     {
         if (!TryGetSingleActionTarget(actionRange, out IDamageable damageable, out Collider hitCollider))
         {
             Debug.Log("No 'Action' objects in range");
-            return;
+            return false;
         }
 
         if (damageable is PlayerHealth playerHealth && ShouldRequestPlayerDamageOnServer(playerHealth))
@@ -143,8 +176,10 @@ public class PlayerActionController : MonoBehaviour
         }
 
         Debug.Log($"Action performed on {hitCollider.gameObject.name}");
-        SpawnImpactEffect(hitCollider);
+        ActionImpactSurfaceType surfaceType = ResolveImpactSurface(damageable, hitCollider);
+        SpawnImpactEffect(hitCollider, surfaceType);
         OnActionPerformed?.Invoke(this, EventArgs.Empty);
+        return true;
     }
 
     private bool TryGetSingleActionTarget(float range, out IDamageable damageable, out Collider hitCollider)
@@ -369,7 +404,7 @@ public class PlayerActionController : MonoBehaviour
         return BridgeTargetResolver.ResolveDamageable(BridgeTargetResolver.Resolve(collider));
     }
 
-    private void SpawnImpactEffect(Collider hitCollider)
+    private void SpawnImpactEffect(Collider hitCollider, ActionImpactSurfaceType surfaceType)
     {
         if (_impactEffectSpawner == null || hitCollider == null || actionTransformHolder == null)
         {
@@ -383,7 +418,54 @@ public class PlayerActionController : MonoBehaviour
             impactNormal = -transform.forward;
         }
 
-        _impactEffectSpawner.SpawnImpact(impactPoint, impactNormal.normalized);
+        float feedbackStrength = actionItem != null && actionItem.actionProfile != null
+            ? actionItem.actionProfile.impactFeedbackStrength
+            : 1f;
+        _impactEffectSpawner.SpawnImpact(impactPoint, impactNormal.normalized, surfaceType, feedbackStrength);
+    }
+
+    private ActionImpactSurfaceType ResolveImpactSurface(IDamageable damageable, Collider hitCollider)
+    {
+        if (damageable is IActionImpactSurfaceProvider provider)
+        {
+            return provider.ImpactSurfaceType;
+        }
+
+        if (damageable is PlayerHealth || damageable is NPCHealth)
+        {
+            return ActionImpactSurfaceType.Flesh;
+        }
+
+        if (damageable is BaseResourceNew resource && resource.GetBaseResourceSO() != null)
+        {
+            return resource.GetBaseResourceSO().impactSurfaceType;
+        }
+
+        EquippableItemSO selectedItem = actionItem != null
+            ? actionItem
+            : _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
+        if (selectedItem != null)
+        {
+            if (selectedItem.itemType == EquippableItemType.Shovel)
+            {
+                return ActionImpactSurfaceType.Soil;
+            }
+
+            if (selectedItem.itemType == EquippableItemType.Wrench)
+            {
+                return ActionImpactSurfaceType.Metal;
+            }
+
+            if (selectedItem.itemType == EquippableItemType.IndustrialHammer)
+            {
+                return ActionImpactSurfaceType.Wood;
+            }
+        }
+
+        IActionImpactSurfaceProvider colliderProvider = hitCollider != null
+            ? hitCollider.GetComponentInParent<IActionImpactSurfaceProvider>()
+            : null;
+        return colliderProvider != null ? colliderProvider.ImpactSurfaceType : ActionImpactSurfaceType.Default;
     }
 
     private bool ShouldRequestPlayerDamageOnServer(PlayerHealth playerHealth)
@@ -403,9 +485,23 @@ public class PlayerActionController : MonoBehaviour
 
     public void TryPerformAction()
     {
-        if (IsDowned())
+        if (IsDowned() || !HasLocalActionAuthority() || _playerInputNew != null && _playerInputNew.IsGameplayUiOpen)
         {
             performAction = false;
+            CancelCurrentAction();
+            return;
+        }
+
+        if (IsActionInProgress)
+        {
+            UpdateProfiledAction();
+            return;
+        }
+
+        EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
+        if (performAction && selectedItem != null && selectedItem.actionProfile != null)
+        {
+            StartProfiledAction(selectedItem);
             return;
         }
 
@@ -437,6 +533,162 @@ public class PlayerActionController : MonoBehaviour
             repeatAction = baseRepeatAction;
             actionDamage = baseActionDamage;
         }
+    }
+
+    public void CancelCurrentAction()
+    {
+        if (!IsActionInProgress)
+        {
+            return;
+        }
+
+        EquippableItemSO canceledItem = actionItem;
+        EquippableActionProfileSO canceledProfile = canceledItem != null ? canceledItem.actionProfile : null;
+        currentActionPhase = EquippableActionPhase.None;
+        currentActionPhaseTimer = 0f;
+        currentActionPhaseDuration = 0f;
+        actionItem = null;
+        OnToolActionEnded?.Invoke(this, CreateToolEventArgs(
+            canceledItem,
+            canceledProfile,
+            EquippableActionPhase.None,
+            false,
+            ActionImpactSurfaceType.Default));
+    }
+
+    private void StartProfiledAction(EquippableItemSO selectedItem)
+    {
+        actionItem = selectedItem;
+        if (!selectedItem.actionRepeatability)
+        {
+            performAction = false;
+        }
+
+        SetProfiledActionPhase(EquippableActionPhase.WindUp);
+        OnToolActionStarted?.Invoke(this, CreateToolEventArgs(
+            selectedItem,
+            selectedItem.actionProfile,
+            currentActionPhase,
+            false,
+            ActionImpactSurfaceType.Default));
+    }
+
+    private void UpdateProfiledAction()
+    {
+        if (actionItem == null
+            || actionItem.actionProfile == null
+            || _inventory == null
+            || _inventory.GetCurrentSelectedItem() != actionItem)
+        {
+            CancelCurrentAction();
+            return;
+        }
+
+        currentActionPhaseTimer -= Time.deltaTime;
+        int transitionGuard = 0;
+        while (currentActionPhaseTimer <= 0f && IsActionInProgress && transitionGuard++ < 5)
+        {
+            switch (currentActionPhase)
+            {
+                case EquippableActionPhase.WindUp:
+                    SetProfiledActionPhase(EquippableActionPhase.Strike);
+                    break;
+                case EquippableActionPhase.Strike:
+                    ResolveProfiledImpact();
+                    SetProfiledActionPhase(EquippableActionPhase.ImpactFreeze);
+                    break;
+                case EquippableActionPhase.ImpactFreeze:
+                    SetProfiledActionPhase(EquippableActionPhase.Recovery);
+                    break;
+                case EquippableActionPhase.Recovery:
+                    CompleteProfiledAction();
+                    break;
+            }
+        }
+    }
+
+    private void ResolveProfiledImpact()
+    {
+        EquippableItemSO impactItem = actionItem;
+        bool hit = false;
+        ActionImpactSurfaceType surfaceType = ActionImpactSurfaceType.Default;
+        if (TryGetSingleActionTarget(actionRange, out IDamageable damageable, out Collider hitCollider))
+        {
+            if (damageable is PlayerHealth playerHealth && ShouldRequestPlayerDamageOnServer(playerHealth))
+            {
+                playerHealth.DamageReceived(actionDamage, _networkObject);
+            }
+            else if (damageable is NPCHealth npcHealth)
+            {
+                npcHealth.DamageReceived(actionDamage, _networkObject);
+            }
+            else
+            {
+                damageable.DamageReceived(impactItem, actionDamage);
+            }
+
+            surfaceType = ResolveImpactSurface(damageable, hitCollider);
+            SpawnImpactEffect(hitCollider, surfaceType);
+            OnActionPerformed?.Invoke(this, EventArgs.Empty);
+            hit = true;
+        }
+
+        OnToolActionImpact?.Invoke(this, CreateToolEventArgs(
+            impactItem,
+            impactItem != null ? impactItem.actionProfile : null,
+            EquippableActionPhase.ImpactFreeze,
+            hit,
+            surfaceType));
+    }
+
+    private void CompleteProfiledAction()
+    {
+        EquippableItemSO completedItem = actionItem;
+        EquippableActionProfileSO completedProfile = completedItem != null ? completedItem.actionProfile : null;
+        currentActionPhase = EquippableActionPhase.None;
+        currentActionPhaseTimer = 0f;
+        currentActionPhaseDuration = 0f;
+        actionItem = null;
+        OnToolActionEnded?.Invoke(this, CreateToolEventArgs(
+            completedItem,
+            completedProfile,
+            EquippableActionPhase.None,
+            false,
+            ActionImpactSurfaceType.Default));
+    }
+
+    private void SetProfiledActionPhase(EquippableActionPhase phase)
+    {
+        currentActionPhase = phase;
+        currentActionPhaseDuration = actionItem != null && actionItem.actionProfile != null
+            ? actionItem.actionProfile.GetPhaseDuration(phase)
+            : 0f;
+        currentActionPhaseTimer = currentActionPhaseDuration;
+    }
+
+    private bool HasLocalActionAuthority()
+    {
+        return _networkObject == null
+            || NetworkManager.Singleton == null
+            || !NetworkManager.Singleton.IsListening
+            || _networkObject.IsOwner;
+    }
+
+    private static ToolActionEventArgs CreateToolEventArgs(
+        EquippableItemSO item,
+        EquippableActionProfileSO profile,
+        EquippableActionPhase phase,
+        bool hit,
+        ActionImpactSurfaceType surfaceType)
+    {
+        return new ToolActionEventArgs
+        {
+            Item = item,
+            Profile = profile,
+            Phase = phase,
+            Hit = hit,
+            SurfaceType = surfaceType
+        };
     }
 
     private bool IsDowned()

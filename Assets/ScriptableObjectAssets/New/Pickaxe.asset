@@ -16,9 +16,12 @@ MonoBehaviour:
   uiSprite: {fileID: 6991357674887153452, guid: ebd4285913526c149b0f170953a45087, type: 3}
   equippableItemPrefab: {fileID: 2889472182152847982, guid: d14f305e42b6f474f9e3be5d6bd50377, type: 3}
   inventorySlotsRequired: 1
-  actionRange: 0.9
-  actionCooldown: 0.5
-  damage: 10
-  movementSpeedPenalty: -0.2
+  actionRange: 1
+  actionCooldown: 0.88
+  damage: 12
+  resourceDamage: 20
+  constructionWorkPower: 12
+  actionProfile: {fileID: 11400000, guid: 2c34d5ffb7fd48a9bfac65d80fd27cd8, type: 2}
+  movementSpeedPenalty: 0.04
   actionRepeatability: 1
   itemType: 2

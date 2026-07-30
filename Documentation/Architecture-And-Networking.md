@@ -90,7 +90,7 @@ obozu.
 | Referencja | Rola |
 |---|---|
 | `CinemachineCameraTarget` | Bazowy target pitch/yaw |
-| feedback target/composer | Nakłada bob, turn i damage feedback |
+| feedback target/composer | Nakłada movement, turn, damage i action feedback |
 | local Canvas | HUD, prompty, menu i crosshair |
 | owner-only components | Input, kamera, lokalne audio i feedback |
 | remote visuals | Model widoczny dla innych klientów |
@@ -161,6 +161,9 @@ przy ponownym załadowaniu sceny.
   usuwaj w `OnNetworkDespawn`.
 - Serwer waliduje sender client ID, ownership, dystans, narzędzie i aktualny
   etap przed zmianą stanu.
+- Fazy zamachu, swing audio, hit-stop i camera kick są owner-only. Potwierdzony
+  impact rozsyła world-space audio/VFX przez `ActionImpactEffectSpawner`;
+  gameplayowy damage/progress nadal przechodzi przez istniejącą walidację celu.
 - Targeted ClientRpc służy do owner-only UI i lokalnych korekt.
 - Nie opieraj serwerowego holder state na owner-only flagach klienta.
 - Eventy AI publikuj po ostatecznej walidacji obrażeń i czyść subskrypcje przy

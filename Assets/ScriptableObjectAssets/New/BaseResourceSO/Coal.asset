@@ -15,6 +15,7 @@ MonoBehaviour:
   resourceName: Coal Vein
   resourcePrefab: {fileID: 3729975646768033361, guid: 5ee1ddbd34d3efa448821c62897004ad, type: 3}
   icon: {fileID: 741899376876123942, guid: 02757d04723893e4b9ed1f9f0f4249f7, type: 3}
+  impactSurfaceType: 2
   baseResourceDestructionRecipeArray:
   - finalProductBaseResourceSO: {fileID: 11400000, guid: 724cd6647f00c974cbad74890edb25ce, type: 2}
     neededEquippableItemType: 2

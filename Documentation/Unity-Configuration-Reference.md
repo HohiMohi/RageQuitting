@@ -21,11 +21,12 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 
 | SO | Pola |
 |---|---|
-| `BaseResourceSO` | identity/prefab/icon, durability, carryability, carrier counts, speed/stamina penalties, anchors, rotation offset, physics profile, fuel, destruction recipes |
+| `BaseResourceSO` | identity/prefab/icon, impact surface, durability, carryability, carrier counts, speed/stamina penalties, anchors, rotation offset, physics profile, fuel, destruction recipes |
 | `MountableBridgeComponentSO` | identity/prefab, recipe, bridge type, carry, furnace i carpenter dimensions |
 | `ProductionRecipeSO` | identity/icon, składniki, typ i ilość wyjścia oraz opcjonalne parametry pieca |
 | `BridgeComponentSO` | identity/final prefab, category, simple assembly i sześć opcjonalnych workflow |
-| `EquippableItemSO` | identity/prefab, slots, range, cooldown, damage, work power, movement penalty, repeatability i enum |
+| `EquippableItemSO` | identity/prefab, slots, range, cooldown, combat/resource damage, work power, action profile, movement penalty, repeatability i enum |
+| `EquippableActionProfileSO` | fazy akcji, pozy narzędzia/rąk, movement multiplier, camera kick, feedback strength i swing audio |
 | `CarryPhysicsProfileSO` | Rigidbody, movement, yaw, horizontal constraint i vertical support |
 | `ExternalImpulseProfileSO` | initial velocity, decay, gravity, control, clamps i forced drop |
 | `NPCDefinitionSO` | identity, faction, behavior, prefab/visual, stats i AI ranges |
@@ -49,13 +50,29 @@ scenowej.
 | `FirstPersonController` | speed, acceleration, jump/ground, Cinemachine target, look feel, stamina i shared-carry |
 | `PlayerInputNew` | Input Action Asset i event routing; większość stanu jest runtime |
 | `PlayerInteractionNew` | camera fallback, distance, assist, hold/body/player anchors |
-| `PlayerActionController` | fallback action values, server tolerance i action holder |
+| `PlayerActionController` | fallback action values, server tolerance i action holder; faza profilowana jest runtime-only |
 | `PlayerInventory` | dwa sloty i pełny catalog enum -> SO |
 | `PlayerHealth` | HP, regen, delays |
 | `PlayerExternalImpulseController` | referencja controller/interaction/health, jeśli widoczna w Inspectorze |
 | `PlayerNetworkSetup` | camera target, local/remote visual, Canvas i owner-only components |
-| `PlayerFirstPersonArms` | references, render layer, pose, locomotion, action, turn lag i tool visual |
+| `PlayerFirstPersonArms` | references, render layer, pose, locomotion, legacy action, turn lag, tool visual oraz opcjonalny composer/audio source |
 | feedback components | controller/composer/input/health oraz amplitudy/smoothing |
+
+`PlayerCameraFeedbackComposer` sumuje obecnie kanały movement, turn, damage i
+action. Nie należy bezpośrednio nadpisywać transformu jego output targetu z
+nowego systemu feedbacku.
+
+### Impact feedback
+
+| Komponent/SO | Pola |
+|---|---|
+| `ActionImpactEffectSpawner` | default ParticleSystem, lifetime, `surfaceFeedback`, fallback volume |
+| `ActionImpactFeedbackEntry` | surface type, opcjonalny ParticleSystem, klip i volume |
+| `BaseResourceSO` | `impactSurfaceType` |
+
+Brak wpisu lub assetu jest poprawną konfiguracją i uruchamia proceduralny
+fallback. Docelowe klipy/prefaby przypisuje się per powierzchnia na prefabie
+gracza.
 
 ### Player UI
 
@@ -209,7 +226,8 @@ Wymagane:
 - `BeaverScoutBehaviorSO`;
 - `BeaverDefenderBehaviorSO`;
 - interest/destruction profiles;
-- spawner memory, jeśli ma pamiętać znane storage;
+- `BeaverSpawnerStorageMemory`, jeśli skauci mają współdzielić znane storage i
+  `ResourcePopulationZone` po odwiedzeniu bazy;
 - `NPCCarrier.downedPlayerCarryAnchor` na grzbiecie;
 - `NPCDownedPlayerDropPoint` przy spawnerze/denie.
 
@@ -257,8 +275,21 @@ musi dać się dopasować do NavMesh i posiadać kompletną ścieżkę.
 | `GameTimerManager` | duration i wait signal |
 | `PlayerSpawnManager` | player prefab i spawn points |
 | `BridgeStageInfoManager` | stage info entries |
-| `ResourcePopulationZone` | resource, minimum, box, cooldown, masks i clearance |
+| `ResourcePopulationZone` | resource, minimum, box, opcjonalny visit point, cooldown, masks i clearance |
 | `NPCSpawner` | prefab, legacy definitions, spawn groups, points, intervals i global limit |
+
+### Strefy odnawiania i Beaver Scout
+
+| Pole/komponent | Setup |
+|---|---|
+| `ResourcePopulationZone.zoneSize` | Obejmuje wyłącznie właściwy obszar, szczególnie pionowy zakres jaskini |
+| `ResourcePopulationZone.visitPoint` | Opcjonalny punkt NavMesh dla wizyty skauta; zostaw pusty dla automatycznego wyboru wewnątrz boxa |
+| `BeaverScoutBehaviorSO.resourceZoneSweepArrivalDistance` | Tolerancja dotarcia do punktu wizyty, domyślnie `1.4 m` |
+| `BeaverSpawnerStorageMemory` | Komponent na spawnerze bobrów; przechowuje wspólną pamięć magazynów i stref |
+
+Strefa nie potrzebuje collidera do wykrywania przez skauta. NPC porównuje swój
+zasięg detekcji z geometrycznym boxem strefy. Lokalna wiedza trafia do pamięci
+spawnera dopiero, gdy skaut wróci do bazy lub dostarczy zasób.
 
 ### NPC spawn groups
 
@@ -341,10 +372,14 @@ Przy zmianie warstw zweryfikuj równocześnie:
 
 1. Dodaj wartość enuma na końcu, aby nie przesunąć serializacji.
 2. Utwórz `EquippableItemSO`.
-3. Utwórz sieciowy prefab świata.
-4. Dodaj visual builder/FPP representation.
-5. Dodaj do inventory catalog wszystkich graczy.
-6. Zarejestruj prefab i umieść source w scenie/storage.
+3. Ustaw osobno `damage`, `resourceDamage` i `constructionWorkPower`.
+4. Utwórz lub przypisz `EquippableActionProfileSO`; bez niego działa legacy flow.
+5. Ustaw `actionRepeatability` oraz dodatnią `movementSpeedPenalty`.
+6. Utwórz sieciowy prefab świata.
+7. Dodaj visual builder/FPP representation.
+8. Dodaj do inventory catalog wszystkich graczy.
+9. Zarejestruj prefab i umieść source w scenie/storage.
+10. Sprawdź trafienie, pudło, hold/click, cancel, surface feedback i host/client.
 
 ### Nowy NPC
 

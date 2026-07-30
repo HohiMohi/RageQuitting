@@ -145,13 +145,17 @@ namespace StarterAssets
 		private PlayerHealth _playerHealth;
 		private DownedPlayerCarryable _downedPlayerCarryable;
 		private PlayerExternalImpulseController _externalImpulseController;
+		private PlayerActionController _playerActionController;
 		
 		private const float _threshold = 0.01f;
 
 		public float VerticalVelocity => _verticalVelocity;
 		public Vector3 HorizontalVelocity => _horizontalVelocity;
 		public float HorizontalSpeed => _horizontalVelocity.magnitude;
-		public bool IsSprinting => _isSprinting && _currentStamina > 0f && !IsDowned();
+		public bool IsSprinting => _isSprinting
+			&& _currentStamina > 0f
+			&& !IsDowned()
+			&& (_playerActionController == null || !_playerActionController.IsActionInProgress);
 		public float CurrentStamina => _currentStamina;
 		public bool IsSharedCarryExhaustionWarningActive => _isSharedCarryExhaustionWarningActive;
 		public float AimYaw => _aimYaw;
@@ -293,6 +297,7 @@ namespace StarterAssets
 			_playerInteractionNew = GetComponent<PlayerInteractionNew>();
 			_playerInventory = GetComponent<PlayerInventory>();
 			_externalImpulseController = GetComponent<PlayerExternalImpulseController>();
+			_playerActionController = GetComponent<PlayerActionController>();
 
 #else
 			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
@@ -494,6 +499,10 @@ namespace StarterAssets
 			if (_externalImpulseController != null)
 			{
 				targetSpeed *= _externalImpulseController.MovementControlMultiplier;
+			}
+			if (_playerActionController != null)
+			{
+				targetSpeed *= _playerActionController.ActionMovementMultiplier;
 			}
 
 			Vector3 localDesiredVelocity = new Vector3(

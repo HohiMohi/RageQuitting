@@ -244,6 +244,7 @@ recepturę destruction.
 | `rageApproach...` | Odświeżanie i dystans rage |
 | `storageSweepPatrolThreshold` | Liczba pustych patroli do sweepu |
 | `storageSweepArrivalDistance` | Dystans znanego storage |
+| `resourceZoneSweepArrivalDistance` | Dystans uznania wizyty w znanej `ResourcePopulationZone` |
 | `resourceDestructionAttackInterval` | Odstęp ataków resource |
 | `idlePatrolRangeIncrease` | Zwiększenie patrolu po nieudanym idle search |
 | `maxPatrolRadius` | Clamp rosnącego patrolu |
@@ -251,6 +252,24 @@ recepturę destruction.
 Priorytet idle: gracze, storage, carry targets, destruction targets, patrol.
 Patrol radius rośnie wtedy, gdy skaut nie znajduje interesującego celu, a nie
 przy każdym literalnym wejściu do Idle.
+
+### Pamięć magazynów i stref odnawiania
+
+Podczas `IdleSearching` skaut rejestruje magazyny oraz aktywne
+`ResourcePopulationZone`, których box znajduje się w `Brain.DetectionRadius`.
+Wiedza jest najpierw lokalna dla instancji NPC. Dopiero powrót do spawnera albo
+dostarczenie zasobu synchronizuje ją przez `BeaverSpawnerStorageMemory`.
+Inny skaut pobiera wspólną pamięć podczas własnej wizyty w bazie.
+
+Po `storageSweepPatrolThreshold` pustych patrolach skaut wraca do bazy i buduje
+wspólną pulę znanych magazynów oraz stref. Kolejny cel jest każdorazowo wybierany
+według najkrótszej kompletnej ścieżki NavMesh. Nieaktywne strefy i lokalizacje
+bez pełnej ścieżki są pomijane.
+
+Po dotarciu do strefy skaut wykonuje zwykły skan przez `idleSearchDuration`.
+Może wtedy zauważyć gracza, zabrać interesujący zasób albo rozpocząć niszczenie
+zgodnie z profilami. Pusta strefa nie zatrzymuje NPC do czasu replenishmentu:
+po zakończeniu skanu odwiedzany jest kolejny cel sweepu.
 
 ## Beaver Defender
 

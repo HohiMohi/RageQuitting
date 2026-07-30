@@ -15,6 +15,7 @@ MonoBehaviour:
   resourceName: Iron Nugget
   resourcePrefab: {fileID: 8908232955564892484, guid: fd7c7f6043997e0449d1602ccc261922, type: 3}
   icon: {fileID: 21300000, guid: 0aea6da8a0f80f244894c623649ec1cc, type: 3}
+  impactSurfaceType: 3
   baseResourceDestructionRecipeArray: []
   resourceDurability: 0
   movementSpeedPenalty: 0

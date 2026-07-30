@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class ResourcePopulationZone : MonoBehaviour
 {
+    private static readonly HashSet<ResourcePopulationZone> activeZones = new HashSet<ResourcePopulationZone>();
+
     [Header("Population")]
     [SerializeField] private BaseResourceSO resourceType;
     [SerializeField, Min(0)] private int minimumAvailableCount = 1;
@@ -12,6 +15,7 @@ public class ResourcePopulationZone : MonoBehaviour
 
     [Header("Zone")]
     [SerializeField] private Vector3 zoneSize = new Vector3(10f, 4f, 10f);
+    [SerializeField] private Transform visitPoint;
     [SerializeField] private LayerMask resourceDetectionLayers = ~0;
     [SerializeField] private LayerMask spawnSurfaceLayers = 1;
 
@@ -34,7 +38,9 @@ public class ResourcePopulationZone : MonoBehaviour
     private float nextPopulationCheckTime;
     private float replenishmentReadyTime;
 
+    public static IReadOnlyCollection<ResourcePopulationZone> ActiveZones => activeZones;
     public BaseResourceSO ResourceType => resourceType;
+    public Transform VisitPoint => visitPoint;
     public int MinimumAvailableCount => Mathf.Max(0, minimumAvailableCount);
     public int CurrentAvailableCount => currentAvailableCount;
     public bool IsReplenishmentPending => replenishmentPending;
@@ -42,7 +48,13 @@ public class ResourcePopulationZone : MonoBehaviour
 
     private void OnEnable()
     {
+        activeZones.Add(this);
         ResetRuntimeState();
+    }
+
+    private void OnDisable()
+    {
+        activeZones.Remove(this);
     }
 
     private void Update()
@@ -108,6 +120,53 @@ public class ResourcePopulationZone : MonoBehaviour
         {
             CancelPendingReplenishment();
         }
+    }
+
+    public Vector3 GetClosestPoint(Vector3 position)
+    {
+        Vector3 localPosition = transform.InverseTransformPoint(position);
+        Vector3 localHalfExtents = GetLocalHalfExtents();
+        localPosition.x = Mathf.Clamp(localPosition.x, -localHalfExtents.x, localHalfExtents.x);
+        localPosition.y = Mathf.Clamp(localPosition.y, -localHalfExtents.y, localHalfExtents.y);
+        localPosition.z = Mathf.Clamp(localPosition.z, -localHalfExtents.z, localHalfExtents.z);
+        return transform.TransformPoint(localPosition);
+    }
+
+    public bool TryGetNpcVisitPosition(NavMeshAgent agent, out Vector3 position)
+    {
+        position = default;
+        if (!isActiveAndEnabled || agent == null || !agent.isOnNavMesh)
+        {
+            return false;
+        }
+
+        if (visitPoint != null)
+        {
+            return TryResolveReachableVisitCandidate(agent, visitPoint.position, 1f, false, out position);
+        }
+
+        Vector3 localHalfExtents = GetLocalHalfExtents();
+        Vector3[] localCandidates =
+        {
+            transform.InverseTransformPoint(GetClosestPoint(agent.transform.position)),
+            Vector3.zero,
+            new Vector3(localHalfExtents.x * 0.5f, 0f, localHalfExtents.z * 0.5f),
+            new Vector3(-localHalfExtents.x * 0.5f, 0f, localHalfExtents.z * 0.5f),
+            new Vector3(localHalfExtents.x * 0.5f, 0f, -localHalfExtents.z * 0.5f),
+            new Vector3(-localHalfExtents.x * 0.5f, 0f, -localHalfExtents.z * 0.5f)
+        };
+
+        float sampleRadius = Mathf.Max(0.5f, Mathf.Min(localHalfExtents.x, localHalfExtents.z) * 0.5f);
+        for (int i = 0; i < localCandidates.Length; i++)
+        {
+            Vector3 candidate = transform.TransformPoint(localCandidates[i]);
+            if (TryResolveReachableVisitCandidate(agent, candidate, sampleRadius, true, out position))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private int CountAvailableResources()
@@ -243,6 +302,49 @@ public class ResourcePopulationZone : MonoBehaviour
             Mathf.Max(0.1f, zoneSize.z));
         Vector3 scale = transform.lossyScale;
         return Vector3.Scale(size * 0.5f, new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z)));
+    }
+
+    private Vector3 GetLocalHalfExtents()
+    {
+        return new Vector3(
+            Mathf.Max(0.1f, zoneSize.x) * 0.5f,
+            Mathf.Max(0.1f, zoneSize.y) * 0.5f,
+            Mathf.Max(0.1f, zoneSize.z) * 0.5f);
+    }
+
+    private bool TryResolveReachableVisitCandidate(
+        NavMeshAgent agent,
+        Vector3 candidate,
+        float sampleRadius,
+        bool requireInsideZone,
+        out Vector3 position)
+    {
+        position = default;
+        if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, Mathf.Max(0.1f, sampleRadius), agent.areaMask)
+            || requireInsideZone && !ContainsPoint(hit.position))
+        {
+            return false;
+        }
+
+        NavMeshPath path = new NavMeshPath();
+        if (!NavMesh.CalculatePath(agent.transform.position, hit.position, agent.areaMask, path)
+            || path.status != NavMeshPathStatus.PathComplete)
+        {
+            return false;
+        }
+
+        position = hit.position;
+        return true;
+    }
+
+    private bool ContainsPoint(Vector3 position)
+    {
+        Vector3 localPosition = transform.InverseTransformPoint(position);
+        Vector3 halfExtents = GetLocalHalfExtents();
+        const float tolerance = 0.05f;
+        return Mathf.Abs(localPosition.x) <= halfExtents.x + tolerance
+            && Mathf.Abs(localPosition.y) <= halfExtents.y + tolerance
+            && Mathf.Abs(localPosition.z) <= halfExtents.z + tolerance;
     }
 
     private void CancelPendingReplenishment()

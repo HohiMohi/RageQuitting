@@ -13,6 +13,7 @@ symulowanego przez serwer.
 | `resourceName` | Nazwa UI i magazynów |
 | `resourcePrefab` | Sieciowy prefab spawnowany przez utility/receptury |
 | `icon` | HUD oraz UI fabryk |
+| `impactSurfaceType` | Rodzaj audio/VFX przy trafieniu narzędziem |
 | `baseResourceDestructionRecipeArray` | Dozwolone narzędzia i produkty rozpadu |
 | `resourceDurability` | Początkowa trwałość |
 | `movementSpeedPenalty` | Kara dla single-carry |
@@ -46,6 +47,11 @@ symulowanego przez serwer.
 
 Scatter i impuls wylicza serwer. Kinematyczny produkt może otrzymać losową
 pozycję, ale nie impuls.
+
+Obrażenia zasobu pochodzą z `EquippableItemSO.ResourceDamage`, a nie z combat
+damage przekazanego do wspólnego `IDamageable`. Jawne `resourceDamage > 0`
+jest źródłem prawdy. Wartość `0` zachowuje kompatybilność starszych assetów
+przez fallback `damage * 2`.
 
 ## `BaseResourceNew`
 
@@ -203,6 +209,7 @@ AI oraz obiekty niesione nie zwiększają dostępnej populacji.
 | `populationCheckInterval` | Interwał kontroli |
 | `replenishmentCooldown` | Czas ciągłego niedoboru |
 | `zoneSize` | Lokalny box, również ograniczenie wysokości jaskini |
+| `visitPoint` | Opcjonalny jawny punkt wizyty NPC; null uruchamia automatyczny wybór NavMesh wewnątrz boxa |
 | `resourceDetectionLayers` | Warstwy liczenia |
 | `spawnSurfaceLayers` | Warstwy dopuszczalnego podłoża |
 | `obstacleLayers` | Warstwy clearance |
@@ -217,6 +224,13 @@ AI oraz obiekty niesione nie zwiększają dostępnej populacji.
 Raycast rozpoczyna się i kończy wewnątrz pionowego zakresu boxa, dzięki czemu
 strefa w jaskini nie wybiera powierzchni nad nią. Clearance musi uwzględniać
 inne zasoby, w tym produkty rozpadu.
+
+Aktywne strefy rejestrują się w runtime `ResourcePopulationZone.ActiveZones`.
+`GetClosestPoint()` pozwala AI wykrywać volume bez fizycznego collidera, a
+`TryGetNpcVisitPosition()` wymaga kompletnej ścieżki NavMesh. Automatycznie
+znaleziony punkt musi pozostać wewnątrz boxa także w osi Y, dlatego nie wybierze
+NavMesh na powierzchni nad jaskinią. Jawny `visitPoint` służy jako override dla
+nietypowych poziomów i powinien być ustawiony na osiągalnym NavMesh.
 
 ## Ograniczenia
 

@@ -15,6 +15,7 @@ MonoBehaviour:
   resourceName: Iron Vein
   resourcePrefab: {fileID: 15759028999787529, guid: f38601078130294488b62af944bf51d4, type: 3}
   icon: {fileID: 21300000, guid: e7d8e44bdd2449f4e89aa01a008eafa3, type: 3}
+  impactSurfaceType: 2
   baseResourceDestructionRecipeArray:
   - finalProductBaseResourceSO: {fileID: 11400000, guid: 59cb7f33c89966747a8e01f704f5bfbc, type: 2}
     neededEquippableItemType: 2

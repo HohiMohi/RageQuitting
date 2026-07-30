@@ -34,6 +34,7 @@ MonoBehaviour:
   rageApproachStoppingDistance: 1.3
   storageSweepPatrolThreshold: 5
   storageSweepArrivalDistance: 1.4
+  resourceZoneSweepArrivalDistance: 1.4
   resourceDestructionAttackInterval: 1
   idlePatrolRangeIncrease: 2
   maxPatrolRadius: 30

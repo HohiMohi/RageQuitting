@@ -24,6 +24,7 @@ public class BaseResourceSO : ScriptableObject
     public Vector3 sharedCarryRotationOffsetEuler;
     public CarryPhysicsProfileSO carryPhysicsProfile;
     public float furnaceFuelAmount;
+    public ActionImpactSurfaceType impactSurfaceType = ActionImpactSurfaceType.Default;
 }
 
 [Serializable]

@@ -5,10 +5,17 @@ using UnityEngine;
 public class BeaverSpawnerStorageMemory : MonoBehaviour
 {
     [SerializeField] private List<NPCStorageEncounterInfo> debugKnownStorages = new List<NPCStorageEncounterInfo>();
+    [SerializeField] private List<NPCResourcePopulationZoneEncounterInfo> debugKnownResourceZones =
+        new List<NPCResourcePopulationZoneEncounterInfo>();
 
     private readonly Dictionary<ulong, NPCStorageEncounterInfo> knownStorages = new Dictionary<ulong, NPCStorageEncounterInfo>();
     private readonly List<ulong> knownStorageOrder = new List<ulong>();
     private readonly List<NPCStorageEncounterInfo> snapshotBuffer = new List<NPCStorageEncounterInfo>();
+    private readonly Dictionary<ulong, NPCResourcePopulationZoneEncounterInfo> knownResourceZones =
+        new Dictionary<ulong, NPCResourcePopulationZoneEncounterInfo>();
+    private readonly List<ulong> knownResourceZoneOrder = new List<ulong>();
+    private readonly List<NPCResourcePopulationZoneEncounterInfo> resourceZoneSnapshotBuffer =
+        new List<NPCResourcePopulationZoneEncounterInfo>();
 
     public bool RegisterStorage(NPCStorageEncounterInfo info)
     {
@@ -56,6 +63,52 @@ public class BeaverSpawnerStorageMemory : MonoBehaviour
         return snapshotBuffer;
     }
 
+    public bool RegisterResourceZone(NPCResourcePopulationZoneEncounterInfo info)
+    {
+        if (info.ZoneId == 0 || knownResourceZones.ContainsKey(info.ZoneId))
+        {
+            return false;
+        }
+
+        knownResourceZones.Add(info.ZoneId, info);
+        knownResourceZoneOrder.Add(info.ZoneId);
+        RefreshDebugList();
+        return true;
+    }
+
+    public int RegisterResourceZones(IEnumerable<NPCResourcePopulationZoneEncounterInfo> infos)
+    {
+        if (infos == null)
+        {
+            return 0;
+        }
+
+        int addedCount = 0;
+        foreach (NPCResourcePopulationZoneEncounterInfo info in infos)
+        {
+            if (RegisterResourceZone(info))
+            {
+                addedCount++;
+            }
+        }
+
+        return addedCount;
+    }
+
+    public IReadOnlyList<NPCResourcePopulationZoneEncounterInfo> GetKnownResourceZonesSnapshot()
+    {
+        resourceZoneSnapshotBuffer.Clear();
+        foreach (ulong zoneId in knownResourceZoneOrder)
+        {
+            if (knownResourceZones.TryGetValue(zoneId, out NPCResourcePopulationZoneEncounterInfo info))
+            {
+                resourceZoneSnapshotBuffer.Add(info);
+            }
+        }
+
+        return resourceZoneSnapshotBuffer;
+    }
+
     private void Update()
     {
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && !NetworkManager.Singleton.IsServer)
@@ -74,6 +127,15 @@ public class BeaverSpawnerStorageMemory : MonoBehaviour
             if (knownStorages.TryGetValue(storageId, out NPCStorageEncounterInfo info))
             {
                 debugKnownStorages.Add(info);
+            }
+        }
+
+        debugKnownResourceZones.Clear();
+        foreach (ulong zoneId in knownResourceZoneOrder)
+        {
+            if (knownResourceZones.TryGetValue(zoneId, out NPCResourcePopulationZoneEncounterInfo info))
+            {
+                debugKnownResourceZones.Add(info);
             }
         }
     }

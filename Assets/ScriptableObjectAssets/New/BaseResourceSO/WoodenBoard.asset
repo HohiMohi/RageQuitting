@@ -15,6 +15,7 @@ MonoBehaviour:
   resourceName: Wooden Board
   resourcePrefab: {fileID: 3729975646768033361, guid: 469f098375234f545aaa5fe7ada8f47c, type: 3}
   icon: {fileID: 21300000, guid: 751aa1b6637101946b2fdbb7aa27d6ad, type: 3}
+  impactSurfaceType: 1
   baseResourceDestructionRecipeArray:
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 7

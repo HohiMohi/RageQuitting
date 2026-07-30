@@ -191,6 +191,20 @@ akcja jest obecnie wykonalna.
 `PlayerActionController` działa na jednym `CurrentTarget`, nie na wszystkich
 obiektach w overlapie.
 
+Dla narzędzia z przypisanym `EquippableActionProfileSO` akcja przebiega jako:
+
+`WindUp → Strike → ImpactFreeze → Recovery`.
+
+Cel nie jest zapamiętywany przy naciśnięciu LPM. Kontroler ponownie odczytuje
+`CurrentTarget` w chwili impactu oraz sprawdza zasięg i dostępność akcji.
+Pozwala to skorygować cel podczas zamachu. Pudło nie zadaje obrażeń i nie
+uruchamia impact feedbacku, ale nadal odtwarza pełny recovery.
+
+Zmiana narzędzia, downed, modalne UI lub utrata lokalnej kontroli anulują
+zamach. Rozpoczęcie akcji wyłącza sprint i stosuje profilowy mnożnik zwykłego
+ruchu. Axe, Pickaxe, Shovel i Industrial Hammer rozpoczynają kolejny cykl przy
+przytrzymaniu LPM. Wrench wymaga osobnego kliknięcia.
+
 | Pole | Znaczenie |
 |---|---|
 | `baseActionRange` | Fallback zasięgu bez poprawnego SO |
@@ -202,6 +216,12 @@ obiektach w overlapie.
 
 Wybrany `EquippableItemSO` zastępuje bazowe parametry. Serwer ponownie
 sprawdza cel, narzędzie, obszar i etap construction workflow.
+
+Publiczny stan `IsActionInProgress`, `CurrentActionPhase`,
+`CurrentActionPhaseNormalized` i `ActionMovementMultiplier` jest używany przez
+movement oraz FPP arms. Eventy `OnToolActionStarted`, `OnToolActionImpact` i
+`OnToolActionEnded` pozwalają dołączać feedback przyszłych broni bez zmiany
+samego kontrolera.
 
 ## Inventory i narzędzia
 
@@ -225,11 +245,39 @@ przedmiotem na plecach; swap zamienia zawartość.
 | `inventorySlotsRequired` | Zajmowane sloty |
 | `actionRange` | Zasięg działania narzędzia |
 | `actionCooldown` | Odstęp akcji |
-| `damage` | Obrażenia dla `IDamageable` |
+| `damage` | Obrażenia graczy i NPC |
+| `resourceDamage` | Utrata durability zasobu; zero używa kompatybilnego `damage * 2` |
 | `constructionWorkPower` | Progress montażu; zero używa `damage` |
-| `movementSpeedPenalty` | Kara noszenia/equip |
+| `movementSpeedPenalty` | Dodatnia kara noszenia; sumowana dla obu slotów |
 | `actionRepeatability` | Powtarzanie przy przytrzymaniu |
 | `itemType` | Axe, Saw, Pickaxe, Hammer, Weapon, IndustrialHammer, Shovel, None lub Wrench |
+| `actionProfile` | Opcjonalny profil faz, pozy, ruchu, camera kicku i audio |
+
+### `EquippableActionProfileSO`
+
+| Grupa | Pola i znaczenie |
+|---|---|
+| Timing | `windUpDuration`, `strikeDuration`, `impactFreezeDuration`, `recoveryDuration` |
+| Tool pose | offset pozycji i rotacji w wind-up/impact |
+| Arms | offsety prawej ręki i `leftArmActionWeight` |
+| Movement | `movementMultiplierDuringAction` w zakresie `0–1` |
+| Camera | offset pozycji/rotacji, recovery i `impactFeedbackStrength` |
+| Audio | opcjonalny `swingClip`, volume i pitch |
+
+Brak profilu zachowuje legacy natychmiastową akcję opartą o
+`actionCooldown`. Brak klipu zamachu uruchamia lokalny proceduralny fallback.
+
+Aktualny tuning:
+
+| Narzędzie | Range | Damage / Resource / Work | Cykl | Ruch | Hold |
+|---|---:|---:|---:|---:|---|
+| Axe | `0.95` | `10 / 20 / 10` | `0.57 s` | `90%` | tak |
+| Pickaxe | `1.0` | `12 / 20 / 12` | `0.88 s` | `78%` | tak |
+| Shovel | `1.25` | `5 / 5 / 20` | `0.74 s` | `85%` | tak |
+| Industrial Hammer | `1.3` | `8 / 8 / 24` | `1.03 s` | `65%` | tak |
+| Wrench | `1.15` | `5 / 5 / 20` | `0.36 s` | `95%` | nie |
+
+Kary inventory wynoszą odpowiednio `0.02`, `0.04`, `0.03`, `0.06` i `0.01`.
 
 ## FPP arms
 
@@ -242,12 +290,29 @@ narzędzia na osobnej warstwie renderowania.
 | Rendering | `firstPersonRenderLayer`, `firstPersonNearClipPlane` zapobiegają chowaniu rąk w ścianach |
 | Pose | pozycja/rotacja rootu, rozstaw i kolory |
 | Locomotion | amplitudy, cycles/meter, smoothing i limit teleportu |
-| Action | czas i kąt swing, hit reaction, pose lerp |
+| Legacy action | `actionDuration`, `actionSwingAngle`, hit reaction i pose lerp |
+| Profiled action | pozycje narzędzia i rąk odczytywane z bieżącej fazy profilu |
 | Turn lag | maksymalne przesunięcie i rotacja |
 | Tool visual | materiały oraz lokalna pozycja, rotacja, skala i swing offset |
 
 Faza ruchu zależy od faktycznie przebytego dystansu. Input przy ścianie nie
 powinien napędzać animacji.
+
+Hit-stop zatrzymuje tylko lokalną pozę narzędzia w `ImpactFreeze`; nie zmienia
+`Time.timeScale`. Trafienie dodaje osobny kanał action feedback do
+`PlayerCameraFeedbackComposer`. Proceduralny camera kick jest owner-only.
+
+## Impact audio i VFX
+
+`ActionImpactEffectSpawner` synchronizuje efekt trafienia, ale zamach bez
+kontaktu pozostaje lokalny. Powierzchnie to `Default`, `Wood`, `Stone`,
+`Metal`, `Soil` i `Flesh`.
+
+`IActionImpactSurfaceProvider` może jawnie określić powierzchnię. Zasoby
+korzystają z `BaseResourceSO.impactSurfaceType`, gracze i NPC z `Flesh`, a
+punkty budowy mają fallback wynikający z używanego narzędzia. Wpisy
+`surfaceFeedback` mogą przypisać prefab ParticleSystemu, klip i volume.
+Brak assetu tworzy niewielki proceduralny VFX i przestrzenny dźwięk.
 
 ## HUD
 

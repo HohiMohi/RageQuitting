@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f8c4b31a7d842c89e39f74a91bf1062, type: 3}
+  m_Name: PickaxeActionProfile
+  m_EditorClassIdentifier: Assembly-CSharp::EquippableActionProfileSO
+  windUpDuration: 0.28
+  strikeDuration: 0.18
+  impactFreezeDuration: 0.06
+  recoveryDuration: 0.36
+  toolWindUpPositionOffset: {x: 0, y: 0.1, z: -0.08}
+  toolWindUpEulerOffset: {x: -55, y: 0, z: 0}
+  toolImpactPositionOffset: {x: 0, y: -0.07, z: 0.16}
+  toolImpactEulerOffset: {x: 70, y: 0, z: 0}
+  rightArmWindUpEulerOffset: {x: -45, y: 0, z: 0}
+  rightArmImpactEulerOffset: {x: 58, y: 0, z: 0}
+  leftArmActionWeight: 0.55
+  movementMultiplierDuringAction: 0.78
+  cameraKickPosition: {x: 0, y: -0.006, z: -0.01}
+  cameraKickEuler: {x: 0.8, y: 0, z: 0}
+  cameraKickRecoveryDuration: 0.16
+  impactFeedbackStrength: 1.2
+  swingClip: {fileID: 0}
+  swingVolume: 0.65
+  swingPitch: 0.8

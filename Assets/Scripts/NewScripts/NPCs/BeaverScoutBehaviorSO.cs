@@ -34,6 +34,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private float rageApproachStoppingDistance = 1.3f;
     [SerializeField] private int storageSweepPatrolThreshold = 5;
     [SerializeField] private float storageSweepArrivalDistance = 1.4f;
+    [SerializeField] private float resourceZoneSweepArrivalDistance = 1.4f;
     [SerializeField] private float resourceDestructionAttackInterval = 1f;
     [SerializeField] private float idlePatrolRangeIncrease = 2f;
     [SerializeField] private float maxPatrolRadius = 30f;
@@ -60,6 +61,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     public float RageApproachStoppingDistance => Mathf.Max(0.1f, rageApproachStoppingDistance);
     public int StorageSweepPatrolThreshold => Mathf.Max(1, storageSweepPatrolThreshold);
     public float StorageSweepArrivalDistance => Mathf.Max(0.1f, storageSweepArrivalDistance);
+    public float ResourceZoneSweepArrivalDistance => Mathf.Max(0.1f, resourceZoneSweepArrivalDistance);
     public float ResourceDestructionAttackInterval => Mathf.Max(0.05f, resourceDestructionAttackInterval);
     public float IdlePatrolRangeIncrease => Mathf.Max(0f, idlePatrolRangeIncrease);
 
@@ -92,11 +94,25 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         RageAttackRecovery,
         RageApproachingTarget,
         ReturningToBaseForStorageSweep,
-        MovingToKnownStorage
+        MovingToKnownSweepLocation,
+        SearchingKnownResourceZone
     }
 
     private class BeaverScoutController : NPCBehaviorController
     {
+        private enum SweepLocationKind
+        {
+            Storage,
+            ResourceZone
+        }
+
+        private struct SweepLocationTarget
+        {
+            public SweepLocationKind Kind;
+            public NPCStorageEncounterInfo StorageInfo;
+            public NPCResourcePopulationZoneEncounterInfo ResourceZoneInfo;
+        }
+
         private readonly BeaverScoutBehaviorSO config;
         private Vector3 homePosition;
         private Vector3 patrolTarget;
@@ -109,7 +125,10 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private readonly HashSet<ulong> encounteredPlayerIds = new HashSet<ulong>();
         private readonly Dictionary<ulong, NPCStorageEncounterInfo> encounteredStorages = new Dictionary<ulong, NPCStorageEncounterInfo>();
         private readonly List<ulong> encounteredStorageOrder = new List<ulong>();
-        private readonly List<NPCStorageEncounterInfo> storageSweepQueue = new List<NPCStorageEncounterInfo>();
+        private readonly Dictionary<ulong, NPCResourcePopulationZoneEncounterInfo> encounteredResourceZones =
+            new Dictionary<ulong, NPCResourcePopulationZoneEncounterInfo>();
+        private readonly List<ulong> encounteredResourceZoneOrder = new List<ulong>();
+        private readonly List<SweepLocationTarget> sweepLocations = new List<SweepLocationTarget>();
         private ScoutState state;
         private float idleSearchEndTime;
         private float nextTargetRefreshTime;
@@ -128,8 +147,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private bool pendingRageAfterCommittedAttack;
         private NPCAnimationController animationController;
         private int consecutivePatrolIdleCount;
-        private int storageSweepIndex;
-        private NPCStorageEncounterInfo currentStorageSweepTarget;
+        private SweepLocationTarget currentSweepTarget;
+        private Vector3 currentSweepDestination;
         private bool finishStorageSweepAfterReturningToBase;
         private float nextResourceDestructionAttackTime;
         private float currentPatrolRadius;
@@ -233,8 +252,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 case ScoutState.ReturningToBaseForStorageSweep:
                     UpdateReturningToBaseForStorageSweep();
                     break;
-                case ScoutState.MovingToKnownStorage:
-                    UpdateMovingToKnownStorage();
+                case ScoutState.MovingToKnownSweepLocation:
+                    UpdateMovingToKnownSweepLocation();
+                    break;
+                case ScoutState.SearchingKnownResourceZone:
+                    UpdateSearchingKnownResourceZone();
                     break;
             }
         }
@@ -327,6 +349,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             ClearFollowTarget();
             RestoreAgentStoppingDistance();
             RegisterNearbyStorages();
+            RegisterNearbyResourceZones();
             idleSearchEndTime = Time.time + config.IdleSearchDuration;
             nextTargetRefreshTime = 0f;
             StopAgent();
@@ -528,52 +551,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         private void UpdateIdleSearching()
         {
-            if (Time.time >= nextTargetRefreshTime)
+            if (Time.time >= nextTargetRefreshTime && TryFindAndEnterIdleTarget())
             {
-                nextTargetRefreshTime = Time.time + config.TargetRefreshInterval;
-                if (TryFindClosestUnencounteredPlayer(out PlayerHealth playerHealth, out Transform playerTransform, out ulong playerId))
-                {
-                    ResetConsecutivePatrolIdleCount();
-                    EnterNoticingPlayer(playerHealth, playerTransform, playerId);
-                    return;
-                }
-
-                ClearStorageTarget();
-                targetObject = null;
-                if (!HasAnyAvailablePlayerInDetectionRange()
-                    && TryFindClosestStorageWithInterestedResource(out BaseStorageNew storage, out BaseResourceSO resourceSO))
-                {
-                    targetStorage = storage;
-                    targetStorageResource = resourceSO;
-                }
-                else
-                {
-                    targetObject = FindClosestStealableObject();
-                    if (targetObject == null)
-                    {
-                        destructionTarget = FindClosestDestructibleResource();
-                    }
-                }
-            }
-
-            if (targetStorage != null && targetStorageResource != null)
-            {
-                ResetConsecutivePatrolIdleCount();
-                EnterMovingToStorage();
-                return;
-            }
-
-            if (targetObject != null)
-            {
-                ResetConsecutivePatrolIdleCount();
-                EnterMovingToTarget();
-                return;
-            }
-
-            if (destructionTarget != null)
-            {
-                ResetConsecutivePatrolIdleCount();
-                EnterMovingToDestructionTarget();
                 return;
             }
 
@@ -589,6 +568,65 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
                 EnterMovingToPatrolPoint();
             }
+        }
+
+        private bool TryFindAndEnterIdleTarget()
+        {
+            nextTargetRefreshTime = Time.time + config.TargetRefreshInterval;
+            if (TryFindClosestUnencounteredPlayer(
+                out PlayerHealth playerHealth,
+                out Transform playerTransform,
+                out ulong playerId))
+            {
+                ResetConsecutivePatrolIdleCount();
+                ClearStorageSweep();
+                EnterNoticingPlayer(playerHealth, playerTransform, playerId);
+                return true;
+            }
+
+            ClearStorageTarget();
+            targetObject = null;
+            ClearDestructionTarget();
+            if (!HasAnyAvailablePlayerInDetectionRange()
+                && TryFindClosestStorageWithInterestedResource(out BaseStorageNew storage, out BaseResourceSO resourceSO))
+            {
+                targetStorage = storage;
+                targetStorageResource = resourceSO;
+            }
+            else
+            {
+                targetObject = FindClosestStealableObject();
+                if (targetObject == null)
+                {
+                    destructionTarget = FindClosestDestructibleResource();
+                }
+            }
+
+            if (targetStorage != null && targetStorageResource != null)
+            {
+                ResetConsecutivePatrolIdleCount();
+                ClearStorageSweep();
+                EnterMovingToStorage();
+                return true;
+            }
+
+            if (targetObject != null)
+            {
+                ResetConsecutivePatrolIdleCount();
+                ClearStorageSweep();
+                EnterMovingToTarget();
+                return true;
+            }
+
+            if (destructionTarget != null)
+            {
+                ResetConsecutivePatrolIdleCount();
+                ClearStorageSweep();
+                EnterMovingToDestructionTarget();
+                return true;
+            }
+
+            return false;
         }
 
         private void EnterNoticingPlayer(PlayerHealth playerHealth, Transform playerTransform, ulong playerId)
@@ -882,23 +920,39 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 return;
             }
 
-            SynchronizeStorageMemoryWithSpawner();
-            BuildStorageSweepQueue();
-            EnterNextKnownStorageOrFinishSweep();
+            SynchronizeExplorationMemoryWithSpawner();
+            BuildSweepLocations();
+            EnterNextKnownLocationOrFinishSweep();
         }
 
-        private void EnterNextKnownStorageOrFinishSweep()
+        private void EnterNextKnownLocationOrFinishSweep()
         {
             RestoreAgentStoppingDistance();
-            while (storageSweepIndex < storageSweepQueue.Count)
+            int closestIndex = -1;
+            float closestPathDistance = float.MaxValue;
+            Vector3 closestDestination = default;
+            for (int i = 0; i < sweepLocations.Count; i++)
             {
-                currentStorageSweepTarget = storageSweepQueue[storageSweepIndex];
-                storageSweepIndex++;
+                if (!TryResolveSweepDestination(sweepLocations[i], out Vector3 destination)
+                    || !TryCalculatePathDistance(destination, out float pathDistance)
+                    || pathDistance >= closestPathDistance)
+                {
+                    continue;
+                }
 
-                Vector3 destination = GetStorageSweepDestination(currentStorageSweepTarget);
-                state = ScoutState.MovingToKnownStorage;
+                closestIndex = i;
+                closestPathDistance = pathDistance;
+                closestDestination = destination;
+            }
+
+            if (closestIndex >= 0)
+            {
+                currentSweepTarget = sweepLocations[closestIndex];
+                sweepLocations.RemoveAt(closestIndex);
+                currentSweepDestination = closestDestination;
+                state = ScoutState.MovingToKnownSweepLocation;
                 ResumeAgent();
-                Brain.Agent.SetDestination(destination);
+                Brain.Agent.SetDestination(currentSweepDestination);
                 return;
             }
 
@@ -912,21 +966,65 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             EnterReturningToBaseForStorageSweep(true);
         }
 
-        private void UpdateMovingToKnownStorage()
+        private void UpdateMovingToKnownSweepLocation()
         {
-            Vector3 destination = GetStorageSweepDestination(currentStorageSweepTarget);
-            Brain.Agent.SetDestination(destination);
-            if (Vector3.Distance(Brain.transform.position, destination) > config.StorageSweepArrivalDistance)
+            if (!TryRefreshCurrentSweepDestination())
+            {
+                EnterNextKnownLocationOrFinishSweep();
+                return;
+            }
+
+            Brain.Agent.SetDestination(currentSweepDestination);
+            float arrivalDistance = currentSweepTarget.Kind == SweepLocationKind.Storage
+                ? config.StorageSweepArrivalDistance
+                : config.ResourceZoneSweepArrivalDistance;
+            if (Vector3.Distance(Brain.transform.position, currentSweepDestination) > arrivalDistance)
             {
                 return;
             }
 
-            if (TryHandleKnownStorageSweepTarget())
+            if (currentSweepTarget.Kind == SweepLocationKind.Storage)
+            {
+                if (TryHandleKnownStorageSweepTarget())
+                {
+                    return;
+                }
+
+                EnterNextKnownLocationOrFinishSweep();
+                return;
+            }
+
+            EnterSearchingKnownResourceZone();
+        }
+
+        private void EnterSearchingKnownResourceZone()
+        {
+            state = ScoutState.SearchingKnownResourceZone;
+            RegisterNearbyStorages();
+            RegisterNearbyResourceZones();
+            idleSearchEndTime = Time.time + config.IdleSearchDuration;
+            nextTargetRefreshTime = 0f;
+            StopAgent();
+        }
+
+        private void UpdateSearchingKnownResourceZone()
+        {
+            ResourcePopulationZone zone = currentSweepTarget.ResourceZoneInfo.Zone;
+            if (zone == null || !zone.isActiveAndEnabled)
+            {
+                EnterNextKnownLocationOrFinishSweep();
+                return;
+            }
+
+            if (Time.time >= nextTargetRefreshTime && TryFindAndEnterIdleTarget())
             {
                 return;
             }
 
-            EnterNextKnownStorageOrFinishSweep();
+            if (Time.time >= idleSearchEndTime)
+            {
+                EnterNextKnownLocationOrFinishSweep();
+            }
         }
 
         private void UpdateDelivering()
@@ -946,7 +1044,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             DeliverCarriedObject();
-            SynchronizeStorageMemoryWithSpawner();
+            SynchronizeExplorationMemoryWithSpawner();
             Brain.Carrier.ClearSharedCarryMoveTarget();
             EnterIdleSearching();
         }
@@ -981,10 +1079,9 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             Brain.Carrier.DropHeldObject();
         }
 
-        private void BuildStorageSweepQueue()
+        private void BuildSweepLocations()
         {
-            storageSweepQueue.Clear();
-            storageSweepIndex = 0;
+            sweepLocations.Clear();
 
             foreach (ulong storageId in encounteredStorageOrder)
             {
@@ -993,13 +1090,30 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                     continue;
                 }
 
-                storageSweepQueue.Add(storageInfo);
+                sweepLocations.Add(new SweepLocationTarget
+                {
+                    Kind = SweepLocationKind.Storage,
+                    StorageInfo = storageInfo
+                });
             }
-        }
 
-        private Vector3 GetStorageSweepDestination(NPCStorageEncounterInfo storageInfo)
-        {
-            return storageInfo.Storage != null ? storageInfo.Storage.transform.position : storageInfo.FirstEncounterPosition;
+            foreach (ulong zoneId in encounteredResourceZoneOrder)
+            {
+                if (!encounteredResourceZones.TryGetValue(
+                    zoneId,
+                    out NPCResourcePopulationZoneEncounterInfo zoneInfo)
+                    || zoneInfo.Zone == null
+                    || !zoneInfo.Zone.isActiveAndEnabled)
+                {
+                    continue;
+                }
+
+                sweepLocations.Add(new SweepLocationTarget
+                {
+                    Kind = SweepLocationKind.ResourceZone,
+                    ResourceZoneInfo = zoneInfo
+                });
+            }
         }
 
         private bool TryHandleKnownStorageSweepTarget()
@@ -1009,7 +1123,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 return false;
             }
 
-            BaseStorageNew storage = ResolveKnownStorage(currentStorageSweepTarget);
+            BaseStorageNew storage = ResolveKnownStorage(currentSweepTarget.StorageInfo);
             if (storage == null)
             {
                 return false;
@@ -1051,6 +1165,66 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             return null;
+        }
+
+        private bool TryResolveSweepDestination(SweepLocationTarget target, out Vector3 destination)
+        {
+            destination = default;
+            if (target.Kind == SweepLocationKind.Storage)
+            {
+                BaseStorageNew storage = ResolveKnownStorage(target.StorageInfo);
+                destination = storage != null ? storage.transform.position : default;
+                return storage != null && storage.gameObject.activeInHierarchy;
+            }
+
+            ResourcePopulationZone zone = target.ResourceZoneInfo.Zone;
+            return zone != null
+                && zone.isActiveAndEnabled
+                && zone.TryGetNpcVisitPosition(Brain.Agent, out destination);
+        }
+
+        private bool TryRefreshCurrentSweepDestination()
+        {
+            if (currentSweepTarget.Kind == SweepLocationKind.ResourceZone)
+            {
+                ResourcePopulationZone zone = currentSweepTarget.ResourceZoneInfo.Zone;
+                return zone != null && zone.isActiveAndEnabled;
+            }
+
+            BaseStorageNew storage = ResolveKnownStorage(currentSweepTarget.StorageInfo);
+            if (storage == null || !storage.gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+
+            currentSweepDestination = storage.transform.position;
+            return true;
+        }
+
+        private bool TryCalculatePathDistance(Vector3 destination, out float pathDistance)
+        {
+            pathDistance = 0f;
+            if (Brain.Agent == null || !Brain.Agent.isOnNavMesh)
+            {
+                return false;
+            }
+
+            NavMeshPath path = new NavMeshPath();
+            if (!NavMesh.CalculatePath(Brain.transform.position, destination, Brain.Agent.areaMask, path)
+                || path.status != NavMeshPathStatus.PathComplete
+                || path.corners.Length == 0)
+            {
+                return false;
+            }
+
+            Vector3 previous = Brain.transform.position;
+            for (int i = 0; i < path.corners.Length; i++)
+            {
+                pathDistance += Vector3.Distance(previous, path.corners[i]);
+                previous = path.corners[i];
+            }
+
+            return true;
         }
 
         private bool TrySelectPatrolTarget(out Vector3 selectedPatrolTarget)
@@ -1225,7 +1399,36 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
         }
 
-        private void SynchronizeStorageMemoryWithSpawner()
+        private void RegisterNearbyResourceZones()
+        {
+            foreach (ResourcePopulationZone zone in ResourcePopulationZone.ActiveZones)
+            {
+                if (zone == null || !zone.isActiveAndEnabled)
+                {
+                    continue;
+                }
+
+                Vector3 closestPoint = zone.GetClosestPoint(Brain.transform.position);
+                if ((closestPoint - Brain.transform.position).sqrMagnitude
+                    > Brain.DetectionRadius * Brain.DetectionRadius)
+                {
+                    continue;
+                }
+
+                ulong zoneId = GetResourceZoneId(zone);
+                if (encounteredResourceZones.ContainsKey(zoneId))
+                {
+                    continue;
+                }
+
+                RegisterEncounteredResourceZone(new NPCResourcePopulationZoneEncounterInfo(
+                    zoneId,
+                    closestPoint,
+                    zone));
+            }
+        }
+
+        private void SynchronizeExplorationMemoryWithSpawner()
         {
             BeaverSpawnerStorageMemory storageMemory = Brain.OriginSpawner != null
                 ? Brain.OriginSpawner.GetComponent<BeaverSpawnerStorageMemory>()
@@ -1240,6 +1443,14 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             for (int i = 0; i < sharedStorages.Count; i++)
             {
                 RegisterEncounteredStorage(sharedStorages[i]);
+            }
+
+            storageMemory.RegisterResourceZones(GetEncounteredResourceZoneInfos());
+            IReadOnlyList<NPCResourcePopulationZoneEncounterInfo> sharedZones =
+                storageMemory.GetKnownResourceZonesSnapshot();
+            for (int i = 0; i < sharedZones.Count; i++)
+            {
+                RegisterEncounteredResourceZone(sharedZones[i]);
             }
         }
 
@@ -1265,6 +1476,30 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             encounteredStorageOrder.Add(storageInfo.StorageId);
         }
 
+        private IEnumerable<NPCResourcePopulationZoneEncounterInfo> GetEncounteredResourceZoneInfos()
+        {
+            foreach (ulong zoneId in encounteredResourceZoneOrder)
+            {
+                if (encounteredResourceZones.TryGetValue(
+                    zoneId,
+                    out NPCResourcePopulationZoneEncounterInfo zoneInfo))
+                {
+                    yield return zoneInfo;
+                }
+            }
+        }
+
+        private void RegisterEncounteredResourceZone(NPCResourcePopulationZoneEncounterInfo zoneInfo)
+        {
+            if (zoneInfo.ZoneId == 0 || encounteredResourceZones.ContainsKey(zoneInfo.ZoneId))
+            {
+                return;
+            }
+
+            encounteredResourceZones.Add(zoneInfo.ZoneId, zoneInfo);
+            encounteredResourceZoneOrder.Add(zoneInfo.ZoneId);
+        }
+
         private static ulong GetStorageId(BaseStorageNew storage)
         {
             if (storage != null && storage.NetworkObject != null && storage.NetworkObject.IsSpawned)
@@ -1273,6 +1508,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             return storage != null ? unchecked((ulong)storage.GetInstanceID()) : 0;
+        }
+
+        private static ulong GetResourceZoneId(ResourcePopulationZone zone)
+        {
+            return zone != null ? unchecked((ulong)zone.GetInstanceID()) : 0;
         }
 
         private bool TryFindClosestStorageWithInterestedResource(out BaseStorageNew selectedStorage, out BaseResourceSO selectedResource)
@@ -1504,9 +1744,9 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         private void ClearStorageSweep()
         {
-            storageSweepQueue.Clear();
-            storageSweepIndex = 0;
-            currentStorageSweepTarget = default;
+            sweepLocations.Clear();
+            currentSweepTarget = default;
+            currentSweepDestination = default;
             finishStorageSweepAfterReturningToBase = false;
         }
 

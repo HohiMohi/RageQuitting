@@ -15,6 +15,7 @@ MonoBehaviour:
   resourceName: Wooden Shards
   resourcePrefab: {fileID: 3729975646768033361, guid: 6bcf02a6eaedf114bbe0b3325fe4019b, type: 3}
   icon: {fileID: 21300000, guid: 751aa1b6637101946b2fdbb7aa27d6ad, type: 3}
+  impactSurfaceType: 1
   baseResourceDestructionRecipeArray: []
   resourceDurability: 5
   movementSpeedPenalty: 0

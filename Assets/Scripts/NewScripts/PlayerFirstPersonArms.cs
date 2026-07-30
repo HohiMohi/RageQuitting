@@ -1,5 +1,6 @@
 using StarterAssets;
 using System;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -15,6 +16,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private PlayerInventory playerInventory;
     [SerializeField] private PlayerTurnFeedback playerTurnFeedback;
+    [SerializeField] private PlayerCameraFeedbackComposer cameraFeedbackComposer;
+    [SerializeField] private AudioSource toolAudioSource;
 
     [Header("Rendering")]
     [SerializeField, Range(0, 31)] private int firstPersonRenderLayer = 30;
@@ -71,9 +74,14 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     private bool baseCameraMaskOverridden;
     private float actionTimer;
     private float hitReactionTimer;
+    private float actionCameraFeedbackTimer;
+    private float actionCameraFeedbackDuration;
+    private Vector3 actionCameraPositionOffset;
+    private Vector3 actionCameraEulerOffset;
     private float previousHealth;
     private int currentToolItemTypeValue = -2;
     private bool setupCompleted;
+    private readonly Dictionary<EquippableItemType, AudioClip> proceduralSwingClips = new();
 
     private bool ShouldShowLocalArms
     {
@@ -121,6 +129,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     private void OnDisable()
     {
         UnsubscribeEvents();
+        cameraFeedbackComposer?.ClearActionFeedback();
     }
 
     private void Update()
@@ -198,10 +207,14 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             playerTurnFeedback = GetComponent<PlayerTurnFeedback>();
         }
 
-        PlayerCameraFeedbackComposer feedbackComposer = GetComponent<PlayerCameraFeedbackComposer>();
-        if (feedbackComposer != null && feedbackComposer.OutputTarget != null)
+        if (cameraFeedbackComposer == null)
         {
-            cameraRoot = feedbackComposer.OutputTarget;
+            cameraFeedbackComposer = GetComponent<PlayerCameraFeedbackComposer>();
+        }
+
+        if (cameraFeedbackComposer != null && cameraFeedbackComposer.OutputTarget != null)
+        {
+            cameraRoot = cameraFeedbackComposer.OutputTarget;
         }
         else if (cameraRoot == null && firstPersonController != null && firstPersonController.CinemachineCameraTarget != null)
         {
@@ -406,6 +419,21 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     {
         actionTimer = Mathf.Max(0f, actionTimer - deltaTime);
         hitReactionTimer = Mathf.Max(0f, hitReactionTimer - deltaTime);
+
+        if (actionCameraFeedbackTimer > 0f)
+        {
+            actionCameraFeedbackTimer = Mathf.Max(0f, actionCameraFeedbackTimer - deltaTime);
+            float weight = actionCameraFeedbackDuration > 0f
+                ? Mathf.SmoothStep(0f, 1f, actionCameraFeedbackTimer / actionCameraFeedbackDuration)
+                : 0f;
+            cameraFeedbackComposer?.SetActionFeedback(
+                actionCameraPositionOffset * weight,
+                actionCameraEulerOffset * weight);
+        }
+        else
+        {
+            cameraFeedbackComposer?.ClearActionFeedback();
+        }
     }
 
     private void UpdateLocomotionAnimation(float deltaTime)
@@ -487,6 +515,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         float actionNormalized = actionDuration > 0f ? Mathf.Clamp01(actionTimer / actionDuration) : 0f;
         float actionCurve = Mathf.Sin(actionNormalized * Mathf.PI);
         float hitNormalized = hitReactionDuration > 0f ? Mathf.Clamp01(hitReactionTimer / hitReactionDuration) : 0f;
+        GetProfiledActionPose(
+            out Vector3 profiledToolPosition,
+            out Vector3 profiledToolEuler,
+            out Vector3 profiledRightArmEuler,
+            out float profiledLeftArmWeight);
 
         Vector3 targetRootPosition = rootLocalPosition + new Vector3(sway, bob, 0f);
         Vector3 targetRootEuler = rootLocalEulerAngles;
@@ -517,12 +550,88 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         armsRoot.localPosition = Vector3.Lerp(armsRoot.localPosition, targetRootPosition, deltaTime * poseLerpSpeed);
         armsRoot.localRotation = Quaternion.Slerp(armsRoot.localRotation, Quaternion.Euler(targetRootEuler), deltaTime * poseLerpSpeed);
 
-        UpdateArmPose(leftArmRoot, true, actionCurve, moveAmount, isCarrying, isDowned);
-        UpdateArmPose(rightArmRoot, false, actionCurve, moveAmount, isCarrying, isDowned);
-        UpdateToolPose(actionCurve, isDowned);
+        UpdateArmPose(
+            leftArmRoot,
+            true,
+            actionCurve,
+            moveAmount,
+            isCarrying,
+            isDowned,
+            profiledRightArmEuler,
+            profiledLeftArmWeight);
+        UpdateArmPose(
+            rightArmRoot,
+            false,
+            actionCurve,
+            moveAmount,
+            isCarrying,
+            isDowned,
+            profiledRightArmEuler,
+            profiledLeftArmWeight);
+        UpdateToolPose(actionCurve, isDowned, profiledToolPosition, profiledToolEuler);
     }
 
-    private void UpdateArmPose(Transform armRoot, bool isLeft, float actionCurve, float moveAmount, bool isCarrying, bool isDowned)
+    private void GetProfiledActionPose(
+        out Vector3 toolPosition,
+        out Vector3 toolEuler,
+        out Vector3 rightArmEuler,
+        out float leftArmWeight)
+    {
+        toolPosition = Vector3.zero;
+        toolEuler = Vector3.zero;
+        rightArmEuler = Vector3.zero;
+        leftArmWeight = 0f;
+
+        if (playerActionController == null ||
+            !playerActionController.IsActionInProgress ||
+            playerActionController.CurrentActionItem == null)
+        {
+            return;
+        }
+
+        EquippableActionProfileSO profile = playerActionController.CurrentActionItem.actionProfile;
+        if (profile == null)
+        {
+            return;
+        }
+
+        float phaseProgress = playerActionController.CurrentActionPhaseNormalized;
+        switch (playerActionController.CurrentActionPhase)
+        {
+            case EquippableActionPhase.WindUp:
+                toolPosition = Vector3.Lerp(Vector3.zero, profile.toolWindUpPositionOffset, phaseProgress);
+                toolEuler = Vector3.Lerp(Vector3.zero, profile.toolWindUpEulerOffset, phaseProgress);
+                rightArmEuler = Vector3.Lerp(Vector3.zero, profile.rightArmWindUpEulerOffset, phaseProgress);
+                break;
+            case EquippableActionPhase.Strike:
+                toolPosition = Vector3.Lerp(profile.toolWindUpPositionOffset, profile.toolImpactPositionOffset, phaseProgress);
+                toolEuler = Vector3.Lerp(profile.toolWindUpEulerOffset, profile.toolImpactEulerOffset, phaseProgress);
+                rightArmEuler = Vector3.Lerp(profile.rightArmWindUpEulerOffset, profile.rightArmImpactEulerOffset, phaseProgress);
+                break;
+            case EquippableActionPhase.ImpactFreeze:
+                toolPosition = profile.toolImpactPositionOffset;
+                toolEuler = profile.toolImpactEulerOffset;
+                rightArmEuler = profile.rightArmImpactEulerOffset;
+                break;
+            case EquippableActionPhase.Recovery:
+                toolPosition = Vector3.Lerp(profile.toolImpactPositionOffset, Vector3.zero, phaseProgress);
+                toolEuler = Vector3.Lerp(profile.toolImpactEulerOffset, Vector3.zero, phaseProgress);
+                rightArmEuler = Vector3.Lerp(profile.rightArmImpactEulerOffset, Vector3.zero, phaseProgress);
+                break;
+        }
+
+        leftArmWeight = Mathf.Clamp01(profile.leftArmActionWeight);
+    }
+
+    private void UpdateArmPose(
+        Transform armRoot,
+        bool isLeft,
+        float actionCurve,
+        float moveAmount,
+        bool isCarrying,
+        bool isDowned,
+        Vector3 profiledRightArmEuler,
+        float profiledLeftArmWeight)
     {
         if (armRoot == null)
         {
@@ -536,6 +645,12 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         targetEuler.x += Mathf.Sin(locomotionPhase + (isLeft ? 0f : Mathf.PI)) * moveAmount * 7f;
         targetEuler.x += actionCurve * actionSwingAngle * (isLeft ? 0.45f : 1f);
         targetEuler.z += actionCurve * side * -12f;
+        targetEuler += isLeft
+            ? new Vector3(
+                profiledRightArmEuler.x,
+                -profiledRightArmEuler.y,
+                -profiledRightArmEuler.z) * profiledLeftArmWeight
+            : profiledRightArmEuler;
 
         if (isCarrying)
         {
@@ -553,14 +668,18 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         armRoot.localRotation = Quaternion.Slerp(armRoot.localRotation, Quaternion.Euler(targetEuler), Time.deltaTime * poseLerpSpeed);
     }
 
-    private void UpdateToolPose(float actionCurve, bool isDowned)
+    private void UpdateToolPose(
+        float actionCurve,
+        bool isDowned,
+        Vector3 profiledPositionOffset,
+        Vector3 profiledEulerOffset)
     {
         if (rightToolAnchor == null)
         {
             return;
         }
 
-        ApplyToolAnchorPose(actionCurve, isDowned);
+        ApplyToolAnchorPose(actionCurve, isDowned, profiledPositionOffset, profiledEulerOffset);
 
         if (rightToolVisual != null && rightToolVisual.activeSelf == isDowned)
         {
@@ -568,15 +687,19 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         }
     }
 
-    private void ApplyToolAnchorPose(float actionCurve, bool isDowned)
+    private void ApplyToolAnchorPose(
+        float actionCurve,
+        bool isDowned,
+        Vector3 profiledPositionOffset = default,
+        Vector3 profiledEulerOffset = default)
     {
         if (rightToolAnchor == null)
         {
             return;
         }
 
-        Vector3 targetPosition = toolLocalPosition + toolSwingPositionOffset * actionCurve;
-        Vector3 targetEuler = toolLocalEulerAngles + toolSwingEulerOffset * actionCurve;
+        Vector3 targetPosition = toolLocalPosition + toolSwingPositionOffset * actionCurve + profiledPositionOffset;
+        Vector3 targetEuler = toolLocalEulerAngles + toolSwingEulerOffset * actionCurve + profiledEulerOffset;
 
         if (isDowned)
         {
@@ -673,8 +796,14 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         {
             playerActionController.OnActionPerformed -= Gameplay_OnActionAnimation;
             playerActionController.OnActionAltPerformed -= Gameplay_OnActionAnimation;
+            playerActionController.OnToolActionStarted -= PlayerActionController_OnToolActionStarted;
+            playerActionController.OnToolActionImpact -= PlayerActionController_OnToolActionImpact;
+            playerActionController.OnToolActionEnded -= PlayerActionController_OnToolActionEnded;
             playerActionController.OnActionPerformed += Gameplay_OnActionAnimation;
             playerActionController.OnActionAltPerformed += Gameplay_OnActionAnimation;
+            playerActionController.OnToolActionStarted += PlayerActionController_OnToolActionStarted;
+            playerActionController.OnToolActionImpact += PlayerActionController_OnToolActionImpact;
+            playerActionController.OnToolActionEnded += PlayerActionController_OnToolActionEnded;
         }
 
         if (playerInteraction != null)
@@ -703,6 +832,9 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         {
             playerActionController.OnActionPerformed -= Gameplay_OnActionAnimation;
             playerActionController.OnActionAltPerformed -= Gameplay_OnActionAnimation;
+            playerActionController.OnToolActionStarted -= PlayerActionController_OnToolActionStarted;
+            playerActionController.OnToolActionImpact -= PlayerActionController_OnToolActionImpact;
+            playerActionController.OnToolActionEnded -= PlayerActionController_OnToolActionEnded;
         }
 
         if (playerInteraction != null)
@@ -734,7 +866,97 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             return;
         }
 
-        actionTimer = actionDuration;
+        if (playerActionController == null || !playerActionController.IsActionInProgress)
+        {
+            actionTimer = actionDuration;
+        }
+    }
+
+    private void PlayerActionController_OnToolActionStarted(
+        object sender,
+        PlayerActionController.ToolActionEventArgs e)
+    {
+        PlaySwingAudio(e.Item, e.Profile);
+    }
+
+    private void PlayerActionController_OnToolActionImpact(
+        object sender,
+        PlayerActionController.ToolActionEventArgs e)
+    {
+        if (!e.Hit || e.Profile == null)
+        {
+            return;
+        }
+
+        actionCameraPositionOffset = e.Profile.cameraKickPosition;
+        actionCameraEulerOffset = e.Profile.cameraKickEuler;
+        actionCameraFeedbackDuration = Mathf.Max(0.01f, e.Profile.cameraKickRecoveryDuration);
+        actionCameraFeedbackTimer = actionCameraFeedbackDuration;
+    }
+
+    private void PlayerActionController_OnToolActionEnded(
+        object sender,
+        PlayerActionController.ToolActionEventArgs e)
+    {
+        if (e.Phase == EquippableActionPhase.None && !e.Hit)
+        {
+            cameraFeedbackComposer?.ClearActionFeedback();
+        }
+    }
+
+    private void PlaySwingAudio(EquippableItemSO item, EquippableActionProfileSO profile)
+    {
+        if (item == null || profile == null)
+        {
+            return;
+        }
+
+        if (toolAudioSource == null)
+        {
+            toolAudioSource = gameObject.AddComponent<AudioSource>();
+            toolAudioSource.playOnAwake = false;
+            toolAudioSource.spatialBlend = 0f;
+        }
+
+        AudioClip clip = profile.swingClip;
+        if (clip == null && !proceduralSwingClips.TryGetValue(item.itemType, out clip))
+        {
+            clip = CreateProceduralSwingClip(item.itemType);
+            proceduralSwingClips[item.itemType] = clip;
+        }
+
+        toolAudioSource.pitch = Mathf.Max(0.01f, profile.swingPitch);
+        toolAudioSource.PlayOneShot(clip, Mathf.Clamp01(profile.swingVolume));
+    }
+
+    private static AudioClip CreateProceduralSwingClip(EquippableItemType itemType)
+    {
+        const int sampleRate = 22050;
+        const float duration = 0.16f;
+        int sampleCount = Mathf.CeilToInt(sampleRate * duration);
+        float[] samples = new float[sampleCount];
+        float weight = itemType == EquippableItemType.IndustrialHammer ||
+                       itemType == EquippableItemType.Pickaxe
+            ? 0.75f
+            : 1f;
+
+        System.Random random = new System.Random(1709 + (int)itemType * 97);
+        for (int index = 0; index < sampleCount; index++)
+        {
+            float normalized = index / (float)sampleCount;
+            float envelope = Mathf.Sin(normalized * Mathf.PI) * (1f - normalized);
+            float noise = (float)(random.NextDouble() * 2.0 - 1.0);
+            samples[index] = noise * envelope * 0.09f * weight;
+        }
+
+        AudioClip clip = AudioClip.Create(
+            $"Procedural_{itemType}_Swing",
+            sampleCount,
+            1,
+            sampleRate,
+            false);
+        clip.SetData(samples, 0);
+        return clip;
     }
 
     private void PlayerHealth_OnHealthChanged(object sender, EventArgs e)

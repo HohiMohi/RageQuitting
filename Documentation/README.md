@@ -1,6 +1,6 @@
 # RageQuitting - dokumentacja projektu
 
-> Stan dokumentacji: 2026-07-29
+> Stan dokumentacji: 2026-07-30
 >
 > Unity: `6000.3.18f1`
 >

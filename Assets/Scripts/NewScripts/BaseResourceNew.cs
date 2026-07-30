@@ -207,7 +207,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     public void DamageReceived(EquippableItemSO equippableItemSO, float damage)
     {
         EquippableItemType toolType = equippableItemSO != null ? equippableItemSO.itemType : EquippableItemType.None;
-        float damageAmount = equippableItemSO != null ? damage * 2f : damage;
+        float damageAmount = equippableItemSO != null ? equippableItemSO.ResourceDamage : damage;
         RequestOrApplyDamage(toolType, damageAmount);
     }
 

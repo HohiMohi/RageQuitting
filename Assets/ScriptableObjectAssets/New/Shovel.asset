@@ -17,9 +17,11 @@ MonoBehaviour:
   equippableItemPrefab: {fileID: 2332549194031454660, guid: 9559d22b4674ce4458ebc497c78a1506, type: 3}
   inventorySlotsRequired: 1
   actionRange: 1.25
-  actionCooldown: 0.5
+  actionCooldown: 0.74
   damage: 5
+  resourceDamage: 5
   constructionWorkPower: 20
-  movementSpeedPenalty: -0.2
+  actionProfile: {fileID: 11400000, guid: 16f9611f77874cdeaa784eefc18e9ab8, type: 2}
+  movementSpeedPenalty: 0.03
   actionRepeatability: 1
   itemType: 6

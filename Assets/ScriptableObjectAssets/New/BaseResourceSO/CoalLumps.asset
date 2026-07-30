@@ -15,6 +15,7 @@ MonoBehaviour:
   resourceName: Coal Lumps
   resourcePrefab: {fileID: 3729975646768033361, guid: 512b6e18e66ec1c41b30c2d304decf26, type: 3}
   icon: {fileID: 6991357674887153452, guid: ebd4285913526c149b0f170953a45087, type: 3}
+  impactSurfaceType: 2
   baseResourceDestructionRecipeArray: []
   resourceDurability: 0
   movementSpeedPenalty: 0
