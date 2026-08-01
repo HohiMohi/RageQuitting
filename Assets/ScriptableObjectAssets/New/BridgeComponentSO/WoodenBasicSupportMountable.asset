@@ -31,7 +31,7 @@ MonoBehaviour:
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints: []
-  carryPhysicsProfile: {fileID: 0}
+  carryPhysicsProfile: {fileID: 11400000, guid: e4e8fbf4f1f17a8fcf3d5d7e4e0b1c24, type: 2}
   meltingPoint: 0
   combustionTemperature: 0
   neededProgress: 0

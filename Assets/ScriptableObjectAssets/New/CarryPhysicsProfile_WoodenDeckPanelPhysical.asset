@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1b5d8f1c8cc4e7e9c0d2a4f1a7b8c91, type: 3}
+  m_Name: CarryPhysicsProfile_WoodenDeckPanelPhysical
+  m_EditorClassIdentifier: Assembly-CSharp::CarryPhysicsProfileSO
+  controlMode: 2
+  orbitArcDegrees: 45
+  orbitAngularSpeed: 75
+  spatialLateralForce: 180
+  orbitPredictionCorrectionSpeed: 180
+  pointGripLateralForce: 75
+  pointGripVerticalForce: 900
+  pointGripSpring: 190
+  pointGripDamping: 55
+  pointGripMaxForce: 1100
+  maximumGripHeightOffset: 0.14
+  projectGripForcesToColliderSurface: 1
+  limitPointGripLiftByCarrierCapacity: 1
+  pointGripLiftCapacityPerCarrier: 0.55
+  stabilizeLongAxisRoll: 0
+  rollLongAxisLocal: {x: 1, y: 0, z: 0}
+  rollReferenceUpLocal: {x: 0, y: 1, z: 0}
+  rollStabilizingTorque: 240
+  rollDamping: 50
+  maximumRollStabilizingTorque: 180
+  compensatePointGripRoll: 0
+  pointGripRollCompensation: 1
+  maximumPointGripRollCompensationTorque: 500
+  limitTilt: 1
+  maximumTiltAngle: 35
+  tiltRestoringTorque: 240
+  tiltDamping: 50
+  softTetherDeadZone: 0.08
+  softTetherPullSpeed: 3.6
+  softTetherVelocityInfluence: 0.12
+  preventGroundedUpwardTether: 1
+  hardTetherDistance: 2
+  tetherBreakDelay: 0.5
+  mass: 30
+  linearDrag: 2.2
+  angularDrag: 7
+  gripSpring: 900
+  gripDamper: 90
+  maxGripForce: 1800
+  maxGripTorque: 170
+  maxGripDistance: 1.75
+  maxVelocity: 3.2
+  maxAngularVelocity: 0.9
+  useGravity: 1
+  allowYawRotation: 1
+  movementForce: 450
+  movementDamper: 85
+  sharedCarryYawTorque: 20
+  horizontalConstraintSpring: 140
+  horizontalConstraintDampingRatio: 1.05
+  maxHorizontalConstraintForce: 650
+  horizontalConstraintDeadZone: 0.03
+  horizontalConstraintForceResponse: 18
+  maxHolderAnchorVelocity: 7
+  verticalSupportSpring: 220
+  verticalSupportDampingRatio: 1.1
+  maxVerticalSupportForce: 1600

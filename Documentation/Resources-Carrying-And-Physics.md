@@ -21,12 +21,12 @@ symulowanego przez serwer.
 | `minAmountOfPlayersNeeded` | Minimalna obsada używana przez carry |
 | `allowMultipleCarriers` | Włącza shared-carry |
 | `recommendedCarriers` | Liczba normalizująca siłę i warunek understaffed |
-| `maxCarriers` | Maksymalna liczba holderów/anchorów |
+| `maxCarriers` | Maksymalna liczba jednoczesnych holderów; nie ogranicza liczby skonfigurowanych anchorów |
 | `underStaffedPenaltyMultiplier` | Kara ruchu przy niedoborze |
 | `sharedCarryUnderstaffedStaminaDrainPerSecond` | Drain staminy każdego player-holdera |
 | `carryMoveSpeed` | Docelowa prędkość/intencja carry |
 | `carryPlayerClearance` | Odstęp kapsuły gracza od obiektu |
-| `carryAttachLocalPoints` | Jawne anchory; pusta lista uruchamia fallback geometryczny |
+| `carryAttachLocalPoints` | Jawne anchory w local space; ich liczba może być większa niż `maxCarriers`, a pusta lista uruchamia fallback geometryczny |
 | `sharedCarryRotationOffsetEuler` | Absolutny offset orientacji przy pierwszym holderze |
 | `carryPhysicsProfile` | Opcjonalny profil Rigidbody; null używa fallbacków komponentu |
 | `furnaceFuelAmount` | Ilość paliwa dodawana do pieca |
@@ -126,16 +126,51 @@ flowchart TD
 - `DirectYaw`: W/S wysyła centralną translację, a A/D osobny input yaw.
 - `PhysicalPointGrip`: siły są przykładane w punktach chwytu; A/D generuje
   fizyczną siłę boczną, a pitch kamery reguluje wysokość chwytu.
-- `Wooden Log` używa dedykowanego profilu `PhysicalPointGrip`; części mostu
-  zachowują obecnie `DirectYaw`.
+- `Wooden Log` oraz sześć aktualnych części mostu używają `PhysicalPointGrip`.
+  Każdy rodzaj części ma osobny profil dostrojony do swojej geometrii i masy.
 - NPC shared-carry jest obecnie wyłączony globalnym feature gate, ale kod
   pozostaje.
+
+### Profile i anchory części mostu
+
+| Część | Profil | Masa | Max angular velocity | Grip height | Max tilt | Lift/carrier |
+|---|---|---:|---:|---:|---:|---:|
+| Wooden Foundation | `CarryPhysicsProfile_WoodenFoundationPhysical` | 45 | 1.1 | 0.12 m | 35° | 0.38 |
+| Wooden Abutment | `CarryPhysicsProfile_WoodenAbutmentPhysical` | 60 | 1.0 | 0.14 m | 32° | 0.38 |
+| Wooden Main Girder | `CarryPhysicsProfile_WoodenMainGirderPhysical` | 70 | 0.65 | 0.18 m | 28° | 0.38 |
+| Wooden Cross Beam | `CarryPhysicsProfile_WoodenCrossBeamPhysical` | 24 | 1.2 | 0.18 m | 42° | 0.55 |
+| Wooden Diagonal Bracing | `CarryPhysicsProfile_WoodenDiagonalBracingPhysical` | 18 | 1.35 | 0.20 m | 48° | 0.55 |
+| Wooden Deck Panel | `CarryPhysicsProfile_WoodenDeckPanelPhysical` | 30 | 0.9 | 0.14 m | 35° | 0.55 |
+
+Każda z tych części ma osiem jawnych `carryAttachLocalPoints`: cztery narożniki,
+a następnie środki przedniego, prawego, tylnego i lewego boku. Indeksy są
+deterministyczne, a serwer przydziela najbliższy wolny i bezpieczny punkt.
+Liczba punktów nie zwiększa `maxCarriers`.
+
+Standardowe części mają logiczne anchory odsunięte o około `0.60 m` od obrysu
+collidera. `Wooden Abutment` używa offsetu `0.90 m` i wspólnej wysokości
+`Y = 0.30 m`, aby kapsuła gracza pozostawała poza pochyłym modelem rampy.
+Preview jest rzutowane na powierzchnię visuala, natomiast fizyczna siła chwytu
+na powierzchnię collidera; logiczny offset gracza nie zwiększa więc sztucznie
+momentu obrotowego.
 
 ### `CarryPhysicsProfileSO`
 
 | Pole | Znaczenie |
 |---|---|
 | `controlMode` | Aktywnie używane tryby: `DirectYaw` i `PhysicalPointGrip` |
+| `pointGripLateralForce` | Siła A/D przykładana w fizycznym punkcie chwytu |
+| `pointGripVerticalForce`, `pointGripSpring`, `pointGripDamping` | Pionowa skala, sprężyna i tłumienie indywidualnego chwytu |
+| `pointGripMaxForce` | Limit siły pojedynczego constraintu przed normalizacją carrierów |
+| `maximumGripHeightOffset` | Maksymalna korekta wysokości chwytu sterowana pitch kamery |
+| `projectGripForcesToColliderSurface` | Oddziela logiczny anchor gracza od punktu przyłożenia siły na colliderze |
+| `limitPointGripLiftByCarrierCapacity` | Włącza limit dodatniej siły pionowej na holdera |
+| `pointGripLiftCapacityPerCarrier` | Część całkowitego ciężaru dostępna pojedynczemu holderowi |
+| `limitTilt`, `maximumTiltAngle` | Włącza miękkie ograniczenie przechyłu i jego próg |
+| `tiltRestoringTorque`, `tiltDamping` | Sprężyna oraz tłumienie soft tilt |
+| `softTetherDeadZone`, `softTetherPullSpeed` | Martwa strefa i prędkość korekty gracza do anchora |
+| `hardTetherDistance`, `tetherBreakDelay` | Dystans i czas prowadzące do indywidualnego force release |
+| `preventGroundedUpwardTether` | Nie pozwala tetherowi odrywać uziemionego gracza od podłoża |
 | `mass` | Masa Rigidbody |
 | `linearDrag`, `angularDrag` | Opór liniowy i kątowy |
 | `gripSpring`, `gripDamper` | Starsze parametry grip/fallback |
@@ -250,6 +285,6 @@ nietypowych poziomów i powinien być ustawiony na osiągalnym NavMesh.
 - Naturalność shared-carry nadal zależy od strojenia masy, springów i
   colliderów konkretnego prefaba.
 - NPC shared-carry jest celowo wyłączony.
-- Anchory fallbackowe są wystarczające dla prostych brył; finalne modele
-  powinny dostać jawne punkty.
+- Fallback geometryczny pozostaje dla prostych i legacy prefabów; Wooden Log
+  oraz sześć aktualnych części mostu mają jawne punkty.
 - Rotation offset shared-carry nie przywraca orientacji spawn po dropie.

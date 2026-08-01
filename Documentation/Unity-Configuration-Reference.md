@@ -22,7 +22,7 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 | SO | Pola |
 |---|---|
 | `BaseResourceSO` | identity/prefab/icon, impact surface, durability, carryability, carrier counts, speed/stamina penalties, anchors, rotation offset, physics profile, fuel, destruction recipes |
-| `MountableBridgeComponentSO` | identity/prefab, recipe, bridge type, carry, furnace i carpenter dimensions |
+| `MountableBridgeComponentSO` | identity/prefab, recipe, bridge type, carrier limits, jawne anchory, profil fizyki, furnace i carpenter dimensions |
 | `ProductionRecipeSO` | identity/icon, składniki, typ i ilość wyjścia oraz opcjonalne parametry pieca |
 | `BridgeComponentSO` | identity/final prefab, category, simple assembly i sześć opcjonalnych workflow |
 | `EquippableItemSO` | identity/prefab, slots/two-handed, range, cooldown, combat/resource damage, work power, action profile, impact impulse, movement penalty, repeatability i enum |
@@ -122,6 +122,23 @@ i wyłącza gravity. Nie trzeba ręcznie utrzymywać tego na każdym prefabie.
 Wymagane komponenty analogiczne do zasobu, ale źródłem danych jest
 `MountableBridgeComponentSO`. Collider powinien odpowiadać visualowi produktu,
 a attach points uwzględniać jego rzeczywistą orientację shared-carry.
+
+Aktualne Foundation, Abutment, Main Girder, Cross Beam, Diagonal Bracing i Deck
+Panel używają osobnych profili `PhysicalPointGrip`. Nie przypisuj im wspólnego
+profilu: masa, damping, limit przechyłu i udźwig na carriera są dostrojone do
+konkretnej geometrii.
+
+Każdy z tych SO ma osiem `carryAttachLocalPoints` w kolejności: cztery narożniki,
+przód, prawa strona, tył, lewa strona. `maxCarriers` nadal wynosi `2` albo `3`;
+osiem punktów oznacza pulę możliwych pozycji, nie ośmiu jednoczesnych holderów.
+Standardowy margines logicznego anchora wynosi około `0.60 m` poza colliderem.
+Rampa Abutment używa `0.90 m` oraz `Y = 0.30 m`, aby placement gracza nie
+przecinał pochyłego decku i bocznych belek.
+
+W profilach części pozostaw `projectGripForcesToColliderSurface=true`: preview i
+placement korzystają z logicznego punktu poza modelem, ale siła jest przykładana
+na colliderze. `limitPointGripLiftByCarrierCapacity` musi pozostać aktywne, aby
+pojedynczy holder nie przejmował całego ciężaru wieloosobowej części.
 
 ## Fabryki i magazyny
 

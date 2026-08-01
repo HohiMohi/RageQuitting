@@ -561,7 +561,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2c6e9f2d9dd5f8fad1e3b5f2b8c9da2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SharedCarryPhysicsBody
-  profile: {fileID: 11400000, guid: e4e8fbf4f1f17a8fcf3d5d7e4e0b1c24, type: 2}
+  profile: {fileID: 11400000, guid: a1f0d7e934b54ec58aeb1a47cd209003, type: 2}
   defaultMass: 20
   defaultLinearDrag: 1.5
   defaultAngularDrag: 4

@@ -33,10 +33,15 @@ MonoBehaviour:
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints:
-  - {x: -1.15, y: 0.55, z: 0}
-  - {x: 1.15, y: 0.55, z: 0}
-  - {x: 0, y: 0.55, z: -1.5}
-  carryPhysicsProfile: {fileID: 0}
+  - {x: -2.1, y: 0.3, z: -2.5}
+  - {x: 2.1, y: 0.3, z: -2.5}
+  - {x: 2.1, y: 0.3, z: 2.5}
+  - {x: -2.1, y: 0.3, z: 2.5}
+  - {x: 0, y: 0.3, z: -2.5}
+  - {x: 2.1, y: 0.3, z: 0}
+  - {x: 0, y: 0.3, z: 2.5}
+  - {x: -2.1, y: 0.3, z: 0}
+  carryPhysicsProfile: {fileID: 11400000, guid: a1f0d7e934b54ec58aeb1a47cd209002, type: 2}
   meltingPoint: 0
   combustionTemperature: 0
   neededProgress: 0

@@ -32,8 +32,16 @@ MonoBehaviour:
   sharedCarryUnderstaffedStaminaDrainPerSecond: 1
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
-  carryAttachLocalPoints: []
-  carryPhysicsProfile: {fileID: 0}
+  carryAttachLocalPoints:
+  - {x: -1.1, y: 0.5, z: -1.1}
+  - {x: 1.1, y: 0.5, z: -1.1}
+  - {x: 1.1, y: 0.5, z: 1.1}
+  - {x: -1.1, y: 0.5, z: 1.1}
+  - {x: 0, y: 0.5, z: -1.1}
+  - {x: 1.1, y: 0.5, z: 0}
+  - {x: 0, y: 0.5, z: 1.1}
+  - {x: -1.1, y: 0.5, z: 0}
+  carryPhysicsProfile: {fileID: 11400000, guid: a1f0d7e934b54ec58aeb1a47cd209001, type: 2}
   meltingPoint: 0
   combustionTemperature: 0
   neededProgress: 0
