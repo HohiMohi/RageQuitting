@@ -32,6 +32,12 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private bool pickedUpObjectSelfPositioned = false;
     private bool sharedCarryMovementActive = false;
     private Vector3 sharedCarryAttachLocalPoint = Vector3.zero;
+    private Vector3 sharedCarryBaseAttachLocalPoint = Vector3.zero;
+    private Vector3 sharedCarryOrbitPivotLocalPoint = Vector3.zero;
+    private float sharedCarryPredictedOrbitAngle;
+    private float sharedCarryAuthoritativeOrbitAngle;
+    private float sharedCarryGripHeightInput;
+    private SharedCarryPhysicsBody sharedCarryPhysicsBody;
     private int minAmountOfPlayersNeeded = 0;
     private int currentAmountOfPlayersSupporting = 0;
     private float holdedItemMovementSpeedPenalty = 0;
@@ -40,6 +46,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private float sharedCarryUnderstaffedStaminaDrainPerSecond;
 
     public bool IsSharedCarryMovementActive => sharedCarryMovementActive && _pickedUpGameObject != null;
+    public bool IsPhysicalPointGripActive => IsSharedCarryMovementActive && sharedCarryPhysicsBody != null
+        && sharedCarryPhysicsBody.ControlMode == SharedCarryControlMode.PhysicalPointGrip;
     public bool HasPickedUpObject => _pickedUpGameObject != null;
     public bool IsHoldingObject => _pickedUpGameObject != null;
     public bool IsHoldingDownedPlayer => _pickedUpGameObject != null && _pickedUpGameObject.TryGetComponent(out DownedPlayerCarryable _);
@@ -56,6 +64,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     public event EventHandler OnHeldObjectChanged;
     public event EventHandler OnHeldObjectForcedRelease;
     public event EventHandler OnCurrentTargetChanged;
+    public event Action<SharedCarryPickupRejectedEventArgs> OnSharedCarryPickupRejected;
     public MonoBehaviour CurrentTarget => _currentTarget;
     public class UpdateHoldedItemMovementSpeedPenaltyEventArgs : EventArgs
     {
@@ -208,6 +217,13 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         pickedUpObjectSelfPositioned = selfPositioned;
         sharedCarryMovementActive = useSharedCarryMovement;
         sharedCarryAttachLocalPoint = attachLocalPoint;
+        sharedCarryBaseAttachLocalPoint = attachLocalPoint;
+        sharedCarryPredictedOrbitAngle = 0f;
+        sharedCarryAuthoritativeOrbitAngle = 0f;
+        sharedCarryPhysicsBody = useSharedCarryMovement ? pickUpObject.GetComponent<SharedCarryPhysicsBody>() : null;
+        sharedCarryOrbitPivotLocalPoint = useSharedCarryMovement
+            ? SharedCarryAttachmentUtility.GetLocalColliderBounds(pickUpObject.transform).center
+            : Vector3.zero;
         ClearSharedCarryStaminaLoad();
         SetHoldedItemProperties(pIckableObject);
 
@@ -263,6 +279,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         pickedUpObjectSelfPositioned = false;
         sharedCarryMovementActive = false;
         sharedCarryAttachLocalPoint = Vector3.zero;
+        ClearSharedCarryOrbitState();
         ClearSharedCarryStaminaLoad();
         SetHoldedItemProperties(null);
         OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
@@ -288,6 +305,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             pickedUpObjectSelfPositioned = false;
             sharedCarryMovementActive = false;
             sharedCarryAttachLocalPoint = Vector3.zero;
+            ClearSharedCarryOrbitState();
             ClearSharedCarryStaminaLoad();
 
             // Position it slightly in front of the player to avoid physics clipping/stuck
@@ -391,14 +409,71 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         transform.position = worldPosition;
     }
 
-    public void SubmitSharedCarryInput(Vector3 worldTranslationInput, float yawInput)
+    public void NotifySharedCarryPickupRejected(MonoBehaviour target, SharedCarryPickupFailureReason reason)
+    {
+        OnSharedCarryPickupRejected?.Invoke(new SharedCarryPickupRejectedEventArgs(target, reason));
+    }
+
+    public void SubmitSharedCarryInput(Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput, float gripHeightInput)
     {
         if (!IsSharedCarryMovementActive || !_pickedUpGameObject.TryGetComponent(out ISharedCarryObject sharedCarryObject))
         {
             return;
         }
 
-        sharedCarryObject.SubmitSharedCarryInput(worldTranslationInput, yawInput);
+        sharedCarryGripHeightInput = Mathf.Clamp(gripHeightInput, -1f, 1f);
+        sharedCarryObject.SubmitSharedCarryInput(worldTranslationInput, worldLateralInput, directYawInput, sharedCarryGripHeightInput);
+    }
+
+    public void PredictSharedCarryOrbit(Vector3 worldLateralInput, float deltaTime)
+    {
+        if (!IsSharedCarryMovementActive || sharedCarryPhysicsBody == null
+            || sharedCarryPhysicsBody.ControlMode != SharedCarryControlMode.SpatialOrbit)
+        {
+            return;
+        }
+
+        float tangentialInput = SharedCarryAttachmentUtility.GetTangentialInput(
+            _pickedUpGameObject.transform,
+            sharedCarryAttachLocalPoint,
+            sharedCarryOrbitPivotLocalPoint,
+            worldLateralInput);
+        float maxAngle = sharedCarryPhysicsBody.OrbitArcDegrees;
+        sharedCarryPredictedOrbitAngle = Mathf.Clamp(
+            sharedCarryPredictedOrbitAngle + tangentialInput * sharedCarryPhysicsBody.OrbitAngularSpeed * deltaTime,
+            -maxAngle,
+            maxAngle);
+        sharedCarryAttachLocalPoint = SharedCarryAttachmentUtility.CalculateOrbitAttachLocalPoint(
+            _pickedUpGameObject.transform,
+            sharedCarryBaseAttachLocalPoint,
+            sharedCarryOrbitPivotLocalPoint,
+            sharedCarryPredictedOrbitAngle);
+    }
+
+    public void ReconcileSharedCarryOrbit(float authoritativeAngle)
+    {
+        if (!IsSharedCarryMovementActive || sharedCarryPhysicsBody == null
+            || sharedCarryPhysicsBody.ControlMode != SharedCarryControlMode.SpatialOrbit)
+        {
+            return;
+        }
+
+        sharedCarryAuthoritativeOrbitAngle = Mathf.Clamp(
+            authoritativeAngle,
+            -sharedCarryPhysicsBody.OrbitArcDegrees,
+            sharedCarryPhysicsBody.OrbitArcDegrees);
+        float difference = Mathf.Abs(sharedCarryPredictedOrbitAngle - sharedCarryAuthoritativeOrbitAngle);
+        if (difference > 12f)
+        {
+            sharedCarryPredictedOrbitAngle = sharedCarryAuthoritativeOrbitAngle;
+        }
+        else if (difference > 1f)
+        {
+            sharedCarryPredictedOrbitAngle = Mathf.MoveTowards(
+                sharedCarryPredictedOrbitAngle,
+                sharedCarryAuthoritativeOrbitAngle,
+                sharedCarryPhysicsBody.OrbitPredictionCorrectionSpeed * 0.1f);
+        }
     }
 
     public void UpdateSharedCarryLoad(float movementSpeedPenalty, int playerHolderCount, int requiredPlayerCount, float understaffedStaminaDrainPerSecond)
@@ -436,9 +511,52 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
         EnsureCarryBodyAnchor();
         Vector3 targetAnchorPosition = _pickedUpGameObject.transform.TransformPoint(sharedCarryAttachLocalPoint);
+        if (sharedCarryPhysicsBody != null && sharedCarryPhysicsBody.ControlMode == SharedCarryControlMode.PhysicalPointGrip)
+        {
+            targetAnchorPosition -= Vector3.up * sharedCarryGripHeightInput * sharedCarryPhysicsBody.MaximumGripHeightOffset;
+            return targetAnchorPosition - carryBodyAnchor.position;
+        }
         Vector3 correction = targetAnchorPosition - carryBodyAnchor.position;
         correction.y = 0f;
         return correction;
+    }
+
+    public Vector3 GetSharedCarryTetherMovement(float deltaTime, float maximumHorizontalSpeed, bool isGrounded)
+    {
+        if (!IsSharedCarryMovementActive || sharedCarryPhysicsBody == null
+            || sharedCarryPhysicsBody.ControlMode != SharedCarryControlMode.PhysicalPointGrip)
+        {
+            return Vector3.zero;
+        }
+
+        Vector3 correction = GetSharedCarryAnchorCorrection();
+        float distance = correction.magnitude;
+        if (distance <= sharedCarryPhysicsBody.SoftTetherDeadZone)
+        {
+            return Vector3.zero;
+        }
+
+        float correctedDistance = distance - sharedCarryPhysicsBody.SoftTetherDeadZone;
+        Vector3 correctionVelocity = correction.normalized * Mathf.Min(
+            sharedCarryPhysicsBody.SoftTetherPullSpeed,
+            correctedDistance / Mathf.Max(deltaTime, 0.0001f));
+        Rigidbody carriedBody = sharedCarryPhysicsBody.Body;
+        if (carriedBody != null)
+        {
+            correctionVelocity += carriedBody.GetPointVelocity(
+                _pickedUpGameObject.transform.TransformPoint(sharedCarryAttachLocalPoint))
+                * sharedCarryPhysicsBody.SoftTetherVelocityInfluence;
+        }
+
+        if (isGrounded && sharedCarryPhysicsBody.PreventGroundedUpwardTether)
+        {
+            correctionVelocity.y = Mathf.Min(0f, correctionVelocity.y);
+        }
+
+        Vector3 horizontalVelocity = Vector3.ProjectOnPlane(correctionVelocity, Vector3.up);
+        horizontalVelocity = Vector3.ClampMagnitude(horizontalVelocity, Mathf.Max(0f, maximumHorizontalSpeed));
+        correctionVelocity = horizontalVelocity + Vector3.up * correctionVelocity.y;
+        return correctionVelocity * deltaTime;
     }
 
     public IInteractableNew GetCurrentInteractable()
@@ -633,6 +751,16 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         sharedCarryPlayerHolderCount = 0;
         sharedCarryRequiredPlayerCount = 0;
         sharedCarryUnderstaffedStaminaDrainPerSecond = 0f;
+    }
+
+    private void ClearSharedCarryOrbitState()
+    {
+        sharedCarryBaseAttachLocalPoint = Vector3.zero;
+        sharedCarryOrbitPivotLocalPoint = Vector3.zero;
+        sharedCarryPredictedOrbitAngle = 0f;
+        sharedCarryAuthoritativeOrbitAngle = 0f;
+        sharedCarryGripHeightInput = 0f;
+        sharedCarryPhysicsBody = null;
     }
 
     private float CalculateMovementSpeedPenalty()

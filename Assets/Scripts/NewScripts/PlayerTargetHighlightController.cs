@@ -10,12 +10,16 @@ public class PlayerTargetHighlightController : MonoBehaviour
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private Material outlineMaterial;
     [SerializeField] private Color outlineColor = Color.white;
+    [SerializeField] private Color unavailableOutlineColor = Color.red;
     [SerializeField, Range(0f, 8f)] private float outlineWidth = 3f;
     [SerializeField, Min(0.01f)] private float fadeInDuration = 0.12f;
     [SerializeField, Min(0.01f)] private float fadeOutDuration = 0.18f;
+    [SerializeField, Min(0.01f)] private float unavailableFlashDuration = 0.35f;
 
     private readonly List<OutlineTarget> targets = new List<OutlineTarget>();
     private MonoBehaviour currentTarget;
+    private MonoBehaviour unavailableFlashTarget;
+    private float unavailableFlashEndsAt;
 
     private void Awake()
     {
@@ -24,8 +28,21 @@ public class PlayerTargetHighlightController : MonoBehaviour
         lookingAtUi ??= GetComponentInChildren<LookingAtComponentUI>(true);
     }
 
+    private void OnEnable()
+    {
+        if (playerInteraction != null)
+        {
+            playerInteraction.OnSharedCarryPickupRejected += HandleSharedCarryPickupRejected;
+        }
+    }
+
     private void LateUpdate()
     {
+        if (unavailableFlashTarget != null && Time.unscaledTime >= unavailableFlashEndsAt)
+        {
+            unavailableFlashTarget = null;
+        }
+
         MonoBehaviour desiredTarget = GetDesiredTarget();
         if (desiredTarget != currentTarget)
         {
@@ -39,7 +56,10 @@ public class PlayerTargetHighlightController : MonoBehaviour
             float duration = target.IsFadingOut ? fadeOutDuration : fadeInDuration;
             float direction = target.IsFadingOut ? -1f : 1f;
             target.Intensity = Mathf.Clamp01(target.Intensity + direction * deltaTime / duration);
-            target.Apply(outlineColor, outlineWidth);
+            Color color = target.Target == unavailableFlashTarget
+                ? unavailableOutlineColor
+                : outlineColor;
+            target.Apply(color, outlineWidth);
 
             if (target.IsFadingOut && target.Intensity <= 0f)
             {
@@ -57,6 +77,11 @@ public class PlayerTargetHighlightController : MonoBehaviour
             return null;
         }
 
+        if (unavailableFlashTarget != null)
+        {
+            return unavailableFlashTarget;
+        }
+
         MonoBehaviour target = playerInteraction.CurrentTarget;
         return target != null &&
                lookingAtUi != null &&
@@ -64,6 +89,20 @@ public class PlayerTargetHighlightController : MonoBehaviour
                lookingAtUi.CurrentTargetHasActionablePrompt
             ? target
             : null;
+    }
+
+    public void FlashUnavailable(MonoBehaviour target = null)
+    {
+        unavailableFlashTarget = target != null ? target : playerInteraction != null ? playerInteraction.CurrentTarget : null;
+        unavailableFlashEndsAt = Time.unscaledTime + unavailableFlashDuration;
+    }
+
+    private void HandleSharedCarryPickupRejected(SharedCarryPickupRejectedEventArgs args)
+    {
+        if (args.Reason == SharedCarryPickupFailureReason.NoAvailableAnchor)
+        {
+            FlashUnavailable(args.Target);
+        }
     }
 
     private void ChangeTarget(MonoBehaviour target)
@@ -95,7 +134,13 @@ public class PlayerTargetHighlightController : MonoBehaviour
 
     private void OnDisable()
     {
+        if (playerInteraction != null)
+        {
+            playerInteraction.OnSharedCarryPickupRejected -= HandleSharedCarryPickupRejected;
+        }
+
         currentTarget = null;
+        unavailableFlashTarget = null;
         foreach (OutlineTarget target in targets)
         {
             target.Dispose();

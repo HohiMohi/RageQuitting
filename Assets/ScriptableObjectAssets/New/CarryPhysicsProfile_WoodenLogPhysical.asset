@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1b5d8f1c8cc4e7e9c0d2a4f1a7b8c91, type: 3}
+  m_Name: CarryPhysicsProfile_WoodenLogPhysical
+  m_EditorClassIdentifier: Assembly-CSharp::CarryPhysicsProfileSO
+  controlMode: 2
+  orbitArcDegrees: 45
+  orbitAngularSpeed: 45
+  spatialLateralForce: 180
+  orbitPredictionCorrectionSpeed: 180
+  pointGripLateralForce: 90
+  pointGripVerticalForce: 900
+  pointGripSpring: 180
+  pointGripDamping: 45
+  pointGripMaxForce: 700
+  maximumGripHeightOffset: 0.2
+  projectGripForcesToColliderSurface: 1
+  limitPointGripLiftByCarrierCapacity: 1
+  pointGripLiftCapacityPerCarrier: 0.55
+  stabilizeLongAxisRoll: 1
+  rollLongAxisLocal: {x: 0, y: 1, z: 0}
+  rollReferenceUpLocal: {x: 1, y: 0, z: 0}
+  rollStabilizingTorque: 900
+  rollDamping: 90
+  maximumRollStabilizingTorque: 500
+  compensatePointGripRoll: 1
+  pointGripRollCompensation: 1
+  maximumPointGripRollCompensationTorque: 500
+  limitTilt: 0
+  maximumTiltAngle: 35
+  tiltRestoringTorque: 120
+  tiltDamping: 18
+  softTetherDeadZone: 0.08
+  softTetherPullSpeed: 3.6
+  softTetherVelocityInfluence: 0.1
+  preventGroundedUpwardTether: 1
+  hardTetherDistance: 1.6
+  tetherBreakDelay: 0.35
+  mass: 20
+  linearDrag: 1.5
+  angularDrag: 4
+  gripSpring: 900
+  gripDamper: 90
+  maxGripForce: 1800
+  maxGripTorque: 90
+  maxGripDistance: 1.5
+  maxVelocity: 3.6
+  maxAngularVelocity: 1.2
+  useGravity: 1
+  allowYawRotation: 1
+  movementForce: 450
+  movementDamper: 65
+  sharedCarryYawTorque: 20
+  horizontalConstraintSpring: 140
+  horizontalConstraintDampingRatio: 1.05
+  maxHorizontalConstraintForce: 650
+  horizontalConstraintDeadZone: 0.03
+  horizontalConstraintForceResponse: 18
+  maxHolderAnchorVelocity: 8
+  verticalSupportSpring: 220
+  verticalSupportDampingRatio: 1.1
+  maxVerticalSupportForce: 1600

@@ -123,7 +123,11 @@ flowchart TD
 - Jeśli najbliższy placement jest zablokowany, próbuje kolejnych.
 - Pierwszy holder prostuje obiekt do yaw i stosuje rotation offset SO.
 - Holderzy nie kolidują z własnym obiektem; osoby postronne i świat nadal tak.
-- W/S wysyła translację, A/D osobny input yaw.
+- `DirectYaw`: W/S wysyła centralną translację, a A/D osobny input yaw.
+- `PhysicalPointGrip`: siły są przykładane w punktach chwytu; A/D generuje
+  fizyczną siłę boczną, a pitch kamery reguluje wysokość chwytu.
+- `Wooden Log` używa dedykowanego profilu `PhysicalPointGrip`; części mostu
+  zachowują obecnie `DirectYaw`.
 - NPC shared-carry jest obecnie wyłączony globalnym feature gate, ale kod
   pozostaje.
 
@@ -131,6 +135,7 @@ flowchart TD
 
 | Pole | Znaczenie |
 |---|---|
+| `controlMode` | Aktywnie używane tryby: `DirectYaw` i `PhysicalPointGrip` |
 | `mass` | Masa Rigidbody |
 | `linearDrag`, `angularDrag` | Opór liniowy i kątowy |
 | `gripSpring`, `gripDamper` | Starsze parametry grip/fallback |

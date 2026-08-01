@@ -15,7 +15,6 @@ MonoBehaviour:
   resourceName: Wooden Log
   resourcePrefab: {fileID: 3729975646768033361, guid: 38d1b14c2ce88df4e8941f8607432eb9, type: 3}
   icon: {fileID: 21300000, guid: 751aa1b6637101946b2fdbb7aa27d6ad, type: 3}
-  impactSurfaceType: 1
   baseResourceDestructionRecipeArray:
   - finalProductBaseResourceSO: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
     neededEquippableItemType: 1
@@ -24,6 +23,11 @@ MonoBehaviour:
       amount: 1
     spawnOffsets: []
     fallbackScatterRadius: 0.35
+    scatterSpawnOffsets: 0
+    spawnOffsetScatterRadius: 0
+    scatterVelocityMin: 0
+    scatterVelocityMax: 0
+    scatterUpwardBias: 0
   - finalProductBaseResourceSO: {fileID: 11400000, guid: f792a6c42b896df4eb69145760225d9a, type: 2}
     neededEquippableItemType: 0
     products:
@@ -31,6 +35,11 @@ MonoBehaviour:
       amount: 1
     spawnOffsets: []
     fallbackScatterRadius: 0.35
+    scatterSpawnOffsets: 0
+    spawnOffsetScatterRadius: 0
+    scatterVelocityMin: 0
+    scatterVelocityMax: 0
+    scatterUpwardBias: 0
   - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
     neededEquippableItemType: 7
     products:
@@ -38,8 +47,13 @@ MonoBehaviour:
       amount: 1
     spawnOffsets: []
     fallbackScatterRadius: 0.35
+    scatterSpawnOffsets: 0
+    spawnOffsetScatterRadius: 0
+    scatterVelocityMin: 0
+    scatterVelocityMax: 0
+    scatterUpwardBias: 0
   resourceDurability: 50
-  movementSpeedPenalty: 0
+  movementSpeedPenalty: 0.1
   canBeCarried: 1
   minAmountOfPlayersNeeded: 2
   allowMultipleCarriers: 1
@@ -50,8 +64,15 @@ MonoBehaviour:
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints:
-  - {x: 0, y: -0.85, z: 0}
-  - {x: 0, y: 2.85, z: 0}
+  - {x: 0, y: -1.25, z: -1.75}
+  - {x: 0, y: -1.25, z: 1.75}
+  - {x: 0, y: 3.25, z: -1.75}
+  - {x: 0, y: 3.25, z: 1.75}
+  - {x: 0, y: -1.25, z: 0}
+  - {x: 0, y: 3.25, z: 0}
+  - {x: 0, y: 1, z: -1.75}
+  - {x: 0, y: 1, z: 1.75}
   sharedCarryRotationOffsetEuler: {x: 0, y: 0, z: 90}
-  carryPhysicsProfile: {fileID: 0}
+  carryPhysicsProfile: {fileID: 11400000, guid: d4f2c817aa794d44b876e3cbf874a901, type: 2}
   furnaceFuelAmount: 0
+  impactSurfaceType: 1

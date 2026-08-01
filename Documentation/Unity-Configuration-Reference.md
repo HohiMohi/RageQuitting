@@ -27,7 +27,7 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 | `BridgeComponentSO` | identity/final prefab, category, simple assembly i sześć opcjonalnych workflow |
 | `EquippableItemSO` | identity/prefab, slots/two-handed, range, cooldown, combat/resource damage, work power, action profile, impact impulse, movement penalty, repeatability i enum |
 | `EquippableActionProfileSO` | fazy akcji, pozy narzędzia/rąk, movement multiplier, camera kick, feedback strength i swing audio |
-| `CarryPhysicsProfileSO` | Rigidbody, movement, yaw, horizontal constraint i vertical support |
+| `CarryPhysicsProfileSO` | Tryb `DirectYaw`/`PhysicalPointGrip`, Rigidbody, movement, point grip/yaw, constraints i vertical support |
 | `ExternalImpulseProfileSO` | initial velocity, decay, gravity, control, clamps i forced drop |
 | `NPCDefinitionSO` | identity, faction, behavior, prefab/visual, stats i AI ranges |
 | `NPCSpawnGroupSO` | nazwa, waga, limit, ważone definicje, tryb `All/Any` i warunki |

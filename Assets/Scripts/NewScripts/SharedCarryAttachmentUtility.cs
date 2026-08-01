@@ -22,8 +22,26 @@ public static class SharedCarryAttachmentUtility
         System.Func<int, bool> isOccupied,
         System.Func<int, Vector3> getAttachLocalPoint)
     {
-        List<AttachPointCandidate> candidates = new List<AttachPointCandidate>();
         if (carriedObject == null || attachPointCount <= 0 || isOccupied == null || getAttachLocalPoint == null)
+        {
+            return new List<int>();
+        }
+
+        return GetFreeAttachPointIndicesByDistance(
+            actorAnchorWorldPosition,
+            attachPointCount,
+            isOccupied,
+            index => carriedObject.TransformPoint(getAttachLocalPoint(index)));
+    }
+
+    public static List<int> GetFreeAttachPointIndicesByDistance(
+        Vector3 actorAnchorWorldPosition,
+        int attachPointCount,
+        System.Func<int, bool> isOccupied,
+        System.Func<int, Vector3> getAttachWorldPoint)
+    {
+        List<AttachPointCandidate> candidates = new List<AttachPointCandidate>();
+        if (attachPointCount <= 0 || isOccupied == null || getAttachWorldPoint == null)
         {
             return new List<int>();
         }
@@ -35,7 +53,7 @@ public static class SharedCarryAttachmentUtility
                 continue;
             }
 
-            Vector3 worldPoint = carriedObject.TransformPoint(getAttachLocalPoint(index));
+            Vector3 worldPoint = getAttachWorldPoint(index);
             candidates.Add(new AttachPointCandidate(index, (worldPoint - actorAnchorWorldPosition).sqrMagnitude));
         }
 
@@ -52,6 +70,61 @@ public static class SharedCarryAttachmentUtility
         }
 
         return sortedIndices;
+    }
+
+    public static bool TrySelectSafeAttachPoint(
+        Transform playerRoot,
+        CharacterController controller,
+        Transform carriedObject,
+        Vector3 carriedPosition,
+        Quaternion carriedRotation,
+        Vector3 actorAnchorWorldPosition,
+        Vector3 bodyAnchorLocalOffset,
+        float maxVerticalPlacementDelta,
+        int attachPointCount,
+        System.Func<int, bool> isOccupied,
+        System.Func<int, Vector3> getAttachLocalPoint,
+        out int attachPointIndex,
+        out Vector3 attachLocalPoint,
+        out Vector3 attachWorldPoint,
+        out Vector3 safePlayerRootPosition)
+    {
+        attachPointIndex = -1;
+        attachLocalPoint = Vector3.zero;
+        attachWorldPoint = Vector3.zero;
+        safePlayerRootPosition = playerRoot != null ? playerRoot.position : Vector3.zero;
+        if (playerRoot == null || controller == null || carriedObject == null)
+        {
+            return false;
+        }
+
+        foreach (int candidateIndex in GetFreeAttachPointIndicesByDistance(
+                     actorAnchorWorldPosition,
+                     attachPointCount,
+                     isOccupied,
+                     index => TransformLocalPoint(carriedObject, carriedPosition, carriedRotation, getAttachLocalPoint(index))))
+        {
+            Vector3 candidateLocalPoint = getAttachLocalPoint(candidateIndex);
+            Vector3 candidateWorldPoint = TransformLocalPoint(carriedObject, carriedPosition, carriedRotation, candidateLocalPoint);
+            if (!TryFindSafePlayerRootPosition(
+                    playerRoot,
+                    controller,
+                    carriedObject,
+                    candidateWorldPoint,
+                    bodyAnchorLocalOffset,
+                    maxVerticalPlacementDelta,
+                    out safePlayerRootPosition))
+            {
+                continue;
+            }
+
+            attachPointIndex = candidateIndex;
+            attachLocalPoint = candidateLocalPoint;
+            attachWorldPoint = candidateWorldPoint;
+            return true;
+        }
+
+        return false;
     }
 
     public static Bounds GetLocalColliderBounds(Transform root)
@@ -119,6 +192,44 @@ public static class SharedCarryAttachmentUtility
         return bounds.center + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
     }
 
+    public static Vector3 CalculateOrbitAttachLocalPoint(Transform root, Vector3 baseAttachLocalPoint, Vector3 pivotLocalPoint, float orbitAngleDegrees)
+    {
+        if (root == null || Mathf.Approximately(orbitAngleDegrees, 0f))
+        {
+            return baseAttachLocalPoint;
+        }
+
+        Vector3 pivotWorld = root.TransformPoint(pivotLocalPoint);
+        Vector3 baseWorld = root.TransformPoint(baseAttachLocalPoint);
+        Vector3 offset = baseWorld - pivotWorld;
+        Vector3 horizontalOffset = Vector3.ProjectOnPlane(offset, Vector3.up);
+        if (horizontalOffset.sqrMagnitude < 0.0001f)
+        {
+            return baseAttachLocalPoint;
+        }
+
+        Vector3 rotatedHorizontalOffset = Quaternion.AngleAxis(orbitAngleDegrees, Vector3.up) * horizontalOffset;
+        Vector3 targetWorld = pivotWorld + rotatedHorizontalOffset + Vector3.up * offset.y;
+        return root.InverseTransformPoint(targetWorld);
+    }
+
+    public static float GetTangentialInput(Transform root, Vector3 attachLocalPoint, Vector3 pivotLocalPoint, Vector3 worldLateralInput)
+    {
+        if (root == null || worldLateralInput.sqrMagnitude < 0.0001f)
+        {
+            return 0f;
+        }
+
+        Vector3 radial = Vector3.ProjectOnPlane(root.TransformPoint(attachLocalPoint) - root.TransformPoint(pivotLocalPoint), Vector3.up);
+        if (radial.sqrMagnitude < 0.0001f)
+        {
+            return 0f;
+        }
+
+        Vector3 tangent = Vector3.Cross(Vector3.up, radial.normalized);
+        return Mathf.Clamp(Vector3.Dot(Vector3.ClampMagnitude(worldLateralInput, 1f), tangent), -1f, 1f);
+    }
+
     public static void NormalizeSharedCarryOrientation(Rigidbody body)
     {
         NormalizeSharedCarryOrientation(body, Vector3.zero);
@@ -131,9 +242,32 @@ public static class SharedCarryAttachmentUtility
             return;
         }
 
-        float lowestPointBeforeRotation = GetLowestColliderPointY(body.transform);
+        CalculateNormalizedSharedCarryPose(body.transform, body.position, body.rotation, rotationOffsetEuler, out Vector3 targetPosition, out Quaternion targetRotation);
+        Transform bodyTransform = body.transform;
+        bodyTransform.SetPositionAndRotation(targetPosition, targetRotation);
+        Physics.SyncTransforms();
+
+        body.angularVelocity = Vector3.zero;
+        body.linearVelocity = Vector3.zero;
+    }
+
+    public static void CalculateNormalizedSharedCarryPose(
+        Transform root,
+        Vector3 currentPosition,
+        Quaternion currentRotation,
+        Vector3 rotationOffsetEuler,
+        out Vector3 targetPosition,
+        out Quaternion targetRotation)
+    {
+        targetPosition = currentPosition;
+        targetRotation = currentRotation;
+        if (root == null)
+        {
+            return;
+        }
+
         Quaternion rotationOffset = Quaternion.Euler(rotationOffsetEuler);
-        Quaternion orientationWithoutOffset = body.rotation * Quaternion.Inverse(rotationOffset);
+        Quaternion orientationWithoutOffset = currentRotation * Quaternion.Inverse(rotationOffset);
         Vector3 heading = Vector3.ProjectOnPlane(orientationWithoutOffset * Vector3.forward, Vector3.up);
         if (heading.sqrMagnitude < 0.0001f)
         {
@@ -142,20 +276,40 @@ public static class SharedCarryAttachmentUtility
 
         Quaternion yawRotation = heading.sqrMagnitude >= 0.0001f
             ? Quaternion.LookRotation(heading.normalized, Vector3.up)
-            : Quaternion.Euler(0f, body.rotation.eulerAngles.y, 0f);
-        Transform bodyTransform = body.transform;
-        bodyTransform.rotation = yawRotation * rotationOffset;
-        Physics.SyncTransforms();
+            : Quaternion.Euler(0f, currentRotation.eulerAngles.y, 0f);
+        targetRotation = yawRotation * rotationOffset;
 
-        float lowestPointAfterRotation = GetLowestColliderPointY(bodyTransform);
+        Bounds localBounds = GetLocalColliderBounds(root);
+        Vector3 scale = root.lossyScale;
+        float lowestPointBeforeRotation = GetLowestBoundsPointY(localBounds, currentPosition, currentRotation, scale);
+        float lowestPointAfterRotation = GetLowestBoundsPointY(localBounds, currentPosition, targetRotation, scale);
         if (float.IsFinite(lowestPointBeforeRotation) && float.IsFinite(lowestPointAfterRotation))
         {
-            bodyTransform.position += Vector3.up * (lowestPointBeforeRotation - lowestPointAfterRotation);
-            Physics.SyncTransforms();
+            targetPosition += Vector3.up * (lowestPointBeforeRotation - lowestPointAfterRotation);
+        }
+    }
+
+    private static Vector3 TransformLocalPoint(Transform root, Vector3 position, Quaternion rotation, Vector3 localPoint)
+    {
+        return position + rotation * Vector3.Scale(localPoint, root.lossyScale);
+    }
+
+    private static float GetLowestBoundsPointY(Bounds bounds, Vector3 position, Quaternion rotation, Vector3 scale)
+    {
+        float lowestPoint = float.PositiveInfinity;
+        for (int x = -1; x <= 1; x += 2)
+        {
+            for (int y = -1; y <= 1; y += 2)
+            {
+                for (int z = -1; z <= 1; z += 2)
+                {
+                    Vector3 localPoint = bounds.center + Vector3.Scale(bounds.extents, new Vector3(x, y, z));
+                    lowestPoint = Mathf.Min(lowestPoint, (position + rotation * Vector3.Scale(localPoint, scale)).y);
+                }
+            }
         }
 
-        body.angularVelocity = Vector3.zero;
-        body.linearVelocity = Vector3.zero;
+        return lowestPoint;
     }
 
     private static float GetLowestColliderPointY(Transform root)

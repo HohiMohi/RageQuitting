@@ -55,7 +55,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.2, g: 0.2, b: 0.2, a: 0.6}
@@ -244,7 +244,7 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -459,6 +459,7 @@ GameObject:
   - component: {fileID: 8697235149423384611}
   - component: {fileID: 4275400787586022788}
   - component: {fileID: 2238749534897486511}
+  - component: {fileID: 5284044091671661184}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -790,11 +791,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51e0a828757d080489bac090692b9b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerActionController
+  ShowTopMostFoldoutHeaderGroup: 1
   baseActionRange: 0.9
   baseActionCooldown: 1
   baseRepeatAction: 0
   baseActionDamage: 5
   serverActionRangeTolerance: 0.15
+  serverCombatImpactTimingTolerance: 0.1
   actionTransformHolder: {fileID: 1382537172534668702}
 --- !u!114 &5297249238941053112
 MonoBehaviour:
@@ -811,6 +814,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   defaultImpactEffectPrefab: {fileID: 0}
   fallbackEffectLifetime: 1.5
+  surfaceFeedback: []
+  fallbackAudioVolume: 0.55
 --- !u!114 &6339126401750945372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -919,6 +924,8 @@ MonoBehaviour:
   playerHealth: {fileID: 6339126401750945372}
   playerInventory: {fileID: 4354115525238422459}
   playerTurnFeedback: {fileID: 0}
+  cameraFeedbackComposer: {fileID: 0}
+  toolAudioSource: {fileID: 0}
   firstPersonRenderLayer: 30
   firstPersonNearClipPlane: 0.01
   rootLocalPosition: {x: 0, y: -0.24, z: 0.95}
@@ -952,6 +959,8 @@ MonoBehaviour:
   toolLocalScale: {x: 0.5, y: 0.5, z: 0.5}
   toolSwingPositionOffset: {x: 0, y: 0.02, z: 0.08}
   toolSwingEulerOffset: {x: 24, y: -8, z: -14}
+  twoHandedGripBlendSpeed: 14
+  twoHandedHandEulerOffset: {x: 0, y: 0, z: 90}
 --- !u!114 &8127641093237516445
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1184,9 +1193,11 @@ MonoBehaviour:
   playerHealth: {fileID: 6339126401750945372}
   outlineMaterial: {fileID: 2100000, guid: c093db2aaac6c134c902f1e1b5145e9f, type: 2}
   outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  unavailableOutlineColor: {r: 1, g: 0, b: 0, a: 1}
   outlineWidth: 3
   fadeInDuration: 0.12
   fadeOutDuration: 0.18
+  unavailableFlashDuration: 0.35
 --- !u!114 &2238749534897486511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1200,6 +1211,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerExternalImpulseController
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &5284044091671661184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 995b40581feb2534c8b4b383af63c1e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSharedCarryAnchorPreview
+  playerInteraction: {fileID: 0}
+  playerHealth: {fileID: 0}
+  markerColor: {r: 0.2, g: 1, b: 0.25, a: 0.72}
+  markerDiameter: 0.18
+  surfacePadding: 0.02
+  fadeInDuration: 0.12
+  fadeOutDuration: 0.15
+  pulseAmount: 0.05
+  pulseSpeed: 3
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0
@@ -1954,6 +1986,9 @@ MonoBehaviour:
   firstItemNameText: {fileID: 0}
   secondItemSprite: {fileID: 612345907341246897}
   secondItemNameText: {fileID: 0}
+  reservedSlotLabel: TWO-HANDED
+  occupiedSlotTextColor: {r: 1, g: 1, b: 1, a: 1}
+  reservedSlotTextColor: {r: 0.55, g: 0.58, b: 0.6, a: 1}
 --- !u!114 &8831978460269016011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2098,6 +2133,7 @@ MonoBehaviour:
   playerHealth: {fileID: 6339126401750945372}
   respawnAvailableText: Press Interact to respawn
   respawnCountdownFormat: Respawn available in {0:0}s
+  carriedByEnemyText: Carried by enemy
   anchoredPosition: {x: 0, y: 140}
   size: {x: 420, y: 54}
 --- !u!1 &5106807215958939648
