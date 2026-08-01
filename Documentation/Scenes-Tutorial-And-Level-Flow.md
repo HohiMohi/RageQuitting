@@ -45,6 +45,43 @@ Główne strefy:
 Rzeka i meta nie stanowią samodzielnego warunku zakończenia. Victory wynika z
 ukończenia etapów mostu.
 
+### Aktualny układ blockoutu
+
+Mapa ma rozmiar `90 x 90 m`. `Ground` jest wyśrodkowany w `(-5, 0)` i obejmuje
+zakres `X=-50...40`, `Z=-45...45`. Rzeka pozostaje przy `X=8`, ma szerokość
+`12 m` oraz długość `90 m`, dlatego dochodzi do obu krawędzi mapy. Jest
+dekoracyjna i nie ma collidera; fizyczne przejście pomiędzy brzegami zapewnia
+most.
+
+Główne strefy zachodnie tworzą czytelny ciąg `Obóz -> Las -> Fabryki ->
+Jaskinia`:
+
+| Strefa | Przybliżony środek | Uwagi |
+|---|---:|---|
+| Obóz graczy | `(-15, -28)` | Pad `16 x 12 m`, cztery spawn pointy i stojak z narzędziami |
+| Las | `(-22, -7)` | Obszar `24 x 24 m`, sześć początkowych `Wood` |
+| Blast Furnace | `(-30, 10)` | Lewa fabryka, wraz z `Forge_Pad`, markerem i storage |
+| Carpenter Table | `(-14, 10)` | Prawa fabryka, wraz z `Sawmill_Pad`, korbami i storage |
+| Jaskinia | `(-22, 29)` | Wejście od południa, rozmiar blockoutu około `12 x 16 m` |
+
+Północne i południowe żeremie pozostają przy około `(-2.5, 22)` oraz
+`(-2.5, -22)`. Obóz jest odsunięty od południowego żeremia; stojak z
+narzędziami nie powinien nachodzić na jego model ani blokować punktów spawnu.
+
+`TutorialPath_Blockout` prowadzi od północnego wyjścia obozu przez punkty około
+`(-15, -22)`, `(-16, -17)`, `(-22, -7)`, `(-13, -1)` i `(-4, 0)` do placu
+budowy. Po wschodniej stronie osobny odcinek prowadzi od mostu przez metę.
+Segmenty drogi są na warstwie `Ignore Raycast`, nie mają aktywnych colliderów
+fizycznych i są pomijane podczas bake NavMesha. Leśne trigger volumes
+`ForestSpawnExclusion_*` obejmują drogę z poboczem i blokują awaryjny spawn
+`Wood` na jej powierzchni.
+
+Jaskinia zawiera dwie żyły żelaza i dwie żyły węgla. Jej
+`NPCVisitPoint` znajduje się tuż za południowym wejściem, około
+`(-22, 0.05, 22.5)`, dzięki czemu Beaver Scout odwiedza wnętrze zamiast
+powierzchni nad dachem. Po każdej zmianie geometrii lub rozmieszczenia tych
+stref należy ponownie wypiec `Assets/Scenes/Tutorial_scene/NavMesh-Tutorial.asset`.
+
 ### Łańcuch produkcji metalu
 
 Tutorialowy Blast Furnace ma cztery receptury zasobów: paczki gwoździ, zestawy
@@ -54,7 +91,8 @@ sześciu aktywnych rodzajów części mostu.
 
 W kopalni znajduje się `IronResourcePopulationZone` skonfigurowana dla
 `Iron Vein`: minimum `1`, kontrola co `2 s`, cooldown `15 s` i box około
-`12 x 4 x 12 m`. Dwie początkowe żyły dają sześć samorodków; po ich wydobyciu
+`10 x 3.6 x 12 m`. Volume jest zamknięte pod dachem jaskini. Dwie początkowe
+żyły dają sześć samorodków; po ich wydobyciu
 strefa odtwarza kolejną żyłę, aby brak żelaza nie powodował softlocka.
 
 ## Managery wymagane w scenie gameplayowej

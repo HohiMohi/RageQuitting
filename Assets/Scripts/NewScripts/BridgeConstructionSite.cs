@@ -184,6 +184,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         currentStage = BridgeConstructionStage.Complete;
         currentWorkProgress = RequiredWorkProgress;
         ApplyVisualState();
+        bridgeComponent?.RefreshVisualAndColliderState();
     }
 
     public virtual void ApplyAssemblyProgress(float progress)
