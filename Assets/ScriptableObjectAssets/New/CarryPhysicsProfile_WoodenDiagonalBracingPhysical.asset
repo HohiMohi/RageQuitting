@@ -27,22 +27,24 @@ MonoBehaviour:
   controlledYawAssistAccelerationDegrees: 60
   controlledYawIntentDeadZone: 0.1
   projectGripForcesToColliderSurface: 1
+  projectCarrierForcesToLongAxisCenterline: 1
   limitPointGripLiftByCarrierCapacity: 1
   pointGripLiftCapacityPerCarrier: 0.55
-  stabilizeLongAxisRoll: 1
+  stabilizeLongAxisRoll: 0
   rollLongAxisLocal: {x: 0, y: 0, z: 1}
   rollReferenceUpLocal: {x: 0, y: 1, z: 0}
   rollStabilizingTorque: 320
   rollDamping: 70
   maximumRollStabilizingTorque: 300
-  compensatePointGripRoll: 1
+  compensatePointGripRoll: 0
   pointGripRollCompensation: 1
   maximumPointGripRollCompensationTorque: 500
-  limitTilt: 1
+  limitTilt: 0
   maximumTiltAngle: 48
   tiltRestoringTorque: 90
   tiltDamping: 16
   stabilizeWhenFullyStaffed: 1
+  enableFullyStaffedOrientationLeveling: 0
   fullyStaffedLoadDistributionRegularization: 0.08
   fullyStaffedLevelingTorque: 120
   fullyStaffedLevelingDeadZone: 1.5

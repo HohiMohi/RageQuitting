@@ -28,6 +28,7 @@ public class CarryPhysicsProfileSO : ScriptableObject
     [Min(0f)] public float controlledYawAssistAccelerationDegrees = 60f;
     [Range(0f, 1f)] public float controlledYawIntentDeadZone = 0.1f;
     public bool projectGripForcesToColliderSurface = false;
+    public bool projectCarrierForcesToLongAxisCenterline = false;
     public bool limitPointGripLiftByCarrierCapacity = false;
     [Range(0f, 2f)] public float pointGripLiftCapacityPerCarrier = 0.55f;
     [Header("Long Axis Roll Stabilization")]
@@ -47,6 +48,7 @@ public class CarryPhysicsProfileSO : ScriptableObject
 
     [Header("Fully Staffed Stabilization")]
     public bool stabilizeWhenFullyStaffed = false;
+    public bool enableFullyStaffedOrientationLeveling = true;
     [Min(0f)] public float fullyStaffedLoadDistributionRegularization = 0.08f;
     [Min(0f)] public float fullyStaffedLevelingTorque = 240f;
     [Range(0f, 15f)] public float fullyStaffedLevelingDeadZone = 1.5f;

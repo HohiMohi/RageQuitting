@@ -303,7 +303,10 @@ public class SharedCarryPhysicsBody : MonoBehaviour
                 if (i < MaxLoadDistributionHolders)
                 {
                     Vector3 attachPoint = transform.TransformPoint(holders[i].AttachLocalPoint);
-                    physicalGripPointScratch[i] = ResolvePhysicalGripPoint(attachPoint);
+                    Vector3 surfaceGripPoint = ResolvePhysicalGripPoint(attachPoint);
+                    physicalGripPointScratch[i] = ResolveCarrierForceApplicationPoint(
+                        surfaceGripPoint,
+                        worldCenterOfMass);
                 }
             }
         }
@@ -354,12 +357,17 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             Vector3 attachPoint = transform.TransformPoint(holder.AttachLocalPoint);
             Vector3 forceApplicationPoint = i < MaxLoadDistributionHolders
                 ? physicalGripPointScratch[i]
-                : ResolvePhysicalGripPoint(attachPoint);
+                : ResolveCarrierForceApplicationPoint(
+                    ResolvePhysicalGripPoint(attachPoint),
+                    worldCenterOfMass);
             float solvedSupportShare = i < MaxLoadDistributionHolders ? supportShareScratch[i] : equalSupportShare;
             float supportShare = Mathf.Lerp(equalSupportShare, solvedSupportShare, fullyStaffedStabilizationWeight);
             Vector3 gravitySupport = Vector3.up * supportedWeight * supportShare;
             Vector3 anchorVelocity = GetAnchorVelocity3D(holder.BodyAnchor, fixedDeltaTime);
-            Vector3 pointVelocity = body.GetPointVelocity(attachPoint);
+            Vector3 pointVelocity = body.GetPointVelocity(
+                profile != null && profile.projectCarrierForcesToLongAxisCenterline
+                    ? forceApplicationPoint
+                    : attachPoint);
             Vector3 relativeVelocity = anchorVelocity - pointVelocity;
             Vector3 gripConstraintForce = CalculatePointGripConstraintForce(
                 holder.BodyAnchor.position - attachPoint,
@@ -1013,29 +1021,47 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         }
 
         Vector3 residualSupportTorque = -Vector3.ProjectOnPlane(residualPassiveGripTorque, Vector3.up);
-        Quaternion yawRotation = ExtractYawRotation(body.rotation);
-        Quaternion targetRotation = yawRotation * sharedCarryTiltOffset;
-        Quaternion errorRotation = targetRotation * Quaternion.Inverse(body.rotation);
-        errorRotation.ToAngleAxis(out float angle, out Vector3 axis);
-        if (angle > 180f)
+        Vector3 levelingTorque = Vector3.zero;
+        Vector3 tiltDampingTorque = Vector3.zero;
+        if (profile.enableFullyStaffedOrientationLeveling)
         {
-            angle -= 360f;
+            Quaternion yawRotation = ExtractYawRotation(body.rotation);
+            Quaternion targetRotation = yawRotation * sharedCarryTiltOffset;
+            Quaternion errorRotation = targetRotation * Quaternion.Inverse(body.rotation);
+            errorRotation.ToAngleAxis(out float angle, out Vector3 axis);
+            if (angle > 180f)
+            {
+                angle -= 360f;
+            }
+
+            Vector3 levelingAxis = Vector3.ProjectOnPlane(axis, Vector3.up);
+            float levelingError = Mathf.Max(0f, Mathf.Abs(angle) - Mathf.Max(0f, profile.fullyStaffedLevelingDeadZone));
+            levelingTorque = levelingAxis.sqrMagnitude >= SolverEpsilon && levelingError > 0f
+                ? levelingAxis.normalized * Mathf.Sign(angle) * levelingError * Mathf.Deg2Rad
+                    * Mathf.Max(0f, profile.fullyStaffedLevelingTorque)
+                : Vector3.zero;
+            Vector3 tiltAngularVelocity = Vector3.ProjectOnPlane(body.angularVelocity, Vector3.up);
+            tiltDampingTorque = -tiltAngularVelocity * Mathf.Max(0f, profile.fullyStaffedTiltDamping);
         }
 
-        Vector3 levelingAxis = Vector3.ProjectOnPlane(axis, Vector3.up);
-        float levelingError = Mathf.Max(0f, Mathf.Abs(angle) - Mathf.Max(0f, profile.fullyStaffedLevelingDeadZone));
-        Vector3 levelingTorque = levelingAxis.sqrMagnitude >= SolverEpsilon && levelingError > 0f
-            ? levelingAxis.normalized * Mathf.Sign(angle) * levelingError * Mathf.Deg2Rad
-                * Mathf.Max(0f, profile.fullyStaffedLevelingTorque)
-            : Vector3.zero;
-        Vector3 tiltAngularVelocity = Vector3.ProjectOnPlane(body.angularVelocity, Vector3.up);
-        Vector3 stabilizingTorque = residualSupportTorque
-            + levelingTorque
-            - tiltAngularVelocity * Mathf.Max(0f, profile.fullyStaffedTiltDamping);
+        Vector3 stabilizingTorque = residualSupportTorque + levelingTorque + tiltDampingTorque;
         stabilizingTorque = Vector3.ClampMagnitude(
             stabilizingTorque,
             Mathf.Max(0f, profile.fullyStaffedMaximumTorque));
         body.AddTorque(stabilizingTorque * fullyStaffedStabilizationWeight, ForceMode.Force);
+    }
+
+    private Vector3 ResolveCarrierForceApplicationPoint(Vector3 surfaceGripPoint, Vector3 worldCenterOfMass)
+    {
+        if (profile == null
+            || !profile.projectCarrierForcesToLongAxisCenterline
+            || !TryGetWorldLongAxis(out Vector3 worldLongAxis))
+        {
+            return surfaceGripPoint;
+        }
+
+        float longitudinalOffset = Vector3.Dot(surfaceGripPoint - worldCenterOfMass, worldLongAxis);
+        return worldCenterOfMass + worldLongAxis * longitudinalOffset;
     }
 
     private Vector3 LimitPointGripLiftCapacity(Vector3 force, float carrierNormalizationCount)

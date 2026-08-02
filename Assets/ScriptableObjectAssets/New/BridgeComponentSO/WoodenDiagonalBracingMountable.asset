@@ -26,10 +26,10 @@ MonoBehaviour:
   movementSpeedPenalty: 0.1
   minAmountOfPlayersNeeded: 1
   allowMultipleCarriers: 1
-  recommendedCarriers: 2
+  recommendedCarriers: 1
   maxCarriers: 2
   underStaffedPenaltyMultiplier: 0.4
-  sharedCarryUnderstaffedStaminaDrainPerSecond: 1
+  sharedCarryUnderstaffedStaminaDrainPerSecond: 0
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints:
