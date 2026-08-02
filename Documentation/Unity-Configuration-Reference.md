@@ -27,7 +27,7 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 | `BridgeComponentSO` | identity/final prefab, category, simple assembly i sześć opcjonalnych workflow |
 | `EquippableItemSO` | identity/prefab, slots/two-handed, range, cooldown, combat/resource damage, work power, action profile, impact impulse, movement penalty, repeatability i enum |
 | `EquippableActionProfileSO` | fazy akcji, pozy narzędzia/rąk, movement multiplier, camera kick, feedback strength i swing audio |
-| `CarryPhysicsProfileSO` | Tryb `DirectYaw`/`PhysicalPointGrip`, Rigidbody, movement, point grip/yaw, constraints i vertical support |
+| `CarryPhysicsProfileSO` | Tryb `DirectYaw`/`PhysicalPointGrip`, Rigidbody, point grip, tether, limity udźwigu oraz fully-staffed load distribution i leveling |
 | `ExternalImpulseProfileSO` | initial velocity, decay, gravity, control, clamps i forced drop |
 | `NPCDefinitionSO` | identity, faction, behavior, prefab/visual, stats i AI ranges |
 | `NPCSpawnGroupSO` | nazwa, waga, limit, ważone definicje, tryb `All/Any` i warunki |
@@ -139,6 +139,27 @@ W profilach części pozostaw `projectGripForcesToColliderSurface=true`: preview
 placement korzystają z logicznego punktu poza modelem, ale siła jest przykładana
 na colliderze. `limitPointGripLiftByCarrierCapacity` musi pozostać aktywne, aby
 pojedynczy holder nie przejmował całego ciężaru wieloosobowej części.
+
+`PhysicalPointGrip` używa stałej wysokości każdego `carryAttachLocalPoint`.
+Ruch kamery nie reguluje już wysokości chwytu, a pole
+`maximumGripHeightOffset` nie istnieje. Przy pełnej obsadzie części mostu
+`stabilizeWhenFullyStaffed` uruchamia serwerowy solver rozkładu pionowego
+podparcia. Ustawienia tej sekcji profilu:
+
+| Pole | Typ/jednostka | Znaczenie |
+|---|---|---|
+| `fullyStaffedLoadDistributionRegularization` | współczynnik | Preferuje równy rozkład, gdy kilka rozwiązań podobnie redukuje moment |
+| `fullyStaffedLevelingTorque` | moment | Sprężyna przywracająca pitch/roll zapisany przy rozpoczęciu carry |
+| `fullyStaffedLevelingDeadZone` | stopnie | Tolerancja przechyłu bez korekty |
+| `fullyStaffedTiltDamping` | damping | Tłumienie prędkości pitch/roll |
+| `fullyStaffedMaximumTorque` | moment | Limit kompensacji pozostałego momentu i poziomowania |
+| `fullyStaffedStabilizationBlendDuration` | sekundy | Czas płynnej aktywacji po dołączeniu ostatniego holdera i wygaszenia po jego utracie |
+
+Solver respektuje `pointGripLiftCapacityPerCarrier`. Jeśli suma limitów
+holderów nie może pokryć ciężaru, obiekt zachowuje fizyczne opadanie. Dla sześciu
+części mostu profile mają tę stabilizację włączoną; profil Wooden Log pozostawia
+ją wyłączoną. Nie przywracaj starej kompensacji `fullyStaffedPassiveTorqueCompensation`,
+ponieważ została zastąpiona rozkładem udźwigu i residual torque compensation.
 
 ## Fabryki i magazyny
 

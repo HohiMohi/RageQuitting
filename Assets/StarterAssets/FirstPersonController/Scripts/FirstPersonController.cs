@@ -125,7 +125,6 @@ namespace StarterAssets
 		private Vector3 _lastSentSharedCarryInput;
 		private Vector3 _lastSentSharedCarryLateralInput;
 		private float _lastSentSharedCarryYawInput;
-		private float _lastSentSharedCarryGripHeightInput;
 		private float _sharedCarryExhaustionWarningElapsed;
 		private bool _isSharedCarryExhaustionWarningActive;
 		private bool _sharedCarryExhaustionRequested;
@@ -599,9 +598,8 @@ namespace StarterAssets
             Vector2 moveInput = _playerInputNew.GetMoveVectorValue();
 			Vector3 worldTranslationInput = GetSharedCarryWorldTranslationInput(moveInput.y);
 			Vector3 worldLateralInput = GetSharedCarryWorldLateralInput(moveInput.x);
-			float gripHeightInput = GetSharedCarryGripHeightInput();
 			_playerInteractionNew.PredictSharedCarryOrbit(worldLateralInput, Time.deltaTime);
-			SendSharedCarryInputIfNeeded(worldTranslationInput, worldLateralInput, moveInput.x, gripHeightInput);
+			SendSharedCarryInputIfNeeded(worldTranslationInput, worldLateralInput, moveInput.x);
 
 			if (_playerInteractionNew.IsPhysicalPointGripActive)
 			{
@@ -668,21 +666,13 @@ namespace StarterAssets
 			return Vector3.ClampMagnitude(worldLateralInput, 1f);
 		}
 
-		private float GetSharedCarryGripHeightInput()
-		{
-			float pitchLimit = _cinemachineTargetPitch >= 0f ? Mathf.Max(1f, TopClamp) : Mathf.Max(1f, Mathf.Abs(BottomClamp));
-			return Mathf.Clamp(_cinemachineTargetPitch / pitchLimit, -1f, 1f);
-		}
-
-		private void SendSharedCarryInputIfNeeded(Vector3 worldTranslationInput, Vector3 worldLateralInput, float yawInput, float gripHeightInput)
+		private void SendSharedCarryInputIfNeeded(Vector3 worldTranslationInput, Vector3 worldLateralInput, float yawInput)
 		{
 			_sharedCarryInputSendTimer += Time.deltaTime;
 			yawInput = Mathf.Clamp(yawInput, -1f, 1f);
-			gripHeightInput = Mathf.Clamp(gripHeightInput, -1f, 1f);
 			bool inputChanged = Vector3.Distance(_lastSentSharedCarryInput, worldTranslationInput) >= sharedCarryInputChangeThreshold
 				|| Vector3.Distance(_lastSentSharedCarryLateralInput, worldLateralInput) >= sharedCarryInputChangeThreshold
-				|| Mathf.Abs(_lastSentSharedCarryYawInput - yawInput) >= sharedCarryInputChangeThreshold
-				|| Mathf.Abs(_lastSentSharedCarryGripHeightInput - gripHeightInput) >= sharedCarryInputChangeThreshold;
+				|| Mathf.Abs(_lastSentSharedCarryYawInput - yawInput) >= sharedCarryInputChangeThreshold;
 			if (_sharedCarryInputSendTimer < sharedCarryInputSendInterval && !inputChanged)
 			{
 				return;
@@ -692,8 +682,7 @@ namespace StarterAssets
 			_lastSentSharedCarryInput = worldTranslationInput;
 			_lastSentSharedCarryLateralInput = worldLateralInput;
 			_lastSentSharedCarryYawInput = yawInput;
-			_lastSentSharedCarryGripHeightInput = gripHeightInput;
-			_playerInteractionNew.SubmitSharedCarryInput(worldTranslationInput, worldLateralInput, yawInput, gripHeightInput);
+			_playerInteractionNew.SubmitSharedCarryInput(worldTranslationInput, worldLateralInput, yawInput);
 		}
 
 

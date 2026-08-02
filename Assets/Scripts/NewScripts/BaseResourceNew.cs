@@ -56,7 +56,6 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private readonly Dictionary<ulong, Vector3> holderMoveInputs = new Dictionary<ulong, Vector3>();
     private readonly Dictionary<ulong, Vector3> holderLateralInputs = new Dictionary<ulong, Vector3>();
     private readonly Dictionary<ulong, float> holderYawInputs = new Dictionary<ulong, float>();
-    private readonly Dictionary<ulong, float> holderGripHeightInputs = new Dictionary<ulong, float>();
     private readonly Dictionary<ulong, float> holderTetherExceededSince = new Dictionary<ulong, float>();
     private readonly Dictionary<ulong, float> holderOrbitAngles = new Dictionary<ulong, float>();
     private readonly Dictionary<ulong, float> holderLastOrbitSyncTimes = new Dictionary<ulong, float>();
@@ -621,7 +620,6 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         holderMoveInputs[ownerClientId] = Vector3.zero;
         holderLateralInputs[ownerClientId] = Vector3.zero;
         holderYawInputs[ownerClientId] = 0f;
-        holderGripHeightInputs[ownerClientId] = 0f;
         holderOrbitAngles[ownerClientId] = 0f;
         holderLastOrbitSyncTimes[ownerClientId] = 0f;
         holderLastInputTimes[ownerClientId] = Time.time;
@@ -979,7 +977,6 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         holderMoveInputs.Remove(clientId);
         holderLateralInputs.Remove(clientId);
         holderYawInputs.Remove(clientId);
-        holderGripHeightInputs.Remove(clientId);
         holderTetherExceededSince.Remove(clientId);
         holderOrbitAngles.Remove(clientId);
         holderLastOrbitSyncTimes.Remove(clientId);
@@ -1202,14 +1199,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
             holderYawInputs.TryGetValue(holderClientId, out float holderYawInput);
             holderLateralInputs.TryGetValue(holderClientId, out Vector3 holderLateralInput);
-            holderGripHeightInputs.TryGetValue(holderClientId, out float holderGripHeightInput);
-
             if (holderLastInputTimes.TryGetValue(holderClientId, out float lastInputTime) && Time.time - lastInputTime > SharedCarryInputStaleTime)
             {
                 holderInput = Vector3.zero;
                 holderLateralInput = Vector3.zero;
                 holderYawInput = 0f;
-                holderGripHeightInput = 0f;
             }
 
             combinedInput += holderInput;
@@ -1224,8 +1218,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                     BaseAttachLocalPoint = holderBaseAttachLocalPoints.TryGetValue(holderClientId, out Vector3 basePoint) ? basePoint : attachLocalPoint,
                     AttachLocalPoint = attachLocalPoint,
                     DesiredLateralInput = holderLateralInput,
-                    DesiredYawInput = holderYawInput,
-                    DesiredGripHeightInput = holderGripHeightInput
+                    DesiredYawInput = holderYawInput
                 });
             }
         }
@@ -1246,8 +1239,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                     BaseAttachLocalPoint = attachLocalPoint,
                     AttachLocalPoint = attachLocalPoint,
                     DesiredLateralInput = Vector3.zero,
-                    DesiredYawInput = 0f,
-                    DesiredGripHeightInput = 0f
+                    DesiredYawInput = 0f
                 });
             }
         }
@@ -1400,30 +1392,28 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         return holderBodyAnchor != null;
     }
 
-    public void SubmitSharedCarryInput(Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput, float gripHeightInput)
+    public void SubmitSharedCarryInput(Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput)
     {
         worldTranslationInput.y = 0f;
         worldTranslationInput = Vector3.ClampMagnitude(worldTranslationInput, 1f);
         worldLateralInput.y = 0f;
         worldLateralInput = Vector3.ClampMagnitude(worldLateralInput, 1f);
         directYawInput = Mathf.Clamp(directYawInput, -1f, 1f);
-        gripHeightInput = Mathf.Clamp(gripHeightInput, -1f, 1f);
-
         if (IsNetworkSessionActive())
         {
             if (IsServer)
             {
-                SetSharedCarryInput(NetworkManager.Singleton.LocalClientId, worldTranslationInput, worldLateralInput, directYawInput, gripHeightInput);
+                SetSharedCarryInput(NetworkManager.Singleton.LocalClientId, worldTranslationInput, worldLateralInput, directYawInput);
             }
             else
             {
-                SubmitSharedCarryInputServerRpc(worldTranslationInput, worldLateralInput, directYawInput, gripHeightInput);
+                SubmitSharedCarryInputServerRpc(worldTranslationInput, worldLateralInput, directYawInput);
             }
 
             return;
         }
 
-        SetSharedCarryInput(NoHolderClientId, worldTranslationInput, worldLateralInput, directYawInput, gripHeightInput);
+        SetSharedCarryInput(NoHolderClientId, worldTranslationInput, worldLateralInput, directYawInput);
     }
 
     public void RequestSharedCarryExhaustion()
@@ -1442,7 +1432,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         TryCrushLocalSharedCarryHolder();
     }
 
-    private void SetSharedCarryInput(ulong clientId, Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput, float gripHeightInput)
+    private void SetSharedCarryInput(ulong clientId, Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput)
     {
         if (!holderClientIds.Contains(clientId))
         {
@@ -1454,7 +1444,6 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         holderMoveInputs[clientId] = Vector3.ClampMagnitude(worldTranslationInput, 1f);
         holderLateralInputs[clientId] = Vector3.ClampMagnitude(worldLateralInput, 1f);
         holderYawInputs[clientId] = Mathf.Clamp(directYawInput, -1f, 1f);
-        holderGripHeightInputs[clientId] = Mathf.Clamp(gripHeightInput, -1f, 1f);
         holderLastInputTimes[clientId] = Time.time;
 
         if (IsServer && clientId != NoHolderClientId)
@@ -1469,9 +1458,9 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void SubmitSharedCarryInputServerRpc(Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput, float gripHeightInput, ServerRpcParams serverRpcParams = default)
+    private void SubmitSharedCarryInputServerRpc(Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput, ServerRpcParams serverRpcParams = default)
     {
-        SetSharedCarryInput(serverRpcParams.Receive.SenderClientId, worldTranslationInput, worldLateralInput, directYawInput, gripHeightInput);
+        SetSharedCarryInput(serverRpcParams.Receive.SenderClientId, worldTranslationInput, worldLateralInput, directYawInput);
     }
     private void SetupLocalSharedCarryPickup(PlayerInteractionNew playerInteraction)
     {
@@ -1495,7 +1484,6 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             holderMoveInputs[NoHolderClientId] = Vector3.zero;
             holderLateralInputs[NoHolderClientId] = Vector3.zero;
             holderYawInputs[NoHolderClientId] = 0f;
-            holderGripHeightInputs[NoHolderClientId] = 0f;
             holderOrbitAngles[NoHolderClientId] = 0f;
             holderLastInputTimes[NoHolderClientId] = Time.time;
             holderBodyAnchorLocalOffsets[NoHolderClientId] = playerInteraction.CarryBodyAnchorLocalOffset;
@@ -1724,9 +1712,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                 continue;
             }
 
-            holderGripHeightInputs.TryGetValue(clientId, out float heightInput);
-            Vector3 target = transform.TransformPoint(attachLocalPoint)
-                - Vector3.up * Mathf.Clamp(heightInput, -1f, 1f) * _sharedCarryPhysicsBody.MaximumGripHeightOffset;
+            Vector3 target = transform.TransformPoint(attachLocalPoint);
             if (Vector3.Distance(bodyAnchor.position, target) <= _sharedCarryPhysicsBody.HardTetherDistance)
             {
                 holderTetherExceededSince.Remove(clientId);

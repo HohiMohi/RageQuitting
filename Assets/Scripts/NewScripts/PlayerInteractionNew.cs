@@ -36,7 +36,6 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private Vector3 sharedCarryOrbitPivotLocalPoint = Vector3.zero;
     private float sharedCarryPredictedOrbitAngle;
     private float sharedCarryAuthoritativeOrbitAngle;
-    private float sharedCarryGripHeightInput;
     private SharedCarryPhysicsBody sharedCarryPhysicsBody;
     private int minAmountOfPlayersNeeded = 0;
     private int currentAmountOfPlayersSupporting = 0;
@@ -414,15 +413,14 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         OnSharedCarryPickupRejected?.Invoke(new SharedCarryPickupRejectedEventArgs(target, reason));
     }
 
-    public void SubmitSharedCarryInput(Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput, float gripHeightInput)
+    public void SubmitSharedCarryInput(Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput)
     {
         if (!IsSharedCarryMovementActive || !_pickedUpGameObject.TryGetComponent(out ISharedCarryObject sharedCarryObject))
         {
             return;
         }
 
-        sharedCarryGripHeightInput = Mathf.Clamp(gripHeightInput, -1f, 1f);
-        sharedCarryObject.SubmitSharedCarryInput(worldTranslationInput, worldLateralInput, directYawInput, sharedCarryGripHeightInput);
+        sharedCarryObject.SubmitSharedCarryInput(worldTranslationInput, worldLateralInput, directYawInput);
     }
 
     public void PredictSharedCarryOrbit(Vector3 worldLateralInput, float deltaTime)
@@ -513,7 +511,6 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         Vector3 targetAnchorPosition = _pickedUpGameObject.transform.TransformPoint(sharedCarryAttachLocalPoint);
         if (sharedCarryPhysicsBody != null && sharedCarryPhysicsBody.ControlMode == SharedCarryControlMode.PhysicalPointGrip)
         {
-            targetAnchorPosition -= Vector3.up * sharedCarryGripHeightInput * sharedCarryPhysicsBody.MaximumGripHeightOffset;
             return targetAnchorPosition - carryBodyAnchor.position;
         }
         Vector3 correction = targetAnchorPosition - carryBodyAnchor.position;
@@ -759,7 +756,6 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         sharedCarryOrbitPivotLocalPoint = Vector3.zero;
         sharedCarryPredictedOrbitAngle = 0f;
         sharedCarryAuthoritativeOrbitAngle = 0f;
-        sharedCarryGripHeightInput = 0f;
         sharedCarryPhysicsBody = null;
     }
 

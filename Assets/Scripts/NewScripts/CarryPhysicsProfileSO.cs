@@ -23,7 +23,6 @@ public class CarryPhysicsProfileSO : ScriptableObject
     [Min(0f)] public float pointGripSpring = 180f;
     [Min(0f)] public float pointGripDamping = 45f;
     [Min(0f)] public float pointGripMaxForce = 700f;
-    [Min(0f)] public float maximumGripHeightOffset = 0.2f;
     public bool projectGripForcesToColliderSurface = false;
     public bool limitPointGripLiftByCarrierCapacity = false;
     [Range(0f, 2f)] public float pointGripLiftCapacityPerCarrier = 0.55f;
@@ -41,6 +40,15 @@ public class CarryPhysicsProfileSO : ScriptableObject
     [Range(0f, 89f)] public float maximumTiltAngle = 35f;
     [Min(0f)] public float tiltRestoringTorque = 120f;
     [Min(0f)] public float tiltDamping = 18f;
+
+    [Header("Fully Staffed Stabilization")]
+    public bool stabilizeWhenFullyStaffed = false;
+    [Min(0f)] public float fullyStaffedLoadDistributionRegularization = 0.08f;
+    [Min(0f)] public float fullyStaffedLevelingTorque = 240f;
+    [Range(0f, 15f)] public float fullyStaffedLevelingDeadZone = 1.5f;
+    [Min(0f)] public float fullyStaffedTiltDamping = 40f;
+    [Min(0f)] public float fullyStaffedMaximumTorque = 300f;
+    [Min(0f)] public float fullyStaffedStabilizationBlendDuration = 0.35f;
 
     [Header("Physical Point Grip Tether")]
     [Min(0f)] public float softTetherDeadZone = 0.08f;

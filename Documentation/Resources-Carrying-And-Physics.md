@@ -124,8 +124,9 @@ flowchart TD
 - Pierwszy holder prostuje obiekt do yaw i stosuje rotation offset SO.
 - Holderzy nie kolidują z własnym obiektem; osoby postronne i świat nadal tak.
 - `DirectYaw`: W/S wysyła centralną translację, a A/D osobny input yaw.
-- `PhysicalPointGrip`: siły są przykładane w punktach chwytu; A/D generuje
-  fizyczną siłę boczną, a pitch kamery reguluje wysokość chwytu.
+- `PhysicalPointGrip`: siły są przykładane w punktach chwytu, a A/D generuje
+  fizyczną siłę boczną i wynikający z miejsca chwytu moment. Wysokość anchora
+  jest stała i nie zależy już od pitch kamery.
 - `Wooden Log` oraz sześć aktualnych części mostu używają `PhysicalPointGrip`.
   Każdy rodzaj części ma osobny profil dostrojony do swojej geometrii i masy.
 - NPC shared-carry jest obecnie wyłączony globalnym feature gate, ale kod
@@ -133,14 +134,14 @@ flowchart TD
 
 ### Profile i anchory części mostu
 
-| Część | Profil | Masa | Max angular velocity | Grip height | Max tilt | Lift/carrier |
-|---|---|---:|---:|---:|---:|---:|
-| Wooden Foundation | `CarryPhysicsProfile_WoodenFoundationPhysical` | 45 | 1.1 | 0.12 m | 35° | 0.38 |
-| Wooden Abutment | `CarryPhysicsProfile_WoodenAbutmentPhysical` | 60 | 1.0 | 0.14 m | 32° | 0.38 |
-| Wooden Main Girder | `CarryPhysicsProfile_WoodenMainGirderPhysical` | 70 | 0.65 | 0.18 m | 28° | 0.38 |
-| Wooden Cross Beam | `CarryPhysicsProfile_WoodenCrossBeamPhysical` | 24 | 1.2 | 0.18 m | 42° | 0.55 |
-| Wooden Diagonal Bracing | `CarryPhysicsProfile_WoodenDiagonalBracingPhysical` | 18 | 1.35 | 0.20 m | 48° | 0.55 |
-| Wooden Deck Panel | `CarryPhysicsProfile_WoodenDeckPanelPhysical` | 30 | 0.9 | 0.14 m | 35° | 0.55 |
+| Część | Profil | Masa | Max angular velocity | Max tilt | Lift/carrier |
+|---|---|---:|---:|---:|---:|
+| Wooden Foundation | `CarryPhysicsProfile_WoodenFoundationPhysical` | 45 | 1.1 | 35° | 0.38 |
+| Wooden Abutment | `CarryPhysicsProfile_WoodenAbutmentPhysical` | 60 | 1.0 | 32° | 0.38 |
+| Wooden Main Girder | `CarryPhysicsProfile_WoodenMainGirderPhysical` | 70 | 0.65 | 28° | 0.38 |
+| Wooden Cross Beam | `CarryPhysicsProfile_WoodenCrossBeamPhysical` | 24 | 1.2 | 42° | 0.55 |
+| Wooden Diagonal Bracing | `CarryPhysicsProfile_WoodenDiagonalBracingPhysical` | 18 | 1.35 | 48° | 0.55 |
+| Wooden Deck Panel | `CarryPhysicsProfile_WoodenDeckPanelPhysical` | 30 | 0.9 | 35° | 0.55 |
 
 Każda z tych części ma osiem jawnych `carryAttachLocalPoints`: cztery narożniki,
 a następnie środki przedniego, prawego, tylnego i lewego boku. Indeksy są
@@ -154,6 +155,15 @@ Preview jest rzutowane na powierzchnię visuala, natomiast fizyczna siła chwytu
 na powierzchnię collidera; logiczny offset gracza nie zwiększa więc sztucznie
 momentu obrotowego.
 
+Po osiągnięciu `recommendedCarriers` sześć profili części mostu uruchamia
+serwerowy solver rozkładu udźwigu. Solver rozdziela ciężar między zajęte anchory,
+minimalizuje moment pitch/roll i respektuje `pointGripLiftCapacityPerCarrier`.
+Podparcie grawitacji ma osobny budżet siły, dlatego pozioma sprężyna chwytu nie
+może odebrać holderowi wymaganej siły pionowej. Pozostały moment jest
+kompensowany ograniczonym momentem, a miękka sprężyna poziomowania przywraca
+pitch/roll zapisany przy rozpoczęciu shared-carry. Yaw, A/D i kolizje pozostają
+fizyczne. Aktywacja i utrata pełnej obsady są płynnie blendowane.
+
 ### `CarryPhysicsProfileSO`
 
 | Pole | Znaczenie |
@@ -162,12 +172,18 @@ momentu obrotowego.
 | `pointGripLateralForce` | Siła A/D przykładana w fizycznym punkcie chwytu |
 | `pointGripVerticalForce`, `pointGripSpring`, `pointGripDamping` | Pionowa skala, sprężyna i tłumienie indywidualnego chwytu |
 | `pointGripMaxForce` | Limit siły pojedynczego constraintu przed normalizacją carrierów |
-| `maximumGripHeightOffset` | Maksymalna korekta wysokości chwytu sterowana pitch kamery |
 | `projectGripForcesToColliderSurface` | Oddziela logiczny anchor gracza od punktu przyłożenia siły na colliderze |
 | `limitPointGripLiftByCarrierCapacity` | Włącza limit dodatniej siły pionowej na holdera |
 | `pointGripLiftCapacityPerCarrier` | Część całkowitego ciężaru dostępna pojedynczemu holderowi |
 | `limitTilt`, `maximumTiltAngle` | Włącza miękkie ograniczenie przechyłu i jego próg |
 | `tiltRestoringTorque`, `tiltDamping` | Sprężyna oraz tłumienie soft tilt |
+| `stabilizeWhenFullyStaffed` | Włącza solver udźwigu i poziomowanie po osiągnięciu wymaganej obsady |
+| `fullyStaffedLoadDistributionRegularization` | Preferencja równego podziału, gdy kilka rozkładów daje podobny moment |
+| `fullyStaffedLevelingTorque` | Siła sprężyny przywracającej początkowy pitch/roll |
+| `fullyStaffedLevelingDeadZone` | Kąt w stopniach ignorowany przez poziomowanie |
+| `fullyStaffedTiltDamping` | Tłumienie prędkości pitch/roll przy pełnej obsadzie |
+| `fullyStaffedMaximumTorque` | Wspólny limit kompensacji i poziomowania |
+| `fullyStaffedStabilizationBlendDuration` | Czas płynnego włączania i wyłączania stabilizacji |
 | `softTetherDeadZone`, `softTetherPullSpeed` | Martwa strefa i prędkość korekty gracza do anchora |
 | `hardTetherDistance`, `tetherBreakDelay` | Dystans i czas prowadzące do indywidualnego force release |
 | `preventGroundedUpwardTether` | Nie pozwala tetherowi odrywać uziemionego gracza od podłoża |

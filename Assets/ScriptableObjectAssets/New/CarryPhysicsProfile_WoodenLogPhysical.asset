@@ -22,7 +22,6 @@ MonoBehaviour:
   pointGripSpring: 180
   pointGripDamping: 45
   pointGripMaxForce: 700
-  maximumGripHeightOffset: 0.2
   projectGripForcesToColliderSurface: 1
   limitPointGripLiftByCarrierCapacity: 1
   pointGripLiftCapacityPerCarrier: 0.55

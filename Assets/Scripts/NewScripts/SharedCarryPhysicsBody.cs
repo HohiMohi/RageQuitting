@@ -8,12 +8,14 @@ public struct SharedCarryPhysicsHolder
     public Vector3 AttachLocalPoint;
     public Vector3 DesiredLateralInput;
     public float DesiredYawInput;
-    public float DesiredGripHeightInput;
 }
 
 [RequireComponent(typeof(Rigidbody))]
 public class SharedCarryPhysicsBody : MonoBehaviour
 {
+    private const int MaxLoadDistributionHolders = 8;
+    private const float SolverEpsilon = 0.0001f;
+
     [SerializeField] private CarryPhysicsProfileSO profile;
     [SerializeField] private float defaultMass = 20f;
     [SerializeField] private float defaultLinearDrag = 1.5f;
@@ -48,6 +50,17 @@ public class SharedCarryPhysicsBody : MonoBehaviour
     private SkinnedMeshRenderer[] previewSkinnedRenderers;
     private readonly Dictionary<Transform, AnchorMotionState> anchorMotionStates = new Dictionary<Transform, AnchorMotionState>();
     private readonly Dictionary<Transform, Vector3> smoothedConstraintForces = new Dictionary<Transform, Vector3>();
+    private readonly Vector3[] physicalGripPointScratch = new Vector3[MaxLoadDistributionHolders];
+    private readonly float[] supportShareScratch = new float[MaxLoadDistributionHolders];
+    private readonly int[] solverHolderIndexScratch = new int[MaxLoadDistributionHolders];
+    private readonly Vector2[] solverLeverScratch = new Vector2[MaxLoadDistributionHolders];
+    private readonly float[] solverShareScratch = new float[MaxLoadDistributionHolders];
+    private readonly float[] solverFixedValueScratch = new float[MaxLoadDistributionHolders];
+    private readonly bool[] solverFixedScratch = new bool[MaxLoadDistributionHolders];
+    private readonly float[,] solverQuadraticScratch = new float[MaxLoadDistributionHolders, MaxLoadDistributionHolders];
+    private readonly float[,] solverAugmentedScratch = new float[MaxLoadDistributionHolders + 1, MaxLoadDistributionHolders + 2];
+    private readonly int[] solverFreeIndexScratch = new int[MaxLoadDistributionHolders];
+    private float fullyStaffedStabilizationWeight;
 
     private struct AnchorMotionState
     {
@@ -62,7 +75,6 @@ public class SharedCarryPhysicsBody : MonoBehaviour
     public float OrbitAngularSpeed => profile != null ? Mathf.Max(0f, profile.orbitAngularSpeed) : 0f;
     public float OrbitPredictionCorrectionSpeed => profile != null ? Mathf.Max(0f, profile.orbitPredictionCorrectionSpeed) : 0f;
     public float MaxGripDistance => GetMaxGripDistance();
-    public float MaximumGripHeightOffset => profile != null ? Mathf.Max(0f, profile.maximumGripHeightOffset) : 0f;
     public float SoftTetherDeadZone => profile != null ? Mathf.Max(0f, profile.softTetherDeadZone) : 0f;
     public float SoftTetherPullSpeed => profile != null ? Mathf.Max(0f, profile.softTetherPullSpeed) : 0f;
     public float SoftTetherVelocityInfluence => profile != null ? Mathf.Max(0f, profile.softTetherVelocityInfluence) : 0f;
@@ -281,12 +293,18 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         int validHolderCount = 0;
         float normalizationDivisor = Mathf.Max(1, carrierNormalizationCount);
         float forceBlend = 1f - Mathf.Exp(-GetHorizontalConstraintForceResponse() * fixedDeltaTime);
+        Vector3 worldCenterOfMass = body.worldCenterOfMass;
 
         for (int i = 0; i < holders.Count; i++)
         {
             if (holders[i].BodyAnchor != null)
             {
                 validHolderCount++;
+                if (i < MaxLoadDistributionHolders)
+                {
+                    Vector3 attachPoint = transform.TransformPoint(holders[i].AttachLocalPoint);
+                    physicalGripPointScratch[i] = ResolvePhysicalGripPoint(attachPoint);
+                }
             }
         }
 
@@ -295,15 +313,33 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             return;
         }
 
-        Vector3 gravitySupportPerHolder = body.useGravity
-            ? Vector3.up * Mathf.Max(0f, -Physics.gravity.y) * body.mass / normalizationDivisor
-            : Vector3.zero;
+        bool isFullyStaffed = validHolderCount >= Mathf.Max(1, carrierNormalizationCount);
+        UpdateFullyStaffedStabilizationWeight(isFullyStaffed, fixedDeltaTime);
+
+        float equalSupportShare = 1f / normalizationDivisor;
+        for (int i = 0; i < Mathf.Min(holders.Count, MaxLoadDistributionHolders); i++)
+        {
+            supportShareScratch[i] = holders[i].BodyAnchor != null ? equalSupportShare : 0f;
+        }
+
+        if (isFullyStaffed && profile != null && profile.stabilizeWhenFullyStaffed)
+        {
+            SolveFullyStaffedLoadDistribution(
+                holders,
+                physicalGripPointScratch,
+                worldCenterOfMass,
+                supportShareScratch);
+        }
+
+        float supportedWeight = body.useGravity
+            ? Mathf.Max(0f, -Physics.gravity.y) * body.mass
+            : 0f;
         Vector3 worldLongAxis = Vector3.zero;
         bool compensateGripRoll = profile != null
             && profile.compensatePointGripRoll
             && TryGetWorldLongAxis(out worldLongAxis);
         float accumulatedGripRollTorque = 0f;
-        Vector3 worldCenterOfMass = body.worldCenterOfMass;
+        Vector3 accumulatedSupportTorque = Vector3.zero;
 
         for (int i = 0; i < holders.Count; i++)
         {
@@ -314,30 +350,24 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             }
 
             Vector3 attachPoint = transform.TransformPoint(holder.AttachLocalPoint);
-            Vector3 forceApplicationPoint = ResolvePhysicalGripPoint(attachPoint);
-            float heightOffset = Mathf.Clamp(holder.DesiredGripHeightInput, -1f, 1f) * MaximumGripHeightOffset;
-            Vector3 targetAnchor = holder.BodyAnchor.position + Vector3.up * heightOffset;
-            Vector3 error = Vector3.ClampMagnitude(targetAnchor - attachPoint, GetMaxGripDistance());
-            float errorMagnitude = error.magnitude;
-            float deadZone = GetHorizontalConstraintDeadZone();
-            if (errorMagnitude <= deadZone)
-            {
-                error = Vector3.zero;
-            }
-            else
-            {
-                error *= (errorMagnitude - deadZone) / Mathf.Max(errorMagnitude, 0.0001f);
-            }
-
+            Vector3 forceApplicationPoint = i < MaxLoadDistributionHolders
+                ? physicalGripPointScratch[i]
+                : ResolvePhysicalGripPoint(attachPoint);
+            float solvedSupportShare = i < MaxLoadDistributionHolders ? supportShareScratch[i] : equalSupportShare;
+            float supportShare = Mathf.Lerp(equalSupportShare, solvedSupportShare, fullyStaffedStabilizationWeight);
+            Vector3 gravitySupport = Vector3.up * supportedWeight * supportShare;
             Vector3 anchorVelocity = GetAnchorVelocity3D(holder.BodyAnchor, fixedDeltaTime);
             Vector3 pointVelocity = body.GetPointVelocity(attachPoint);
-            Vector3 gripForce = error * GetPointGripSpring() + (anchorVelocity - pointVelocity) * GetPointGripDamping();
-            gripForce.y *= GetPointGripVerticalForceScale();
-            gripForce += gravitySupportPerHolder;
-            gripForce = Vector3.ClampMagnitude(gripForce, GetPointGripMaxForce() / normalizationDivisor);
+            Vector3 relativeVelocity = anchorVelocity - pointVelocity;
+            Vector3 gripConstraintForce = CalculatePointGripConstraintForce(
+                holder.BodyAnchor.position - attachPoint,
+                relativeVelocity,
+                gravitySupport,
+                normalizationDivisor);
+            gripConstraintForce = SmoothConstraintForce(holder.BodyAnchor, gripConstraintForce, forceBlend);
+            Vector3 gripForce = gripConstraintForce + gravitySupport;
             gripForce = LimitPointGripLiftCapacity(gripForce);
-            gripForce = SmoothConstraintForce(holder.BodyAnchor, gripForce, forceBlend);
-            gripForce = LimitPointGripLiftCapacity(gripForce);
+            accumulatedSupportTorque += Vector3.Cross(forceApplicationPoint - worldCenterOfMass, gravitySupport);
             if (compensateGripRoll)
             {
                 Vector3 gripTorque = Vector3.Cross(forceApplicationPoint - worldCenterOfMass, gripForce);
@@ -358,6 +388,8 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             compensationTorque = Mathf.Clamp(compensationTorque, -maximumCompensation, maximumCompensation);
             body.AddTorque(worldLongAxis * compensationTorque, ForceMode.Force);
         }
+
+        ApplyFullyStaffedStabilization(accumulatedSupportTorque);
 
         PruneConstraintState(holders);
         Vector3 horizontalVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
@@ -429,9 +461,33 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         Quaternion rotation,
         out Vector3 surfaceOutwardDirection)
     {
+        return ResolvePreviewGripPointForPose(
+            logicalLocalPoint,
+            null,
+            position,
+            rotation,
+            out surfaceOutwardDirection);
+    }
+
+    public Vector3 ResolvePreviewGripPointForPose(
+        Vector3 logicalLocalPoint,
+        Vector3? explicitSurfaceLocalPoint,
+        Vector3 position,
+        Quaternion rotation,
+        out Vector3 surfaceOutwardDirection)
+    {
         Vector3 surfaceLocalPoint;
         Vector3 outwardLocalDirection;
-        if (TryGetPreviewVisualLocalBounds(out Bounds visualBounds))
+        if (explicitSurfaceLocalPoint.HasValue)
+        {
+            surfaceLocalPoint = explicitSurfaceLocalPoint.Value;
+            outwardLocalDirection = logicalLocalPoint - surfaceLocalPoint;
+            if (outwardLocalDirection.sqrMagnitude < 0.0001f)
+            {
+                outwardLocalDirection = surfaceLocalPoint;
+            }
+        }
+        else if (TryGetPreviewVisualLocalBounds(out Bounds visualBounds))
         {
             surfaceLocalPoint = GetClosestPointOnBoundsSurface(visualBounds, logicalLocalPoint);
             outwardLocalDirection = logicalLocalPoint - surfaceLocalPoint;
@@ -594,6 +650,331 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         ? 1f
         : Mathf.Max(0f, profile.pointGripVerticalForce) / profile.pointGripSpring;
 
+    private Vector3 CalculatePointGripConstraintForce(
+        Vector3 rawError,
+        Vector3 relativeVelocity,
+        Vector3 gravitySupport,
+        float normalizationDivisor)
+    {
+        Vector3 error = Vector3.ClampMagnitude(rawError, GetMaxGripDistance());
+        float errorMagnitude = error.magnitude;
+        float deadZone = GetHorizontalConstraintDeadZone();
+        if (errorMagnitude <= deadZone)
+        {
+            error = Vector3.zero;
+        }
+        else
+        {
+            error *= (errorMagnitude - deadZone) / Mathf.Max(errorMagnitude, 0.0001f);
+        }
+
+        Vector3 force = error * GetPointGripSpring() + relativeVelocity * GetPointGripDamping();
+        force.y *= GetPointGripVerticalForceScale();
+        float maximumForce = GetPointGripMaxForce() / Mathf.Max(1f, normalizationDivisor);
+        float constraintBudget = Mathf.Max(0f, maximumForce - gravitySupport.magnitude);
+        force = Vector3.ClampMagnitude(force, constraintBudget);
+
+        if (profile != null && profile.limitPointGripLiftByCarrierCapacity && body.useGravity)
+        {
+            float maximumUpwardForce = body.mass
+                * Mathf.Max(0f, -Physics.gravity.y)
+                * Mathf.Clamp(profile.pointGripLiftCapacityPerCarrier, 0f, 2f);
+            force.y = Mathf.Min(force.y, Mathf.Max(0f, maximumUpwardForce - gravitySupport.y));
+        }
+
+        return force;
+    }
+
+    private bool SolveFullyStaffedLoadDistribution(
+        IReadOnlyList<SharedCarryPhysicsHolder> holders,
+        Vector3[] forceApplicationPoints,
+        Vector3 worldCenterOfMass,
+        float[] supportShares)
+    {
+        if (profile == null || holders.Count > MaxLoadDistributionHolders)
+        {
+            return false;
+        }
+
+        int solverCount = 0;
+        float supportRadius = 0f;
+        for (int holderIndex = 0; holderIndex < holders.Count; holderIndex++)
+        {
+            if (holders[holderIndex].BodyAnchor == null)
+            {
+                continue;
+            }
+
+            Vector3 horizontalLever = Vector3.ProjectOnPlane(
+                forceApplicationPoints[holderIndex] - worldCenterOfMass,
+                Vector3.up);
+            solverHolderIndexScratch[solverCount] = holderIndex;
+            solverLeverScratch[solverCount] = new Vector2(horizontalLever.z, -horizontalLever.x);
+            supportRadius = Mathf.Max(supportRadius, horizontalLever.magnitude);
+            solverCount++;
+        }
+
+        if (solverCount == 0)
+        {
+            return false;
+        }
+
+        float maximumShare = profile.limitPointGripLiftByCarrierCapacity
+            ? Mathf.Clamp(profile.pointGripLiftCapacityPerCarrier, 0f, 2f)
+            : 2f;
+        if (maximumShare * solverCount < 1f - SolverEpsilon)
+        {
+            return false;
+        }
+
+        float leverScale = 1f / Mathf.Max(0.01f, supportRadius);
+        float regularization = Mathf.Max(
+            SolverEpsilon,
+            profile.fullyStaffedLoadDistributionRegularization);
+        float equalShare = 1f / solverCount;
+
+        for (int i = 0; i < solverCount; i++)
+        {
+            solverLeverScratch[i] *= leverScale;
+            solverShareScratch[i] = equalShare;
+            solverFixedValueScratch[i] = 0f;
+            solverFixedScratch[i] = false;
+        }
+
+        for (int i = 0; i < solverCount; i++)
+        {
+            for (int j = 0; j < solverCount; j++)
+            {
+                solverQuadraticScratch[i, j] = Vector2.Dot(solverLeverScratch[i], solverLeverScratch[j])
+                    + (i == j ? regularization : 0f);
+            }
+        }
+
+        for (int iteration = 0; iteration <= solverCount; iteration++)
+        {
+            int freeCount = 0;
+            float fixedShare = 0f;
+            for (int i = 0; i < solverCount; i++)
+            {
+                if (solverFixedScratch[i])
+                {
+                    fixedShare += solverFixedValueScratch[i];
+                }
+                else
+                {
+                    solverFreeIndexScratch[freeCount++] = i;
+                }
+            }
+
+            if (freeCount == 0)
+            {
+                if (Mathf.Abs(fixedShare - 1f) > SolverEpsilon)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < solverCount; i++)
+                {
+                    supportShares[solverHolderIndexScratch[i]] = solverFixedValueScratch[i];
+                }
+
+                return true;
+            }
+
+            if (fixedShare > 1f + SolverEpsilon)
+            {
+                return false;
+            }
+
+            int systemSize = freeCount + 1;
+            for (int row = 0; row < systemSize; row++)
+            {
+                for (int column = 0; column <= systemSize; column++)
+                {
+                    solverAugmentedScratch[row, column] = 0f;
+                }
+            }
+
+            for (int freeRow = 0; freeRow < freeCount; freeRow++)
+            {
+                int holderRow = solverFreeIndexScratch[freeRow];
+                float rightHandSide = regularization * equalShare;
+                for (int fixedIndex = 0; fixedIndex < solverCount; fixedIndex++)
+                {
+                    if (solverFixedScratch[fixedIndex])
+                    {
+                        rightHandSide -= solverQuadraticScratch[holderRow, fixedIndex]
+                            * solverFixedValueScratch[fixedIndex];
+                    }
+                }
+
+                for (int freeColumn = 0; freeColumn < freeCount; freeColumn++)
+                {
+                    int holderColumn = solverFreeIndexScratch[freeColumn];
+                    solverAugmentedScratch[freeRow, freeColumn] = solverQuadraticScratch[holderRow, holderColumn];
+                }
+
+                solverAugmentedScratch[freeRow, freeCount] = 1f;
+                solverAugmentedScratch[freeRow, systemSize] = rightHandSide;
+                solverAugmentedScratch[freeCount, freeRow] = 1f;
+            }
+
+            solverAugmentedScratch[freeCount, systemSize] = 1f - fixedShare;
+            if (!SolveAugmentedSystem(systemSize))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < solverCount; i++)
+            {
+                if (solverFixedScratch[i])
+                {
+                    solverShareScratch[i] = solverFixedValueScratch[i];
+                }
+            }
+
+            int violatingIndex = -1;
+            float violatingValue = 0f;
+            float largestViolation = 0f;
+            for (int freeIndex = 0; freeIndex < freeCount; freeIndex++)
+            {
+                int holderIndex = solverFreeIndexScratch[freeIndex];
+                float share = solverAugmentedScratch[freeIndex, systemSize];
+                solverShareScratch[holderIndex] = share;
+                float violation = share < 0f ? -share : Mathf.Max(0f, share - maximumShare);
+                if (violation > largestViolation)
+                {
+                    largestViolation = violation;
+                    violatingIndex = holderIndex;
+                    violatingValue = share < 0f ? 0f : maximumShare;
+                }
+            }
+
+            if (violatingIndex < 0)
+            {
+                for (int i = 0; i < solverCount; i++)
+                {
+                    supportShares[solverHolderIndexScratch[i]] = Mathf.Clamp(solverShareScratch[i], 0f, maximumShare);
+                }
+
+                return true;
+            }
+
+            solverFixedScratch[violatingIndex] = true;
+            solverFixedValueScratch[violatingIndex] = violatingValue;
+        }
+
+        return false;
+    }
+
+    private bool SolveAugmentedSystem(int systemSize)
+    {
+        for (int pivotColumn = 0; pivotColumn < systemSize; pivotColumn++)
+        {
+            int pivotRow = pivotColumn;
+            float pivotMagnitude = Mathf.Abs(solverAugmentedScratch[pivotRow, pivotColumn]);
+            for (int candidateRow = pivotColumn + 1; candidateRow < systemSize; candidateRow++)
+            {
+                float candidateMagnitude = Mathf.Abs(solverAugmentedScratch[candidateRow, pivotColumn]);
+                if (candidateMagnitude > pivotMagnitude)
+                {
+                    pivotMagnitude = candidateMagnitude;
+                    pivotRow = candidateRow;
+                }
+            }
+
+            if (pivotMagnitude < SolverEpsilon)
+            {
+                return false;
+            }
+
+            if (pivotRow != pivotColumn)
+            {
+                for (int column = pivotColumn; column <= systemSize; column++)
+                {
+                    float temporary = solverAugmentedScratch[pivotColumn, column];
+                    solverAugmentedScratch[pivotColumn, column] = solverAugmentedScratch[pivotRow, column];
+                    solverAugmentedScratch[pivotRow, column] = temporary;
+                }
+            }
+
+            float pivot = solverAugmentedScratch[pivotColumn, pivotColumn];
+            for (int column = pivotColumn; column <= systemSize; column++)
+            {
+                solverAugmentedScratch[pivotColumn, column] /= pivot;
+            }
+
+            for (int row = 0; row < systemSize; row++)
+            {
+                if (row == pivotColumn)
+                {
+                    continue;
+                }
+
+                float factor = solverAugmentedScratch[row, pivotColumn];
+                if (Mathf.Abs(factor) < SolverEpsilon)
+                {
+                    continue;
+                }
+
+                for (int column = pivotColumn; column <= systemSize; column++)
+                {
+                    solverAugmentedScratch[row, column] -= factor * solverAugmentedScratch[pivotColumn, column];
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void UpdateFullyStaffedStabilizationWeight(bool isFullyStaffed, float fixedDeltaTime)
+    {
+        if (profile == null || !profile.stabilizeWhenFullyStaffed)
+        {
+            fullyStaffedStabilizationWeight = 0f;
+            return;
+        }
+
+        float targetWeight = isFullyStaffed ? 1f : 0f;
+        float blendDuration = Mathf.Max(0f, profile.fullyStaffedStabilizationBlendDuration);
+        fullyStaffedStabilizationWeight = blendDuration <= 0f
+            ? targetWeight
+            : Mathf.MoveTowards(fullyStaffedStabilizationWeight, targetWeight, fixedDeltaTime / blendDuration);
+    }
+
+    private void ApplyFullyStaffedStabilization(Vector3 accumulatedSupportTorque)
+    {
+        if (profile == null || !profile.stabilizeWhenFullyStaffed || fullyStaffedStabilizationWeight <= 0f)
+        {
+            return;
+        }
+
+        Vector3 residualSupportTorque = -Vector3.ProjectOnPlane(accumulatedSupportTorque, Vector3.up);
+        Quaternion yawRotation = ExtractYawRotation(body.rotation);
+        Quaternion targetRotation = yawRotation * sharedCarryTiltOffset;
+        Quaternion errorRotation = targetRotation * Quaternion.Inverse(body.rotation);
+        errorRotation.ToAngleAxis(out float angle, out Vector3 axis);
+        if (angle > 180f)
+        {
+            angle -= 360f;
+        }
+
+        Vector3 levelingAxis = Vector3.ProjectOnPlane(axis, Vector3.up);
+        float levelingError = Mathf.Max(0f, Mathf.Abs(angle) - Mathf.Max(0f, profile.fullyStaffedLevelingDeadZone));
+        Vector3 levelingTorque = levelingAxis.sqrMagnitude >= SolverEpsilon && levelingError > 0f
+            ? levelingAxis.normalized * Mathf.Sign(angle) * levelingError * Mathf.Deg2Rad
+                * Mathf.Max(0f, profile.fullyStaffedLevelingTorque)
+            : Vector3.zero;
+        Vector3 tiltAngularVelocity = Vector3.ProjectOnPlane(body.angularVelocity, Vector3.up);
+        Vector3 stabilizingTorque = residualSupportTorque
+            + levelingTorque
+            - tiltAngularVelocity * Mathf.Max(0f, profile.fullyStaffedTiltDamping);
+        stabilizingTorque = Vector3.ClampMagnitude(
+            stabilizingTorque,
+            Mathf.Max(0f, profile.fullyStaffedMaximumTorque));
+        body.AddTorque(stabilizingTorque * fullyStaffedStabilizationWeight, ForceMode.Force);
+    }
+
     private Vector3 LimitPointGripLiftCapacity(Vector3 force)
     {
         if (profile == null || !profile.limitPointGripLiftByCarrierCapacity || !body.useGravity)
@@ -707,6 +1088,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
     {
         anchorMotionStates.Clear();
         smoothedConstraintForces.Clear();
+        fullyStaffedStabilizationWeight = 0f;
     }
 
     private RigidbodyConstraints GetRotationConstraints()

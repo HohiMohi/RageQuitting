@@ -22,7 +22,6 @@ MonoBehaviour:
   pointGripSpring: 210
   pointGripDamping: 60
   pointGripMaxForce: 1350
-  maximumGripHeightOffset: 0.12
   projectGripForcesToColliderSurface: 1
   limitPointGripLiftByCarrierCapacity: 1
   pointGripLiftCapacityPerCarrier: 0.38
@@ -39,6 +38,13 @@ MonoBehaviour:
   maximumTiltAngle: 35
   tiltRestoringTorque: 260
   tiltDamping: 45
+  stabilizeWhenFullyStaffed: 1
+  fullyStaffedLoadDistributionRegularization: 0.08
+  fullyStaffedLevelingTorque: 240
+  fullyStaffedLevelingDeadZone: 1.5
+  fullyStaffedTiltDamping: 60
+  fullyStaffedMaximumTorque: 350
+  fullyStaffedStabilizationBlendDuration: 0.35
   softTetherDeadZone: 0.08
   softTetherPullSpeed: 3.5
   softTetherVelocityInfluence: 0.12
