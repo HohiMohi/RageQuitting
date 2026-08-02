@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c0995a3182a1464a89a990f501066fb, type: 3}
+  m_Name: ThornyBush
+  m_EditorClassIdentifier: Assembly-CSharp::BaseResourceSO
+  resourceName: Thorny Bush
+  resourcePrefab: {fileID: 345125299947117648, guid: 71241bb9d7194d741a196dffe27314f2, type: 3}
+  icon: {fileID: 21300000, guid: af0ae2dbf3d1efb4f82af377950704a2, type: 3}
+  baseResourceDestructionRecipeArray:
+  - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+    neededEquippableItemType: 0
+    products:
+    - resourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+      amount: 1
+    spawnOffsets:
+    - {x: 0, y: 0.35, z: 0}
+    fallbackScatterRadius: 0.1
+    scatterSpawnOffsets: 0
+    spawnOffsetScatterRadius: 0
+    scatterVelocityMin: 0.4
+    scatterVelocityMax: 0.8
+    scatterUpwardBias: 0.25
+  - finalProductBaseResourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+    neededEquippableItemType: 7
+    products:
+    - resourceSO: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}
+      amount: 1
+    spawnOffsets:
+    - {x: 0, y: 0.35, z: 0}
+    fallbackScatterRadius: 0.1
+    scatterSpawnOffsets: 0
+    spawnOffsetScatterRadius: 0
+    scatterVelocityMin: 0.4
+    scatterVelocityMax: 0.8
+    scatterUpwardBias: 0.25
+  resourceDurability: 15
+  movementSpeedPenalty: 0
+  canBeCarried: 0
+  minAmountOfPlayersNeeded: 0
+  allowMultipleCarriers: 0
+  recommendedCarriers: 1
+  maxCarriers: 1
+  underStaffedPenaltyMultiplier: 1
+  sharedCarryUnderstaffedStaminaDrainPerSecond: 0
+  carryMoveSpeed: 0
+  carryPlayerClearance: 0.35
+  carryAttachLocalPoints: []
+  sharedCarryRotationOffsetEuler: {x: 0, y: 0, z: 0}
+  carryPhysicsProfile: {fileID: 0}
+  furnaceFuelAmount: 0
+  impactSurfaceType: 1
