@@ -37,6 +37,7 @@ Transform:
   m_Children:
   - {fileID: 6443065939112619218}
   - {fileID: 5314715974974362649}
+  - {fileID: 6239600173624432589}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2283903632250504443
@@ -78,6 +79,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MountableBridgeComponent
   ShowTopMostFoldoutHeaderGroup: 1
   mountableBridgeComponentSO: {fileID: 11400000, guid: 02de348a3aecf8c48af099d5429623cb, type: 2}
+  mountAlignmentPoint: {fileID: 6239600173624432589}
   isPickedUp: 0
   sharedCarryGroundLayerMask:
     serializedVersion: 2
@@ -212,6 +214,37 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!1 &1914377265038557922
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6239600173624432589}
+  m_Layer: 0
+  m_Name: MountAlignmentPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6239600173624432589
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1914377265038557922}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 926676885036233051}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6425446112341838072
 GameObject:
   m_ObjectHideFlags: 0

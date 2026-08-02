@@ -145,7 +145,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.37106913, g: 0.37106913, b: 0.37106913, a: 0.76862746}
@@ -238,7 +238,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
@@ -681,6 +681,59 @@ MonoBehaviour:
   activeColor: {r: 1, g: 0.65, b: 0.08, a: 1}
   pulseAmount: 0.18
   pulseSpeed: 4
+--- !u!1 &2039952693474629081
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1683210546956940192}
+  - component: {fileID: 7770822846442685515}
+  m_Layer: 2
+  m_Name: MountComponentCaptureVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1683210546956940192
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2039952693474629081}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.13, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3988711186007305610}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &7770822846442685515
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2039952693474629081}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.5, y: 2.5, z: 6}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &2162948170831043671
 GameObject:
   m_ObjectHideFlags: 0
@@ -1638,6 +1691,59 @@ MonoBehaviour:
   activeColor: {r: 1, g: 0.65, b: 0.08, a: 1}
   pulseAmount: 0.18
   pulseSpeed: 4
+--- !u!1 &5052838538496270513
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7343271894853258379}
+  - component: {fileID: 8158979435534425839}
+  m_Layer: 2
+  m_Name: MountCarrierStagingVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7343271894853258379
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5052838538496270513}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3988711186007305610}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &8158979435534425839
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5052838538496270513}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.25, y: 3, z: 10}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &5504809310519173329
 GameObject:
   m_ObjectHideFlags: 0
@@ -1890,6 +1996,7 @@ GameObject:
   - component: {fileID: 3988711186007305610}
   - component: {fileID: 8906096908440391085}
   - component: {fileID: 4615839405154885389}
+  - component: {fileID: 5510839138751159985}
   m_Layer: 0
   m_Name: WoodenDiagonalBracingBridgeComponent
   m_TagString: Untagged
@@ -1914,6 +2021,9 @@ Transform:
   - {fileID: 6744797075389842631}
   - {fileID: 7925704189736802015}
   - {fileID: 7115533958547210418}
+  - {fileID: 5332112257160091840}
+  - {fileID: 1683210546956940192}
+  - {fileID: 7343271894853258379}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8906096908440391085
@@ -1957,6 +2067,8 @@ MonoBehaviour:
   markedGroundVisual: {fileID: 0}
   diggingVisual: {fileID: 0}
   completedDigVisual: {fileID: 0}
+  hideMountedVisualsWhenComplete: 0
+  disablePhysicalCollidersWhenComplete: 0
   prerequisiteCrossBeams: []
   orientation: 0
   bracingVisualRoot: {fileID: 6744797075389842631}
@@ -1967,6 +2079,43 @@ MonoBehaviour:
   misalignedColor: {r: 0.8, g: 0.15, b: 0.1, a: 1}
   almostAlignedColor: {r: 0.9, g: 0.65, b: 0.1, a: 1}
   alignedColor: {r: 0.15, g: 0.8, b: 0.2, a: 1}
+--- !u!114 &5510839138751159985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6578965267839666106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac3e31ecaca25d14bbebd3f2ba0106a3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeMountSocket
+  bridgeComponent: {fileID: 8906096908440391085}
+  targetPose: {fileID: 5332112257160091840}
+  componentCaptureVolume: {fileID: 7770822846442685515}
+  carrierStagingVolume: {fileID: 8158979435534425839}
+  ghostVisualRoot: {fileID: 7904640493835821974}
+  positionTolerance: {x: 0.25, y: 0.25, z: 0.25}
+  rotationToleranceDegrees: {x: 12, y: 12, z: 12}
+  maximumLinearVelocity: 0.35
+  maximumAngularVelocityDegrees: 15
+  settleDuration: 1
+  requireRecommendedCarrierCount: 1
+  allowedOrientationOffsetsEuler:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 180, z: 0}
+  positionSpring: 12
+  positionDamping: 7
+  maximumPositionAcceleration: 6
+  rotationSpring: 8
+  rotationDamping: 4
+  maximumAngularAcceleration: 4
+  feedbackVisibilityDistance: 12
+  indicatorWidth: 0.035
+  invalidColor: {r: 0.95, g: 0.16, b: 0.12, a: 0.75}
+  positioningColor: {r: 1, g: 0.68, b: 0.08, a: 0.75}
+  settlingColor: {r: 0.15, g: 0.95, b: 0.3, a: 0.8}
 --- !u!1 &6609221463858681298
 GameObject:
   m_ObjectHideFlags: 0
@@ -2463,6 +2612,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7788630075120988905}
+  m_Father: {fileID: 3988711186007305610}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8108238974523139708
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5332112257160091840}
+  m_Layer: 0
+  m_Name: MountTargetPose
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5332112257160091840
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8108238974523139708}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 3988711186007305610}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8190863787354396891

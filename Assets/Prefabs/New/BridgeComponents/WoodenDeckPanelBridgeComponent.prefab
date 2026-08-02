@@ -214,7 +214,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d1646333493f0794ca025e6332012772, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelWorkPoint
   workPointId: 3
   markerRenderer: {fileID: 6052979285168451529}
@@ -223,6 +223,59 @@ MonoBehaviour:
   activeColor: {r: 1, g: 0.72, b: 0.05, a: 1}
   pulseAmount: 0.22
   pulseSpeed: 4
+--- !u!1 &262289900617236194
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7083794301243888782}
+  - component: {fileID: 3931923251332122115}
+  m_Layer: 2
+  m_Name: MountComponentCaptureVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7083794301243888782
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262289900617236194}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.09, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9035386176381198183}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3931923251332122115
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262289900617236194}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4, y: 2.5, z: 4.4}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &265698582326846209
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,7 +422,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -1340,6 +1393,37 @@ Transform:
   - {fileID: 8652580044851614089}
   m_Father: {fileID: 5573409047271287118}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2742357675413763533
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 765984902268273183}
+  m_Layer: 0
+  m_Name: MountTargetPose
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &765984902268273183
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2742357675413763533}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9035386176381198183}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2750168292672177918
 GameObject:
   m_ObjectHideFlags: 0
@@ -1731,6 +1815,7 @@ GameObject:
   - component: {fileID: 1302415044618197312}
   - component: {fileID: 5571897640415329345}
   - component: {fileID: 3590890302050833330}
+  - component: {fileID: 4872740353136116501}
   m_Layer: 0
   m_Name: WoodenDeckPanelBridgeComponent
   m_TagString: Untagged
@@ -1753,6 +1838,9 @@ Transform:
   m_Children:
   - {fileID: 2639348702254019790}
   - {fileID: 6042836152505572824}
+  - {fileID: 765984902268273183}
+  - {fileID: 7083794301243888782}
+  - {fileID: 5364428167952310700}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1302415044618197312
@@ -1827,6 +1915,43 @@ MonoBehaviour:
   alignmentIndicatorRenderer: {fileID: 1031055003568053065}
   misalignedColor: {r: 0.8, g: 0.15, b: 0.1, a: 1}
   alignedColor: {r: 0.15, g: 0.8, b: 0.2, a: 1}
+--- !u!114 &4872740353136116501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3045501216062563860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac3e31ecaca25d14bbebd3f2ba0106a3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeMountSocket
+  bridgeComponent: {fileID: 1302415044618197312}
+  targetPose: {fileID: 765984902268273183}
+  componentCaptureVolume: {fileID: 3931923251332122115}
+  carrierStagingVolume: {fileID: 5649037336094722862}
+  ghostVisualRoot: {fileID: 7301191927294368184}
+  positionTolerance: {x: 0.25, y: 0.25, z: 0.25}
+  rotationToleranceDegrees: {x: 12, y: 12, z: 12}
+  maximumLinearVelocity: 0.35
+  maximumAngularVelocityDegrees: 15
+  settleDuration: 1
+  requireRecommendedCarrierCount: 1
+  allowedOrientationOffsetsEuler:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 180, z: 0}
+  positionSpring: 12
+  positionDamping: 7
+  maximumPositionAcceleration: 6
+  rotationSpring: 8
+  rotationDamping: 4
+  maximumAngularAcceleration: 4
+  feedbackVisibilityDistance: 12
+  indicatorWidth: 0.035
+  invalidColor: {r: 0.95, g: 0.16, b: 0.12, a: 0.75}
+  positioningColor: {r: 1, g: 0.68, b: 0.08, a: 0.75}
+  settlingColor: {r: 0.15, g: 0.95, b: 0.3, a: 0.8}
 --- !u!1 &3105035710959689138
 GameObject:
   m_ObjectHideFlags: 0
@@ -3852,6 +3977,59 @@ MonoBehaviour:
   activeColor: {r: 1, g: 0.72, b: 0.05, a: 1}
   pulseAmount: 0.22
   pulseSpeed: 4
+--- !u!1 &8075638270692242640
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5364428167952310700}
+  - component: {fileID: 5649037336094722862}
+  m_Layer: 2
+  m_Name: MountCarrierStagingVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5364428167952310700
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8075638270692242640}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9035386176381198183}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5649037336094722862
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8075638270692242640}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 8, y: 3, z: 8.4}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8741948963976879955
 GameObject:
   m_ObjectHideFlags: 0

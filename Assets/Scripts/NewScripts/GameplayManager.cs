@@ -22,6 +22,9 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
     public float constructionAnchor3;
     public float constructionAux0;
     public float constructionAux1;
+    public int mountAlignmentState;
+    public ulong mountAlignmentCandidateNetworkObjectId;
+    public double mountAlignmentStartedAt;
 
     public BridgeComponentNetworkState(int componentID)
     {
@@ -40,6 +43,9 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
         constructionAnchor3 = 0f;
         constructionAux0 = 0f;
         constructionAux1 = 0f;
+        mountAlignmentState = (int)BridgeMountAlignmentState.Inactive;
+        mountAlignmentCandidateNetworkObjectId = BridgeMountSocket.NoCandidateNetworkObjectId;
+        mountAlignmentStartedAt = -1d;
     }
 
     public bool Equals(BridgeComponentNetworkState other)
@@ -58,7 +64,10 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
             && constructionAnchor2.Equals(other.constructionAnchor2)
             && constructionAnchor3.Equals(other.constructionAnchor3)
             && constructionAux0.Equals(other.constructionAux0)
-            && constructionAux1.Equals(other.constructionAux1);
+            && constructionAux1.Equals(other.constructionAux1)
+            && mountAlignmentState == other.mountAlignmentState
+            && mountAlignmentCandidateNetworkObjectId == other.mountAlignmentCandidateNetworkObjectId
+            && mountAlignmentStartedAt.Equals(other.mountAlignmentStartedAt);
     }
 
     public override bool Equals(object obj)
@@ -76,7 +85,12 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
             constructionAnchor1,
             constructionAnchor2,
             constructionAnchor3,
-            HashCode.Combine(constructionAux0, constructionAux1));
+            HashCode.Combine(
+                constructionAux0,
+                constructionAux1,
+                mountAlignmentState,
+                mountAlignmentCandidateNetworkObjectId,
+                mountAlignmentStartedAt));
     }
 }
 
@@ -139,7 +153,7 @@ public class GameplayManager : MonoBehaviour
     private const string RequestConstructionWorkMessageName = "GameplayManager_RequestConstructionWork";
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
     private const int StateMessageBaseSize = sizeof(int);
-    private const int StateMessageItemSize = sizeof(int) * 4 + sizeof(bool) * 3 + sizeof(float) * 8;
+    private const int StateMessageItemSize = sizeof(int) * 5 + sizeof(bool) * 3 + sizeof(float) * 8 + sizeof(ulong) + sizeof(double);
     private const int MountRequestMessageSize = sizeof(int) + sizeof(ulong);
     private const int AssembleRequestMessageSize = sizeof(int) * 2;
     private const int ConstructionWorkRequestMessageSize = sizeof(int) * 3;
@@ -350,6 +364,7 @@ public class GameplayManager : MonoBehaviour
                 constructionProgress = constructionSite != null ? constructionSite.CurrentWorkProgress : 0f
             };
             constructionSite?.PopulateNetworkState(ref state);
+            component?.MountSocket?.PopulateNetworkState(ref state);
             bridgeComponentStates.Add(state);
         }
     }
@@ -460,13 +475,13 @@ public class GameplayManager : MonoBehaviour
 
         if (!IsNetworkSessionActive())
         {
-            TryMountBridgeComponentLocal(bridgeComponent, heldComponent);
+            TryMountBridgeComponentLocal(bridgeComponent, heldComponent, false);
             return;
         }
 
         if (NetworkManager.Singleton.IsServer)
         {
-            TryMountBridgeComponentServer(bridgeComponent.ComponentID, heldComponent.NetworkObjectId);
+            TryMountBridgeComponentServer(NetworkManager.Singleton.LocalClientId, bridgeComponent.ComponentID, heldComponent.NetworkObjectId);
             return;
         }
 
@@ -630,21 +645,20 @@ public class GameplayManager : MonoBehaviour
         return actionController != null && actionController.CanPerformServerValidatedActionOn(target, selectedTool);
     }
 
-    private void TryMountBridgeComponentLocal(BridgeComponent bridgeComponent, MountableBridgeComponent heldComponent)
+    private void TryMountBridgeComponentLocal(
+        BridgeComponent bridgeComponent,
+        MountableBridgeComponent heldComponent,
+        bool allowMountSocket)
     {
-        if (!CanMountBridgeComponent(bridgeComponent, heldComponent))
+        if ((!allowMountSocket && bridgeComponent.MountSocket != null)
+            || !CanMountBridgeComponent(bridgeComponent, heldComponent)
+            || !IsValidComponentDataIndex(bridgeComponent.ComponentID))
         {
             return;
         }
 
         bridgeComponent.ApplyMountedState();
         heldComponent.RemoveFromWorld();
-        if (!IsValidComponentDataIndex(bridgeComponent.ComponentID))
-        {
-            Debug.LogError($"Cannot mount bridge component {bridgeComponent.ComponentID}: bridgeComponentDataArray has {bridgeComponentDataArray?.Length ?? 0} entries.", this);
-            return;
-        }
-
         bridgeComponentDataArray[bridgeComponent.ComponentID].isMounted = true;
         if (!bridgeComponent.NeedAssembling)
         {
@@ -657,10 +671,10 @@ public class GameplayManager : MonoBehaviour
     {
         reader.ReadValueSafe(out int componentID);
         reader.ReadValueSafe(out ulong mountableComponentNetworkObjectId);
-        TryMountBridgeComponentServer(componentID, mountableComponentNetworkObjectId);
+        TryMountBridgeComponentServer(senderClientId, componentID, mountableComponentNetworkObjectId);
     }
 
-    private void TryMountBridgeComponentServer(int componentID, ulong mountableComponentNetworkObjectId)
+    private void TryMountBridgeComponentServer(ulong senderClientId, int componentID, ulong mountableComponentNetworkObjectId)
     {
         if (!NetworkManager.Singleton.IsServer || !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent))
         {
@@ -672,7 +686,10 @@ public class GameplayManager : MonoBehaviour
             return;
         }
 
-        if (!mountableNetworkObject.TryGetComponent(out MountableBridgeComponent heldComponent) || !CanMountBridgeComponent(bridgeComponent, heldComponent))
+        if (!mountableNetworkObject.TryGetComponent(out MountableBridgeComponent heldComponent)
+            || bridgeComponent.MountSocket != null
+            || !heldComponent.IsHeldBy(senderClientId)
+            || !CanMountBridgeComponent(bridgeComponent, heldComponent))
         {
             return;
         }
@@ -710,6 +727,87 @@ public class GameplayManager : MonoBehaviour
             && !bridgeComponent.IsMounted
             && heldComponent.GetMountableBridgeComponentSO() != null
             && heldComponent.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponent.GetBridgeComponentSO();
+    }
+
+    public bool TryAutoMountBridgeComponent(BridgeComponent bridgeComponent, MountableBridgeComponent heldComponent)
+    {
+        if (bridgeComponent == null
+            || heldComponent == null
+            || bridgeComponent.MountSocket == null
+            || !bridgeComponent.MountSocket.IsAuthoritativeCandidateReady(heldComponent)
+            || !CanMountBridgeComponent(bridgeComponent, heldComponent))
+        {
+            return false;
+        }
+
+        if (!IsNetworkSessionActive())
+        {
+            heldComponent.PrepareForMountingRemoval();
+            TryMountBridgeComponentLocal(bridgeComponent, heldComponent, true);
+            return bridgeComponent.IsMounted;
+        }
+
+        if (!NetworkManager.Singleton.IsServer || !TryGetStateIndex(bridgeComponent.ComponentID, out int stateIndex))
+        {
+            return false;
+        }
+
+        heldComponent.PrepareForMountingRemoval();
+        heldComponent.RemoveFromWorld();
+        BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
+        state.isMounted = true;
+        state.canBeMounted = false;
+        state.mountAlignmentState = (int)BridgeMountAlignmentState.Complete;
+        state.mountAlignmentCandidateNetworkObjectId = BridgeMountSocket.NoCandidateNetworkObjectId;
+        if (bridgeComponent.ConstructionSite != null)
+        {
+            bridgeComponent.ConstructionSite.NotifyMounted();
+            bridgeComponent.ConstructionSite.PopulateNetworkState(ref state);
+        }
+        if (!bridgeComponent.NeedAssembling)
+        {
+            state.isAssembled = true;
+            state.currentAssemblingProgress = bridgeComponent.GetAssemblingProgressNeeded();
+        }
+
+        bridgeComponentStates[stateIndex] = state;
+        ApplyNetworkState(state);
+        CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
+        BroadcastBridgeState();
+        return true;
+    }
+
+    public void ReportMountAlignmentState(
+        BridgeComponent bridgeComponent,
+        BridgeMountAlignmentState alignmentState,
+        ulong candidateNetworkObjectId,
+        double startedAt)
+    {
+        if (bridgeComponent == null || !IsNetworkSessionActive() || !NetworkManager.Singleton.IsServer)
+        {
+            return;
+        }
+
+        InitializeServerBridgeState();
+        if (!TryGetStateIndex(bridgeComponent.ComponentID, out int stateIndex))
+        {
+            return;
+        }
+
+        BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
+        if (state.mountAlignmentState == (int)alignmentState
+            && state.mountAlignmentCandidateNetworkObjectId == candidateNetworkObjectId
+            && Math.Abs(state.mountAlignmentStartedAt - startedAt) < 0.0001d)
+        {
+            return;
+        }
+
+        state.mountAlignmentState = (int)alignmentState;
+        state.mountAlignmentCandidateNetworkObjectId = candidateNetworkObjectId;
+        state.mountAlignmentStartedAt = startedAt;
+        bridgeComponentStates[stateIndex] = state;
+        BroadcastBridgeState();
     }
 
     private void HandleRequestAssembleMessage(ulong senderClientId, FastBufferReader reader)
@@ -792,13 +890,20 @@ public class GameplayManager : MonoBehaviour
         }
 
         using FastBufferWriter writer = CreateBridgeStateWriter();
-        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessageToAll(StateSyncMessageName, writer);
+        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessageToAll(
+            StateSyncMessageName,
+            writer,
+            NetworkDelivery.ReliableFragmentedSequenced);
     }
 
     private void SendBridgeState(ulong clientId)
     {
         using FastBufferWriter writer = CreateBridgeStateWriter();
-        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(StateSyncMessageName, clientId, writer);
+        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(
+            StateSyncMessageName,
+            clientId,
+            writer,
+            NetworkDelivery.ReliableFragmentedSequenced);
     }
 
     private FastBufferWriter CreateBridgeStateWriter()
@@ -851,6 +956,9 @@ public class GameplayManager : MonoBehaviour
         writer.WriteValueSafe(state.constructionAnchor3);
         writer.WriteValueSafe(state.constructionAux0);
         writer.WriteValueSafe(state.constructionAux1);
+        writer.WriteValueSafe(state.mountAlignmentState);
+        writer.WriteValueSafe(state.mountAlignmentCandidateNetworkObjectId);
+        writer.WriteValueSafe(state.mountAlignmentStartedAt);
     }
 
     private BridgeComponentNetworkState ReadState(FastBufferReader reader)
@@ -870,6 +978,9 @@ public class GameplayManager : MonoBehaviour
         reader.ReadValueSafe(out float constructionAnchor3);
         reader.ReadValueSafe(out float constructionAux0);
         reader.ReadValueSafe(out float constructionAux1);
+        reader.ReadValueSafe(out int mountAlignmentState);
+        reader.ReadValueSafe(out ulong mountAlignmentCandidateNetworkObjectId);
+        reader.ReadValueSafe(out double mountAlignmentStartedAt);
 
         return new BridgeComponentNetworkState(componentID)
         {
@@ -886,7 +997,10 @@ public class GameplayManager : MonoBehaviour
             constructionAnchor2 = constructionAnchor2,
             constructionAnchor3 = constructionAnchor3,
             constructionAux0 = constructionAux0,
-            constructionAux1 = constructionAux1
+            constructionAux1 = constructionAux1,
+            mountAlignmentState = mountAlignmentState,
+            mountAlignmentCandidateNetworkObjectId = mountAlignmentCandidateNetworkObjectId,
+            mountAlignmentStartedAt = mountAlignmentStartedAt
         };
     }
 

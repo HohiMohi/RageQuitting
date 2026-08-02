@@ -24,9 +24,9 @@ MonoBehaviour:
     amount: 1
   bridgeComponentSO: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
   movementSpeedPenalty: 0.15
-  minAmountOfPlayersNeeded: 3
+  minAmountOfPlayersNeeded: 1
   allowMultipleCarriers: 1
-  recommendedCarriers: 3
+  recommendedCarriers: 1
   maxCarriers: 3
   underStaffedPenaltyMultiplier: 0.4
   sharedCarryUnderstaffedStaminaDrainPerSecond: 1

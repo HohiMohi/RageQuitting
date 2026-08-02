@@ -279,7 +279,7 @@ public class BridgeDiagonalBracingConstructionSite : BridgeConstructionSite
         }
         else if (currentStage == BridgeConstructionStage.ReadyForMount)
         {
-            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Deliver Wooden Diagonal Bracing"));
+            bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Diagonal Bracing");
         }
     }
 

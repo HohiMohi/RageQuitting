@@ -254,7 +254,7 @@ public class BridgeCrossBeamConstructionSite : BridgeConstructionSite
         }
         else if (currentStage == BridgeConstructionStage.ReadyForMount)
         {
-            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Deliver Wooden Cross Beam"));
+            bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Cross Beam");
         }
     }
 

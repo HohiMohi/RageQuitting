@@ -11,6 +11,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     private readonly NetworkVariable<ulong> occupiedAttachPointMaskNetwork = new NetworkVariable<ulong>();
 
     [SerializeField] private MountableBridgeComponentSO mountableBridgeComponentSO;
+    [Tooltip("Optional pose used by BridgeMountSocket. The component root is used when this is empty.")]
+    [SerializeField] private Transform mountAlignmentPoint;
     [SerializeField] private bool isPickedUp = false;
     [SerializeField] private LayerMask sharedCarryGroundLayerMask = Physics.DefaultRaycastLayers;
     [SerializeField] private float sharedCarryGroundRaycastUpOffset = 2f;
@@ -20,6 +22,10 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     [SerializeField] private float sharedCarryMaxVerticalPlacementDelta = 0.75f;
     public bool IsPickedUp => isPickedUp;
     public bool IsActivelyCarried => isPickedUp;
+    public Transform MountAlignmentTransform => mountAlignmentPoint != null ? mountAlignmentPoint : transform;
+    public Rigidbody PhysicsBody => _rigidbody;
+    public int ActiveCarrierCount => GetCurrentHolderCount();
+    public int RecommendedCarriers => GetRecommendedCarriers();
     public bool SupportsAnchorPreview => _sharedCarryPhysicsBody != null
         && _sharedCarryPhysicsBody.ControlMode == SharedCarryControlMode.PhysicalPointGrip;
 
@@ -1314,6 +1320,41 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             markerOutwardDirection,
             playerPlacement);
         return true;
+    }
+
+    public bool IsHeldBy(ulong clientId)
+    {
+        return holderClientIds.Contains(clientId);
+    }
+
+    public void PrepareForMountingRemoval()
+    {
+        if (IsNetworkSessionActive())
+        {
+            if (IsServer)
+            {
+                ForceReleaseCurrentHolders();
+                ForceReleaseExternalCarryActor();
+            }
+            return;
+        }
+
+        PlayerInteractionNew[] players = FindObjectsByType<PlayerInteractionNew>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        foreach (PlayerInteractionNew player in players)
+        {
+            if (player != null && player.GetPickedUpGameObject() == gameObject)
+            {
+                player.ForceReleasePickedUpObject(gameObject);
+            }
+        }
+
+        foreach (ulong actorId in npcHolderActorIds.ToArray())
+        {
+            ClearNpcSharedCarryHolder(actorId, true);
+        }
+        ForceReleaseExternalCarryActor();
+        ClearLocalSharedCarryState();
+        SetPickedUpState(false);
     }
 
     private bool TryGetCarryAnchorPreviewLocalPoint(int attachPointIndex, out Vector3 previewLocalPoint)

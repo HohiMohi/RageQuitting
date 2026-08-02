@@ -146,7 +146,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
                     $"Dig foundation - {Mathf.CeilToInt(currentWorkProgress)} / {Mathf.CeilToInt(RequiredWorkProgress)}"));
                 break;
             case BridgeConstructionStage.ReadyForMount:
-                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Deliver Wooden Foundation"));
+                bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Foundation");
                 break;
             case BridgeConstructionStage.Hammering:
                 prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,

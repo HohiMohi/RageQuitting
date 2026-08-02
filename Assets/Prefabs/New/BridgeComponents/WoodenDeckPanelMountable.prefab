@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1071953876245875673
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6076198151206247423}
+  m_Layer: 0
+  m_Name: MountAlignmentPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6076198151206247423
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1071953876245875673}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3187452543888606679}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &812761260378441203
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8,10 +39,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 7812937564109823443, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
-      propertyPath: profile
-      value:
-      objectReference: {fileID: 11400000, guid: a1f0d7e934b54ec58aeb1a47cd209006, type: 2}
     - target: {fileID: 336505790147575727, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
       propertyPath: m_Size.x
       value: 2
@@ -86,15 +113,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2944903068767746877, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
-      value: 
+      value:
       objectReference: {fileID: 2100000, guid: a93690481a4958b458bcf869e19c3a20, type: 2}
     - target: {fileID: 3619494238778981573, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
       propertyPath: m_Name
       value: WoodenDeckPanelMountable
       objectReference: {fileID: 0}
     - target: {fileID: 4637332815183956525, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
+      propertyPath: mountAlignmentPoint
+      value:
+      objectReference: {fileID: 6076198151206247423}
+    - target: {fileID: 4637332815183956525, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
       propertyPath: mountableBridgeComponentSO
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: efe9a838721d1314cbcea199a5221532, type: 2}
     - target: {fileID: 7812937564109823441, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
       propertyPath: GlobalObjectIdHash
@@ -108,8 +139,20 @@ PrefabInstance:
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 1607336829
       objectReference: {fileID: 0}
+    - target: {fileID: 7812937564109823443, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
+      propertyPath: profile
+      value:
+      objectReference: {fileID: 11400000, guid: a1f0d7e934b54ec58aeb1a47cd209006, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2845036072808415268, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6076198151206247423}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
+--- !u!4 &3187452543888606679 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2845036072808415268, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
+  m_PrefabInstance: {fileID: 812761260378441203}
+  m_PrefabAsset: {fileID: 0}

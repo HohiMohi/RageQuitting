@@ -23,6 +23,10 @@ public class CarryPhysicsProfileSO : ScriptableObject
     [Min(0f)] public float pointGripSpring = 180f;
     [Min(0f)] public float pointGripDamping = 45f;
     [Min(0f)] public float pointGripMaxForce = 700f;
+    public bool enableMinimumControlledYawSpeed = false;
+    [Min(0f)] public float minimumControlledYawSpeedDegrees = 18f;
+    [Min(0f)] public float controlledYawAssistAccelerationDegrees = 60f;
+    [Range(0f, 1f)] public float controlledYawIntentDeadZone = 0.1f;
     public bool projectGripForcesToColliderSurface = false;
     public bool limitPointGripLiftByCarrierCapacity = false;
     [Range(0f, 2f)] public float pointGripLiftCapacityPerCarrier = 0.55f;

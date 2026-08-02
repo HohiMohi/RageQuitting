@@ -128,6 +128,13 @@ Panel używają osobnych profili `PhysicalPointGrip`. Nie przypisuj im wspólneg
 profilu: masa, damping, limit przechyłu i udźwig na carriera są dostrojone do
 konkretnej geometrii.
 
+W tych sześciu SO `minAmountOfPlayersNeeded = 1` jest tymczasowym ustawieniem
+testowym pozwalającym rozpocząć carry solo. Nie ustawiaj z tego powodu
+`recommendedCarriers` na `1`: ta wartość steruje fizyką i wynosi `3` dla
+Foundation, Abutment i Main Girder oraz `2` dla Cross Beam, Diagonal Bracing i
+Deck Panel. Stabilizacja fully-staffed uruchamia się dopiero po osiągnięciu tej
+docelowej obsady.
+
 Każdy z tych SO ma osiem `carryAttachLocalPoints` w kolejności: cztery narożniki,
 przód, prawa strona, tył, lewa strona. `maxCarriers` nadal wynosi `2` albo `3`;
 osiem punktów oznacza pulę możliwych pozycji, nie ośmiu jednoczesnych holderów.
@@ -144,7 +151,9 @@ pojedynczy holder nie przejmował całego ciężaru wieloosobowej części.
 Ruch kamery nie reguluje już wysokości chwytu, a pole
 `maximumGripHeightOffset` nie istnieje. Przy pełnej obsadzie części mostu
 `stabilizeWhenFullyStaffed` uruchamia serwerowy solver rozkładu pionowego
-podparcia. Ustawienia tej sekcji profilu:
+podparcia. Solver kompensuje residualny moment pełnej pasywnej siły chwytu po
+wcześniejszym, jednokrotnym odjęciu kompensacji rollu. Ustawienia tej sekcji
+profilu:
 
 | Pole | Typ/jednostka | Znaczenie |
 |---|---|---|

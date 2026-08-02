@@ -315,7 +315,7 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
         }
         else if (currentStage == BridgeConstructionStage.ReadyForMount)
         {
-            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Deliver Wooden Deck Panel"));
+            bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Deck Panel");
         }
     }
 

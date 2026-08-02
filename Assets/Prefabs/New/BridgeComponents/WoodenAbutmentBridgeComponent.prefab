@@ -123,9 +123,40 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69966c098803af846877ec3d2501ca8f, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::BridgeAbutmentWorkPoint
   workPointId: 11
+--- !u!1 &456133250462768286
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9125810961382398546}
+  m_Layer: 0
+  m_Name: MountTargetPose
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9125810961382398546
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 456133250462768286}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6791451970182892134}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &701768163505495249
 GameObject:
   m_ObjectHideFlags: 0
@@ -339,7 +370,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69966c098803af846877ec3d2501ca8f, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::BridgeAbutmentWorkPoint
   workPointId: 1
 --- !u!1 &1607730084043986354
@@ -465,7 +496,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69966c098803af846877ec3d2501ca8f, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::BridgeAbutmentWorkPoint
   workPointId: 0
 --- !u!1 &1806163269220058786
@@ -681,9 +712,62 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69966c098803af846877ec3d2501ca8f, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::BridgeAbutmentWorkPoint
   workPointId: 12
+--- !u!1 &2517699336055649752
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2702247594129671158}
+  - component: {fileID: 19839726784000581}
+  m_Layer: 2
+  m_Name: MountComponentCaptureVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2702247594129671158
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2517699336055649752}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.59999996, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6791451970182892134}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &19839726784000581
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2517699336055649752}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.4, y: 2.8134196, z: 5.2443056}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3738756928114092892
 GameObject:
   m_ObjectHideFlags: 0
@@ -1533,6 +1617,59 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &8989176373088213850
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7986319950502389931}
+  - component: {fileID: 266202016382528885}
+  m_Layer: 2
+  m_Name: MountCarrierStagingVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7986319950502389931
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8989176373088213850}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6791451970182892134}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &266202016382528885
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8989176373088213850}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 8.4, y: 3.3134196, z: 9.244306}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &3970428948292095935
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1670,10 +1807,22 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       insertIndex: -1
       addedObject: {fileID: 498631610348367143}
+    - targetCorrespondingSourceObject: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9125810961382398546}
+    - targetCorrespondingSourceObject: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2702247594129671158}
+    - targetCorrespondingSourceObject: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7986319950502389931}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8055575316023257244}
+    - targetCorrespondingSourceObject: {fileID: 4503090971889695914, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6047275543221324500}
   m_SourcePrefab: {fileID: 100100000, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
 --- !u!1 &677788956319822613 stripped
 GameObject:
@@ -1699,6 +1848,8 @@ MonoBehaviour:
   markedGroundVisual: {fileID: 0}
   diggingVisual: {fileID: 0}
   completedDigVisual: {fileID: 0}
+  hideMountedVisualsWhenComplete: 0
+  disablePhysicalCollidersWhenComplete: 0
   prerequisiteFoundation: {fileID: 0}
   rampVisualRoot: {fileID: 2393748353542568085}
   leftWedgeVisual: {fileID: 5121092877237975305}
@@ -1706,6 +1857,53 @@ MonoBehaviour:
   levelIndicatorRenderer: {fileID: 2534043354003413782}
   unlevelColor: {r: 0.8, g: 0.15, b: 0.1, a: 1}
   levelColor: {r: 0.15, g: 0.8, b: 0.2, a: 1}
+--- !u!114 &6047275543221324500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 677788956319822613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac3e31ecaca25d14bbebd3f2ba0106a3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeMountSocket
+  bridgeComponent: {fileID: 3546353653165739073}
+  targetPose: {fileID: 9125810961382398546}
+  componentCaptureVolume: {fileID: 19839726784000581}
+  carrierStagingVolume: {fileID: 266202016382528885}
+  ghostVisualRoot: {fileID: 6304839535055071312}
+  positionTolerance: {x: 0.25, y: 0.25, z: 0.25}
+  rotationToleranceDegrees: {x: 12, y: 12, z: 12}
+  maximumLinearVelocity: 0.35
+  maximumAngularVelocityDegrees: 15
+  settleDuration: 1
+  requireRecommendedCarrierCount: 1
+  allowedOrientationOffsetsEuler:
+  - {x: 0, y: 0, z: 0}
+  positionSpring: 12
+  positionDamping: 7
+  maximumPositionAcceleration: 6
+  rotationSpring: 8
+  rotationDamping: 4
+  maximumAngularAcceleration: 4
+  feedbackVisibilityDistance: 12
+  indicatorWidth: 0.035
+  invalidColor: {r: 0.95, g: 0.16, b: 0.12, a: 0.75}
+  positioningColor: {r: 1, g: 0.68, b: 0.08, a: 0.75}
+  settlingColor: {r: 0.15, g: 0.95, b: 0.3, a: 0.8}
+--- !u!114 &3546353653165739073 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 445541680187868158, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}
+  m_PrefabInstance: {fileID: 3970428948292095935}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 677788956319822613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f62e55383e8b6a40a20d283ef8e5295, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeComponent
 --- !u!4 &6791451970182892134 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7591337799597426137, guid: cb63db54486c4994ebf6f8ae8d214131, type: 3}

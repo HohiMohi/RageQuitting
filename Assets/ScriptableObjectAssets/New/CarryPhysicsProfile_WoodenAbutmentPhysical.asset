@@ -22,6 +22,10 @@ MonoBehaviour:
   pointGripSpring: 220
   pointGripDamping: 65
   pointGripMaxForce: 1650
+  enableMinimumControlledYawSpeed: 1
+  minimumControlledYawSpeedDegrees: 18
+  controlledYawAssistAccelerationDegrees: 60
+  controlledYawIntentDeadZone: 0.1
   projectGripForcesToColliderSurface: 1
   limitPointGripLiftByCarrierCapacity: 1
   pointGripLiftCapacityPerCarrier: 0.38

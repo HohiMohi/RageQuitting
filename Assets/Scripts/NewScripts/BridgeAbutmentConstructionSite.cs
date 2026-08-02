@@ -240,7 +240,7 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
         }
         else if (currentStage == BridgeConstructionStage.ReadyForMount)
         {
-            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Deliver Wooden Abutment"));
+            bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Abutment");
         }
     }
 

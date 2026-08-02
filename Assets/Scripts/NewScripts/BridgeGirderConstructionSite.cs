@@ -212,7 +212,7 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         }
         else if (currentStage == BridgeConstructionStage.ReadyForMount)
         {
-            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Deliver Wooden Main Girder"));
+            bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Main Girder");
         }
     }
 

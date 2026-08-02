@@ -339,7 +339,9 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             && profile.compensatePointGripRoll
             && TryGetWorldLongAxis(out worldLongAxis);
         float accumulatedGripRollTorque = 0f;
-        Vector3 accumulatedSupportTorque = Vector3.zero;
+        Vector3 accumulatedPassiveGripTorque = Vector3.zero;
+        float accumulatedControlledYawTorque = 0f;
+        float accumulatedMaximumYawTorque = 0f;
 
         for (int i = 0; i < holders.Count; i++)
         {
@@ -366,30 +368,47 @@ public class SharedCarryPhysicsBody : MonoBehaviour
                 normalizationDivisor);
             gripConstraintForce = SmoothConstraintForce(holder.BodyAnchor, gripConstraintForce, forceBlend);
             Vector3 gripForce = gripConstraintForce + gravitySupport;
-            gripForce = LimitPointGripLiftCapacity(gripForce);
-            accumulatedSupportTorque += Vector3.Cross(forceApplicationPoint - worldCenterOfMass, gravitySupport);
+            gripForce = LimitPointGripLiftCapacity(gripForce, normalizationDivisor);
+            Vector3 passiveGripTorque = Vector3.Cross(forceApplicationPoint - worldCenterOfMass, gripForce);
+            accumulatedPassiveGripTorque += passiveGripTorque;
             if (compensateGripRoll)
             {
-                Vector3 gripTorque = Vector3.Cross(forceApplicationPoint - worldCenterOfMass, gripForce);
-                accumulatedGripRollTorque += Vector3.Dot(gripTorque, worldLongAxis);
+                accumulatedGripRollTorque += Vector3.Dot(passiveGripTorque, worldLongAxis);
             }
             body.AddForceAtPosition(gripForce, forceApplicationPoint, ForceMode.Force);
 
-            Vector3 lateralForce = Vector3.ClampMagnitude(Vector3.ProjectOnPlane(holder.DesiredLateralInput, Vector3.up), 1f)
-                * GetPointGripLateralForce() / normalizationDivisor;
+            Vector3 lateralInput = Vector3.ClampMagnitude(
+                Vector3.ProjectOnPlane(holder.DesiredLateralInput, Vector3.up),
+                1f);
+            Vector3 lateralForce = lateralInput * GetPointGripLateralForce() / normalizationDivisor;
             body.AddForceAtPosition(lateralForce, forceApplicationPoint, ForceMode.Force);
+
+            Vector3 horizontalLever = Vector3.ProjectOnPlane(forceApplicationPoint - worldCenterOfMass, Vector3.up);
+            accumulatedControlledYawTorque += Vector3.Dot(
+                Vector3.Cross(horizontalLever, lateralForce),
+                Vector3.up);
+            accumulatedMaximumYawTorque += horizontalLever.magnitude
+                * GetPointGripLateralForce()
+                / normalizationDivisor
+                * lateralInput.magnitude;
         }
 
+        Vector3 appliedGripRollCompensation = Vector3.zero;
         if (compensateGripRoll)
         {
             float compensationTorque = -accumulatedGripRollTorque
                 * Mathf.Clamp01(profile.pointGripRollCompensation);
             float maximumCompensation = Mathf.Max(0f, profile.maximumPointGripRollCompensationTorque);
             compensationTorque = Mathf.Clamp(compensationTorque, -maximumCompensation, maximumCompensation);
-            body.AddTorque(worldLongAxis * compensationTorque, ForceMode.Force);
+            appliedGripRollCompensation = worldLongAxis * compensationTorque;
+            body.AddTorque(appliedGripRollCompensation, ForceMode.Force);
         }
 
-        ApplyFullyStaffedStabilization(accumulatedSupportTorque);
+        ApplyMinimumControlledYawSpeed(
+            accumulatedControlledYawTorque,
+            accumulatedMaximumYawTorque,
+            fixedDeltaTime);
+        ApplyFullyStaffedStabilization(accumulatedPassiveGripTorque + appliedGripRollCompensation);
 
         PruneConstraintState(holders);
         Vector3 horizontalVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
@@ -467,6 +486,50 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             position,
             rotation,
             out surfaceOutwardDirection);
+    }
+
+    private void ApplyMinimumControlledYawSpeed(
+        float controlledYawTorque,
+        float maximumYawTorque,
+        float fixedDeltaTime)
+    {
+        if (profile == null
+            || !profile.enableMinimumControlledYawSpeed
+            || ControlMode != SharedCarryControlMode.PhysicalPointGrip
+            || !AllowsYawRotation()
+            || maximumYawTorque <= 0.0001f
+            || fixedDeltaTime <= 0f)
+        {
+            return;
+        }
+
+        float yawIntent = Mathf.Clamp(controlledYawTorque / maximumYawTorque, -1f, 1f);
+        if (Mathf.Abs(yawIntent) <= Mathf.Clamp01(profile.controlledYawIntentDeadZone))
+        {
+            return;
+        }
+
+        float targetYawSpeed = Mathf.Sign(yawIntent)
+            * Mathf.Max(0f, profile.minimumControlledYawSpeedDegrees)
+            * Mathf.Deg2Rad;
+        float currentYawSpeed = Vector3.Dot(body.angularVelocity, Vector3.up);
+        if (Mathf.Sign(currentYawSpeed) == Mathf.Sign(targetYawSpeed)
+            && Mathf.Abs(currentYawSpeed) >= Mathf.Abs(targetYawSpeed))
+        {
+            return;
+        }
+
+        float maximumAcceleration = Mathf.Max(0f, profile.controlledYawAssistAccelerationDegrees)
+            * Mathf.Deg2Rad;
+        float requiredAcceleration = (targetYawSpeed - currentYawSpeed) / fixedDeltaTime;
+        float yawAcceleration = Mathf.Clamp(requiredAcceleration, -maximumAcceleration, maximumAcceleration);
+
+        // Angular damping on heavy carry profiles can otherwise make the configured
+        // minimum speed unreachable even while the player keeps steering.
+        float dampingCompensation = Mathf.Sign(currentYawSpeed) == Mathf.Sign(targetYawSpeed)
+            ? currentYawSpeed * Mathf.Max(0f, body.angularDamping)
+            : 0f;
+        body.AddTorque(Vector3.up * (yawAcceleration + dampingCompensation), ForceMode.Acceleration);
     }
 
     public Vector3 ResolvePreviewGripPointForPose(
@@ -678,7 +741,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         {
             float maximumUpwardForce = body.mass
                 * Mathf.Max(0f, -Physics.gravity.y)
-                * Mathf.Clamp(profile.pointGripLiftCapacityPerCarrier, 0f, 2f);
+                * GetEffectivePointGripLiftCapacity(normalizationDivisor);
             force.y = Mathf.Min(force.y, Mathf.Max(0f, maximumUpwardForce - gravitySupport.y));
         }
 
@@ -720,7 +783,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         }
 
         float maximumShare = profile.limitPointGripLiftByCarrierCapacity
-            ? Mathf.Clamp(profile.pointGripLiftCapacityPerCarrier, 0f, 2f)
+            ? GetEffectivePointGripLiftCapacity(solverCount)
             : 2f;
         if (maximumShare * solverCount < 1f - SolverEpsilon)
         {
@@ -942,14 +1005,14 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             : Mathf.MoveTowards(fullyStaffedStabilizationWeight, targetWeight, fixedDeltaTime / blendDuration);
     }
 
-    private void ApplyFullyStaffedStabilization(Vector3 accumulatedSupportTorque)
+    private void ApplyFullyStaffedStabilization(Vector3 residualPassiveGripTorque)
     {
         if (profile == null || !profile.stabilizeWhenFullyStaffed || fullyStaffedStabilizationWeight <= 0f)
         {
             return;
         }
 
-        Vector3 residualSupportTorque = -Vector3.ProjectOnPlane(accumulatedSupportTorque, Vector3.up);
+        Vector3 residualSupportTorque = -Vector3.ProjectOnPlane(residualPassiveGripTorque, Vector3.up);
         Quaternion yawRotation = ExtractYawRotation(body.rotation);
         Quaternion targetRotation = yawRotation * sharedCarryTiltOffset;
         Quaternion errorRotation = targetRotation * Quaternion.Inverse(body.rotation);
@@ -975,7 +1038,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         body.AddTorque(stabilizingTorque * fullyStaffedStabilizationWeight, ForceMode.Force);
     }
 
-    private Vector3 LimitPointGripLiftCapacity(Vector3 force)
+    private Vector3 LimitPointGripLiftCapacity(Vector3 force, float carrierNormalizationCount)
     {
         if (profile == null || !profile.limitPointGripLiftByCarrierCapacity || !body.useGravity)
         {
@@ -990,9 +1053,18 @@ public class SharedCarryPhysicsBody : MonoBehaviour
 
         float maximumUpwardForce = body.mass
             * gravityMagnitude
-            * Mathf.Clamp(profile.pointGripLiftCapacityPerCarrier, 0f, 2f);
+            * GetEffectivePointGripLiftCapacity(carrierNormalizationCount);
         force.y = Mathf.Min(force.y, maximumUpwardForce);
         return force;
+    }
+
+    private float GetEffectivePointGripLiftCapacity(float carrierNormalizationCount)
+    {
+        float configuredCapacity = profile != null
+            ? Mathf.Clamp(profile.pointGripLiftCapacityPerCarrier, 0f, 2f)
+            : 2f;
+        float requiredTeamCapacity = 1.1f / Mathf.Max(1f, carrierNormalizationCount);
+        return Mathf.Max(configuredCapacity, requiredTeamCapacity);
     }
 
     private bool AllowsYawRotation() => profile == null || profile.allowYawRotation;

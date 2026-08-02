@@ -22,6 +22,10 @@ MonoBehaviour:
   pointGripSpring: 180
   pointGripDamping: 45
   pointGripMaxForce: 700
+  enableMinimumControlledYawSpeed: 1
+  minimumControlledYawSpeedDegrees: 18
+  controlledYawAssistAccelerationDegrees: 60
+  controlledYawIntentDeadZone: 0.1
   projectGripForcesToColliderSurface: 1
   limitPointGripLiftByCarrierCapacity: 1
   pointGripLiftCapacityPerCarrier: 0.55
@@ -38,6 +42,13 @@ MonoBehaviour:
   maximumTiltAngle: 35
   tiltRestoringTorque: 120
   tiltDamping: 18
+  stabilizeWhenFullyStaffed: 0
+  fullyStaffedLoadDistributionRegularization: 0.08
+  fullyStaffedLevelingTorque: 240
+  fullyStaffedLevelingDeadZone: 1.5
+  fullyStaffedTiltDamping: 40
+  fullyStaffedMaximumTorque: 300
+  fullyStaffedStabilizationBlendDuration: 0.35
   softTetherDeadZone: 0.08
   softTetherPullSpeed: 3.6
   softTetherVelocityInfluence: 0.1

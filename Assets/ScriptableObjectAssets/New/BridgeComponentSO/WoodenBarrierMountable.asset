@@ -29,6 +29,7 @@ MonoBehaviour:
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints: []
+  carryAnchorPreviewLocalPoints: []
   carryPhysicsProfile: {fileID: 0}
   meltingPoint: 0
   combustionTemperature: 0

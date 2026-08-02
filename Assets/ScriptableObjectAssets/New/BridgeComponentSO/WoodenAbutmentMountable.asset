@@ -24,9 +24,9 @@ MonoBehaviour:
     amount: 1
   bridgeComponentSO: {fileID: 11400000, guid: 43e6a23a14d975d46927ef4c7c4a9df7, type: 2}
   movementSpeedPenalty: 0.15
-  minAmountOfPlayersNeeded: 3
+  minAmountOfPlayersNeeded: 1
   allowMultipleCarriers: 1
-  recommendedCarriers: 3
+  recommendedCarriers: 1
   maxCarriers: 3
   underStaffedPenaltyMultiplier: 0.4
   sharedCarryUnderstaffedStaminaDrainPerSecond: 1
@@ -41,6 +41,7 @@ MonoBehaviour:
   - {x: 2.1, y: 0.3, z: 0}
   - {x: 0, y: 0.3, z: 2.5}
   - {x: -2.1, y: 0.3, z: 0}
+  carryAnchorPreviewLocalPoints: []
   carryPhysicsProfile: {fileID: 11400000, guid: a1f0d7e934b54ec58aeb1a47cd209002, type: 2}
   meltingPoint: 0
   combustionTemperature: 0

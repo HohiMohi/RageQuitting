@@ -18,9 +18,9 @@ symulowanego przez serwer.
 | `resourceDurability` | Początkowa trwałość |
 | `movementSpeedPenalty` | Kara dla single-carry |
 | `canBeCarried` | Blokuje pickup gracza/NPC; false wymusza kinematic Rigidbody bez grawitacji |
-| `minAmountOfPlayersNeeded` | Minimalna obsada używana przez carry |
+| `minAmountOfPlayersNeeded` | Minimalna obsada pozwalająca rozpocząć carry; może być niższa od docelowej obsady fizycznej |
 | `allowMultipleCarriers` | Włącza shared-carry |
-| `recommendedCarriers` | Liczba normalizująca siłę i warunek understaffed |
+| `recommendedCarriers` | Docelowa obsada fizyczna: normalizuje siły, udźwig, kary understaffed i próg fully-staffed |
 | `maxCarriers` | Maksymalna liczba jednoczesnych holderów; nie ogranicza liczby skonfigurowanych anchorów |
 | `underStaffedPenaltyMultiplier` | Kara ruchu przy niedoborze |
 | `sharedCarryUnderstaffedStaminaDrainPerSecond` | Drain staminy każdego player-holdera |
@@ -143,6 +143,12 @@ flowchart TD
 | Wooden Diagonal Bracing | `CarryPhysicsProfile_WoodenDiagonalBracingPhysical` | 18 | 1.35 | 48° | 0.55 |
 | Wooden Deck Panel | `CarryPhysicsProfile_WoodenDeckPanelPhysical` | 30 | 0.9 | 35° | 0.55 |
 
+W aktualnej konfiguracji testowej wszystkie sześć części ma
+`minAmountOfPlayersNeeded = 1`, więc pickup jest możliwy solo. Wartość
+`recommendedCarriers` pozostaje docelowa: `3` dla Foundation, Abutment i Main
+Girder oraz `2` dla Cross Beam, Diagonal Bracing i Deck Panel. Pojedynczy holder
+jest zatem obsadą niedoborową i nie uruchamia stabilizacji fully-staffed.
+
 Każda z tych części ma osiem jawnych `carryAttachLocalPoints`: cztery narożniki,
 a następnie środki przedniego, prawego, tylnego i lewego boku. Indeksy są
 deterministyczne, a serwer przydziela najbliższy wolny i bezpieczny punkt.
@@ -158,11 +164,13 @@ momentu obrotowego.
 Po osiągnięciu `recommendedCarriers` sześć profili części mostu uruchamia
 serwerowy solver rozkładu udźwigu. Solver rozdziela ciężar między zajęte anchory,
 minimalizuje moment pitch/roll i respektuje `pointGripLiftCapacityPerCarrier`.
-Podparcie grawitacji ma osobny budżet siły, dlatego pozioma sprężyna chwytu nie
-może odebrać holderowi wymaganej siły pionowej. Pozostały moment jest
-kompensowany ograniczonym momentem, a miękka sprężyna poziomowania przywraca
-pitch/roll zapisany przy rozpoczęciu shared-carry. Yaw, A/D i kolizje pozostają
-fizyczne. Aktywacja i utrata pełnej obsady są płynnie blendowane.
+Pasywny moment jest liczony z finalnej siły chwytu po wygładzaniu i limitach, a
+nie tylko z nominalnego podparcia grawitacji. Kompensacja rollu wokół długiej osi
+jest aplikowana dokładnie raz; stabilizacja pełnej obsady otrzymuje dopiero
+pozostały moment pitch/roll. Dzięki temu oba mechanizmy nie generują przeciwnego
+rollu. Miękka sprężyna poziomowania przywraca orientację zapisaną na początku
+carry. Yaw, A/D i kolizje pozostają fizyczne, a aktywacja pełnej obsady jest
+płynnie blendowana.
 
 ### `CarryPhysicsProfileSO`
 
@@ -300,6 +308,8 @@ nietypowych poziomów i powinien być ustawiony na osiągalnym NavMesh.
 
 - Naturalność shared-carry nadal zależy od strojenia masy, springów i
   colliderów konkretnego prefaba.
+- Test solo sprawdza pickup i zachowanie niedoborowej obsady; stabilność
+  fully-staffed trzeba weryfikować osobno z docelowymi dwoma lub trzema holderami.
 - NPC shared-carry jest celowo wyłączony.
 - Fallback geometryczny pozostaje dla prostych i legacy prefabów; Wooden Log
   oraz sześć aktualnych części mostu mają jawne punkty.

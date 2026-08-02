@@ -22,15 +22,16 @@ MonoBehaviour:
     amount: 2
   bridgeComponentSO: {fileID: 0}
   movementSpeedPenalty: 0.15
-  minAmountOfPlayersNeeded: 3
+  minAmountOfPlayersNeeded: 1
   allowMultipleCarriers: 1
-  recommendedCarriers: 3
+  recommendedCarriers: 1
   maxCarriers: 3
   underStaffedPenaltyMultiplier: 0.4
   sharedCarryUnderstaffedStaminaDrainPerSecond: 1
   carryMoveSpeed: 4
   carryPlayerClearance: 0.35
   carryAttachLocalPoints: []
+  carryAnchorPreviewLocalPoints: []
   carryPhysicsProfile: {fileID: 0}
   meltingPoint: 0
   combustionTemperature: 0

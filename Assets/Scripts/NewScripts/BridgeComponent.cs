@@ -19,6 +19,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     private bool needAssembling;
     private Collider[] readyForMountingInteractionColliders = Array.Empty<Collider>();
     private BridgeConstructionSite constructionSite;
+    private BridgeMountSocket mountSocket;
 
     public EventHandler<ComponentMountedEventArgs> ComponentMounted;
     public EventHandler<ComponentAsembledEventArgs> ComponentAsembled;
@@ -40,6 +41,11 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void Interact(Transform interactor)
     {
+        if (mountSocket != null)
+        {
+            return;
+        }
+
         if (canBeMounted && !isMounted)
         {
             if (interactor.TryGetComponent<PlayerInteractionNew>(out PlayerInteractionNew playerInteraction))
@@ -99,6 +105,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     private void Awake()
     {
         constructionSite = GetComponent<BridgeConstructionSite>();
+        mountSocket = GetComponent<BridgeMountSocket>();
         CacheBridgeComponentColliders();
         ConfigureReadyForMountingInteractionColliders();
         ApplyVisualAndColliderState();
@@ -287,6 +294,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         canBeMounted = state.canBeMounted;
         currentAssemblingProgress = state.currentAssemblingProgress;
         constructionSite?.ApplyNetworkState(state);
+        mountSocket?.ApplyNetworkAlignmentState(state);
 
         ApplyVisualAndColliderState();
 
@@ -331,6 +339,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         foreach (Collider collider in GetComponentsInChildren<Collider>(true))
         {
             if (collider == null || IsReadyForMountingInteractionCollider(collider) ||
+                (mountSocket != null && mountSocket.IsSocketCollider(collider)) ||
                 (constructionSite != null && constructionSite.IsConstructionInteractionCollider(collider)) ||
                 collider.GetComponentInParent<BridgeAbutmentWorkPoint>() != null ||
                 collider.GetComponentInParent<BridgeGirderWorkPoint>() != null ||
@@ -403,6 +412,19 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     }
 
     public BridgeConstructionSite ConstructionSite => constructionSite;
+    public BridgeMountSocket MountSocket => mountSocket;
+    public GameObject ReadyForMountingVisualsGameObject => readyForMountingVisualsGameObject;
+
+    public void AddReadyForMountPrompt(List<InteractionPrompt> prompts, string legacyPrompt)
+    {
+        if (mountSocket != null)
+        {
+            mountSocket.AddMountPrompt(prompts);
+            return;
+        }
+
+        prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, legacyPrompt));
+    }
 
     public void RefreshVisualAndColliderState()
     {
