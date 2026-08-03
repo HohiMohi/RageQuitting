@@ -8,7 +8,8 @@ public enum BeaverDefenderState
     FollowingScout,
     AttackMode,
     ApproachingDownedPlayer,
-    CarryingDownedPlayer
+    CarryingDownedPlayer,
+    AquaticEgress
 }
 
 [CreateAssetMenu(fileName = "BeaverDefenderBehavior", menuName = "Scriptable Objects/NPC/Behaviors/Beaver Defender")]
@@ -82,6 +83,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
         private NPCBrain followedScout;
         private NetworkObject combatTarget;
         private NPCAnimationController animationController;
+        private NPCAquaticLocomotionController aquaticLocomotion;
         private DownedPlayerCarryable downedPlayerTarget;
         private GoatPushZone selectedPushZone;
         private NPCDownedPlayerDropPoint denDropPoint;
@@ -108,6 +110,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
         public override void Enter()
         {
             animationController = Brain.GetComponent<NPCAnimationController>();
+            aquaticLocomotion = Brain.GetComponent<NPCAquaticLocomotionController>();
             defaultAgentSpeed = Brain.Definition != null ? Brain.Definition.moveSpeed : Brain.Agent.speed;
             NPCFactionDamageAlertSystem.OnNpcFactionMemberDamaged += HandleFactionDamageAlert;
             EnterIdle();
@@ -131,6 +134,9 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
                     break;
                 case BeaverDefenderState.CarryingDownedPlayer:
                     TickCarryingDownedPlayer();
+                    break;
+                case BeaverDefenderState.AquaticEgress:
+                    TickAquaticEgress();
                     break;
             }
         }
@@ -478,6 +484,11 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
                 nextDestinationRefreshTime = 0f;
                 dropAttemptStartedAt = -1f;
                 nextDropAttemptTime = 0f;
+                if (aquaticLocomotion != null && aquaticLocomotion.IsSwimming && aquaticLocomotion.BeginAquaticEgress())
+                {
+                    currentState = BeaverDefenderState.AquaticEgress;
+                    return;
+                }
                 if (!TrySetCarryDestination())
                 {
                     SwitchCarryDestinationToDen();
@@ -551,6 +562,42 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
             }
 
             TryDropCarriedPlayerAtDen();
+        }
+
+        private void TickAquaticEgress()
+        {
+            if (!IsDownedCarryTargetValid(requireCarriedByThisNpc: true))
+            {
+                EnterIdle();
+                return;
+            }
+
+            if (aquaticLocomotion == null || !aquaticLocomotion.IsAquaticEgressActive)
+            {
+                currentState = BeaverDefenderState.CarryingDownedPlayer;
+                if (!TrySetCarryDestination())
+                {
+                    SwitchCarryDestinationToDen();
+                }
+                return;
+            }
+
+            if (!aquaticLocomotion.TryGetAquaticEgressDestination(out Vector3 exitPosition)
+                || !TrySetDestination(exitPosition, 0.3f))
+            {
+                TryDropCarriedPlayerNearCarrier();
+                return;
+            }
+
+            if (aquaticLocomotion.HasReachedAquaticEgressDestination)
+            {
+                aquaticLocomotion.EndAquaticEgress();
+                currentState = BeaverDefenderState.CarryingDownedPlayer;
+                if (!TrySetCarryDestination())
+                {
+                    SwitchCarryDestinationToDen();
+                }
+            }
         }
 
         private void SelectCarryDestination()
@@ -783,6 +830,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
 
         private void ClearDownedPlayerCarryState(bool dropCarriedPlayer)
         {
+            aquaticLocomotion?.EndAquaticEgress();
             if (dropCarriedPlayer
                 && downedPlayerTarget != null
                 && Brain.Carrier != null

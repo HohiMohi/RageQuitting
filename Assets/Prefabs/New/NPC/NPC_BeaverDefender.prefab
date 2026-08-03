@@ -133,19 +133,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100009, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
       propertyPath: faction
-      value: 
+      value:
       objectReference: {fileID: 11400000, guid: 34d6c4b2bbadb67479d43cab310d4ad7, type: 2}
     - target: {fileID: 3098827496799528937, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
       propertyPath: animator
-      value: 
+      value:
       objectReference: {fileID: 7547068550667716696}
     - target: {fileID: 3098827496799528937, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
       propertyPath: visualRoot
-      value: 
+      value:
       objectReference: {fileID: 3381944756240329336}
     - target: {fileID: 3098827496799528937, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
       propertyPath: visualController
-      value: 
+      value:
       objectReference: {fileID: 782310274538014284}
     - target: {fileID: 4819304511543750011, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
       propertyPath: attackRange
@@ -169,8 +169,33 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 100011, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3381944756240329336}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1307942723112141821}
   m_SourcePrefab: {fileID: 100100000, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
+--- !u!1 &3622094151679886642 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100000, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
+  m_PrefabInstance: {fileID: 3622094151679984530}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1307942723112141821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3622094151679886642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccde206186305dd408ed3c04473fdd7a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::NPCAquaticLocomotionController
+  ShowTopMostFoldoutHeaderGroup: 1
+  waterStateCheckInterval: 0.15
+  shoreSpeedTransitionDuration: 0.75
+  externalSpeedChangeTolerance: 0.02
+  aquaticEgressArrivalDistance: 0.35
 --- !u!4 &3622094151679886643 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 100001, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
@@ -247,7 +272,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e17d213eb79352345aa91960ad9f3e80, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::NPCVisualController
 --- !u!4 &3381944756240329336 stripped
 Transform:

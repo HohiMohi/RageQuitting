@@ -21,4 +21,17 @@ public class NPCDefinitionSO : ScriptableObject
     public float detectionRadius = 12f;
     public float interactionDistance = 1.4f;
     public float patrolRadius = 8f;
+
+    [Header("Water Traversal")]
+    public NPCWaterTraversalMode waterTraversalMode = NPCWaterTraversalMode.None;
+    [Range(0.1f, 1f)] public float surfaceSwimSpeedMultiplier = 0.75f;
+    [Min(0f)] public float surfaceSwimVisualBobbingAmplitude;
+    [Min(0f)] public float surfaceSwimVisualBobbingFrequency = 1.5f;
+    [Min(1f)] public float waterAreaCost = 4f;
+    public string waterNavMeshAreaName = "WaterSurface";
+    [Min(1f)] public float waterEntryAreaCost = 2f;
+    public string waterEntryNavMeshAreaName = "WaterEntry";
+
+    public float SurfaceSwimVisualBobbingAmplitude => Mathf.Max(0f, surfaceSwimVisualBobbingAmplitude);
+    public float SurfaceSwimVisualBobbingFrequency => Mathf.Max(0f, surfaceSwimVisualBobbingFrequency);
 }

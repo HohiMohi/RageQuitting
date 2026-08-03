@@ -147,6 +147,7 @@ namespace StarterAssets
 		private DownedPlayerCarryable _downedPlayerCarryable;
 		private PlayerExternalImpulseController _externalImpulseController;
 		private PlayerActionController _playerActionController;
+		private PlayerStaminaController _staminaController;
 		
 		private const float _threshold = 0.01f;
 
@@ -157,8 +158,10 @@ namespace StarterAssets
 			&& _currentStamina > 0f
 			&& !IsDowned()
 			&& (_playerActionController == null || !_playerActionController.IsActionInProgress);
-		public float CurrentStamina => _currentStamina;
-		public bool IsSharedCarryExhaustionWarningActive => _isSharedCarryExhaustionWarningActive;
+		public float CurrentStamina => _staminaController != null ? _staminaController.CurrentStamina : _currentStamina;
+		public bool IsSharedCarryExhaustionWarningActive => !IsDowned()
+			&& (_isSharedCarryExhaustionWarningActive
+				|| (_staminaController != null && _staminaController.CurrentExhaustionReason == StaminaExhaustionReason.Water));
 		public float AimYaw => _aimYaw;
 		public float BodyYawVelocity => _bodyYawVelocity;
 		public float CameraBodyYawOffset => _cameraBodyYawOffset;
@@ -204,6 +207,8 @@ namespace StarterAssets
 				_playerHealth.OnDownedStateChanged += PlayerHealth_OnDownedStateChanged;
 			}
 			_downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
+			_staminaController = GetComponent<PlayerStaminaController>();
+			_staminaController?.Configure(MaxStamina, StaminaRegenerationTimeout);
 			_currentStamina = MaxStamina;
         }
 
@@ -253,7 +258,14 @@ namespace StarterAssets
 
 			if (!_playerHealth.IsDowned)
 			{
-				_currentStamina = MaxStamina;
+				if (_staminaController != null)
+				{
+					_staminaController.RestoreFullStamina();
+				}
+				else
+				{
+					_currentStamina = MaxStamina;
+				}
 			}
 		}
 
@@ -526,7 +538,10 @@ namespace StarterAssets
 
 			if (moveInput != Vector2.zero && IsSprinting)
 			{
-				_currentStamina = Mathf.Max(0f, _currentStamina - Time.deltaTime);
+				if (_staminaController == null)
+				{
+					_currentStamina = Mathf.Max(0f, _currentStamina - Time.deltaTime);
+				}
 			}
 		}
 
@@ -762,6 +777,12 @@ namespace StarterAssets
 
 		private void HandleStaminaRegeneration()
 		{
+			if (_staminaController != null)
+			{
+				UpdateStaminaDrainSources();
+				return;
+			}
+
 			if (IsDowned())
 			{
 				_countStaminaTimeout = false;
@@ -804,6 +825,19 @@ namespace StarterAssets
 				return;
 			}
 
+			if (_staminaController != null)
+			{
+				if (_playerInteractionNew != null && _playerInteractionNew.IsSharedCarryMovementActive)
+				{
+					HandleSharedCarryStaminaUsage();
+				}
+				else
+				{
+					CancelSharedCarryExhaustionWarning();
+				}
+				return;
+			}
+
 			if (_playerInteractionNew != null && _playerInteractionNew.IsSharedCarryMovementActive)
 			{
 				HandleSharedCarryStaminaUsage();
@@ -830,8 +864,11 @@ namespace StarterAssets
 				return;
 			}
 
-			_currentStamina = Mathf.Max(0f, _currentStamina - _playerInteractionNew.SharedCarryUnderstaffedStaminaDrainPerSecond * Time.deltaTime);
-			if (_currentStamina > 0f)
+			if (_staminaController == null)
+			{
+				_currentStamina = Mathf.Max(0f, _currentStamina - _playerInteractionNew.SharedCarryUnderstaffedStaminaDrainPerSecond * Time.deltaTime);
+			}
+			if (CurrentStamina > 0f)
 			{
 				return;
 			}
@@ -857,6 +894,21 @@ namespace StarterAssets
 			return _playerInteractionNew != null && _playerInteractionNew.IsSharedCarryUnderstaffed;
 		}
 
+		private void UpdateStaminaDrainSources()
+		{
+			bool downed = IsDowned();
+			bool sharedCarry = !downed && _playerInteractionNew != null && _playerInteractionNew.IsSharedCarryMovementActive;
+			bool understaffed = sharedCarry && _playerInteractionNew.IsSharedCarryUnderstaffed;
+			bool moving = _input != null && _input.move != Vector2.zero;
+			_staminaController.SetDrainSource(StaminaDrainSource.Sprint, !downed && moving && IsSprinting ? 1f : 0f);
+			_staminaController.SetDrainSource(
+				StaminaDrainSource.UnderstaffedSharedCarry,
+				understaffed ? _playerInteractionNew.SharedCarryUnderstaffedStaminaDrainPerSecond : 0f);
+			_staminaController.SetDrainSource(
+				StaminaDrainSource.Carry,
+				!downed && !sharedCarry && _holdedItemMovementSpeedPenaltyMultiplier > 0f ? 1f : 0f);
+		}
+
 		private void CancelSharedCarryExhaustionWarning()
 		{
 			if (!_isSharedCarryExhaustionWarningActive)
@@ -872,7 +924,19 @@ namespace StarterAssets
 
 		public float GetStaminaNormalized()
 		{
-			return _currentStamina / MaxStamina;
+			return _staminaController != null ? _staminaController.NormalizedStamina : _currentStamina / MaxStamina;
+		}
+
+		public void ApplyWaterFloatHeight(float targetRootY)
+		{
+			if (_controller == null || IsBeingCarried())
+			{
+				return;
+			}
+
+			_verticalVelocity = 0f;
+			float delta = targetRootY - transform.position.y;
+			_controller.Move(Vector3.up * Mathf.Clamp(delta, -2f * Time.deltaTime, 2f * Time.deltaTime));
 		}
 
 		private bool IsDowned()

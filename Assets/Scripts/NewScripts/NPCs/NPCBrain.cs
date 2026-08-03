@@ -41,6 +41,7 @@ public class NPCBrain : NetworkBehaviour
     public NPCBehaviorController BehaviorController => behaviorController;
     public NPCSpawner OriginSpawner => originSpawner;
     public Vector3 SpawnPosition => spawnPosition;
+    public Transform VisualRoot => visualRoot;
     public float DetectionRadius => definition != null ? definition.detectionRadius : 12f;
     public float InteractionDistance => definition != null ? definition.interactionDistance : 1.4f;
     public float PatrolRadius => definition != null ? definition.patrolRadius : 8f;
@@ -210,6 +211,14 @@ public class NPCBrain : NetworkBehaviour
         agent.speed = definition.moveSpeed;
         agent.acceleration = definition.acceleration;
         agent.angularSpeed = definition.angularSpeed;
+        ConfigureNavMeshArea(
+            definition.waterNavMeshAreaName,
+            definition.waterAreaCost,
+            definition.waterTraversalMode == NPCWaterTraversalMode.SurfaceSwimmer);
+        ConfigureNavMeshArea(
+            definition.waterEntryNavMeshAreaName,
+            definition.waterEntryAreaCost,
+            definition.waterTraversalMode == NPCWaterTraversalMode.SurfaceSwimmer);
 
         if (health == null)
         {
@@ -224,6 +233,19 @@ public class NPCBrain : NetworkBehaviour
         factionMember.SetFaction(definition.faction);
 
         EnsureVisual();
+    }
+
+    private void ConfigureNavMeshArea(string areaName, float areaCost, bool enabled)
+    {
+        int areaIndex = NavMesh.GetAreaFromName(areaName);
+        if (areaIndex < 0)
+        {
+            return;
+        }
+
+        int areaBit = 1 << areaIndex;
+        agent.areaMask = enabled ? agent.areaMask | areaBit : agent.areaMask & ~areaBit;
+        agent.SetAreaCost(areaIndex, Mathf.Max(1f, areaCost));
     }
 
     private void RebuildBehavior()

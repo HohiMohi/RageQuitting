@@ -25,3 +25,11 @@ MonoBehaviour:
   detectionRadius: 14
   interactionDistance: 1.4
   patrolRadius: 10
+  waterTraversalMode: 1
+  surfaceSwimSpeedMultiplier: 0.75
+  surfaceSwimVisualBobbingAmplitude: 0
+  surfaceSwimVisualBobbingFrequency: 1.5
+  waterAreaCost: 4
+  waterNavMeshAreaName: WaterSurface
+  waterEntryAreaCost: 2
+  waterEntryNavMeshAreaName: WaterEntry

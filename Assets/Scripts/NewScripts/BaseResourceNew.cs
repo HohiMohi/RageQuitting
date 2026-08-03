@@ -859,6 +859,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public void RemoveFromWorld()
     {
+        RemoveFromWorld(EnvironmentalRemovalReason.Unknown);
+    }
+
+    public void RemoveFromWorld(EnvironmentalRemovalReason reason)
+    {
         if (IsNetworkSessionActive())
         {
             if (IsServer)

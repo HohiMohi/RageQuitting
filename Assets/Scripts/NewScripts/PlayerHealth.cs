@@ -37,6 +37,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     private float lastDamageTime = float.NegativeInfinity;
     private PlayerInteractionNew playerInteraction;
     private DownedPlayerCarryable downedPlayerCarryable;
+    private PlayerWaterExposureController waterExposureController;
 
     public event EventHandler OnHealthChanged;
     public event EventHandler OnDownedStateChanged;
@@ -48,7 +49,9 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     public bool IsRespawnTimerPausedByNpcCarry => IsNetworkStateActive
         ? npcCarryRespawnPauseStartedAtNetwork.Value >= 0f
         : npcCarryRespawnPauseStartedAtLocal >= 0f;
-    public bool CanBeRevived => IsDowned && !IsCarriedByNPC;
+    public bool CanBeRevived => IsDowned
+        && !IsCarriedByNPC
+        && (waterExposureController == null || !waterExposureController.IsInUnsafeWater);
     public bool CanRespawn => IsDowned && !IsCarriedByNPC && GetRespawnTimeRemaining() <= 0f;
 
     private bool IsNetworkStateActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
@@ -57,6 +60,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     {
         playerInteraction = GetComponent<PlayerInteractionNew>();
         downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
+        waterExposureController = GetComponent<PlayerWaterExposureController>();
         currentHealthLocal = maxHealth;
     }
 
