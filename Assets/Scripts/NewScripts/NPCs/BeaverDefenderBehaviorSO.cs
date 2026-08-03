@@ -691,7 +691,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
             DownedPlayerCarryable target = downedPlayerTarget;
             Vector3 releasePosition = selectedPushZone.GetCarriedPlayerReleasePosition(Brain.transform.position);
             Quaternion releaseRotation = Quaternion.LookRotation(selectedPushZone.PushDirection, Vector3.up);
-            ExternalImpulseProfileSO impulseProfile = selectedPushZone.PushImpulseProfile;
+            ExternalImpulseProfileSO impulseProfile = selectedPushZone.CarrierThrowImpulseProfile;
             Vector3 pushDirection = selectedPushZone.PushDirection;
 
             if (!Brain.Carrier.DropHeldObject(releasePosition, releaseRotation))

@@ -11,6 +11,7 @@ public class GoatPushZone : MonoBehaviour
     [SerializeField] private Transform carrierThrowPoint;
     [SerializeField] private Vector3 localPushDirection = Vector3.forward;
     [SerializeField] private ExternalImpulseProfileSO pushImpulseProfile;
+    [SerializeField] private ExternalImpulseProfileSO carriedPlayerThrowImpulseProfile;
     [SerializeField] private float setupPositionSampleRadius = 0.75f;
     [SerializeField, Min(0.1f)] private float carriedPlayerReleaseDistance = 0.65f;
     [SerializeField, Min(0f)] private float carriedPlayerReleaseHeight = 0.15f;
@@ -23,8 +24,11 @@ public class GoatPushZone : MonoBehaviour
     public Vector3 CarrierThrowPosition => carrierThrowPoint != null ? carrierThrowPoint.position : ApproachPosition;
     public Vector3 PushDirection => transform.TransformDirection(localPushDirection).normalized;
     public ExternalImpulseProfileSO PushImpulseProfile => pushImpulseProfile;
+    public ExternalImpulseProfileSO CarrierThrowImpulseProfile => carriedPlayerThrowImpulseProfile != null
+        ? carriedPlayerThrowImpulseProfile
+        : pushImpulseProfile;
     public bool CanAcceptCarriedPlayerDrop => isActiveAndEnabled
-        && pushImpulseProfile != null
+        && CarrierThrowImpulseProfile != null
         && PushDirection.sqrMagnitude > 0.0001f;
 
     public static IReadOnlyCollection<GoatPushZone> Zones => ActiveZones;

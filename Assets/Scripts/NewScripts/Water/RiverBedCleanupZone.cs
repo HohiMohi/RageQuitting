@@ -18,15 +18,24 @@ public class RiverBedCleanupZone : MonoBehaviour
 
     private void TryRemoveResource(Collider other)
     {
-        if (GameplayManager.Instance != null
-            && !GameplayManager.Instance.EnableRiverBedResourceRemoval)
+        if (NetworkManager.Singleton != null
+            && NetworkManager.Singleton.IsListening
+            && !NetworkManager.Singleton.IsServer)
         {
             return;
         }
 
-        if (NetworkManager.Singleton != null
-            && NetworkManager.Singleton.IsListening
-            && !NetworkManager.Singleton.IsServer)
+        EquippableWorldPhysics equippablePhysics = other != null
+            ? other.GetComponentInParent<EquippableWorldPhysics>()
+            : null;
+        if (equippablePhysics != null)
+        {
+            equippablePhysics.ReturnToRespawnPoint();
+            return;
+        }
+
+        if (GameplayManager.Instance != null
+            && !GameplayManager.Instance.EnableRiverBedResourceRemoval)
         {
             return;
         }

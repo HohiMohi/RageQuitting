@@ -17,6 +17,7 @@ public class EquippableItemSO : ScriptableObject
     public EquippableItemType itemType;
     public EquippableActionProfileSO actionProfile;
     public ExternalImpulseProfileSO impactImpulseProfile;
+    public EquippableWorldPhysicsProfileSO worldPhysicsProfile;
 
     public float ResourceDamage => resourceDamage > 0f ? resourceDamage : damage * 2f;
     public float ConstructionWorkPower => constructionWorkPower > 0f ? constructionWorkPower : damage;

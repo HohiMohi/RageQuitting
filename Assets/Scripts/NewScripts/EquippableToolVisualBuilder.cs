@@ -27,7 +27,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
     public const string SecondaryGripName = "SecondaryGrip";
 
 #if UNITY_EDITOR
-    private const string AxeModelAssetPath = "Assets/AI_assets/Models/Tools/Axe_LowPoly.fbx";
+    private const string AxeModelAssetPath = "Assets/AI_assets/Models/Tools/Axe_LowPoly_Corrected.prefab";
     private const string PickaxeModelAssetPath = "Assets/AI_assets/Models/Tools/Pickaxe_LowPoly.fbx";
 #endif
     private static readonly Quaternion ImportedModelLocalRotation = Quaternion.Euler(-90f, 0f, 0f);
@@ -102,7 +102,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
                 BuildWrench(generatedRoot.transform, materials);
                 break;
             default:
-                Destroy(generatedRoot);
+                DestroyVisualObject(generatedRoot);
                 return null;
         }
 
@@ -157,7 +157,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
             return;
         }
 
-        Destroy(previousModel.gameObject);
+        DestroyVisualObject(previousModel.gameObject);
     }
 
     private ToolVisualMaterials GetConfiguredMaterials()
@@ -187,7 +187,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
 
         foreach (Collider collider in model.GetComponentsInChildren<Collider>())
         {
-            Destroy(collider);
+            DestroyVisualObject(collider);
         }
 
         return true;
@@ -307,12 +307,29 @@ public class EquippableToolVisualBuilder : MonoBehaviour
 
         foreach (Collider collider in part.GetComponentsInChildren<Collider>())
         {
-            Destroy(collider);
+            DestroyVisualObject(collider);
         }
 
         if (part.TryGetComponent(out Renderer renderer))
         {
             renderer.sharedMaterial = material;
+        }
+    }
+
+    private static void DestroyVisualObject(Object target)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(target);
+        }
+        else
+        {
+            DestroyImmediate(target);
         }
     }
 

@@ -17,7 +17,9 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
 
     public void Interact(Transform interactor)
     {
-        if (!interactor.TryGetComponent(out PlayerInventory playerInventory) || !playerInventory.CanAddItem(equippableItemSO))
+        if ((TryGetComponent(out EquippableWorldPhysics worldPhysics) && worldPhysics.IsReturning)
+            || !interactor.TryGetComponent(out PlayerInventory playerInventory)
+            || !playerInventory.CanAddItem(equippableItemSO))
         {
             return;
         }
@@ -41,18 +43,36 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
         CompletePickup(interactor);
     }
 
-    public static void DropItem(EquippableItemSO itemToDrop, Vector3 dropPosition)
+    public static void DropItem(EquippableItemSO itemToDrop, NetworkObject dropper)
     {
-        Instantiate(itemToDrop.equippableItemPrefab, dropPosition, Quaternion.identity);
+        if (itemToDrop == null || itemToDrop.equippableItemPrefab == null || dropper == null)
+        {
+            return;
+        }
+
+        GameObject droppedItem = Instantiate(
+            itemToDrop.equippableItemPrefab,
+            dropper.transform.position + Vector3.up,
+            dropper.transform.rotation);
+        droppedItem.GetComponent<EquippableWorldPhysics>()?.InitializeDrop(dropper);
     }
 
-    public static void SpawnNetworkedDrop(EquippableItemSO itemToDrop, Vector3 dropPosition, Quaternion dropRotation)
+    public static void SpawnNetworkedDrop(EquippableItemSO itemToDrop, NetworkObject dropper)
     {
-        GameObject droppedItem = Instantiate(itemToDrop.equippableItemPrefab, dropPosition, dropRotation);
+        if (itemToDrop == null || itemToDrop.equippableItemPrefab == null || dropper == null)
+        {
+            return;
+        }
+
+        GameObject droppedItem = Instantiate(
+            itemToDrop.equippableItemPrefab,
+            dropper.transform.position + Vector3.up,
+            dropper.transform.rotation);
 
         if (droppedItem.TryGetComponent(out NetworkObject networkObject))
         {
             networkObject.Spawn(true);
+            droppedItem.GetComponent<EquippableWorldPhysics>()?.InitializeDrop(dropper);
         }
         else
         {
@@ -80,7 +100,9 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
 
     private void CompletePickup(Transform interactor)
     {
-        if (interactor.TryGetComponent(out PlayerInventory playerInventory) && playerInventory.AddItem(equippableItemSO))
+        if ((!TryGetComponent(out EquippableWorldPhysics worldPhysics) || !worldPhysics.IsReturning)
+            && interactor.TryGetComponent(out PlayerInventory playerInventory)
+            && playerInventory.AddItem(equippableItemSO))
         {
             OnAnyItemEquipped?.Invoke(this, EventArgs.Empty);
             DespawnOrDestroy();
@@ -102,6 +124,15 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
     private void RequestPickupServerRpc(ulong interactorNetworkObjectId, ServerRpcParams serverRpcParams = default)
     {
         if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(interactorNetworkObjectId, out NetworkObject interactorNetworkObject))
+        {
+            return;
+        }
+
+        if (interactorNetworkObject.OwnerClientId != serverRpcParams.Receive.SenderClientId
+            || Vector3.Distance(interactorNetworkObject.transform.position, transform.position) > 3f
+            || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && worldPhysics.IsReturning)
+            || !interactorNetworkObject.TryGetComponent(out PlayerInventory playerInventory)
+            || !playerInventory.CanAddItem(equippableItemSO))
         {
             return;
         }

@@ -163,7 +163,7 @@ PrefabInstance:
     - target: {fileID: 5674413288067453901, guid: e2d90d314c8e7274c80975b5c53332d9, type: 3}
       propertyPath: axeModelPrefab
       value: 
-      objectReference: {fileID: 100000, guid: 64411a0f80fab254f9712fe3ffb11984, type: 3}
+      objectReference: {fileID: 2796881867761008965, guid: 72436a0b4cd526a42b270c5b52a3e025, type: 3}
     - target: {fileID: 7958297063004264045, guid: e2d90d314c8e7274c80975b5c53332d9, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0

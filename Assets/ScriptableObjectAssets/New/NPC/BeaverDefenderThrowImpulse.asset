@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ab378b2c944edc843aeb43df83b43cba, type: 3}
-  m_Name: GoatPushImpulse
+  m_Name: BeaverDefenderThrowImpulse
   m_EditorClassIdentifier: Assembly-CSharp::ExternalImpulseProfileSO
   horizontalSpeed: 10
   verticalSpeed: 3
-  horizontalDeceleration: 7
+  horizontalDeceleration: 6.75
   gravityMultiplier: 1
   maximumDuration: 2
   movementControlMultiplier: 0.35

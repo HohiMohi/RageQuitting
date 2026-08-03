@@ -144,7 +144,7 @@ public class PlayerInventory : NetworkBehaviour
             _currentInventoryOccupiedSlots -= inventoryItems[_selectedItemIndex].inventorySlotsRequired;
             EquippableItemSO itemToRemove = inventoryItems[_selectedItemIndex];
             inventoryItems[_selectedItemIndex] = inventoryItems[1]; // Assign the second item to the first slot
-            DropItemInWorld(itemToRemove, transform.position + transform.forward, transform.rotation);
+            DropItemInWorld(itemToRemove);
             OnInventoryUpdated?.Invoke(this, new OnInventoryUpdateArgs
             {
                 itemSlotIndex = 0,
@@ -316,27 +316,28 @@ public class PlayerInventory : NetworkBehaviour
         return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
     }
 
-    private void DropItemInWorld(EquippableItemSO itemToDrop, Vector3 dropPosition, Quaternion dropRotation)
+    private void DropItemInWorld(EquippableItemSO itemToDrop)
     {
+        NetworkObject dropper = GetComponent<NetworkObject>();
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
             if (IsServer)
             {
-                EquippableItem.SpawnNetworkedDrop(itemToDrop, dropPosition, dropRotation);
+                EquippableItem.SpawnNetworkedDrop(itemToDrop, dropper);
             }
             else
             {
-                DropItemServerRpc((int)itemToDrop.itemType, dropPosition, dropRotation);
+                DropItemServerRpc((int)itemToDrop.itemType);
             }
 
             return;
         }
 
-        EquippableItem.DropItem(itemToDrop, dropPosition);
+        EquippableItem.DropItem(itemToDrop, dropper);
     }
 
     [ServerRpc]
-    private void DropItemServerRpc(int itemTypeValue, Vector3 dropPosition, Quaternion dropRotation)
+    private void DropItemServerRpc(int itemTypeValue, ServerRpcParams rpcParams = default)
     {
         EquippableItemSO itemToDrop = GetEquippableItemSO((EquippableItemType)itemTypeValue);
         if (itemToDrop == null)
@@ -345,7 +346,15 @@ public class PlayerInventory : NetworkBehaviour
             return;
         }
 
-        EquippableItem.SpawnNetworkedDrop(itemToDrop, dropPosition, dropRotation);
+        if (NetworkManager.Singleton == null
+            || !NetworkManager.Singleton.ConnectedClients.TryGetValue(rpcParams.Receive.SenderClientId, out NetworkClient client)
+            || client.PlayerObject == null
+            || client.PlayerObject != NetworkObject)
+        {
+            return;
+        }
+
+        EquippableItem.SpawnNetworkedDrop(itemToDrop, client.PlayerObject);
     }
 
     public EquippableItemSO GetEquippableItemSO(EquippableItemType itemType)

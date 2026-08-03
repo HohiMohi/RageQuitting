@@ -8,6 +8,15 @@ public class BasicRigidBodyPush : MonoBehaviour
 
 	private void OnControllerColliderHit(ControllerColliderHit hit)
 	{
+		EquippableWorldPhysics equippablePhysics = hit.collider != null
+			? hit.collider.GetComponentInParent<EquippableWorldPhysics>()
+			: null;
+		if (equippablePhysics != null)
+		{
+			equippablePhysics.RequestPlayerPush(transform, hit.moveDirection, hit.point);
+			return;
+		}
+
 		if (canPush) PushRigidBodies(hit);
 	}
 

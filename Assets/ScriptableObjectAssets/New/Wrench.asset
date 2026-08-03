@@ -21,7 +21,9 @@ MonoBehaviour:
   damage: 5
   resourceDamage: 5
   constructionWorkPower: 20
-  actionProfile: {fileID: 11400000, guid: 8c945b4f093d44d9b242776e8e0313e7, type: 2}
   movementSpeedPenalty: 0.01
   actionRepeatability: 0
   itemType: 8
+  actionProfile: {fileID: 11400000, guid: 8c945b4f093d44d9b242776e8e0313e7, type: 2}
+  impactImpulseProfile: {fileID: 0}
+  worldPhysicsProfile: {fileID: 11400000, guid: b635dffea5961da408b80f1138624101, type: 2}
