@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TutorialRiverProfile
   m_EditorClassIdentifier: Assembly-CSharp::WaterBodyProfileSO
   maximumSafeWadingDepth: 1.2
-  staminaDrainPerSecond: 1
+  staminaDrainPerSecond: 0
   exhaustionWarningDuration: 3
   unsupportedGraceDuration: 2
   downedFloatDepth: 0.35

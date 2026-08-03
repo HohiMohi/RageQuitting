@@ -362,3 +362,22 @@ crosshaira i elementów dekoracyjnych powinien być wyłączony.
   zmiana hierarchii wymaga sprawdzenia referencji.
 - Interfejs `IDamageable` obsługuje zarówno damage, jak i construction work.
 - Feedback proceduralny nie ma jeszcze pełnego menu dostępności.
+
+## Woda, stamina i utoniecie
+
+**Status:** zaimplementowane w `Tutorial_scene`; autorytet zagrozen i staminy nalezy do serwera.
+
+`PlayerStaminaController` jest wspolnym zrodlem stanu staminy dla sprintu, carry, niedoborowego shared-carry i wody. Koszty aktywnych zrodel sumuja sie, a `FirstPersonController` zachowuje kompatybilne wlasciwosci delegujace do nowego kontrolera.
+
+`PlayerWaterExposureController` rozroznia bezpieczne brodzenie i niebezpieczna wode. W tutorialu woda zuzywa `1 stamina/s`; wartosc konfiguruje pole `staminaDrainPerSecond` w `TutorialRiverProfile`. Przy zerowej staminie rozpoczyna sie ostrzezenie trwajace `3 s`; pozostanie w wodzie konczy sie stanem downed. Brak bezpiecznego podloza albo przekroczenie bezpiecznej glebokosci brodzenia uruchamia niezalezny timer `2 s`.
+
+| Stan | Zachowanie |
+|---|---|
+| `Wading` | Gracz ma bezpieczne podloze, ale nadal placi koszt staminy wody. |
+| `Unsafe` | Brak bezpiecznego podloza lub przekroczona glebokosc; przy wlaczonej fladze `GameplayManager` odliczane sa `2 s`. |
+| Zero staminy | HUD pokazuje powod `Water`; po `3 s` serwer ustawia downed. |
+| Downed w wodzie | Cialo unosi sie przy powierzchni, revive jest zablokowany, pickup i respawn pozostaja dostepne. |
+
+Wyjscie na bezpieczny brzeg resetuje oba timery. Przejscie w downed natychmiast zatrzymuje wodny drain i miganie HUD, ale pozostawia unoszenie ciala przy powierzchni. Carry powalonego gracza przez innego gracza pozostaje dozwolone, a drain carry sumuje sie z kosztem wody.
+
+`GameplayManager.EnableUnsupportedWaterDowning` pozwala scenowo wylaczyc tylko timer `Unsafe`. Nie wylacza kosztu staminy ani powalenia po jej wyczerpaniu. Ponowne wlaczenie flagi rozpoczyna timer od poczatku.

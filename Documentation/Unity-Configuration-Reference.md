@@ -465,3 +465,33 @@ Przy zmianie warstw zweryfikuj równocześnie:
 - population zone runtime debug;
 - current NPC target/state/reservations;
 - aktualne UI preview i local drag state.
+
+## Konfiguracja systemu wody
+
+### `WaterBodyProfileSO`
+
+| Pole | Jednostka | Znaczenie |
+|---|---:|---|
+| `maximumSafeWadingDepth` | m | Maksymalna glebokosc uznawana za bezpieczne brodzenie. |
+| `staminaDrainPerSecond` | stamina/s | Staly koszt pobytu w wodzie. |
+| `exhaustionWarningDuration` | s | Czas od zera staminy do downed. |
+| `unsupportedGraceDuration` | s | Czas bez bezpiecznego podloza do downed. |
+| `downedFloatDepth` | m | Zanurzenie roota powalonego gracza ponizej powierzchni. |
+| `groundMask` | LayerMask | Warstwy uznawane za podloze przy sondzie brodzenia. |
+| `waterNavMeshAreaName` | nazwa | Obszar NavMesh powierzchni wody; w tutorialu `WaterSurface`. |
+| `waterNavMeshAreaCost` | mnoznik | Koszt trasy wodnej wzgledem ladu. |
+| `surfaceSwimSpeedMultiplier` | 0-1 | Predkosc `SurfaceSwimmer` w wodzie. |
+
+### Komponenty scenowe i prefabowe
+
+| Komponent | Gdzie | Najwazniejsza konfiguracja |
+|---|---|---|
+| `WaterBody` | root akwenu | Profil, trigger volume, transform powierzchni i lista wyjsc na brzegi. |
+| `PlayerStaminaController` | `PlayerNew.prefab` | Serwerowy stan staminy i zrodla drain; zwykle konfigurowany automatycznie przez FPP. |
+| `PlayerWaterExposureController` | `PlayerNew.prefab` | Referencje health/stamina/FPP i interwal serwerowej sondy podloza. |
+| `RiverBedCleanupZone` | dno akwenu | Trigger obejmujacy dno; usuwa tylko `BaseResourceNew`. |
+| `NPCAquaticLocomotionController` | prefab NPC wodnego | Brain, agent, carrier i visual root; ruch oraz bobbing pobiera z definicji NPC. |
+| `NPCDefinitionSO` | definicja NPC | `waterTraversalMode`, mnoznik predkosci, `WaterEntry/WaterSurface` oraz `surfaceSwimVisualBobbingAmplitude/Frequency`. |
+| `GameplayManager` | manager sceny | `EnableRiverBedResourceRemoval` i `EnableUnsupportedWaterDowning`; obie flagi domyslnie wlaczone. |
+
+Przy tworzeniu nowego akwenu nalezy przygotowac trigger `WaterBody`, osobny cleanup dna, shoreline segments oraz ciagla powierzchnie NavMesh z `WaterEntry` i `WaterSurface`. Dla nowego `SurfaceSwimmer` wymagane sa zgodny agent type, dostep do obu obszarow oraz `NPCAquaticLocomotionController` na prefabie. Tryby `BottomWalker` i `VolumeSwimmer` nie maja jeszcze solvera ruchu.

@@ -314,3 +314,24 @@ nietypowych poziomów i powinien być ustawiony na osiągalnym NavMesh.
 - Fallback geometryczny pozostaje dla prostych i legacy prefabów; Wooden Log
   oraz sześć aktualnych części mostu mają jawne punkty.
 - Rotation offset shared-carry nie przywraca orientacji spawn po dropie.
+
+## Usuwanie zasobow w rzece
+
+**Status:** zaimplementowane dla `BaseResourceNew`.
+
+`RiverBedCleanupZone` jest serwerowym triggerem umieszczonym przy dnie rzeki. Po kontakcie wyszukuje root zasobu, deduplikuje zdarzenia colliderow, zwalnia holderow i wywoluje `BaseResourceNew.RemoveFromWorld(EnvironmentalRemovalReason.RiverBed)`.
+
+- Usuwane sa tylko obiekty `BaseResourceNew`.
+- Narzedzia, czesci mostu, gracze i NPC nie sa usuwani przez ten trigger.
+- Utrata jest trwala; cleanup nie zwraca produktu i nie uruchamia dodatkowego respawnu.
+- Despawn wykonuje wylacznie serwer, dlatego klient nie moze samodzielnie usunac zasobu.
+- `GameplayManager.EnableRiverBedResourceRemoval` wlacza lub wylacza cleanup dla calej sceny.
+- Przy wylaczonej fladze obiekt nie trafia do zbioru deduplikacji, dlatego ponowne wlaczenie pozwala usunac zasob nadal lezacy w triggerze.
+
+Przy dodawaniu kolejnych akwenow nalezy tworzyc osobny trigger dna i pozostawic go wewnatrz gameplay volume odpowiadajacego mu `WaterBody`.
+
+## Thorny Bush
+
+`Thorny Bush` jest nieruchomym `BaseResourceNew` uzywanym jako przeszkoda etapu `Clearing` fundamentow. Nie mozna go podniesc. Ma `15` durability, rozpada sie po jednym trafieniu `Axe` albo trzech trafieniach bez narzedzia i tworzy jeden `Wooden Shards`.
+
+Trigger placu fundamentu jest podczas `Clearing` miekkim celem targetowania. Zachowuje informacyjny prompt, ale pozwala dalszemu interaktywnemu lub podatnemu na obrazenia obiektowi, w tym krzakowi, przejac `CurrentTarget`. Solidna geometria nadal blokuje promien.

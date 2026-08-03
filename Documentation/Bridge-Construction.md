@@ -38,6 +38,8 @@ workflow zachowuje prosty mount/assembly.
 | `bridgeBuildingStages` | Kolejność etapów i wymagane części |
 | `currentBridgeBuildingStageIndex` | Stan runtime/initial debug |
 | `isFullyAsembled` | Stan ukończenia; nazwa zawiera historyczną literówkę |
+| `enableRiverBedResourceRemoval` | Globalnie włącza cleanup `BaseResourceNew` na dnie rzeki |
+| `enableUnsupportedWaterDowning` | Włącza downed po timerze braku bezpiecznego podłoża |
 
 Każdy `BridgeComponent` musi mieć unikalny `componentID`, który odpowiada
 elementowi stanu. Manager odblokowuje tylko części aktualnego etapu i po
@@ -47,6 +49,8 @@ wywołuje victory.
 `BridgeComponentNetworkState` przenosi mount/assembly, stage, progress,
 dwie wartości całkowite, cztery progresy punktów i dwa pola pomocnicze.
 Workflow interpretują te pola inaczej, ale nie zmieniają protokołu.
+
+Podczas `Clearing` dedykowany trigger placu jest miękkim fallbackiem targetowania. Celowanie w pusty plac pokazuje prompt etapu, ale interaktywny albo podatny na obrażenia obiekt za triggerem przejmuje `CurrentTarget`. Po przejściu do `Digging` plac ponownie jest bezpośrednim celem pracy.
 
 ## `BridgeComponent`
 
@@ -240,4 +244,3 @@ treść tutorialu. Pierwsza synchronizacja nie odtwarza historii.
   workflow; łatwo wprowadzić kolizję przy nowym typie.
 - Filary, oczepy, łożyska, bariery i connectory nie mają pełnej integracji
   aktywnego poziomu.
-

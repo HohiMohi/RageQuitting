@@ -2,6 +2,21 @@ using UnityEngine;
 
 public static class BridgeTargetResolver
 {
+    internal static bool TryGetClearingSiteFallback(
+        Collider collider,
+        out BridgeConstructionSite constructionSite)
+    {
+        constructionSite = collider != null
+            ? collider.GetComponentInParent<BridgeConstructionSite>()
+            : null;
+
+        return collider != null
+            && collider.isTrigger
+            && constructionSite != null
+            && constructionSite.CurrentStage == BridgeConstructionStage.Clearing
+            && constructionSite.IsConstructionInteractionCollider(collider);
+    }
+
     public static MonoBehaviour Resolve(Collider collider)
     {
         if (collider == null)

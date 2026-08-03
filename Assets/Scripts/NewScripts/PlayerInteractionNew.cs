@@ -638,6 +638,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private MonoBehaviour FindTarget(RaycastHit[] hits, out bool blocked)
     {
         blocked = false;
+        MonoBehaviour fallbackTarget = null;
         Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
         foreach (RaycastHit hit in hits)
@@ -650,17 +651,25 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             MonoBehaviour target = BridgeTargetResolver.Resolve(hit.collider);
             if (target != null)
             {
+                if (BridgeTargetResolver.TryGetClearingSiteFallback(
+                        hit.collider,
+                        out BridgeConstructionSite constructionSite))
+                {
+                    fallbackTarget ??= constructionSite;
+                    continue;
+                }
+
                 return target;
             }
 
             if (hit.collider != null && !hit.collider.isTrigger)
             {
                 blocked = true;
-                return null;
+                return fallbackTarget;
             }
         }
 
-        return null;
+        return fallbackTarget;
     }
 
     private bool TryGetAimRay(out Ray aimRay)

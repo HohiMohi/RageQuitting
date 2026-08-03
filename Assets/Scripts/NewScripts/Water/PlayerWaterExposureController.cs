@@ -133,7 +133,9 @@ public class PlayerWaterExposureController : NetworkBehaviour
             return;
         }
         double now = CurrentServerTime;
-        if (state == WaterExposureState.Unsafe)
+        bool unsupportedWaterDowningEnabled = GameplayManager.Instance == null
+            || GameplayManager.Instance.EnableUnsupportedWaterDowning;
+        if (state == WaterExposureState.Unsafe && unsupportedWaterDowningEnabled)
         {
             SetTimerIfNeeded(unsafeStartedAtNetwork, ref localUnsafeStartedAt, now, networkAuthority);
             if (GetElapsed(unsafeStartedAtNetwork.Value, localUnsafeStartedAt, now, networkAuthority) >= profile.UnsupportedGraceDuration)

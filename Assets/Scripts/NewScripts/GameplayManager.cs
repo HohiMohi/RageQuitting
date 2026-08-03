@@ -166,6 +166,10 @@ public class GameplayManager : MonoBehaviour
     [SerializeField] private int currentBridgeBuildingStageIndex;
     [SerializeField] private bool isFullyAsembled;
 
+    [Header("Water Mechanics")]
+    [SerializeField] private bool enableRiverBedResourceRemoval = true;
+    [SerializeField] private bool enableUnsupportedWaterDowning = true;
+
     private readonly List<BridgeComponentNetworkState> bridgeComponentStates = new List<BridgeComponentNetworkState>();
     private readonly HashSet<int> reportedInvalidStageComponentIndexes = new HashSet<int>();
     private readonly Dictionary<int, BridgeConstructionStage> observedConstructionStages =
@@ -187,6 +191,8 @@ public class GameplayManager : MonoBehaviour
 
     public bool IsFullyAssembled => isFullyAsembled;
     public int CurrentBridgeStageIndex => currentBridgeBuildingStageIndex;
+    public bool EnableRiverBedResourceRemoval => enableRiverBedResourceRemoval;
+    public bool EnableUnsupportedWaterDowning => enableUnsupportedWaterDowning;
     public event EventHandler OnBridgeFullyAssembled;
     public event EventHandler OnBridgeRequirementsChanged;
     public event EventHandler<BridgeConstructionStageChangedEventArgs> OnConstructionStageChanged;

@@ -491,3 +491,20 @@ obrażeniami nadal restartuje behavior bez sztucznego celu walki.
 - Standing opiera się na collider bounds; skomplikowane modele powinny dostać
   `GoatStandingSurface`.
 - Jawne GoatPushZone są wymagane; system nie wykrywa automatycznie przepaści.
+
+## Nawigacja wodna NPC
+
+**Status:** `SurfaceSwimmer` dziala dla Beaver Scout i Beaver Defender; `BottomWalker` i `VolumeSwimmer` sa przygotowanymi kontraktami.
+
+`NPCDefinitionSO.waterTraversalMode` okresla dostep NPC do wody. `NPCAquaticLocomotionController` przelacza koszt i maske obszarow `WaterEntry` oraz `WaterSurface` i zmniejsza predkosc do profilowego mnoznika (`0.75` dla bobrow). Bobbing visuala jest konfigurowany per definicja przez `surfaceSwimVisualBobbingAmplitude/Frequency`; oba bobry maja amplitude `0`. Ewentualny bobbing porusza tylko `VisualRoot`, nigdy collider ani `NavMeshAgent`.
+
+| Tryb | Stan |
+|---|---|
+| `None` | NPC ladowy, bez sciezki po powierzchni rzeki. |
+| `SurfaceSwimmer` | Dzialajaca nawigacja po ukrytym NavMesh powierzchniowym. |
+| `BottomWalker` | API pod przyszle NPC chodzace po dnie; brak locomotion w tej iteracji. |
+| `VolumeSwimmer` | API pod przyszle plywanie 3D; brak locomotion w tej iteracji. |
+
+Bobry preferuja lad przez koszt `WaterEntry = 2` i `WaterSurface = 4`, ale moga wybrac rzeke jako krotsza trase. Ciagly ukryty NavMesh pozwala wejsc i wyjsc na calej niezaslonietej dlugosci brzegu bez `OffMeshLink`. Lekki zasob single-carry jest dozwolony. Shared-carry, mountable oraz powalony gracz blokuja zwykle rozpoczecie trasy przez wode.
+
+Beaver Defender moze wejsc bez ladunku po wlasny downed combat target. Po pickupie uruchamia `AquaticEgress`, zachowuje dostep do najblizszego wyjscia z aktualnego akwenu, a po osiagnieciu brzegu blokuje dalsza trase wodna i kontynuuje transport do strefy zrzutu albo dena.

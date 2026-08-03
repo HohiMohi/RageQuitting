@@ -247,3 +247,19 @@ Late join:
 - Meta i rzeka są głównie elementami blockoutu.
 - World-space markery/szyldy wymagają ręcznej kontroli wysokości i orientacji.
 - Część nowych rodzajów mostu ma SO, ale nie pełną integrację scenową.
+
+## Rzeka w `Tutorial_scene`
+
+Rzeka jest systemem gameplayowym, nie tylko visualem. Ciagly ground zastapiono zachodnim i wschodnim brzegiem, skarpami o nachyleniu okolo `33.7 stopnia` oraz dnem okolo `3 m` ponizej powierzchni. Plaskie dno ma okolo `3 m` szerokosci. `RiverGameplay` zawiera:
+
+- `WaterBody` i trigger `WaterVolume`;
+- profil `TutorialRiverProfile`;
+- `RiverBedCleanupZone` przy dnie;
+- niewidoczna powierzchnie `WaterSurfaceNavigation` uzywana tylko do bake NavMesh;
+- ciagle pasy `WaterEntry` na obu brzegach;
+- `AmphibiousNavigationSurface` laczacy lad z `WaterSurface` bez rzecznych `NavMeshLink`;
+- shoreline segments uzywane do wyboru najblizszego wyjscia Defendera.
+
+Obszar NavMesh `WaterSurface` ma indeks `3` i koszt `4`, a `WaterEntry` indeks `4` i koszt `2`. Bobry posiadaja dostep do obu, koza i NPC ladowe nie. Fizyczne skarpy i dno sa pomijane podczas amfibijnego bake, a niewidoczne collidery nawigacyjne sa wylaczone w runtime. Test kontrolny powinien potwierdzic `PathComplete` przez rzeke z maska `Walkable + WaterEntry + WaterSurface` oraz `PathPartial` dla samego `Walkable`.
+
+Visual rzeki pozostaje osobny od colliderow gameplayowych. Zmiana jego materialu lub skali nie powinna zmieniac `WaterVolume`, punktow wyjscia ani powierzchni nawigacyjnej.
