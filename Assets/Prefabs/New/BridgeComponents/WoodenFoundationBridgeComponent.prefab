@@ -391,7 +391,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3, y: 2.5, z: 3}
+  m_Size: {x: 3.75, y: 3.125, z: 3.75}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &4898277989284614976
 GameObject:
@@ -1161,7 +1161,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 7, y: 3, z: 7}
+  m_Size: {x: 8.400001, y: 3, z: 8.400001}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &7405321993374761307
 PrefabInstance:
@@ -1318,8 +1318,8 @@ MonoBehaviour:
   componentCaptureVolume: {fileID: 2695343085473346902}
   carrierStagingVolume: {fileID: 8855637730928251603}
   ghostVisualRoot: {fileID: 1705188710318080605}
-  positionTolerance: {x: 0.25, y: 0.25, z: 0.25}
-  rotationToleranceDegrees: {x: 12, y: 12, z: 12}
+  positionTolerance: {x: 0.4, y: 0.4, z: 0.4}
+  rotationToleranceDegrees: {x: 18, y: 18, z: 18}
   maximumLinearVelocity: 0.35
   maximumAngularVelocityDegrees: 15
   settleDuration: 1
@@ -1335,8 +1335,14 @@ MonoBehaviour:
   rotationSpring: 8
   rotationDamping: 4
   maximumAngularAcceleration: 4
+  mountingCollisionClearancePadding: 0.5
   feedbackVisibilityDistance: 12
   indicatorWidth: 0.035
+  feedbackBoundsScale: 1.12
+  feedbackBoundsPadding: 0.25
+  maximumPositionIndicatorLength: 2.5
+  minimumRotationIndicatorRadius: 0.65
+  maximumRotationIndicatorRadius: 2.5
   invalidColor: {r: 0.95, g: 0.16, b: 0.12, a: 0.75}
   positioningColor: {r: 1, g: 0.68, b: 0.08, a: 0.75}
   settlingColor: {r: 0.15, g: 0.95, b: 0.3, a: 0.8}

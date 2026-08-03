@@ -68,6 +68,51 @@ Collidery ghosta powinny być triggerami. Fizyczne collidery niewidocznej
 części są wyłączone. Dedykowane workflow może opóźnić collider aż do
 `Complete` albo wyłączyć go po ukończeniu, jak fundament.
 
+## Precyzyjne dostarczanie części
+
+Sześć aktualnych części tutorialowego mostu używa `BridgeMountSocket`. Samo
+wejście carriera w zasięg interakcji nie montuje już części. Serwer wymaga
+jednocześnie poprawnego typu, aktywnego carry, obecności holderów w staging
+volume, właściwej pozycji i rotacji oraz odpowiednio małej prędkości. Poprawny
+stan musi utrzymać się przez `settleDuration`, domyślnie `1 s`.
+
+```mermaid
+flowchart LR
+    A["ComponentCaptureVolume"] --> B["CarrierStagingVolume"]
+    B --> C["Position / rotation assist"]
+    C --> D["Velocity check"]
+    D --> E["Settling 1 s"]
+    E --> F["Server auto-mount"]
+```
+
+| Pole `BridgeMountSocket` | Znaczenie |
+|---|---|
+| `targetPose` | Dokładna pozycja i bazowa rotacja montażu |
+| `componentCaptureVolume` | Szeroka strefa wykrywania kompatybilnej niesionej części |
+| `carrierStagingVolume` | Obszar, w którym muszą znajdować się wszyscy aktywni holderzy |
+| `positionTolerance` | Dopuszczalny błąd pozycji w lokalnych osiach targetu; aktualnie `0.40 m` |
+| `rotationToleranceDegrees` | Dopuszczalny błąd rotacji per oś; aktualnie `18°` |
+| `maximumLinearVelocity` | Maksymalna prędkość podczas settle; aktualnie `0.35 m/s` |
+| `maximumAngularVelocityDegrees` | Maksymalna prędkość kątowa; aktualnie `15°/s` |
+| `settleDuration` | Czas nieprzerwanego poprawnego ustawienia |
+| `requireRecommendedCarrierCount` | Wymaga pełnej docelowej obsady, niezależnie od testowego minimum pickup |
+| `allowedOrientationOffsetsEuler` | Alternatywne poprawne orientacje względem `targetPose`, np. obrót `180°` |
+| pola `Soft Assist` | Sprężyna, damping i limity przyspieszenia pozycji/rotacji |
+| pola `Feedback` | Zasięg, grubość, kolory, skala obrysu i długości wskaźników |
+
+Capture volume sześciu części jest powiększony o około `25%`, a staging volume
+o około `20%` w X/Z. Obrys feedbacku skaluje bounds ghosta o `1.12` i dodaje
+minimum `0.25 m` marginesu. Strzałki pozycji mogą mieć do `2.5 m`, a promień
+wskaźników rotacji skaluje się z rozmiarem części. Runtime visuale nie mają
+colliderów i używają `Ignore Raycast`.
+
+Gdy jedna część znajduje się w kilku capture volume, tylko socket o najmniejszym
+znormalizowanym błędzie pozycji i rotacji może stosować assist albo rozpocząć
+settle. Remis rozstrzyga stabilny `componentID`. Zapobiega to przeciąganiu
+jednej części przez sąsiednie sockety.
+
+Legacy Support i Roadway bez `BridgeMountSocket` zachowują ręczny montaż.
+
 ## Bazowy `BridgeConstructionSite`
 
 | Pole | Znaczenie |
@@ -175,8 +220,17 @@ Fastening -> Complete`
 | `temporaryFixProgressNeeded` | Progress każdego końca |
 | `fastenerProgressNeeded` | Progress finalnego punktu |
 
-Instancja holdera wybiera orientację `/` albo `\`. Finalne połączenia mają
-ścisłą kolejność krzyżową; aktywny punkt powinien pulsować i zmieniać kolor.
+Instancja holdera wybiera orientację `/` albo `\`. `ForwardSlash` ustawia
+`MountTargetPose` i ghost na lokalny yaw `+45°`, a `BackSlash` na `-45°`.
+Pozycja obu targetów pozostaje wspólna, ponieważ stężenia krzyżują się w tym
+samym środku. Dozwolony offset `0/180°` oznacza odpowiednio `45°/225°` oraz
+`-45°/135°`. Dzięki temu assist, błąd rotacji i arbitraż nakładających się
+socketów odnoszą się do rzeczywistej przekątnej, a nie osi kontenera.
+
+`alignmentStep` nie zmienia targetu dostarczania ani ghosta. Po montażu obraca
+wyłącznie finalny `bracingVisualRoot` podczas etapu `Aligning`. Finalne
+połączenia mają ścisłą kolejność krzyżową; aktywny punkt powinien pulsować i
+zmieniać kolor.
 
 ### Panel pomostu
 
@@ -229,11 +283,13 @@ treść tutorialu. Pierwsza synchronizacja nie odtwarza historii.
 2. Utwórz/podepnij odpowiadający workflow SO.
 3. Utwórz mountable SO i sieciowy prefab produktu.
 4. Utwórz holder z `BridgeComponent`, site oraz work pointami.
-5. Nadaj unikalny `componentID`.
-6. Dodaj holder do `Bridge` i właściwego `bridgeBuildingStage`.
-7. Skonfiguruj prerequisites.
-8. Dodaj produkt do fabryki oraz network registry.
-9. Sprawdź ghost, final visual i collidery w każdym stanie.
+5. Dla nowej precyzyjnie dostarczanej części dodaj `BridgeMountSocket`, jawny
+   `MountTargetPose`, capture volume i carrier staging volume.
+6. Nadaj unikalny `componentID`.
+7. Dodaj holder do `Bridge` i właściwego `bridgeBuildingStage`.
+8. Skonfiguruj prerequisites.
+9. Dodaj produkt do fabryki oraz network registry.
+10. Sprawdź ghost, target pose, final visual i collidery w każdym stanie.
 
 ## Ograniczenia
 

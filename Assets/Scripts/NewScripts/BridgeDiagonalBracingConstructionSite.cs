@@ -41,6 +41,7 @@ public class BridgeDiagonalBracingConstructionSite : BridgeConstructionSite
     private float endTemporaryFixProgress;
     private readonly float[] fastenerProgress = new float[FastenerCount];
     private MaterialPropertyBlock indicatorPropertyBlock;
+    private BridgeMountSocket mountSocket;
 
     public DiagonalBracingOrientation Orientation => orientation;
     public int AlignmentStep => alignmentStep;
@@ -53,6 +54,7 @@ public class BridgeDiagonalBracingConstructionSite : BridgeConstructionSite
     protected override void Awake()
     {
         workPoints = GetComponentsInChildren<BridgeDiagonalBracingWorkPoint>(true);
+        mountSocket = GetComponent<BridgeMountSocket>();
         base.Awake();
         diagonalWorkflow = bridgeComponent != null && bridgeComponent.GetBridgeComponentSO() != null
             ? bridgeComponent.GetBridgeComponentSO().diagonalBracingConstructionWorkflow
@@ -331,17 +333,15 @@ public class BridgeDiagonalBracingConstructionSite : BridgeConstructionSite
 
     protected override void ApplyVisualState()
     {
+        float targetYaw = GetTargetYaw();
+        ApplyMountOrientation(targetYaw);
+
         BridgeDiagonalBracingConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null) return;
 
         if (bracingVisualRoot != null)
         {
-            float targetYaw = orientation == DiagonalBracingOrientation.ForwardSlash ? 45f : -45f;
             bracingVisualRoot.localRotation = Quaternion.Euler(0f, targetYaw + alignmentStep * settings.AlignmentAngleStep, 0f);
-            if (ghostVisualRoot != null)
-            {
-                ghostVisualRoot.localRotation = Quaternion.Euler(0f, targetYaw, 0f);
-            }
         }
 
         UpdateTemporaryFixVisual(startTemporaryFixVisual, startTemporaryFixProgress, settings.TemporaryFixProgressNeeded);
@@ -375,6 +375,28 @@ public class BridgeDiagonalBracingConstructionSite : BridgeConstructionSite
                 point.gameObject.SetActive(active);
                 point.SetHighlighted(currentStage == BridgeConstructionStage.Fastening && point.WorkPointId == expected);
             }
+        }
+    }
+
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+        ApplyMountOrientation(GetTargetYaw());
+    }
+
+    private float GetTargetYaw()
+    {
+        return orientation == DiagonalBracingOrientation.ForwardSlash ? 45f : -45f;
+    }
+
+    private void ApplyMountOrientation(float targetYaw)
+    {
+        Quaternion targetRotation = Quaternion.Euler(0f, targetYaw, 0f);
+        mountSocket ??= GetComponent<BridgeMountSocket>();
+        mountSocket?.SetTargetPoseLocalRotation(targetRotation);
+        if (ghostVisualRoot != null)
+        {
+            ghostVisualRoot.localRotation = targetRotation;
         }
     }
 

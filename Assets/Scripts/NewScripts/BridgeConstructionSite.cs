@@ -283,7 +283,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         markedGroundVisual.transform.localScale = new Vector3(safeSize.x / 2.4f, 1f, safeSize.y / 2.4f);
     }
 
-    private void OnValidate()
+    protected virtual void OnValidate()
     {
         clearingAreaSize.x = Mathf.Max(0.1f, clearingAreaSize.x);
         clearingAreaSize.y = Mathf.Max(0.1f, clearingAreaSize.y);

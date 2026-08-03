@@ -212,6 +212,50 @@ Wymagane:
 - work point children właściwego typu;
 - komplet prerequisites.
 
+### `BridgeMountSocket`
+
+Dodawaj ten komponent do holderów używających automatycznego, precyzyjnego
+montażu. `targetPose` musi być osobnym childem. Jeśli referencja jest pusta,
+runtime używa roota jako fallbacku, ale nie należy wtedy programowo obracać
+targetu, ponieważ zmieniłoby to orientację całego holdera.
+
+| Pole | Typ/jednostka | Konfiguracja |
+|---|---|---|
+| `bridgeComponent` | prefab reference | `BridgeComponent` na tym samym holderze |
+| `targetPose` | Transform | Dokładny środek i bazowa rotacja finalnej części |
+| `componentCaptureVolume` | BoxCollider trigger | Szeroka strefa kandydata; dla sześciu części około `125%` wcześniejszego rozmiaru |
+| `carrierStagingVolume` | BoxCollider trigger | Strefa holderów; około `120%` w X/Z, bez zwiększania wysokości |
+| `ghostVisualRoot` | GameObject | Visual docelowej części używany również do bounds feedbacku |
+| `positionTolerance` | metry per lokalna oś | Aktualny baseline sześciu części: `(0.40, 0.40, 0.40)` |
+| `rotationToleranceDegrees` | stopnie per lokalna oś | Aktualny baseline: `(18, 18, 18)` |
+| `maximumLinearVelocity` | m/s | `0.35` |
+| `maximumAngularVelocityDegrees` | °/s | `15` |
+| `settleDuration` | sekundy | `1` |
+| `requireRecommendedCarrierCount` | bool | Wymaga `recommendedCarriers`, nie tylko `minAmountOfPlayersNeeded` |
+| `allowedOrientationOffsetsEuler` | Vector3[] | Alternatywne poprawne obroty, zwykle `0°`, opcjonalnie `180°` |
+| `positionSpring`, `positionDamping` | assist | Bazowo `12` i `7` |
+| `maximumPositionAcceleration` | m/s² | Bazowo `6` |
+| `rotationSpring`, `rotationDamping` | assist | Bazowo `8` i `4` |
+| `maximumAngularAcceleration` | rad/s² | Bazowo `4` |
+| `mountingCollisionClearancePadding` | metry | Tymczasowy margines ignorowania kolizji podczas końcowego ustawiania |
+| `feedbackVisibilityDistance` | metry | Bazowo `12` |
+| `feedbackBoundsScale` | mnożnik | `1.12` |
+| `feedbackBoundsPadding` | metry | Minimum `0.25` poza bounds ghosta |
+| `maximumPositionIndicatorLength` | metry | `2.5` |
+| `minimumRotationIndicatorRadius` | metry | Minimalny promień łuków, obecnie `0.65` |
+| `maximumRotationIndicatorRadius` | metry | Maksymalny promień łuków, obecnie `2.5` |
+| `invalidColor`, `positioningColor`, `settlingColor` | Color | Czerwony, żółty i zielony stan lokalnego feedbacku |
+
+Przy nakładających się capture volume aktywny jest tylko kompatybilny socket o
+najmniejszym znormalizowanym błędzie pozycji i rotacji. Nie próbuj rozwiązywać
+tego przez ręczne wyłączanie sąsiednich triggerów.
+
+W `BridgeDiagonalBracingConstructionSite` orientacja scenowa steruje bazową
+rotacją targetu: `ForwardSlash = +45°`, `BackSlash = -45°`. Te same kąty muszą
+mieć `MountTargetPose` i ghost. `allowedOrientationOffsetsEuler` zachowuje
+wariant `0/180°`. Późniejszy `alignmentStep` obraca wyłącznie zamontowany visual
+i nie może być zapisywany w target pose.
+
 ### Work point
 
 Każdy work point ma:

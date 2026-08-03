@@ -42,6 +42,7 @@ public readonly struct BridgeMountPoseError
 public sealed class BridgeMountSocket : MonoBehaviour
 {
     public const ulong NoCandidateNetworkObjectId = ulong.MaxValue;
+    private static readonly HashSet<BridgeMountSocket> ActiveSockets = new HashSet<BridgeMountSocket>();
 
     [Header("References")]
     [SerializeField] private BridgeComponent bridgeComponent;
@@ -71,6 +72,11 @@ public sealed class BridgeMountSocket : MonoBehaviour
     [Header("Feedback")]
     [SerializeField, Min(0f)] private float feedbackVisibilityDistance = 12f;
     [SerializeField, Min(0.005f)] private float indicatorWidth = 0.035f;
+    [SerializeField, Min(1f)] private float feedbackBoundsScale = 1.12f;
+    [SerializeField, Min(0f)] private float feedbackBoundsPadding = 0.25f;
+    [SerializeField, Min(0.1f)] private float maximumPositionIndicatorLength = 2.5f;
+    [SerializeField, Min(0.1f)] private float minimumRotationIndicatorRadius = 0.65f;
+    [SerializeField, Min(0.1f)] private float maximumRotationIndicatorRadius = 2.5f;
     [SerializeField] private Color invalidColor = new Color(0.95f, 0.16f, 0.12f, 0.75f);
     [SerializeField] private Color positioningColor = new Color(1f, 0.68f, 0.08f, 0.75f);
     [SerializeField] private Color settlingColor = new Color(0.15f, 0.95f, 0.3f, 0.8f);
@@ -96,6 +102,16 @@ public sealed class BridgeMountSocket : MonoBehaviour
     public double SettleStartedAt => settleStartedAt;
     public ulong CurrentCandidateNetworkObjectId => synchronizedCandidateId;
 
+    public void SetTargetPoseLocalRotation(Quaternion localRotation)
+    {
+        if (targetPose == null || targetPose == transform)
+        {
+            return;
+        }
+
+        targetPose.localRotation = localRotation;
+    }
+
     private void Awake()
     {
         if (bridgeComponent == null)
@@ -120,12 +136,19 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
     private void OnDestroy()
     {
+        ActiveSockets.Remove(this);
         ClearMountingCollisionClearance();
         visualizer?.Dispose();
     }
 
+    private void OnEnable()
+    {
+        ActiveSockets.Add(this);
+    }
+
     private void OnDisable()
     {
+        ActiveSockets.Remove(this);
         ClearMountingCollisionClearance();
     }
 
@@ -340,7 +363,8 @@ public sealed class BridgeMountSocket : MonoBehaviour
         candidateBuffer.Clear();
         CollectCandidates(candidateBuffer);
         if (authoritativeCandidate != null && candidateBuffer.Contains(authoritativeCandidate)
-            && currentAlignmentState == BridgeMountAlignmentState.Settling)
+            && currentAlignmentState == BridgeMountAlignmentState.Settling
+            && IsPreferredSocketForCandidate(authoritativeCandidate))
         {
             return authoritativeCandidate;
         }
@@ -350,7 +374,9 @@ public sealed class BridgeMountSocket : MonoBehaviour
         for (int i = 0; i < candidateBuffer.Count; i++)
         {
             MountableBridgeComponent candidate = candidateBuffer[i];
-            if (!IsMatchingCarriedComponent(candidate) || !TryEvaluateCandidate(candidate, out BridgeMountPoseError error))
+            if (!IsMatchingCarriedComponent(candidate)
+                || !IsPreferredSocketForCandidate(candidate)
+                || !TryEvaluateCandidate(candidate, out BridgeMountPoseError error))
             {
                 continue;
             }
@@ -366,6 +392,106 @@ public sealed class BridgeMountSocket : MonoBehaviour
         }
 
         return bestCandidate;
+    }
+
+    private bool IsPreferredSocketForCandidate(MountableBridgeComponent candidate)
+    {
+        if (!IsMatchingCarriedComponent(candidate))
+        {
+            return false;
+        }
+
+        BridgeMountSocket preferred = null;
+        float preferredScore = float.PositiveInfinity;
+        foreach (BridgeMountSocket socket in ActiveSockets)
+        {
+            if (socket == null
+                || !socket.isActiveAndEnabled
+                || socket.bridgeComponent == null
+                || socket.bridgeComponent.IsMounted
+                || !socket.bridgeComponent.CanBeMounted
+                || !socket.IsMatchingCarriedComponent(candidate)
+                || !socket.ContainsCandidate(candidate)
+                || !socket.TryEvaluateCandidate(candidate, out BridgeMountPoseError error))
+            {
+                continue;
+            }
+
+            float score = socket.GetNormalizedPoseScore(error);
+            if (preferred == null
+                || score < preferredScore - 0.0001f
+                || (Mathf.Abs(score - preferredScore) <= 0.0001f && IsStableSocketBefore(socket, preferred)))
+            {
+                preferred = socket;
+                preferredScore = score;
+            }
+        }
+
+        return preferred == this;
+    }
+
+    private bool ContainsCandidate(MountableBridgeComponent candidate)
+    {
+        if (candidate == null || componentCaptureVolume == null || !componentCaptureVolume.enabled)
+        {
+            return false;
+        }
+
+        Transform volumeTransform = componentCaptureVolume.transform;
+        Vector3 scale = Abs(volumeTransform.lossyScale);
+        Vector3 halfExtents = Vector3.Scale(componentCaptureVolume.size, scale) * 0.5f;
+        Vector3 center = volumeTransform.TransformPoint(componentCaptureVolume.center);
+        int hitCount = Physics.OverlapBoxNonAlloc(
+            center,
+            halfExtents,
+            overlapResults,
+            volumeTransform.rotation,
+            Physics.AllLayers,
+            QueryTriggerInteraction.Collide);
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider hit = overlapResults[i];
+            if (hit != null && hit.GetComponentInParent<MountableBridgeComponent>() == candidate)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private float GetNormalizedPoseScore(BridgeMountPoseError error)
+    {
+        Vector3 safePositionTolerance = new Vector3(
+            Mathf.Max(positionTolerance.x, 0.01f),
+            Mathf.Max(positionTolerance.y, 0.01f),
+            Mathf.Max(positionTolerance.z, 0.01f));
+        Vector3 safeRotationTolerance = new Vector3(
+            Mathf.Max(rotationToleranceDegrees.x, 0.01f),
+            Mathf.Max(rotationToleranceDegrees.y, 0.01f),
+            Mathf.Max(rotationToleranceDegrees.z, 0.01f));
+        Vector3 normalizedPosition = new Vector3(
+            error.LocalPositionError.x / safePositionTolerance.x,
+            error.LocalPositionError.y / safePositionTolerance.y,
+            error.LocalPositionError.z / safePositionTolerance.z);
+        Vector3 normalizedRotation = new Vector3(
+            error.LocalRotationError.x / safeRotationTolerance.x,
+            error.LocalRotationError.y / safeRotationTolerance.y,
+            error.LocalRotationError.z / safeRotationTolerance.z);
+        return normalizedPosition.sqrMagnitude + normalizedRotation.sqrMagnitude;
+    }
+
+    private static bool IsStableSocketBefore(BridgeMountSocket candidate, BridgeMountSocket current)
+    {
+        int candidateComponentId = candidate.bridgeComponent != null
+            ? candidate.bridgeComponent.ComponentID
+            : int.MaxValue;
+        int currentComponentId = current.bridgeComponent != null
+            ? current.bridgeComponent.ComponentID
+            : int.MaxValue;
+        return candidateComponentId != currentComponentId
+            ? candidateComponentId < currentComponentId
+            : candidate.GetInstanceID() < current.GetInstanceID();
     }
 
     private void CollectCandidates(List<MountableBridgeComponent> results)
@@ -716,12 +842,15 @@ public sealed class BridgeMountSocket : MonoBehaviour
         private readonly BridgeMountSocket socket;
         private readonly Transform root;
         private readonly List<LineRenderer> carrierLines = new List<LineRenderer>();
+        private readonly List<LineRenderer> feedbackBoundsLines = new List<LineRenderer>();
         private readonly LineRenderer[] positionLines = new LineRenderer[3];
         private readonly LineRenderer[] rotationLines = new LineRenderer[3];
         private readonly Renderer[] ghostRenderers;
         private readonly Color[] originalGhostColors;
         private readonly MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
         private readonly Material lineMaterial;
+        private Vector3 feedbackBoundsCenter;
+        private Vector3 feedbackBoundsExtents = Vector3.one * 0.5f;
 
         public BridgeMountSocketVisualizer(BridgeMountSocket socket, GameObject ghostVisualRoot)
         {
@@ -737,6 +866,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
             for (int i = 0; i < 12; i++)
             {
                 carrierLines.Add(CreateLine($"CarrierZone_{i}"));
+                feedbackBoundsLines.Add(CreateLine($"TargetBounds_{i}"));
             }
             for (int i = 0; i < 3; i++)
             {
@@ -776,6 +906,8 @@ public sealed class BridgeMountSocket : MonoBehaviour
                     : socket.invalidColor;
             ApplyGhostColor(stateColor);
             DrawCarrierVolume(stateColor);
+            ResolveFeedbackBounds();
+            DrawFeedbackBounds(stateColor);
             DrawPositionIndicators(candidate != null ? error.LocalPositionError : Vector3.zero);
             DrawRotationIndicators(candidate != null ? error.LocalRotationError : Vector3.zero);
         }
@@ -853,14 +985,17 @@ public sealed class BridgeMountSocket : MonoBehaviour
         {
             Color[] colors = { Color.red, Color.green, Color.blue };
             Vector3[] axes = { socket.TargetPose.right, socket.TargetPose.up, socket.TargetPose.forward };
+            float[] extents = { feedbackBoundsExtents.x, feedbackBoundsExtents.y, feedbackBoundsExtents.z };
             float[] values = { localError.x, localError.y, localError.z };
             for (int i = 0; i < 3; i++)
             {
                 LineRenderer line = positionLines[i];
                 line.enabled = Mathf.Abs(values[i]) > 0.01f;
                 line.startColor = line.endColor = colors[i];
-                line.SetPosition(0, socket.TargetPose.position);
-                line.SetPosition(1, socket.TargetPose.position + axes[i] * Mathf.Clamp(values[i], -1.5f, 1.5f));
+                float direction = Mathf.Sign(values[i]);
+                Vector3 start = feedbackBoundsCenter + axes[i] * extents[i] * direction;
+                line.SetPosition(0, start);
+                line.SetPosition(1, start + axes[i] * Mathf.Clamp(values[i], -socket.maximumPositionIndicatorLength, socket.maximumPositionIndicatorLength));
             }
         }
 
@@ -869,19 +1004,97 @@ public sealed class BridgeMountSocket : MonoBehaviour
             Color[] colors = { Color.red, Color.green, Color.blue };
             Vector3[] axes = { socket.TargetPose.right, socket.TargetPose.up, socket.TargetPose.forward };
             Vector3[] starts = { socket.TargetPose.up, socket.TargetPose.forward, socket.TargetPose.right };
+            float[] radii =
+            {
+                Mathf.Max(feedbackBoundsExtents.y, feedbackBoundsExtents.z),
+                Mathf.Max(feedbackBoundsExtents.x, feedbackBoundsExtents.z),
+                Mathf.Max(feedbackBoundsExtents.x, feedbackBoundsExtents.y)
+            };
             float[] values = { localError.x, localError.y, localError.z };
             for (int axisIndex = 0; axisIndex < 3; axisIndex++)
             {
                 LineRenderer line = rotationLines[axisIndex];
                 float angle = Mathf.Clamp(values[axisIndex], -120f, 120f);
+                float radius = Mathf.Clamp(radii[axisIndex], socket.minimumRotationIndicatorRadius, socket.maximumRotationIndicatorRadius);
                 line.enabled = Mathf.Abs(angle) > 0.5f;
                 line.startColor = line.endColor = colors[axisIndex];
                 for (int pointIndex = 0; pointIndex < line.positionCount; pointIndex++)
                 {
                     float t = pointIndex / (float)(line.positionCount - 1);
                     Vector3 radial = Quaternion.AngleAxis(angle * t, axes[axisIndex]) * starts[axisIndex];
-                    line.SetPosition(pointIndex, socket.TargetPose.position + radial.normalized * 0.6f);
+                    line.SetPosition(pointIndex, feedbackBoundsCenter + radial.normalized * radius);
                 }
+            }
+        }
+
+        private void ResolveFeedbackBounds()
+        {
+            Bounds localBounds = default;
+            bool hasBounds = false;
+            for (int rendererIndex = 0; rendererIndex < ghostRenderers.Length; rendererIndex++)
+            {
+                Renderer renderer = ghostRenderers[rendererIndex];
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                Bounds rendererBounds = renderer.localBounds;
+                for (int x = -1; x <= 1; x += 2)
+                for (int y = -1; y <= 1; y += 2)
+                for (int z = -1; z <= 1; z += 2)
+                {
+                    Vector3 rendererCorner = rendererBounds.center + Vector3.Scale(rendererBounds.extents, new Vector3(x, y, z));
+                    Vector3 targetLocalCorner = socket.TargetPose.InverseTransformPoint(renderer.transform.TransformPoint(rendererCorner));
+                    if (!hasBounds)
+                    {
+                        localBounds = new Bounds(targetLocalCorner, Vector3.zero);
+                        hasBounds = true;
+                    }
+                    else
+                    {
+                        localBounds.Encapsulate(targetLocalCorner);
+                    }
+                }
+            }
+
+            if (!hasBounds && socket.componentCaptureVolume != null)
+            {
+                BoxCollider fallback = socket.componentCaptureVolume;
+                Vector3 worldCenter = fallback.transform.TransformPoint(fallback.center);
+                feedbackBoundsCenter = worldCenter;
+                feedbackBoundsExtents = Vector3.Scale(fallback.size * 0.5f, Abs(fallback.transform.lossyScale));
+                return;
+            }
+
+            Vector3 targetScale = Abs(socket.TargetPose.lossyScale);
+            feedbackBoundsCenter = socket.TargetPose.TransformPoint(hasBounds ? localBounds.center : Vector3.zero);
+            Vector3 scaledExtents = Vector3.Scale(hasBounds ? localBounds.extents : Vector3.one * 0.5f, targetScale);
+            feedbackBoundsExtents = scaledExtents * socket.feedbackBoundsScale + Vector3.one * socket.feedbackBoundsPadding;
+        }
+
+        private void DrawFeedbackBounds(Color color)
+        {
+            Vector3[] corners = new Vector3[8];
+            int index = 0;
+            for (int y = -1; y <= 1; y += 2)
+            for (int z = -1; z <= 1; z += 2)
+            for (int x = -1; x <= 1; x += 2)
+            {
+                corners[index++] = feedbackBoundsCenter
+                    + socket.TargetPose.right * feedbackBoundsExtents.x * x
+                    + socket.TargetPose.up * feedbackBoundsExtents.y * y
+                    + socket.TargetPose.forward * feedbackBoundsExtents.z * z;
+            }
+
+            int[,] edges = { {0,1},{0,2},{0,4},{1,3},{1,5},{2,3},{2,6},{3,7},{4,5},{4,6},{5,7},{6,7} };
+            for (int i = 0; i < feedbackBoundsLines.Count; i++)
+            {
+                LineRenderer line = feedbackBoundsLines[i];
+                line.enabled = true;
+                line.startColor = line.endColor = color;
+                line.SetPosition(0, corners[edges[i, 0]]);
+                line.SetPosition(1, corners[edges[i, 1]]);
             }
         }
 
