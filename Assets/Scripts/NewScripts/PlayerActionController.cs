@@ -270,6 +270,10 @@ public class PlayerActionController : NetworkBehaviour
         {
             hasCorrectTool = selectedItem != null && baseResource.CanBeDestroyedWith(selectedItem.itemType);
         }
+        else if (target is FlexibleSaplingController sapling)
+        {
+            hasCorrectTool = selectedItem != null && sapling.CanApplyTool(selectedItem.itemType);
+        }
         else if (target is BridgeComponent bridgeComponent)
         {
             hasCorrectTool = selectedItem != null &&
@@ -305,6 +309,12 @@ public class PlayerActionController : NetworkBehaviour
 
     private static bool TryGetRequiredTool(MonoBehaviour target, out EquippableItemType requiredTool)
     {
+        if (target is FlexibleSaplingController sapling && sapling.CanApplyTool(EquippableItemType.Shovel))
+        {
+            requiredTool = EquippableItemType.Shovel;
+            return true;
+        }
+
         foreach (EquippableItemType toolType in Enum.GetValues(typeof(EquippableItemType)))
         {
             if (toolType == EquippableItemType.None)

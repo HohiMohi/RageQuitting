@@ -43,6 +43,9 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private int sharedCarryPlayerHolderCount;
     private int sharedCarryRequiredPlayerCount;
     private float sharedCarryUnderstaffedStaminaDrainPerSecond;
+    private FlexibleSaplingController activeFlexibleSapling;
+    private FlexibleSaplingGripSide activeFlexibleSaplingSide;
+    private PlayerFlexibleSaplingUI flexibleSaplingUI;
 
     public bool IsSharedCarryMovementActive => sharedCarryMovementActive && _pickedUpGameObject != null;
     public bool IsPhysicalPointGripActive => IsSharedCarryMovementActive && sharedCarryPhysicsBody != null
@@ -57,6 +60,9 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     public int CurrentSharedCarryPlayerCount => sharedCarryPlayerHolderCount;
     public int RequiredSharedCarryPlayerCount => sharedCarryRequiredPlayerCount;
     public Vector3 CarryBodyAnchorLocalOffset => defaultCarryBodyAnchorLocalPosition;
+    public bool IsFlexibleSaplingInteractionActive => activeFlexibleSapling != null;
+    public FlexibleSaplingController ActiveFlexibleSapling => activeFlexibleSapling;
+    public FlexibleSaplingGripSide ActiveFlexibleSaplingSide => activeFlexibleSaplingSide;
 
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
     public event EventHandler OnInteractionPerformed;
@@ -76,6 +82,11 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         _playerInputNew.OnInteract += HandleInteract;
         _playerInputNew.OnActionAlt += HandleActionAlt;
         _playerHealth = GetComponent<PlayerHealth>();
+        flexibleSaplingUI = GetComponent<PlayerFlexibleSaplingUI>();
+        if (flexibleSaplingUI == null)
+        {
+            flexibleSaplingUI = gameObject.AddComponent<PlayerFlexibleSaplingUI>();
+        }
         EnsureCarryBodyAnchor();
         EnsureCarriedPlayerAnchor();
     }
@@ -112,6 +123,13 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleInteract(object sender, EventArgs e)
     {
+        if (activeFlexibleSapling != null)
+        {
+            FlexibleSaplingController sapling = activeFlexibleSapling;
+            sapling.Release(this);
+            return;
+        }
+
         if (_playerHealth != null && _playerHealth.IsDowned)
         {
             _playerHealth.RequestRespawn();
@@ -333,6 +351,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     public void DropHeldObjectForStateChange()
     {
+        ReleaseFlexibleSaplingForStateChange();
         if (DropObject())
         {
             OnHeldObjectForcedRelease?.Invoke(this, EventArgs.Empty);
@@ -672,6 +691,41 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         return fallbackTarget;
     }
 
+    public void BeginFlexibleSaplingSession(FlexibleSaplingController sapling, FlexibleSaplingGripSide side)
+    {
+        if (sapling == null)
+        {
+            return;
+        }
+
+        activeFlexibleSapling = sapling;
+        activeFlexibleSaplingSide = side;
+        flexibleSaplingUI?.Show(sapling);
+    }
+
+    public void EndFlexibleSaplingSession(FlexibleSaplingController sapling)
+    {
+        if (sapling != null && activeFlexibleSapling != sapling)
+        {
+            return;
+        }
+
+        activeFlexibleSapling = null;
+        flexibleSaplingUI?.Hide();
+    }
+
+    private void ReleaseFlexibleSaplingForStateChange()
+    {
+        if (activeFlexibleSapling == null)
+        {
+            return;
+        }
+
+        FlexibleSaplingController sapling = activeFlexibleSapling;
+        sapling.Release(this);
+        EndFlexibleSaplingSession(sapling);
+    }
+
     private bool TryGetAimRay(out Ray aimRay)
     {
         if (aimCamera == null || !aimCamera.isActiveAndEnabled)
@@ -793,8 +847,15 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     {
         if (_playerHealth != null && _playerHealth.IsDowned)
         {
+            ReleaseFlexibleSaplingForStateChange();
             ClearCurrentInteractable();
             return;
+        }
+
+        if (activeFlexibleSapling != null)
+        {
+            Vector2 lookDelta = _playerInputNew.GetLookDeltaValueForMinigames();
+            activeFlexibleSapling.SubmitLocalPull(this, -lookDelta.y);
         }
 
         MovePickedUpObjectToHoldPosition();

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a06f9b80e9084c4aaf372ef1f5d8b99, type: 3}
+  m_Name: FlexibleSaplingProfile
+  m_EditorClassIdentifier: Assembly-CSharp::FlexibleSaplingProfileSO
+  requiredPulls: 10
+  requiredPlayers: 2
+  mouseSensitivity: 0.004
+  initialTargetCenter: 0.35
+  finalTargetCenter: 0.84
+  targetZoneHalfWidth: 0.07
+  targetProgressExponent: 2
+  breakingTilt: 0.92
+  pullEvaluationDelay: 0.45
+  minimumGestureTravel: 0.15
+  secondStageTimeLimit: 5
+  finalStageTimeLimit: 3.5
+  inputSendInterval: 0.033333335
+  inputTimeout: 3
+  interactionDistance: 3
+  releaseClearance: 0.45
+  releaseSearchRadius: 1.2
+  releaseGroundProbeDistance: 1.5
+  maximumVisualTiltDegrees: 32
+  visualFollowSpeed: 12
+  recenterSpeed: 1.5
+  stumpShovelHits: 12
+  activePlayerImpulse: {fileID: 11400000, guid: 22cd22e9553ce3c4d862a8477e7b5164, type: 2}
+  partnerImpulse: {fileID: 11400000, guid: 6c20f898884b07f47b06c90e34ab45a5, type: 2}
+  uprootedProduct: {fileID: 11400000, guid: cbb3eae1bd4ef9b4a98935b2c03b7441, type: 2}

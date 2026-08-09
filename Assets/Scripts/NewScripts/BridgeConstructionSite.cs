@@ -9,6 +9,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     [SerializeField] private bool requiresSiteClearing = true;
     [SerializeField] private Vector2 clearingAreaSize = new Vector2(2.4f, 2.4f);
     [SerializeField] private BaseResourceNew[] clearingObstacles;
+    [SerializeField] private FlexibleSaplingController[] clearingSaplings;
 
     [Header("Stage visuals")]
     [SerializeField] private Collider constructionInteractionCollider;
@@ -225,19 +226,28 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     private int CountRemainingObstacles()
     {
-        if (clearingObstacles == null)
+        int count = 0;
+        if (clearingObstacles != null)
         {
-            return 0;
+            foreach (BaseResourceNew obstacle in clearingObstacles)
+            {
+                if (obstacle != null &&
+                    obstacle.gameObject.activeInHierarchy &&
+                    obstacle.CanBeDestroyedWith(EquippableItemType.Axe))
+                {
+                    count++;
+                }
+            }
         }
 
-        int count = 0;
-        foreach (BaseResourceNew obstacle in clearingObstacles)
+        if (clearingSaplings != null)
         {
-            if (obstacle != null &&
-                obstacle.gameObject.activeInHierarchy &&
-                obstacle.CanBeDestroyedWith(EquippableItemType.Axe))
+            foreach (FlexibleSaplingController sapling in clearingSaplings)
             {
-                count++;
+                if (sapling != null && sapling.gameObject.activeInHierarchy && !sapling.IsCleared)
+                {
+                    count++;
+                }
             }
         }
 

@@ -406,6 +406,11 @@ namespace StarterAssets
 
 		private void CameraRotation()
 		{
+			if (_playerInteractionNew != null && _playerInteractionNew.IsFlexibleSaplingInteractionActive)
+			{
+				return;
+			}
+
             EnsureLookRotationInitialized();
             Vector2 lookDelta = _playerInputNew.GetLookDeltaValue();
             bool hasLookInput = lookDelta.sqrMagnitude >= _threshold;
@@ -496,6 +501,14 @@ namespace StarterAssets
 			if (IsDowned())
 			{
 				MoveWhileDowned();
+				return;
+			}
+
+			if (_playerInteractionNew != null && _playerInteractionNew.IsFlexibleSaplingInteractionActive)
+			{
+				_isSprinting = false;
+				_isJumpPerformed = false;
+				_horizontalVelocity = Vector3.zero;
 				return;
 			}
 
@@ -720,7 +733,8 @@ namespace StarterAssets
 				return;
 			}
 
-			bool canJump = !IsDowned() && (_playerInteractionNew == null || !_playerInteractionNew.IsSharedCarryMovementActive);
+			bool canJump = !IsDowned() && (_playerInteractionNew == null ||
+				(!_playerInteractionNew.IsSharedCarryMovementActive && !_playerInteractionNew.IsFlexibleSaplingInteractionActive));
 			if (!canJump)
 			{
 				_isJumpPerformed = false;
@@ -937,6 +951,15 @@ namespace StarterAssets
 			_verticalVelocity = 0f;
 			float delta = targetRootY - transform.position.y;
 			_controller.Move(Vector3.up * Mathf.Clamp(delta, -2f * Time.deltaTime, 2f * Time.deltaTime));
+		}
+
+		public void ResetMovementAfterForcedPlacement()
+		{
+			_horizontalVelocity = Vector3.zero;
+			_verticalVelocity = Grounded ? -2f : 0f;
+			_mostNegativeAirVelocity = 0f;
+			_isSprinting = false;
+			_isJumpPerformed = false;
 		}
 
 		private bool IsDowned()
