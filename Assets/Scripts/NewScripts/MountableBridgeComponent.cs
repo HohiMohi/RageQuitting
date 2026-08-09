@@ -51,6 +51,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     private ICarryActor externalCarryActor;
     private Vector3 sharedCarryOrbitPivotLocalPoint;
     private bool sharedCarryOrbitPivotInitialized;
+    private BridgeMountSocket verticalControlSocket;
+    private float mountSocketVerticalControlWeight;
 
     public void Interact(Transform interactor)
     {
@@ -295,7 +297,33 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     private void SetPickedUpState(bool pickedUp)
     {
         isPickedUp = pickedUp;
+        if (!pickedUp)
+        {
+            ClearMountSocketVerticalControl(verticalControlSocket);
+        }
         UpdatePickedUpProperties();
+    }
+
+    public void SetMountSocketVerticalControl(BridgeMountSocket socket, float weight)
+    {
+        if (socket == null || (verticalControlSocket != null && verticalControlSocket != socket))
+        {
+            return;
+        }
+
+        verticalControlSocket = socket;
+        mountSocketVerticalControlWeight = Mathf.Clamp01(weight);
+    }
+
+    public void ClearMountSocketVerticalControl(BridgeMountSocket socket)
+    {
+        if (socket != null && verticalControlSocket != socket)
+        {
+            return;
+        }
+
+        verticalControlSocket = null;
+        mountSocketVerticalControlWeight = 0f;
     }
 
     private void UpdatePickedUpProperties()
@@ -919,7 +947,12 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
         combinedInput.y = 0f;
         combinedInput = Vector3.ClampMagnitude(combinedInput / GetRecommendedCarriers(), 1f);
-        _sharedCarryPhysicsBody.Simulate(physicsHolders, combinedInput, GetRecommendedCarriers(), Time.fixedDeltaTime);
+        _sharedCarryPhysicsBody.Simulate(
+            physicsHolders,
+            combinedInput,
+            GetRecommendedCarriers(),
+            Time.fixedDeltaTime,
+            mountSocketVerticalControlWeight);
         UpdateNpcSharedCarryAttachments();
     }
 
@@ -1729,6 +1762,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     public override void OnDestroy()
     {
+        ClearMountSocketVerticalControl(verticalControlSocket);
         _sharedCarryCollisionController?.RestoreAllCollisions();
         if (holderClientIds.Count > 0)
         {

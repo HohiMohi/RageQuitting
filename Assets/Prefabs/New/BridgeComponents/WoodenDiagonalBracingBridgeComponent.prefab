@@ -2108,6 +2108,11 @@ MonoBehaviour:
   positionSpring: 12
   positionDamping: 7
   maximumPositionAcceleration: 6
+  verticalPositionSpring: 16
+  verticalPositionDamping: 8
+  maximumVerticalAcceleration: 18
+  verticalControlBlendDuration: 0.25
+  verticalGravityCompensation: 1
   rotationSpring: 8
   rotationDamping: 4
   maximumAngularAcceleration: 4

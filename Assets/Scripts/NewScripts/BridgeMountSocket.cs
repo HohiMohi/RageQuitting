@@ -64,6 +64,11 @@ public sealed class BridgeMountSocket : MonoBehaviour
     [SerializeField, Min(0f)] private float positionSpring = 12f;
     [SerializeField, Min(0f)] private float positionDamping = 7f;
     [SerializeField, Min(0f)] private float maximumPositionAcceleration = 6f;
+    [SerializeField, Min(0f)] private float verticalPositionSpring = 16f;
+    [SerializeField, Min(0f)] private float verticalPositionDamping = 8f;
+    [SerializeField, Min(0f)] private float maximumVerticalAcceleration = 18f;
+    [SerializeField, Min(0f)] private float verticalControlBlendDuration = 0.25f;
+    [SerializeField, Range(0f, 2f)] private float verticalGravityCompensation = 1f;
     [SerializeField, Min(0f)] private float rotationSpring = 8f;
     [SerializeField, Min(0f)] private float rotationDamping = 4f;
     [SerializeField, Min(0f)] private float maximumAngularAcceleration = 4f;
@@ -94,6 +99,9 @@ public sealed class BridgeMountSocket : MonoBehaviour
     private ulong synchronizedCandidateId = NoCandidateNetworkObjectId;
     private bool mountRequested;
     private BridgeMountSocketVisualizer visualizer;
+    private MountableBridgeComponent verticalControlCandidate;
+    private float verticalControlWeight;
+    private bool verticalControlRequested;
 
     public BridgeMountAlignmentState CurrentAlignmentState => currentAlignmentState;
     public BridgeMountPoseError CurrentPoseError => currentPoseError;
@@ -137,6 +145,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
     private void OnDestroy()
     {
         ActiveSockets.Remove(this);
+        ClearVerticalControlImmediately();
         ClearMountingCollisionClearance();
         visualizer?.Dispose();
     }
@@ -149,6 +158,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
     private void OnDisable()
     {
         ActiveSockets.Remove(this);
+        ClearVerticalControlImmediately();
         ClearMountingCollisionClearance();
     }
 
@@ -156,7 +166,9 @@ public sealed class BridgeMountSocket : MonoBehaviour
     {
         if (IsAuthoritative())
         {
+            verticalControlRequested = false;
             EvaluateAuthoritativeState();
+            UpdateVerticalControl();
         }
     }
 
@@ -194,14 +206,19 @@ public sealed class BridgeMountSocket : MonoBehaviour
             return false;
         }
 
-        Vector3 testPoint = carrierRoot.transform.position;
-        if (carrierRoot.TryGetComponent(out CharacterController controller))
-        {
-            testPoint = controller.bounds.center;
-        }
-
+        Vector3 testPoint = GetCarrierStagingPoint(carrierRoot);
         Vector3 closest = carrierStagingVolume.ClosestPoint(testPoint);
         return (closest - testPoint).sqrMagnitude <= 0.0025f;
+    }
+
+    private static Vector3 GetCarrierStagingPoint(GameObject carrierRoot)
+    {
+        if (carrierRoot.TryGetComponent(out CharacterController controller))
+        {
+            return controller.transform.TransformPoint(controller.center);
+        }
+
+        return carrierRoot.transform.position;
     }
 
     public void ApplyNetworkAlignmentState(BridgeComponentNetworkState state)
@@ -314,6 +331,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
         }
 
         currentPoseError = poseError;
+        RequestVerticalControl(candidate);
         ApplySoftAssist(candidate, poseError.OrientationIndex);
 
         if (!IsWithinTolerance(poseError.LocalPositionError, positionTolerance))
@@ -571,9 +589,26 @@ public sealed class BridgeMountSocket : MonoBehaviour
         }
 
         CalculateDesiredBodyPose(candidate, orientationIndex, out Vector3 desiredPosition, out Quaternion desiredRotation);
-        Vector3 positionAcceleration = (desiredPosition - body.position) * positionSpring
-            - body.linearVelocity * positionDamping;
-        body.AddForce(Vector3.ClampMagnitude(positionAcceleration, maximumPositionAcceleration), ForceMode.Acceleration);
+        Vector3 positionError = desiredPosition - body.position;
+        Vector3 horizontalVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
+        Vector3 horizontalAcceleration = Vector3.ProjectOnPlane(positionError, Vector3.up) * positionSpring
+            - horizontalVelocity * positionDamping;
+        horizontalAcceleration = Vector3.ClampMagnitude(horizontalAcceleration, maximumPositionAcceleration);
+
+        float verticalAcceleration = positionError.y * verticalPositionSpring
+            - body.linearVelocity.y * verticalPositionDamping;
+        if (body.useGravity)
+        {
+            verticalAcceleration -= Physics.gravity.y
+                * verticalGravityCompensation
+                * verticalControlWeight;
+        }
+
+        verticalAcceleration = Mathf.Clamp(
+            verticalAcceleration,
+            -maximumVerticalAcceleration,
+            maximumVerticalAcceleration);
+        body.AddForce(horizontalAcceleration + Vector3.up * verticalAcceleration, ForceMode.Acceleration);
 
         Quaternion rotationError = desiredRotation * Quaternion.Inverse(body.rotation);
         rotationError.ToAngleAxis(out float angleDegrees, out Vector3 axis);
@@ -663,6 +698,53 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
         ignoredMountingCollisionPairs.Clear();
         clearanceCandidate = null;
+    }
+
+    private void RequestVerticalControl(MountableBridgeComponent candidate)
+    {
+        if (candidate == null)
+        {
+            return;
+        }
+
+        if (verticalControlCandidate != candidate)
+        {
+            verticalControlCandidate?.ClearMountSocketVerticalControl(this);
+            verticalControlCandidate = candidate;
+            verticalControlWeight = 0f;
+        }
+
+        verticalControlRequested = true;
+    }
+
+    private void UpdateVerticalControl()
+    {
+        if (verticalControlCandidate == null)
+        {
+            verticalControlWeight = 0f;
+            return;
+        }
+
+        float targetWeight = verticalControlRequested ? 1f : 0f;
+        float blendDuration = Mathf.Max(0f, verticalControlBlendDuration);
+        verticalControlWeight = blendDuration <= 0f
+            ? targetWeight
+            : Mathf.MoveTowards(verticalControlWeight, targetWeight, Time.fixedDeltaTime / blendDuration);
+        verticalControlCandidate.SetMountSocketVerticalControl(this, verticalControlWeight);
+
+        if (!verticalControlRequested && verticalControlWeight <= 0f)
+        {
+            verticalControlCandidate.ClearMountSocketVerticalControl(this);
+            verticalControlCandidate = null;
+        }
+    }
+
+    private void ClearVerticalControlImmediately()
+    {
+        verticalControlCandidate?.ClearMountSocketVerticalControl(this);
+        verticalControlCandidate = null;
+        verticalControlWeight = 0f;
+        verticalControlRequested = false;
     }
 
     private void CalculateDesiredBodyPose(

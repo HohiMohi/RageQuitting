@@ -145,7 +145,12 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         ResetConstraintState();
     }
 
-    public void Simulate(IReadOnlyList<SharedCarryPhysicsHolder> holders, Vector3 combinedInput, int carrierNormalizationCount, float fixedDeltaTime)
+    public void Simulate(
+        IReadOnlyList<SharedCarryPhysicsHolder> holders,
+        Vector3 combinedInput,
+        int carrierNormalizationCount,
+        float fixedDeltaTime,
+        float verticalSupportSuppression = 0f)
     {
         if (!sharedCarryActive || body == null || !body.gameObject.activeInHierarchy || holders == null || holders.Count == 0)
         {
@@ -156,7 +161,12 @@ public class SharedCarryPhysicsBody : MonoBehaviour
 
         if (ControlMode == SharedCarryControlMode.PhysicalPointGrip)
         {
-            SimulatePhysicalPointGrip(holders, combinedInput, carrierNormalizationCount, fixedDeltaTime);
+            SimulatePhysicalPointGrip(
+                holders,
+                combinedInput,
+                carrierNormalizationCount,
+                fixedDeltaTime,
+                verticalSupportSuppression);
             return;
         }
 
@@ -288,7 +298,12 @@ public class SharedCarryPhysicsBody : MonoBehaviour
         }
     }
 
-    private void SimulatePhysicalPointGrip(IReadOnlyList<SharedCarryPhysicsHolder> holders, Vector3 combinedInput, int carrierNormalizationCount, float fixedDeltaTime)
+    private void SimulatePhysicalPointGrip(
+        IReadOnlyList<SharedCarryPhysicsHolder> holders,
+        Vector3 combinedInput,
+        int carrierNormalizationCount,
+        float fixedDeltaTime,
+        float verticalSupportSuppression)
     {
         int validHolderCount = 0;
         float normalizationDivisor = Mathf.Max(1, carrierNormalizationCount);
@@ -334,6 +349,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
                 supportShareScratch);
         }
 
+        float verticalSupportScale = 1f - Mathf.Clamp01(verticalSupportSuppression);
         float supportedWeight = body.useGravity
             ? Mathf.Max(0f, -Physics.gravity.y) * body.mass
             : 0f;
@@ -362,7 +378,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
                     worldCenterOfMass);
             float solvedSupportShare = i < MaxLoadDistributionHolders ? supportShareScratch[i] : equalSupportShare;
             float supportShare = Mathf.Lerp(equalSupportShare, solvedSupportShare, fullyStaffedStabilizationWeight);
-            Vector3 gravitySupport = Vector3.up * supportedWeight * supportShare;
+            Vector3 gravitySupport = Vector3.up * supportedWeight * supportShare * verticalSupportScale;
             Vector3 anchorVelocity = GetAnchorVelocity3D(holder.BodyAnchor, fixedDeltaTime);
             Vector3 pointVelocity = body.GetPointVelocity(
                 profile != null && profile.projectCarrierForcesToLongAxisCenterline
@@ -375,6 +391,7 @@ public class SharedCarryPhysicsBody : MonoBehaviour
                 gravitySupport,
                 normalizationDivisor);
             gripConstraintForce = SmoothConstraintForce(holder.BodyAnchor, gripConstraintForce, forceBlend);
+            gripConstraintForce.y *= verticalSupportScale;
             Vector3 gripForce = gripConstraintForce + gravitySupport;
             gripForce = LimitPointGripLiftCapacity(gripForce, normalizationDivisor);
             Vector3 passiveGripTorque = Vector3.Cross(forceApplicationPoint - worldCenterOfMass, gripForce);
