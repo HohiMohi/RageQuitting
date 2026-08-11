@@ -106,6 +106,14 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             return;
         }
 
+        if (_pickedUpGameObject != null &&
+            _pickedUpGameObject.TryGetComponent(out PortableSubstanceContainer container))
+        {
+            container.RequestContextAction(this, _currentTarget);
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
         if (_currentTarget is DownedPlayerCarryable downedPlayerCarryable)
         {
             downedPlayerCarryable.RequestRevive(transform);

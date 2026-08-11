@@ -144,12 +144,24 @@ flowchart LR
 
 `Clearing -> Digging -> ReadyForMount -> Hammering -> Complete`
 
+### Cykliczne kopanie fundamentu
+
+`Digging` fundamentu zawiera trzy cykle `Loosening -> SoilRemoval`. W każdym cyklu łopata musi nabić `60` work progress, po czym wiadrem trzeba usunąć netto `6` porcji ziemi. Cele kumulacyjne wynoszą `6`, `12` i `18`; ukończenie trzeciego cyklu przełącza plac na `ReadyForMount`.
+
+Stan nie zwiększa rozmiaru pakietu mostu: `constructionValueA/B` przechowują indeks cyklu i `FoundationDiggingSubstage`, `constructionProgress` progres łopaty, a `constructionAux0` liczbę usuniętych porcji. Late join odtwarza z nich podetap oraz głębokość.
+
+Wykop ma ruchomą powierzchnię ziemi, stałe ściany, dno i łagodną rampę. Głębokość wynosi `1.2 * removedSoilUnits / 18`, maksymalnie `1.2 m`. Zwrócona ziemia podnosi powierzchnię. `EarthPile` wrzucony przed montażem odejmuje zawarte porcje; po `ReadyForMount` przywraca ostatni `SoilRemoval`. Po zamontowaniu fundamentu regres jest wyłączony.
+
 `BridgeConstructionWorkflowSO`:
 
 | Pole | Znaczenie |
 |---|---|
 | `diggingTool` | Zwykle Shovel |
 | `diggingProgressNeeded` | Łączny work progress wykopu |
+| `diggingCycleCount` | Liczba par `Loosening/SoilRemoval`; tutorial: `3` |
+| `looseningProgressPerCycle` | Work progress łopatą w jednym cyklu; tutorial: `60` |
+| `soilUnitsPerCycle` | Porcje ziemi do usunięcia netto w cyklu; tutorial: `6` |
+| `finalExcavationDepth` | Finalna głębokość fizycznej powierzchni; tutorial: `1.2 m` |
 
 Po mount foundation znika plac i sześcian wykopu. Industrial Hammer dodaje
 assembly progress. Końcowy root collider może być wyłączony zgodnie z

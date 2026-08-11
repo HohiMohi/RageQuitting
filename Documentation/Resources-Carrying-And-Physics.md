@@ -335,3 +335,11 @@ Przy dodawaniu kolejnych akwenow nalezy tworzyc osobny trigger dna i pozostawic 
 `Thorny Bush` jest nieruchomym `BaseResourceNew` uzywanym jako przeszkoda etapu `Clearing` fundamentow. Nie mozna go podniesc. Ma `15` durability, rozpada sie po jednym trafieniu `Axe` albo trzech trafieniach bez narzedzia i tworzy jeden `Wooden Shards`.
 
 Trigger placu fundamentu jest podczas `Clearing` miekkim celem targetowania. Zachowuje informacyjny prompt, ale pozwala dalszemu interaktywnemu lub podatnemu na obrazenia obiektowi, w tym krzakowi, przejac `CurrentTarget`. Solidna geometria nadal blokuje promien.
+
+## Substancje i wiadra
+
+`PortableSubstanceContainer` jest fizycznym, sieciowym single-carry pojemnikiem. Przechowuje do trzech porcji jednej pozycji z katalogu `ContainerSubstanceSO`; nie miesza typów i zachowuje zawartość po upuszczeniu. RMB pobiera porcję z aktywnego `ISubstanceSource`, a poza źródłem wysypuje całość. E nadal upuszcza wiadro. Serwer sprawdza holdera, odległość, pojemność i źródło.
+
+Pierwszą substancją jest `Soil`. Wysypanie tworzy jeden `LooseSubstancePile` z faktyczną liczbą porcji. Kupę można ponownie nabierać po jednej porcji; visual maleje, a zero porcji despawnuje obiekt. Kupa jest dynamiczna i podatna na kolizje, ale nie można jej nieść rękami. Kontakt z dnem rzeki ją usuwa.
+
+Dwa wiadra stoją przy obozowym stojaku. Wiadro dotykające dna rzeki wymusza release, opróżnia się, znika na `2 s` i wraca do wolnego `BucketRespawnPoint`.

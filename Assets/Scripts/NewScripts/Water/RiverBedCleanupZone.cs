@@ -34,6 +34,22 @@ public class RiverBedCleanupZone : MonoBehaviour
             return;
         }
 
+        PortableSubstanceContainer container = other != null
+            ? other.GetComponentInParent<PortableSubstanceContainer>()
+            : null;
+        if (container != null)
+        {
+            container.ReturnToRespawnPoint(2f);
+            return;
+        }
+
+        LooseSubstancePile loosePile = other != null ? other.GetComponentInParent<LooseSubstancePile>() : null;
+        if (loosePile != null)
+        {
+            loosePile.RemoveUnitsFromWorld(loosePile.CurrentUnits);
+            return;
+        }
+
         if (GameplayManager.Instance != null
             && !GameplayManager.Instance.EnableRiverBedResourceRemoval)
         {

@@ -539,3 +539,19 @@ Przy zmianie warstw zweryfikuj równocześnie:
 | `GameplayManager` | manager sceny | `EnableRiverBedResourceRemoval` i `EnableUnsupportedWaterDowning`; obie flagi domyslnie wlaczone. |
 
 Przy tworzeniu nowego akwenu nalezy przygotowac trigger `WaterBody`, osobny cleanup dna, shoreline segments oraz ciagla powierzchnie NavMesh z `WaterEntry` i `WaterSurface`. Dla nowego `SurfaceSwimmer` wymagane sa zgodny agent type, dostep do obu obszarow oraz `NPCAquaticLocomotionController` na prefabie. Tryby `BottomWalker` i `VolumeSwimmer` nie maja jeszcze solvera ruchu.
+# Kopanie fundamentów i substancje
+
+| Komponent / asset | Pole | Znaczenie |
+|---|---|---|
+| `BridgeConstructionWorkflowSO` | `diggingCycleCount` | Liczba cykli rozdrabniania i wybierania ziemi |
+| `BridgeConstructionWorkflowSO` | `looseningProgressPerCycle` | Progres łopatą wymagany przed wybieraniem |
+| `BridgeConstructionWorkflowSO` | `soilUnitsPerCycle` | Porcje usuwane netto w cyklu |
+| `BridgeConstructionWorkflowSO` | `finalExcavationDepth` | Maksymalne pionowe przesunięcie powierzchni w metrach |
+| `BridgeConstructionSite` | `excavationVolume` | Referencja do geometrii i triggera konkretnego wykopu |
+| `FoundationExcavationVolume` | `soilSurface` | Transform ruchomej powierzchni wraz z colliderem |
+| `FoundationExcavationVolume` | `compact/loosenedSoilMaterial` | Materiały blendowane podczas pracy łopatą |
+| `PortableSubstanceContainer` | `capacity` | Maksymalna liczba porcji; obecnie `3` |
+| `PortableSubstanceContainer` | `supportedSubstances` | Typy możliwe do przechowywania bez mieszania |
+| `PortableSubstanceContainer` | `loosePilePrefab` | Sieciowy prefab tworzony przy wysypaniu |
+| `LooseSubstancePile` | `initialUnits` | Startowa liczba porcji dla instancji scenowej; runtime dump ją nadpisuje |
+| `BucketRespawnPoint` | `bucketIndex` | Stabilna kolejność wyboru punktów powrotu |

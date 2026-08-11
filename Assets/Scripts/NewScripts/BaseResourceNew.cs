@@ -44,6 +44,14 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     public bool CanBeDestroyed => baseResourceSO != null
         && baseResourceSO.baseResourceDestructionRecipeArray != null
         && baseResourceSO.baseResourceDestructionRecipeArray.Length > 0;
+    public bool IsHeldBy(ulong clientId) => holderClientIds.Contains(clientId) ||
+        (!IsNetworkSessionActive() && isPickedUp && clientId == NoHolderClientId);
+    public void ForceReleaseForEnvironmentalRemoval()
+    {
+        if (IsNetworkSessionActive() && !IsServer) return;
+        ForceReleaseCurrentHolder();
+        ForceReleaseExternalCarryActor();
+    }
     public bool SupportsAnchorPreview => _sharedCarryPhysicsBody != null
         && _sharedCarryPhysicsBody.ControlMode == SharedCarryControlMode.PhysicalPointGrip;
     private Rigidbody _rigidbody;

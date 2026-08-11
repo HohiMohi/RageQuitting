@@ -12,6 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fce3447cb7c2b0041a046c67070347b5, type: 3}
   m_Name: WoodenFoundationWorkflow
   m_EditorClassIdentifier: Assembly-CSharp::BridgeConstructionWorkflowSO
-  requiresSiteClearing: 1
   diggingTool: 6
   diggingProgressNeeded: 100
+  diggingCycleCount: 3
+  looseningProgressPerCycle: 60
+  soilUnitsPerCycle: 6
+  finalExcavationDepth: 1.2

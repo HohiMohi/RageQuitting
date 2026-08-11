@@ -86,6 +86,10 @@ stref należy ponownie wypiec `Assets/Scenes/Tutorial_scene/NavMesh-Tutorial.ass
 
 Tutorialowy Blast Furnace ma cztery receptury zasobów: paczki gwoździ, zestawy
 śrub i nakrętek, zestawy płyt łączących oraz zestawy kotew fundamentowych.
+
+Oba fundamenty mają fizyczne wykopy. Dawne ciągłe collidery `Ground_West` i `Ground_East` są zastąpione kompozycją podłoża z otworami; każdy wykop zawiera opuszczaną powierzchnię, dno, ściany, rampę i trigger zwracanej ziemi. Obszary wykopów są oznaczone `Not Walkable` i uwzględnione w zapisanym NavMesh.
+
+Przy stojaku w obozie znajdują się dwa wspólne wiadra. Nie są przypisane do fundamentów, więc jeden gracz może ukończyć cały flow jednym wiadrem, opróżniając je poza wykopem.
 Produkty trzeba fizycznie przenieść do Carpenter Table, gdzie są składnikami
 sześciu aktywnych rodzajów części mostu.
 

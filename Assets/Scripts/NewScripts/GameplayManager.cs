@@ -1305,4 +1305,16 @@ public class GameplayManager : MonoBehaviour
         bridgeComponent = null;
         return false;
     }
+
+    public bool TryGetConstructionSite(int componentID, out BridgeConstructionSite constructionSite)
+    {
+        if (TryGetBridgeComponent(componentID, out BridgeComponent component) && component.ConstructionSite != null)
+        {
+            constructionSite = component.ConstructionSite;
+            return true;
+        }
+
+        constructionSite = null;
+        return false;
+    }
 }

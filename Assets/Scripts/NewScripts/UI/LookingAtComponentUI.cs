@@ -118,6 +118,14 @@ public class LookingAtComponentUI : MonoBehaviour
 
         if (playerInteraction.IsHoldingObject)
         {
+            GameObject heldObjectForPrompt = playerInteraction.GetPickedUpGameObject();
+            if (heldObjectForPrompt != null && heldObjectForPrompt.TryGetComponent(out PortableSubstanceContainer container))
+            {
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.ActionAlt, container.GetContextActionDescription(target)));
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Drop"));
+                return;
+            }
+
             if (target is BridgeComponent bridgeComponent && bridgeComponent.CanBeMounted)
             {
                 GameObject heldObject = playerInteraction.GetPickedUpGameObject();
