@@ -46,6 +46,9 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private FlexibleSaplingController activeFlexibleSapling;
     private FlexibleSaplingGripSide activeFlexibleSaplingSide;
     private PlayerFlexibleSaplingUI flexibleSaplingUI;
+    private PortableSubstanceContainer activeBucketHold;
+    private MonoBehaviour bucketHoldTarget;
+    private float bucketHoldStartedAt;
 
     public bool IsSharedCarryMovementActive => sharedCarryMovementActive && _pickedUpGameObject != null;
     public bool IsPhysicalPointGripActive => IsSharedCarryMovementActive && sharedCarryPhysicsBody != null
@@ -63,6 +66,12 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     public bool IsFlexibleSaplingInteractionActive => activeFlexibleSapling != null;
     public FlexibleSaplingController ActiveFlexibleSapling => activeFlexibleSapling;
     public FlexibleSaplingGripSide ActiveFlexibleSaplingSide => activeFlexibleSaplingSide;
+    public bool IsBucketActionHoldActive => activeBucketHold != null;
+    public float BucketActionHoldProgress => activeBucketHold == null
+        ? 0f
+        : activeBucketHold.ActionHoldDuration <= 0f
+            ? 1f
+            : Mathf.Clamp01((Time.unscaledTime - bucketHoldStartedAt) / activeBucketHold.ActionHoldDuration);
 
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
     public event EventHandler OnInteractionPerformed;
@@ -81,6 +90,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         _playerInputNew = GetComponent<PlayerInputNew>();
         _playerInputNew.OnInteract += HandleInteract;
         _playerInputNew.OnActionAlt += HandleActionAlt;
+        _playerInputNew.OnActionAltCanceled += HandleActionAltCanceled;
         _playerHealth = GetComponent<PlayerHealth>();
         flexibleSaplingUI = GetComponent<PlayerFlexibleSaplingUI>();
         if (flexibleSaplingUI == null)
@@ -97,6 +107,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     {
         _playerInputNew.OnInteract -= HandleInteract;
         _playerInputNew.OnActionAlt -= HandleActionAlt;
+        _playerInputNew.OnActionAltCanceled -= HandleActionAltCanceled;
     }
 
     private void HandleActionAlt(object sender, EventArgs e)
@@ -109,8 +120,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         if (_pickedUpGameObject != null &&
             _pickedUpGameObject.TryGetComponent(out PortableSubstanceContainer container))
         {
-            container.RequestContextAction(this, _currentTarget);
-            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+            BeginBucketActionHold(container, _currentTarget);
             return;
         }
 
@@ -127,6 +137,68 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             playerHealth.RequestRevive(reviverNetworkObject);
             OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private void HandleActionAltCanceled(object sender, EventArgs e)
+    {
+        CancelBucketActionHold();
+    }
+
+    private void BeginBucketActionHold(PortableSubstanceContainer container, MonoBehaviour target)
+    {
+        if (container == null || activeBucketHold != null)
+        {
+            return;
+        }
+
+        activeBucketHold = container;
+        bucketHoldTarget = target;
+        bucketHoldStartedAt = Time.unscaledTime;
+        if (container.ActionHoldDuration <= 0f)
+        {
+            CompleteBucketActionHold();
+        }
+    }
+
+    private void UpdateBucketActionHold()
+    {
+        if (activeBucketHold == null)
+        {
+            return;
+        }
+
+        if (_pickedUpGameObject != activeBucketHold.gameObject || _currentTarget != bucketHoldTarget ||
+            (_playerHealth != null && _playerHealth.IsDowned))
+        {
+            CancelBucketActionHold();
+            return;
+        }
+
+        if (Time.unscaledTime - bucketHoldStartedAt >= activeBucketHold.ActionHoldDuration)
+        {
+            CompleteBucketActionHold();
+        }
+    }
+
+    private void CompleteBucketActionHold()
+    {
+        PortableSubstanceContainer container = activeBucketHold;
+        MonoBehaviour target = bucketHoldTarget;
+        CancelBucketActionHold();
+        if (container == null || _pickedUpGameObject != container.gameObject)
+        {
+            return;
+        }
+
+        container.RequestContextAction(this, target);
+        OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void CancelBucketActionHold()
+    {
+        activeBucketHold = null;
+        bucketHoldTarget = null;
+        bucketHoldStartedAt = 0f;
     }
 
     private void HandleInteract(object sender, EventArgs e)
@@ -759,6 +831,11 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void SetCurrentTarget(MonoBehaviour target)
     {
+        if (activeBucketHold != null && target != bucketHoldTarget)
+        {
+            CancelBucketActionHold();
+        }
+
         _currentInteractable?.LookedAway(transform);
         _currentTarget = target;
         _currentInteractable = target as IInteractableNew;
@@ -855,10 +932,13 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     {
         if (_playerHealth != null && _playerHealth.IsDowned)
         {
+            CancelBucketActionHold();
             ReleaseFlexibleSaplingForStateChange();
             ClearCurrentInteractable();
             return;
         }
+
+        UpdateBucketActionHold();
 
         if (activeFlexibleSapling != null)
         {

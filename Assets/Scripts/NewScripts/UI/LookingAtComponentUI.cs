@@ -290,7 +290,8 @@ public class LookingAtComponentUI : MonoBehaviour
                                     bridgeComponent.IsMounted &&
                                     !bridgeComponent.IsAssembled &&
                                     bridgeComponent.NeedAssembling;
-        bool showProgress = showConstructionProgress || showAssemblyProgress;
+        bool showBucketHoldProgress = playerInteraction.IsBucketActionHoldActive;
+        bool showProgress = showBucketHoldProgress || showConstructionProgress || showAssemblyProgress;
 
         if (progressCircleHolder != null)
         {
@@ -299,7 +300,11 @@ public class LookingAtComponentUI : MonoBehaviour
 
         if (showProgress && assemblingProgressBar != null)
         {
-            if (showConstructionProgress && constructionSite.RequiredWorkProgress > 0f)
+            if (showBucketHoldProgress)
+            {
+                assemblingProgressBar.fillAmount = playerInteraction.BucketActionHoldProgress;
+            }
+            else if (showConstructionProgress && constructionSite.RequiredWorkProgress > 0f)
             {
                 assemblingProgressBar.fillAmount = Mathf.Clamp01(
                     constructionSite.CurrentWorkProgress /

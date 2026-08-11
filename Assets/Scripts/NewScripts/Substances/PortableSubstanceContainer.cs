@@ -14,6 +14,7 @@ public class PortableSubstanceContainer : NetworkBehaviour
     [SerializeField] private Transform contentVisual;
     [SerializeField] private Renderer contentRenderer;
     [SerializeField] private float interactionDistance = 2.5f;
+    [SerializeField, Min(0f)] private float actionHoldDuration = 1.5f;
     [SerializeField] private Vector3 emptyContentLocalScale = new Vector3(0.27f, 0.02f, 0.27f);
     [SerializeField] private float contentBottomLocalY = 0.45f;
     [SerializeField] private float contentTopLocalY = 0.55f;
@@ -29,6 +30,7 @@ public class PortableSubstanceContainer : NetworkBehaviour
     public ContainerSubstanceSO CurrentSubstance => GetSubstance(CurrentSubstanceIndex);
     public int CurrentUnits => IsSpawned ? unitsNetwork.Value : localUnits;
     public int Capacity => Mathf.Max(1, capacity);
+    public float ActionHoldDuration => Mathf.Max(0f, actionHoldDuration);
     public bool IsReturning => IsSpawned ? returningNetwork.Value : localReturning;
     public string ContentsLabel => CurrentUnits <= 0 || CurrentSubstance == null
         ? $"Empty 0 / {Capacity}"
@@ -102,9 +104,9 @@ public class PortableSubstanceContainer : NetworkBehaviour
         }
         if (source != null)
         {
-            return CurrentUnits >= Capacity ? $"Bucket full - {ContentsLabel}" : $"Scoop - {ContentsLabel}";
+            return CurrentUnits >= Capacity ? $"Bucket full - {ContentsLabel}" : $"Hold to scoop - {ContentsLabel}";
         }
-        return CurrentUnits > 0 ? $"Empty bucket - {ContentsLabel}" : ContentsLabel;
+        return CurrentUnits > 0 ? $"Hold to empty bucket - {ContentsLabel}" : ContentsLabel;
     }
 
     [ServerRpc(RequireOwnership = false)]
