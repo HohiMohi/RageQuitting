@@ -18,6 +18,7 @@ public class EquippableItemSO : ScriptableObject
     public EquippableActionProfileSO actionProfile;
     public ExternalImpulseProfileSO impactImpulseProfile;
     public EquippableWorldPhysicsProfileSO worldPhysicsProfile;
+    public RopeToolProfileSO ropeProfile;
 
     public float ResourceDamage => resourceDamage > 0f ? resourceDamage : damage * 2f;
     public float ConstructionWorkPower => constructionWorkPower > 0f ? constructionWorkPower : damage;
@@ -34,5 +35,6 @@ public enum EquippableItemType
     IndustrialHammer, // Mounting Bridge Components
     Shovel, // Mounting Bridge Roadway - roadway compaction
     None, // for object-object and object-NPC interaction
-    Wrench // Tightening bridge construction connections
+    Wrench, // Tightening bridge construction connections
+    Rope
 }

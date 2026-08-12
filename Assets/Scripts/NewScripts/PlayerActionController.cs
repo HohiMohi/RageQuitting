@@ -136,6 +136,11 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (IsRopeSelected())
+        {
+            return;
+        }
+
         if (IsDowned())
         {
             return;
@@ -147,6 +152,12 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleAction(object sender, EventArgs e)
     {
+        if (IsRopeSelected())
+        {
+            performAction = false;
+            return;
+        }
+
         if (IsDowned())
         {
             performAction = false;
@@ -705,6 +716,13 @@ public class PlayerActionController : NetworkBehaviour
 
     public void TryPerformAction()
     {
+        if (IsRopeSelected())
+        {
+            performAction = false;
+            CancelCurrentAction();
+            return;
+        }
+
         if (IsDowned() || !HasLocalActionAuthority() || _playerInputNew != null && _playerInputNew.IsGameplayUiOpen)
         {
             performAction = false;
@@ -735,6 +753,12 @@ public class PlayerActionController : NetworkBehaviour
             }
             actionCooldownTimer = actionCooldown;
         }
+    }
+
+    private bool IsRopeSelected()
+    {
+        EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
+        return selectedItem != null && selectedItem.itemType == EquippableItemType.Rope;
     }
 
     public void SetActionParameters(EquippableItemSO equippableItemSO)

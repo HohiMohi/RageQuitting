@@ -264,7 +264,8 @@ public class PlayerEquippableItemVisuals : NetworkBehaviour
                itemType == EquippableItemType.Pickaxe ||
                itemType == EquippableItemType.Shovel ||
                itemType == EquippableItemType.IndustrialHammer ||
-               itemType == EquippableItemType.Wrench;
+               itemType == EquippableItemType.Wrench ||
+               itemType == EquippableItemType.Rope;
     }
 
     private static void ClearVisual(ref GameObject visual)

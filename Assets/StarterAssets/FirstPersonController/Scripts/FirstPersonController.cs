@@ -148,6 +148,7 @@ namespace StarterAssets
 		private PlayerExternalImpulseController _externalImpulseController;
 		private PlayerActionController _playerActionController;
 		private PlayerStaminaController _staminaController;
+		private PlayerRopeConstraintController _ropeConstraintController;
 		
 		private const float _threshold = 0.01f;
 
@@ -208,6 +209,7 @@ namespace StarterAssets
 			}
 			_downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
 			_staminaController = GetComponent<PlayerStaminaController>();
+			_ropeConstraintController = GetComponent<PlayerRopeConstraintController>();
 			_staminaController?.Configure(MaxStamina, StaminaRegenerationTimeout);
 			_currentStamina = MaxStamina;
         }
@@ -271,6 +273,12 @@ namespace StarterAssets
 
         private void PlayerInputNew_OnJump(object sender, EventArgs e)
         {
+			if (_ropeConstraintController != null && _ropeConstraintController.TryHandleJumpInput())
+			{
+				_isJumpPerformed = false;
+				return;
+			}
+
 			if (IsDowned())
 			{
 				_isJumpPerformed = false;
@@ -498,6 +506,13 @@ namespace StarterAssets
 				return;
 			}
 
+			if (_ropeConstraintController != null && _ropeConstraintController.IsSuspended)
+			{
+				_isSprinting = false;
+				_isJumpPerformed = false;
+				return;
+			}
+
 			if (IsDowned())
 			{
 				MoveWhileDowned();
@@ -717,6 +732,13 @@ namespace StarterAssets
 		private void JumpAndGravity()
 		{
 			if (IsBeingCarried())
+			{
+				_isJumpPerformed = false;
+				_verticalVelocity = 0f;
+				return;
+			}
+
+			if (_ropeConstraintController != null && _ropeConstraintController.IsSuspended)
 			{
 				_isJumpPerformed = false;
 				_verticalVelocity = 0f;
@@ -959,6 +981,19 @@ namespace StarterAssets
 			_verticalVelocity = Grounded ? -2f : 0f;
 			_mostNegativeAirVelocity = 0f;
 			_isSprinting = false;
+			_isJumpPerformed = false;
+		}
+
+		public Vector3 GetRopeEntryVelocity()
+		{
+			return _horizontalVelocity + Vector3.up * _verticalVelocity;
+		}
+
+		public void ApplyRopeReleaseVelocity(Vector3 velocity)
+		{
+			_horizontalVelocity = Vector3.ProjectOnPlane(velocity, Vector3.up);
+			_verticalVelocity = velocity.y;
+			_mostNegativeAirVelocity = Mathf.Min(0f, velocity.y);
 			_isJumpPerformed = false;
 		}
 

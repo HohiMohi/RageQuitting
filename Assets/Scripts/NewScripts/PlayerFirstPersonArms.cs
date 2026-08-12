@@ -12,6 +12,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private FirstPersonController firstPersonController;
     [SerializeField] private PlayerInputNew playerInput;
     [SerializeField] private PlayerActionController playerActionController;
+    [SerializeField] private RopeToolController ropeToolController;
     [SerializeField] private PlayerInteractionNew playerInteraction;
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private PlayerInventory playerInventory;
@@ -190,6 +191,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         if (playerActionController == null)
         {
             playerActionController = GetComponent<PlayerActionController>();
+        }
+
+        if (ropeToolController == null)
+        {
+            ropeToolController = GetComponent<RopeToolController>();
         }
 
         if (playerInteraction == null)
@@ -598,6 +604,33 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         rightArmEuler = Vector3.zero;
         leftArmWeight = 0f;
 
+        if (ropeToolController != null && ropeToolController.IsRopeSelected())
+        {
+            switch (ropeToolController.CurrentState)
+            {
+                case RopeState.Charging:
+                    float charge = ropeToolController.ChargeNormalized;
+                    toolPosition = Vector3.Lerp(Vector3.zero, new Vector3(-0.06f, 0.05f, -0.08f), charge);
+                    toolEuler = Vector3.Lerp(Vector3.zero, new Vector3(12f, -8f, -18f), charge);
+                    rightArmEuler = Vector3.Lerp(Vector3.zero, new Vector3(-10f, 0f, 12f), charge);
+                    leftArmWeight = 1f;
+                    return;
+                case RopeState.Reeling:
+                    float reelCycle = Mathf.Sin(Time.unscaledTime * 8f);
+                    toolPosition = new Vector3(-0.03f, 0.01f, -0.04f);
+                    toolEuler = new Vector3(8f, 0f, reelCycle * 10f);
+                    rightArmEuler = new Vector3(-6f, 0f, reelCycle * 8f);
+                    leftArmWeight = 1f;
+                    return;
+                case RopeState.PayingOut:
+                    toolPosition = new Vector3(0f, 0.02f, 0.05f);
+                    toolEuler = new Vector3(-8f, 0f, -6f);
+                    rightArmEuler = new Vector3(6f, 0f, -5f);
+                    leftArmWeight = 1f;
+                    return;
+            }
+        }
+
         if (playerActionController == null ||
             !playerActionController.IsActionInProgress ||
             playerActionController.CurrentActionItem == null)
@@ -869,7 +902,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
                itemType == EquippableItemType.Pickaxe ||
                itemType == EquippableItemType.Shovel ||
                itemType == EquippableItemType.IndustrialHammer ||
-               itemType == EquippableItemType.Wrench;
+               itemType == EquippableItemType.Wrench ||
+               itemType == EquippableItemType.Rope;
     }
 
     private void ClearToolVisual()

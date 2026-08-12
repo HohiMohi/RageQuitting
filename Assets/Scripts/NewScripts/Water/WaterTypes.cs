@@ -24,9 +24,10 @@ public enum StaminaDrainSource
 {
     Sprint,
     Carry,
-    UnderstaffedSharedCarry,
-    Water
-}
+    UnderstaffedSharedCarry,
+    Water,
+    RopeReeling
+}
 
 public enum StaminaExhaustionReason
 {

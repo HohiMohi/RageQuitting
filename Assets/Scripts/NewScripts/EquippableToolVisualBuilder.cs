@@ -101,6 +101,9 @@ public class EquippableToolVisualBuilder : MonoBehaviour
             case EquippableItemType.Wrench:
                 BuildWrench(generatedRoot.transform, materials);
                 break;
+            case EquippableItemType.Rope:
+                BuildRope(generatedRoot.transform, materials);
+                break;
             default:
                 DestroyVisualObject(generatedRoot);
                 return null;
@@ -285,6 +288,18 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         CreateCube("JawBase", root, new Vector3(0f, 0.31f, 0f), Quaternion.identity, new Vector3(0.32f, 0.16f, 0.1f), metal);
     }
 
+    private static void BuildRope(Transform root, ToolVisualMaterials materials)
+    {
+        Material rope = GetMaterial(materials.handleMaterial, new Color(0.42f, 0.24f, 0.1f, 1f));
+        Material spool = GetMaterial(materials.pickaxeMaterial, new Color(0.25f, 0.27f, 0.28f, 1f));
+
+        CreateCylinder("RopeCoil", root, Vector3.zero, Quaternion.Euler(90f, 0f, 0f), new Vector3(0.42f, 0.18f, 0.42f), rope);
+        CreateCylinder("SpoolLeft", root, new Vector3(0f, 0f, -0.13f), Quaternion.Euler(90f, 0f, 0f), new Vector3(0.5f, 0.035f, 0.5f), spool);
+        CreateCylinder("SpoolRight", root, new Vector3(0f, 0f, 0.13f), Quaternion.Euler(90f, 0f, 0f), new Vector3(0.5f, 0.035f, 0.5f), spool);
+        CreateCapsule("Handle", root, new Vector3(0f, 0.37f, 0f), Quaternion.Euler(0f, 0f, 90f), new Vector3(0.055f, 0.24f, 0.055f), spool);
+        CreateSecondaryGrip(root, new Vector3(-0.22f, 0f, 0f));
+    }
+
     private static void CreateCapsule(string objectName, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)
     {
         GameObject capsule = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -295,6 +310,12 @@ public class EquippableToolVisualBuilder : MonoBehaviour
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         SetupPart(cube, objectName, parent, localPosition, localRotation, localScale, material);
+    }
+
+    private static void CreateCylinder(string objectName, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)
+    {
+        GameObject cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        SetupPart(cylinder, objectName, parent, localPosition, localRotation, localScale, material);
     }
 
     private static void SetupPart(GameObject part, string objectName, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)

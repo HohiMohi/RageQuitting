@@ -37,6 +37,7 @@ flowchart LR
 | [Architecture-And-Networking](Architecture-And-Networking.md) | NGO, authority, spawn, sceny, restart i synchronizacja |
 | [Player-Interaction-And-UI](Player-Interaction-And-UI.md) | ruch, kamera, input, narzędzia, targeting, HUD i downed |
 | [Resources-Carrying-And-Physics](Resources-Carrying-And-Physics.md) | zasoby, destruction, single/shared-carry i impulsy |
+| [Rope-Tool-And-Network-Tether](Rope-Tool-And-Network-Tether.md) | dwureczna lina, fizyczny tether, sterowanie i synchronizacja |
 | [Factories-Storage-And-Production](Factories-Storage-And-Production.md) | magazyny, stół stolarski i piec |
 | [Bridge-Construction](Bridge-Construction.md) | komponenty mostu i wszystkie workflow montażu |
 | [NPC-Systems](NPC-Systems.md) | wspólne AI, Beaver Scout, Beaver Defender i Goat |

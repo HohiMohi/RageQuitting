@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6022b08370b0baa42b8b2acf2ce498eb, type: 3}
+  m_Name: Rope
+  m_EditorClassIdentifier: Assembly-CSharp::EquippableItemSO
+  itemName: Rope
+  uiSprite: {fileID: -5371076386585925285, guid: 522dc36f97d68494f8ed7d0011f0f9f2, type: 3}
+  equippableItemPrefab: {fileID: 5532002865230366914, guid: 35a800b8d4814e347a9adc42da934134, type: 3}
+  inventorySlotsRequired: 2
+  actionRange: 15
+  actionCooldown: 0
+  damage: 0
+  resourceDamage: 0
+  constructionWorkPower: 0
+  movementSpeedPenalty: 0.02
+  actionRepeatability: 0
+  itemType: 9
+  actionProfile: {fileID: 0}
+  impactImpulseProfile: {fileID: 0}
+  worldPhysicsProfile: {fileID: 11400000, guid: 473fff084d7f84f43906012f9fcf24fc, type: 2}
+  ropeProfile: {fileID: 11400000, guid: 0f9c5b587bbfc984d949fea091da8c0e, type: 2}

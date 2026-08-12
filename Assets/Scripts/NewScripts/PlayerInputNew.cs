@@ -16,6 +16,7 @@ public class PlayerInputNew : NetworkBehaviour
     }
 
     public EventHandler OnInteract;
+    public EventHandler OnInteractCanceled;
     public EventHandler OnJump;
     public EventHandler OnAction;
     public EventHandler OnActionCanceled;
@@ -101,6 +102,7 @@ public class PlayerInputNew : NetworkBehaviour
         playerGameInputActions.Game.Sprint.performed += Sprint_performed;
         playerGameInputActions.Game.Sprint.canceled += Sprint_canceled;
         playerGameInputActions.Game.Interact.performed += Interact_performed;
+        playerGameInputActions.Game.Interact.canceled += Interact_canceled;
         playerGameInputActions.Game.Action.performed += Action_performed;
         playerGameInputActions.Game.Action.canceled += Action_canceled;
         playerGameInputActions.Game.ActionAlt.performed += ActionAlt_performed;
@@ -262,6 +264,11 @@ public class PlayerInputNew : NetworkBehaviour
         }
 
         OnInteract?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void Interact_canceled(InputAction.CallbackContext context)
+    {
+        OnInteractCanceled?.Invoke(this, EventArgs.Empty);
     }
 
     private void Sprint_canceled(InputAction.CallbackContext context)

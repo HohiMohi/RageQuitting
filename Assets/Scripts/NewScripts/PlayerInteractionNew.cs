@@ -203,6 +203,13 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleInteract(object sender, EventArgs e)
     {
+        RopeToolController ropeTool = GetComponent<RopeToolController>();
+        if (ropeTool != null && ropeTool.TryHandleInteractPressed())
+        {
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
         if (activeFlexibleSapling != null)
         {
             FlexibleSaplingController sapling = activeFlexibleSapling;

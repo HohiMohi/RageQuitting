@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af8baacdf0e84214aa7719659b3f0842, type: 3}
+  m_Name: RopeToolProfile
+  m_EditorClassIdentifier: Assembly-CSharp::RopeToolProfileSO
+  maximumLength: 15
+  minimumLength: 0.8
+  minimumThrowLength: 4
+  fullChargeDuration: 3
+  minimumThrowSpeed: 8
+  maximumThrowSpeed: 20
+  throwUpwardBias: 0.08
+  ropeEndProjectilePrefab: {fileID: 6741823952889223239, guid: 057287109178cdb44bb3d31234ee1ad3, type: 3}
+  emptyEndpointReelSpeed: 8
+  attachedTargetReelSpeed: 4
+  payOutSpeed: 4
+  tautDeadZone: 0.1
+  endpointReturnDistance: 0.35
+  emptyEndpointSpring: 42
+  emptyEndpointDamping: 10
+  maximumEmptyEndpointAcceleration: 24
+  maximumEmptyEndpointSpeed: 8
+  landedLinearDamping: 2.5
+  landedAngularDamping: 4
+  endpointGroundProbeDistance: 0.18
+  resourceSpring: 35
+  resourceDamping: 8
+  maximumResourceAcceleration: 10
+  playerPullSpeed: 6
+  playerTargetPullShare: 1
+  playerHolderReactionShare: 0
+  maximumStretch: 1.25
+  breakOnOverload: 0
+  overloadDuration: 0.75
+  suspendedSwingGravityMultiplier: 1
+  suspendedSwingInputAcceleration: 2.5
+  suspendedSwingDamping: 0.2
+  maximumSuspendedSwingSpeed: 10
+  suspendedTautThreshold: 0.05
+  suspendedWallContactGraceDuration: 0.12
+  suspendedPositionDeadZone: 0.03
+  suspendedPositionCorrectionSpeed: 3
+  suspendedPositionCorrectionAcceleration: 12
+  maximumSuspendedAnchorTransferSpeed: 10
+  suspendedGroundedReleaseDelay: 0.15
+  suspendedUpwardPullThreshold: 0.1
+  wallJumpOutwardSpeed: 4
+  wallJumpUpwardSpeed: 2.5
+  wallJumpCooldown: 0.3
+  obstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967291
+  obstructionRadius: 0.06
+  maximumReelingStaminaDrain: 5
+  allowTargetEscape: 1
+  targetEscapeHoldDuration: 1.5
+  lineSegments: 18
+  lineWidth: 0.035
+  maximumVisualSag: 0.8
+  relaxedColor: {r: 0.55, g: 0.36, b: 0.18, a: 1}
+  tautColor: {r: 0.9, g: 0.72, b: 0.3, a: 1}
+  blockedColor: {r: 0.9, g: 0.25, b: 0.2, a: 1}
+  trajectoryPreviewSegments: 40
+  trajectoryPreviewTimeStep: 0.04
+  trajectoryPreviewLineWidth: 0.025
+  trajectoryPreviewMarkerRadius: 0.12
+  trajectoryPreviewColor: {r: 0.95, g: 0.78, b: 0.24, a: 0.9}
+  trajectoryPreviewHitColor: {r: 0.45, g: 1, b: 0.35, a: 0.95}
