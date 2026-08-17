@@ -148,7 +148,9 @@ flowchart LR
 
 `Digging` fundamentu zawiera trzy cykle `Loosening -> SoilRemoval`. W każdym cyklu łopata musi nabić `60` work progress, po czym wiadrem trzeba usunąć netto `6` porcji ziemi. Cele kumulacyjne wynoszą `6`, `12` i `18`; ukończenie trzeciego cyklu przełącza plac na `ReadyForMount`.
 
-Stan nie zwiększa rozmiaru pakietu mostu: `constructionValueA/B` przechowują indeks cyklu i `FoundationDiggingSubstage`, `constructionProgress` progres łopaty, a `constructionAux0` liczbę usuniętych porcji. Late join odtwarza z nich podetap oraz głębokość.
+`SoilRemoval` ma limit czasu ustawiany przez `loosenedSoilHardeningDuration` (tutorial: `15 s`). Deadline rozpoczyna się przy wejściu w podetap i nie jest resetowany przez nabieranie ani zwracanie ziemi. Po upływie czasu plac wraca do `Loosening` z progresem `0`, zachowując liczbę usuniętych porcji i głębokość wykopu. Ponowne rozdrobnienie uruchamia świeży deadline; prompt pokazuje czas pozostały do stwardnienia.
+
+Stan nie zwiększa rozmiaru pakietu mostu: `constructionValueA/B` przechowują indeks cyklu i `FoundationDiggingSubstage`, `constructionProgress` progres łopaty, `constructionAux0` liczbę usuniętych porcji, a `constructionAux1` deadline stwardnienia w czasie serwera. Late join odtwarza podetap, głębokość oraz pozostały czas.
 
 Wykop ma ruchomą powierzchnię ziemi, stałe ściany, dno i łagodną rampę. Głębokość wynosi `1.2 * removedSoilUnits / 18`, maksymalnie `1.2 m`. Zwrócona ziemia podnosi powierzchnię. `EarthPile` wrzucony przed montażem odejmuje zawarte porcje; po `ReadyForMount` przywraca ostatni `SoilRemoval`. Po zamontowaniu fundamentu regres jest wyłączony.
 
@@ -162,6 +164,7 @@ Wykop ma ruchomą powierzchnię ziemi, stałe ściany, dno i łagodną rampę. G
 | `looseningProgressPerCycle` | Work progress łopatą w jednym cyklu; tutorial: `60` |
 | `soilUnitsPerCycle` | Porcje ziemi do usunięcia netto w cyklu; tutorial: `6` |
 | `finalExcavationDepth` | Finalna głębokość fizycznej powierzchni; tutorial: `1.2 m` |
+| `loosenedSoilHardeningDuration` | Czas do ponownego stwardnienia podczas `SoilRemoval`; tutorial: `15 s` |
 
 Po mount foundation znika plac i sześcian wykopu. Industrial Hammer dodaje
 assembly progress. Końcowy root collider może być wyłączony zgodnie z

@@ -18,3 +18,4 @@ MonoBehaviour:
   looseningProgressPerCycle: 60
   soilUnitsPerCycle: 6
   finalExcavationDepth: 1.2
+  loosenedSoilHardeningDuration: 15

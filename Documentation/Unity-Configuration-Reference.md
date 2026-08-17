@@ -547,6 +547,7 @@ Przy tworzeniu nowego akwenu nalezy przygotowac trigger `WaterBody`, osobny clea
 | `BridgeConstructionWorkflowSO` | `looseningProgressPerCycle` | Progres łopatą wymagany przed wybieraniem |
 | `BridgeConstructionWorkflowSO` | `soilUnitsPerCycle` | Porcje usuwane netto w cyklu |
 | `BridgeConstructionWorkflowSO` | `finalExcavationDepth` | Maksymalne pionowe przesunięcie powierzchni w metrach |
+| `BridgeConstructionWorkflowSO` | `loosenedSoilHardeningDuration` | Czas aktywnego `SoilRemoval` przed ponownym stwardnieniem; tutorial: `15 s` |
 | `BridgeConstructionSite` | `excavationVolume` | Referencja do geometrii i triggera konkretnego wykopu |
 | `FoundationExcavationVolume` | `soilSurface` | Transform ruchomej powierzchni wraz z colliderem |
 | `FoundationExcavationVolume` | `compact/loosenedSoilMaterial` | Materiały blendowane podczas pracy łopatą |

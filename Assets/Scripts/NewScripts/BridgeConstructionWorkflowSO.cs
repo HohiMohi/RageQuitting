@@ -9,6 +9,7 @@ public class BridgeConstructionWorkflowSO : ScriptableObject
     [SerializeField, Min(0.01f)] private float looseningProgressPerCycle = 60f;
     [SerializeField, Min(1)] private int soilUnitsPerCycle = 6;
     [SerializeField, Min(0.1f)] private float finalExcavationDepth = 1.2f;
+    [SerializeField, Min(0.1f)] private float loosenedSoilHardeningDuration = 15f;
 
     public EquippableItemType DiggingTool => diggingTool;
     public float DiggingProgressNeeded => Mathf.Max(0.01f, diggingProgressNeeded);
@@ -16,6 +17,7 @@ public class BridgeConstructionWorkflowSO : ScriptableObject
     public float LooseningProgressPerCycle => Mathf.Max(0.01f, looseningProgressPerCycle);
     public int SoilUnitsPerCycle => Mathf.Max(1, soilUnitsPerCycle);
     public float FinalExcavationDepth => Mathf.Max(0.1f, finalExcavationDepth);
+    public float LoosenedSoilHardeningDuration => Mathf.Max(0.1f, loosenedSoilHardeningDuration);
 }
 
 public enum FoundationDiggingSubstage

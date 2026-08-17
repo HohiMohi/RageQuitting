@@ -354,7 +354,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FlexibleSaplingController
   ShowTopMostFoldoutHeaderGroup: 1
   profile: {fileID: 11400000, guid: c8f6028c8ebff1a4983c3d72c461e1b7, type: 2}
-  allowSinglePlayerTesting: 1
+  allowSinglePlayerTesting: 0
   leftGripPoint: {fileID: 2163667331830556796}
   rightGripPoint: {fileID: 1794855694416704407}
   interactionCollider: {fileID: 160113084340723709}
