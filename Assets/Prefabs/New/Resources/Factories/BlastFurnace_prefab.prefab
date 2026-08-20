@@ -1329,12 +1329,16 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   factoryInteractionUI: {fileID: 1651454301633047277}
   InteractionOutlineGameobject: {fileID: 7777361665201592475}
+  productionRecipeSOArray:
+  - {fileID: 11400000, guid: 6027e79d3b101624e9d7bf5684e98a74, type: 2}
+  currentlySelectedProductionRecipeSO: {fileID: 0}
   mountableBridgeComponentSOArray: []
   currentlySelectedMountableBridgeComponentSO: {fileID: 0}
   baseStorageNew: {fileID: 8763692948322462596}
   mountableBridgeComponentSpawnPoint: {fileID: 3259981276442647206}
   bridgeComponentSpriteRenderer: {fileID: 2033902807226350510}
   productionDuration: 1
+  defaultSelectedComponentIndex: -1
   furnaceStorage: {fileID: 1226735101515080394}
 --- !u!1 &7777361665201592475 stripped
 GameObject:

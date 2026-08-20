@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ContainerSubstanceSO
   displayName: Soil
   displayColor: {r: 0.24, g: 0.12, b: 0.045, a: 1}
-  isSoil: 1
+  substanceKind: 0

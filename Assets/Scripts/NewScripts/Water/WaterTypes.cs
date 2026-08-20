@@ -26,7 +26,8 @@ public enum StaminaDrainSource
     Carry,
     UnderstaffedSharedCarry,
     Water,
-    RopeReeling
+    RopeReeling,
+    WheelbarrowDriving
 }
 
 public enum StaminaExhaustionReason

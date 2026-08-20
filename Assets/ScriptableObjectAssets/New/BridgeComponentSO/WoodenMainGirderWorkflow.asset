@@ -18,3 +18,4 @@ MonoBehaviour:
   initialLevelDifference: 2
   levelStepHeight: 0.1
   fastenerProgressNeeded: 40
+  fastenerPairWindowDuration: 15

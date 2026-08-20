@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 825521eef67554f40a02a36995769296, type: 3}
+  m_Name: Furnace_CementBag
+  m_EditorClassIdentifier: Assembly-CSharp::ProductionRecipeSO
+  recipeName: Cement Bag
+  recipeIcon: {fileID: 0}
+  requiredResources:
+  - resourceType: {fileID: 11400000, guid: 2749abf92a0c49f41bbc91d1cebdc5f5, type: 2}
+    amount: 2
+  - resourceType: {fileID: 11400000, guid: 6bbc7405fd8da944a81acb34c3423688, type: 2}
+    amount: 2
+  productType: 1
+  mountableBridgeComponentOutput: {fileID: 0}
+  baseResourceOutput: {fileID: 11400000, guid: 903c24cf923bf4f4ba272f48c678d364, type: 2}
+  outputAmount: 1
+  meltingPoint: 700
+  combustionTemperature: 900
+  neededProgress: 450
+  neededCombustionProgress: 900

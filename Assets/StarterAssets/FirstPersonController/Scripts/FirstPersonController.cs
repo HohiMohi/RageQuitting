@@ -149,6 +149,7 @@ namespace StarterAssets
 		private PlayerActionController _playerActionController;
 		private PlayerStaminaController _staminaController;
 		private PlayerRopeConstraintController _ropeConstraintController;
+		private PlayerWheelbarrowController _wheelbarrowController;
 		
 		private const float _threshold = 0.01f;
 
@@ -210,6 +211,7 @@ namespace StarterAssets
 			_downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
 			_staminaController = GetComponent<PlayerStaminaController>();
 			_ropeConstraintController = GetComponent<PlayerRopeConstraintController>();
+			_wheelbarrowController = GetComponent<PlayerWheelbarrowController>();
 			_staminaController?.Configure(MaxStamina, StaminaRegenerationTimeout);
 			_currentStamina = MaxStamina;
         }
@@ -414,6 +416,11 @@ namespace StarterAssets
 
 		private void CameraRotation()
 		{
+			if (_wheelbarrowController != null && _wheelbarrowController.BlocksCameraRotation)
+			{
+				return;
+			}
+
 			if (_playerInteractionNew != null && _playerInteractionNew.IsFlexibleSaplingInteractionActive)
 			{
 				return;
@@ -503,6 +510,16 @@ namespace StarterAssets
 				_isSprinting = false;
 				_isJumpPerformed = false;
 				_horizontalVelocity = Vector3.zero;
+				return;
+			}
+
+			if (_wheelbarrowController != null && _wheelbarrowController.BlocksStandardMovement)
+			{
+				_isSprinting = false;
+				_isJumpPerformed = false;
+				_horizontalVelocity = Vector3.zero;
+				_verticalVelocity = 0f;
+				_wheelbarrowController.ApplyAnchoredMovement(Time.deltaTime);
 				return;
 			}
 
@@ -731,6 +748,13 @@ namespace StarterAssets
 
 		private void JumpAndGravity()
 		{
+			if (_wheelbarrowController != null && _wheelbarrowController.BlocksStandardMovement)
+			{
+				_isJumpPerformed = false;
+				_verticalVelocity = 0f;
+				return;
+			}
+
 			if (IsBeingCarried())
 			{
 				_isJumpPerformed = false;

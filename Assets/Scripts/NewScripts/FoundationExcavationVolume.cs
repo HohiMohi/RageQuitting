@@ -8,6 +8,14 @@ public class FoundationExcavationVolume : MonoBehaviour
     [SerializeField] private Material compactSoilMaterial;
     [SerializeField] private Material loosenedSoilMaterial;
     [SerializeField] private float surfaceStartLocalY;
+    [Header("Concrete")]
+    [SerializeField] private Transform concreteFillVisual;
+    [SerializeField] private Renderer concreteRenderer;
+    [SerializeField] private Collider driedConcreteCollider;
+    [SerializeField] private Material wetConcreteMaterial;
+    [SerializeField] private Material dryConcreteMaterial;
+    [SerializeField] private float concreteEmptyLocalY = -1.2f;
+    [SerializeField] private float concreteFullLocalY;
 
     private Material runtimeMaterial;
 
@@ -47,6 +55,38 @@ public class FoundationExcavationVolume : MonoBehaviour
             runtimeMaterial.Lerp(compactSoilMaterial, loosenedSoilMaterial, loosened);
         }
     }
+
+    public void ApplyConcreteState(BridgeConstructionStage stage, int pouredLoads, int requiredLoads,
+        float remainingDryingTime, float dryingDuration)
+    {
+        float fill = requiredLoads > 0 ? Mathf.Clamp01((float)pouredLoads / requiredLoads) : 0f;
+        bool visible = fill > 0f;
+        if (concreteFillVisual != null)
+        {
+            concreteFillVisual.gameObject.SetActive(visible);
+            Vector3 position = concreteFillVisual.localPosition;
+            position.y = Mathf.Lerp(concreteEmptyLocalY, concreteFullLocalY, fill);
+            concreteFillVisual.localPosition = position;
+        }
+
+        bool dry = stage == BridgeConstructionStage.ReadyForMount || stage == BridgeConstructionStage.Hammering ||
+                   stage == BridgeConstructionStage.Complete;
+        if (driedConcreteCollider != null) driedConcreteCollider.enabled = dry && visible;
+        if (concreteRenderer != null && wetConcreteMaterial != null && dryConcreteMaterial != null)
+        {
+            float drying = stage == BridgeConstructionStage.ConcreteDrying && dryingDuration > 0f
+                ? 1f - Mathf.Clamp01(remainingDryingTime / dryingDuration)
+                : dry ? 1f : 0f;
+            if (concreteRenderer.sharedMaterial == null || runtimeConcreteMaterial == null)
+            {
+                runtimeConcreteMaterial = new Material(wetConcreteMaterial) { name = wetConcreteMaterial.name + " (Concrete Runtime)" };
+                concreteRenderer.material = runtimeConcreteMaterial;
+            }
+            runtimeConcreteMaterial.Lerp(wetConcreteMaterial, dryConcreteMaterial, drying);
+        }
+    }
+
+    private Material runtimeConcreteMaterial;
 
     private void OnTriggerEnter(Collider other)
     {

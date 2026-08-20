@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 693b3e20b44421a419ad9423ffdeb0fb, type: 3}
+  m_Name: ConcreteMixerProfile
+  m_EditorClassIdentifier: Assembly-CSharp::ConcreteMixerProfileSO
+  drumCapacity: 15
+  requiredWaterUnits: 6
+  requiredGravelUnits: 6
+  requiredCementBags: 1
+  cementBagVolume: 3
+  requiredRotations: 6
+  minimumLoadedVolumeToStartMixing: 6
+  maximumCrankAngularSpeed: 240
+  crankResponseTime: 0.12
+  crankInputRate: 20
+  interactionDistance: 3.5
+  pouringDelay: 0.75
+  alwaysReadyConcreteForTesting: 1

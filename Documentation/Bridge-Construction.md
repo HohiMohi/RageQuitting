@@ -135,24 +135,46 @@ powinien zniknąć po dostarczeniu fundamentu.
 ```mermaid
 flowchart LR
     C["Clearing"] --> D["Digging"]
-    D --> M["ReadyForMount"]
+    D --> P["ConcretePouring"]
+    P -. "future delivery" .-> M["ReadyForMount"]
     M --> W["Dedykowana praca"]
     W --> X["Complete"]
 ```
 
 ### Fundament
 
-`Clearing -> Digging -> ReadyForMount -> Hammering -> Complete`
+`Clearing -> Digging -> ConcretePouring -> ReadyForMount -> Hammering -> Complete`
+
+W V1 flow zatrzymuje się w `ConcretePouring` po przygotowaniu pełnej partii w
+betoniarce. Transport taczką, wlanie do wykopu i przejście do `ReadyForMount`
+będą dodane w kolejnym kroku.
 
 ### Cykliczne kopanie fundamentu
 
-`Digging` fundamentu zawiera trzy cykle `Loosening -> SoilRemoval`. W każdym cyklu łopata musi nabić `60` work progress, po czym wiadrem trzeba usunąć netto `6` porcji ziemi. Cele kumulacyjne wynoszą `6`, `12` i `18`; ukończenie trzeciego cyklu przełącza plac na `ReadyForMount`.
+`Digging` fundamentu zawiera trzy cykle `Loosening -> SoilRemoval`. W każdym cyklu łopata musi nabić `60` work progress, po czym wiadrem trzeba usunąć netto `6` porcji ziemi. Cele kumulacyjne wynoszą `6`, `12` i `18`; ukończenie trzeciego cyklu przełącza plac na `ConcretePouring`.
 
 `SoilRemoval` ma limit czasu ustawiany przez `loosenedSoilHardeningDuration` (tutorial: `15 s`). Deadline rozpoczyna się przy wejściu w podetap i nie jest resetowany przez nabieranie ani zwracanie ziemi. Po upływie czasu plac wraca do `Loosening` z progresem `0`, zachowując liczbę usuniętych porcji i głębokość wykopu. Ponowne rozdrobnienie uruchamia świeży deadline; prompt pokazuje czas pozostały do stwardnienia.
 
 Stan nie zwiększa rozmiaru pakietu mostu: `constructionValueA/B` przechowują indeks cyklu i `FoundationDiggingSubstage`, `constructionProgress` progres łopaty, `constructionAux0` liczbę usuniętych porcji, a `constructionAux1` deadline stwardnienia w czasie serwera. Late join odtwarza podetap, głębokość oraz pozostały czas.
 
-Wykop ma ruchomą powierzchnię ziemi, stałe ściany, dno i łagodną rampę. Głębokość wynosi `1.2 * removedSoilUnits / 18`, maksymalnie `1.2 m`. Zwrócona ziemia podnosi powierzchnię. `EarthPile` wrzucony przed montażem odejmuje zawarte porcje; po `ReadyForMount` przywraca ostatni `SoilRemoval`. Po zamontowaniu fundamentu regres jest wyłączony.
+Wykop ma ruchomą powierzchnię ziemi, stałe ściany, dno i łagodną rampę. Głębokość wynosi `1.2 * removedSoilUnits / 18`, maksymalnie `1.2 m`. Zwrócona ziemia podnosi powierzchnię. `EarthPile` wrzucony podczas `ConcretePouring` albo przed montażem przywraca ostatni `SoilRemoval`. Po zamontowaniu fundamentu regres jest wyłączony.
+
+### Przygotowanie betonu
+
+Jedna wspólna betoniarka przy Blast Furnace przyjmuje dokładnie `6 Water`,
+`6 Gravel` i `1 Cement Bag`. Pełne wiadro przekazuje trzy porcje po ukończonym
+przytrzymaniu RMB, a niesiony worek cementu wkłada się przez E. Bęben mieści
+`15` jednostek objętości; wiadro i worek zajmują po `3`.
+
+Korba jest blokowana dla jednego operatora. UI z oporem zlicza sześć pełnych
+obrotów zgodnie z ruchem wskazówek zegara, a częściowy progres pozostaje po
+zmianie operatora. Mieszanie zaczyna naliczać progres od `6/15` objętości;
+każdy kolejny pełny ładunek podnosi maksymalny progres o `20%`. Input na
+aktualnym limicie nadal obraca korbę i bęben, ale nie zwiększa progresu ani nie
+jest kolejkowany. Dokładny wsad daje `ConcreteReady`, pozostałe kombinacje
+kończą jako `RuinedMix`. Przełączenie dźwigni na `Pouring` zwalnia operatora,
+obraca bęben i bezpowrotnie opróżnia dowolną zawartość. W V1 gotowy beton nie
+jest jeszcze przypisany do konkretnego fundamentu.
 
 `BridgeConstructionWorkflowSO`:
 
@@ -305,6 +327,20 @@ treść tutorialu. Pierwsza synchronizacja nie odtwarza historii.
 8. Skonfiguruj prerequisites.
 9. Dodaj produkt do fabryki oraz network registry.
 10. Sprawdź ghost, target pose, final visual i collidery w każdym stanie.
+
+## Betonowanie fundamentu
+
+Po trzecim cyklu kopania fundament przechodzi do `ConcretePouring`. Jedna
+gotowa partia betonu musi zostać przewieziona zadokowaną taczką. Przy wykopie
+dwóch graczy zajmuje stanowiska przy rączkach i przesuwa kursory ku górze.
+Różnica do `0.15` pozwala przechylać taczkę; różnica ponad `0.35` utrzymana
+przez `0.6 s` niszczy ładunek. Przerwanie minigry zachowuje beton.
+
+Po poprawnym wylaniu `BridgeConstructionSite.TryAcceptConcreteLoad()` zapisuje
+ładunek w `constructionAnchor0` i przechodzi do `ConcreteDrying`. Deadline
+schnięcia jest zapisany w `constructionAux1`; tutorial używa `1` partii i
+`30 s`. Po wyschnięciu aktywowany jest collider powierzchni i etap
+`ReadyForMount`. Ziemia nie może już cofnąć wykopu po przyjęciu betonu.
 
 ## Ograniczenia
 

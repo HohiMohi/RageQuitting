@@ -340,6 +340,33 @@ Trigger placu fundamentu jest podczas `Clearing` miekkim celem targetowania. Zac
 
 `PortableSubstanceContainer` jest fizycznym, sieciowym single-carry pojemnikiem. Przechowuje do trzech porcji jednej pozycji z katalogu `ContainerSubstanceSO`; nie miesza typów i zachowuje zawartość po upuszczeniu. RMB pobiera porcję z aktywnego `ISubstanceSource`, a poza źródłem wysypuje całość. E nadal upuszcza wiadro. Serwer sprawdza holdera, odległość, pojemność i źródło.
 
-Pierwszą substancją jest `Soil`. Wysypanie tworzy jeden `LooseSubstancePile` z faktyczną liczbą porcji. Kupę można ponownie nabierać po jednej porcji; visual maleje, a zero porcji despawnuje obiekt. Kupa jest dynamiczna i podatna na kolizje, ale nie można jej nieść rękami. Kontakt z dnem rzeki ją usuwa.
+Katalog obejmuje `Soil`, `Water`, `Gravel` i przygotowany pod dalszy etap
+`Concrete`. Wysypanie Soil tworzy jeden `LooseSubstancePile` z faktyczną liczbą
+porcji. Kupę można ponownie nabierać po jednej porcji; visual maleje, a zero
+porcji despawnuje obiekt. Kupa jest dynamiczna i podatna na kolizje, ale nie
+można jej nieść rękami. Kontakt z dnem rzeki ją usuwa.
+
+`SubstanceExtractionZone` jest niewyczerpywalnym źródłem o stabilnym ID
+scenowym. Tutorial ma dwa punkty poboru wody w `WaterBody` i po jednej strefie
+żwiru na każdym brzegu. Jedno ukończone przytrzymanie RMB pobiera jedną porcję;
+pełne wiadro przekazuje do `ISubstanceSink` wszystkie trzy porcje atomowo.
+
+`Limestone Stone`, `Clay Lump` i `Cement Bag` są zwykłymi zasobami
+single-carry. Złoża wapienia i gliny nie są przenośne i odradzają się do
+ustawionego minimum w swoich `ResourcePopulationZone`.
 
 Dwa wiadra stoją przy obozowym stojaku. Wiadro dotykające dna rzeki wymusza release, opróżnia się, znika na `2 s` i wraca do wolnego `BucketRespawnPoint`.
+
+## Taczka
+
+`WheelbarrowController` jest serwerowo symulowanym pojazdem Rigidbody z jednym
+`WheelCollider`. W/S napędza i hamuje, a A/D skręca wyłącznie razem z ruchem.
+Kierowca zapewnia miękką stabilizację; bez niego taczka może przewrócić się na
+nierównym podłożu lub po uderzeniu. Obciążenie zwiększa masę, przesuwa środek
+ciężkości i podnosi koszt staminy przy podjeździe.
+
+Skrzynia przechowuje trzy widoczne zasoby single-carry jednego typu, do `60 kg`,
+jednego pasażera oraz niezależny ładunek betonu. Zabezpieczony zasób zachowuje
+NetworkObject, ale ma wyłączoną własną fizykę i collidery. Przechył ponad `60°`
+przez `0.25 s` wysypuje ładunek i zwalnia graczy. Pustą, zatrzymaną taczkę można
+postawić na koła po przytrzymaniu E przez `1.5 s`.

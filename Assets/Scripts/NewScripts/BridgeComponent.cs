@@ -4,9 +4,17 @@ using UnityEngine;
 
 public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 {
+    [Header("Initial State")]
+    [Tooltip("Start this scene instance fully mounted, assembled and construction-complete.")]
+    [SerializeField] private bool startFullyCompleted;
+
+    [Header("Configuration")]
     [SerializeField] private int componentID;
+    [HideInInspector]
     [SerializeField] private bool isMounted;
+    [HideInInspector]
     [SerializeField] private bool canBeMounted;
+    [HideInInspector]
     [SerializeField] private bool isAssembled;
     [SerializeField] private BridgeComponentSO bridgeComponentSO;
     [SerializeField] private GameObject readyForMountingVisualsGameObject;
@@ -106,8 +114,15 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         constructionSite = GetComponent<BridgeConstructionSite>();
         mountSocket = GetComponent<BridgeMountSocket>();
+        InitializeDefinitionState();
+        constructionSite?.Initialize();
         CacheBridgeComponentColliders();
         ConfigureReadyForMountingInteractionColliders();
+        ResetRuntimeState();
+        if (startFullyCompleted && HasInitialStateAuthority())
+        {
+            ApplyInitialCompletedState();
+        }
         ApplyVisualAndColliderState();
     }
 
@@ -115,12 +130,11 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     void Start()
     {
 
-        currentAssemblingProgress = 0;
+        InitializeDefinitionState();
+        currentAssemblingProgress = isAssembled ? assemblingProgressNeeded : 0f;
 
         if (bridgeComponentSO != null)
         {
-            assemblingProgressNeeded = bridgeComponentSO.assemblingProgressNeeded;
-            needAssembling = bridgeComponentSO.needAssembling;
             BridgeComponentSOAssigned?.Invoke(this, new BridgeComponentSOAssignedEventArgs
             {
                 bridgeComponentSO = bridgeComponentSO
@@ -231,6 +245,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     public bool IsAssembled => isAssembled;
     public bool NeedAssembling => needAssembling;
     public int ComponentID => componentID;
+    public bool StartFullyCompleted => startFullyCompleted;
 
     public float GetAssemblingProgressNormalized()
     {
@@ -307,6 +322,57 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         {
             ComponentAsembled?.Invoke(this, new ComponentAsembledEventArgs { componentID = componentID });
         }
+    }
+
+    internal void ApplyInitialCompletedState()
+    {
+        InitializeDefinitionState();
+        isMounted = true;
+        isAssembled = true;
+        canBeMounted = false;
+        currentAssemblingProgress = assemblingProgressNeeded;
+        constructionSite?.ApplyInitialCompletedState();
+
+        if (mountSocket != null)
+        {
+            BridgeComponentNetworkState completedSocketState = new BridgeComponentNetworkState(componentID)
+            {
+                mountAlignmentState = (int)BridgeMountAlignmentState.Complete,
+                mountAlignmentCandidateNetworkObjectId = BridgeMountSocket.NoCandidateNetworkObjectId,
+                mountAlignmentStartedAt = -1d
+            };
+            mountSocket.ApplyNetworkAlignmentState(completedSocketState);
+        }
+
+        ApplyVisualAndColliderState();
+    }
+
+    private void ResetRuntimeState()
+    {
+        isMounted = false;
+        isAssembled = false;
+        canBeMounted = false;
+        currentAssemblingProgress = 0f;
+    }
+
+    private void InitializeDefinitionState()
+    {
+        if (bridgeComponentSO == null)
+        {
+            assemblingProgressNeeded = 0f;
+            needAssembling = false;
+            return;
+        }
+
+        assemblingProgressNeeded = bridgeComponentSO.assemblingProgressNeeded;
+        needAssembling = bridgeComponentSO.needAssembling;
+    }
+
+    private static bool HasInitialStateAuthority()
+    {
+        return Unity.Netcode.NetworkManager.Singleton == null
+            || !Unity.Netcode.NetworkManager.Singleton.IsListening
+            || Unity.Netcode.NetworkManager.Singleton.IsServer;
     }
 
     public void DamageReceived(float damage)
@@ -430,4 +496,34 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         ApplyVisualAndColliderState();
     }
+
+#if UNITY_EDITOR
+    public void RefreshInitialStatePreview()
+    {
+        if (Application.isPlaying)
+        {
+            return;
+        }
+
+        constructionSite = GetComponent<BridgeConstructionSite>();
+        mountSocket = GetComponent<BridgeMountSocket>();
+        InitializeDefinitionState();
+        constructionSite?.Initialize();
+        CacheBridgeComponentColliders();
+        ConfigureReadyForMountingInteractionColliders();
+        constructionSite?.RefreshInitialStatePreview(startFullyCompleted);
+        mountSocket?.RefreshInitialStatePreview(startFullyCompleted);
+
+        bool previousMounted = isMounted;
+        bool previousAssembled = isAssembled;
+        bool previousMountable = canBeMounted;
+        isMounted = startFullyCompleted;
+        isAssembled = startFullyCompleted;
+        canBeMounted = false;
+        ApplyVisualAndColliderState();
+        isMounted = previousMounted;
+        isAssembled = previousAssembled;
+        canBeMounted = previousMountable;
+    }
+#endif
 }

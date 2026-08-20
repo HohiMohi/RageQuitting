@@ -465,6 +465,8 @@ GameObject:
   - component: {fileID: 1577947834922496544}
   - component: {fileID: 7189231748599922122}
   - component: {fileID: 6765605657286188049}
+  - component: {fileID: 1759615207400898478}
+  - component: {fileID: 8272239400986367473}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -762,6 +764,7 @@ MonoBehaviour:
   carriedPlayerAnchor: {fileID: 0}
   defaultCarriedPlayerAnchorLocalPosition: {x: 0, y: 1, z: 1}
   _pickedUpGameObject: {fileID: 0}
+  bucketTargetLossGraceDuration: 0.2
 --- !u!114 &4354115525238422459
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -927,6 +930,7 @@ MonoBehaviour:
   firstPersonController: {fileID: 8036448780592137977}
   playerInput: {fileID: 8057224913680877428}
   playerActionController: {fileID: 482533967712327051}
+  ropeToolController: {fileID: 0}
   playerInteraction: {fileID: 1047544986995738481}
   playerHealth: {fileID: 6339126401750945372}
   playerInventory: {fileID: 4354115525238422459}
@@ -1300,6 +1304,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerRopeConstraintController
   ShowTopMostFoldoutHeaderGroup: 1
+  maximumConstraintCorrectionSpeed: 8
 --- !u!114 &6765605657286188049
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1313,6 +1318,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerRopeUI
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &1759615207400898478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b72a8d4da0937a4fb2f0edfba8b164d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWheelbarrowController
+  inputSendInterval: 0.05
+  anchorSnapDistance: 2
+--- !u!114 &8272239400986367473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14cde028ea2734d4fb954a6552088c44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWheelbarrowPouringUI
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0

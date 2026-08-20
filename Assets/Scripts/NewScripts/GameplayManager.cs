@@ -151,12 +151,14 @@ public class GameplayManager : MonoBehaviour
     private const string RequestMountMessageName = "GameplayManager_RequestMountBridgeComponent";
     private const string RequestAssembleMessageName = "GameplayManager_RequestAssembleBridgeComponent";
     private const string RequestConstructionWorkMessageName = "GameplayManager_RequestConstructionWork";
+    private const string GirderFasteningWindowMessageName = "GameplayManager_GirderFasteningWindow";
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
     private const int StateMessageBaseSize = sizeof(int);
     private const int StateMessageItemSize = sizeof(int) * 5 + sizeof(bool) * 3 + sizeof(float) * 8 + sizeof(ulong) + sizeof(double);
     private const int MountRequestMessageSize = sizeof(int) + sizeof(ulong);
     private const int AssembleRequestMessageSize = sizeof(int) * 2;
     private const int ConstructionWorkRequestMessageSize = sizeof(int) * 3;
+    private const int GirderFasteningWindowMessageSize = sizeof(int) * 2 + sizeof(double);
 
     public static GameplayManager Instance { get; private set; }
 
@@ -196,6 +198,7 @@ public class GameplayManager : MonoBehaviour
     public event EventHandler OnBridgeFullyAssembled;
     public event EventHandler OnBridgeRequirementsChanged;
     public event EventHandler<BridgeConstructionStageChangedEventArgs> OnConstructionStageChanged;
+    public event Action<int, int, double> OnLocalGirderFasteningWindowStarted;
 
     private void Awake()
     {
@@ -225,6 +228,11 @@ public class GameplayManager : MonoBehaviour
         }
 
         CacheBridgeComponents();
+        if (!IsNetworkSessionActive() || NetworkManager.Singleton.IsServer)
+        {
+            ApplyConfiguredInitialBridgeState();
+            AdvancePastInitiallyCompletedStages();
+        }
         SeedObservedConstructionStages();
         SubscribeBridgeComponentEvents();
         yield return null;
@@ -269,6 +277,7 @@ public class GameplayManager : MonoBehaviour
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestMountMessageName);
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestAssembleMessageName);
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestConstructionWorkMessageName);
+            NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(GirderFasteningWindowMessageName);
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(StateSyncMessageName);
             networkMessagingRegistered = false;
         }
@@ -292,6 +301,9 @@ public class GameplayManager : MonoBehaviour
         }
 
         NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(StateSyncMessageName, HandleBridgeStateMessage);
+        NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(
+            GirderFasteningWindowMessageName,
+            HandleGirderFasteningWindowMessage);
         if (NetworkManager.Singleton.IsServer)
         {
             NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RequestFullStateMessageName, HandleRequestFullBridgeStateMessage);
@@ -375,6 +387,88 @@ public class GameplayManager : MonoBehaviour
         }
     }
 
+    private void ApplyConfiguredInitialBridgeState()
+    {
+        if (bridgeComponents == null)
+        {
+            return;
+        }
+
+        foreach (BridgeComponent component in bridgeComponents)
+        {
+            if (component == null)
+            {
+                continue;
+            }
+
+            int componentID = component.ComponentID;
+            if (IsValidComponentDataIndex(componentID))
+            {
+                bridgeComponentDataArray[componentID].isMounted = false;
+                bridgeComponentDataArray[componentID].isAssembled = false;
+                bridgeComponentDataArray[componentID].CanBeMounted = false;
+            }
+
+            if (!component.StartFullyCompleted)
+            {
+                continue;
+            }
+
+            component.ApplyInitialCompletedState();
+            if (IsValidComponentDataIndex(componentID))
+            {
+                bridgeComponentDataArray[componentID].isMounted = true;
+                bridgeComponentDataArray[componentID].isAssembled = true;
+            }
+        }
+    }
+
+    private void AdvancePastInitiallyCompletedStages()
+    {
+        if (bridgeBuildingStages == null || bridgeComponentDataArray == null)
+        {
+            return;
+        }
+
+        while (currentBridgeBuildingStageIndex >= 0 &&
+               currentBridgeBuildingStageIndex < bridgeBuildingStages.Length &&
+               IsStageFullyCompleted(currentBridgeBuildingStageIndex))
+        {
+            currentBridgeBuildingStageIndex++;
+        }
+
+        if (currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
+        {
+            isFullyAsembled = true;
+            bridgeFullyAssembledEventInvoked = true;
+        }
+    }
+
+    private bool IsStageFullyCompleted(int stageIndex)
+    {
+        if (!ValidateStageComponentIndexes(stageIndex))
+        {
+            return false;
+        }
+
+        int[] componentIndexes = bridgeBuildingStages[stageIndex].bridgeComponentDataIndexes;
+        if (componentIndexes == null)
+        {
+            return true;
+        }
+
+        foreach (int componentIndex in componentIndexes)
+        {
+            BridgeComponentData componentData = bridgeComponentDataArray[componentIndex];
+            if (!componentData.isMounted || !componentData.isAssembled)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private void Bridge_OnComponentAssembled(object sender, Bridge.ComponentAssembledEventArgs e)
     {
         if (IsNetworkSessionActive())
@@ -425,6 +519,12 @@ public class GameplayManager : MonoBehaviour
 
         foreach (int componentIndex in bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes)
         {
+            if (bridgeComponentDataArray[componentIndex].isMounted && bridgeComponentDataArray[componentIndex].isAssembled)
+            {
+                bridgeComponentDataArray[componentIndex].CanBeMounted = false;
+                continue;
+            }
+
             bridgeComponentDataArray[componentIndex].CanBeMounted = true;
             if (IsNetworkSessionActive() && NetworkManager.Singleton.IsServer && TryGetStateIndex(componentIndex, out int stateIndex))
             {
@@ -538,7 +638,8 @@ public class GameplayManager : MonoBehaviour
 
         if (!IsNetworkSessionActive())
         {
-            if (bridgeComponent.ConstructionSite != null && bridgeComponent.ConstructionSite.TryApplyToolWork(equippableItemSO.itemType, workPower, workPointId))
+            if (bridgeComponent.ConstructionSite != null &&
+                bridgeComponent.ConstructionSite.TryApplyToolWork(equippableItemSO.itemType, workPower, workPointId, 0ul))
             {
                 ObserveConstructionStage(bridgeComponent.ComponentID);
                 NotifyBridgeRequirementsChanged();
@@ -605,7 +706,11 @@ public class GameplayManager : MonoBehaviour
             return;
         }
 
-        if (!bridgeComponent.ConstructionSite.TryApplyToolWork(selectedTool.itemType, selectedTool.ConstructionWorkPower, workPointId) ||
+        if (!bridgeComponent.ConstructionSite.TryApplyToolWork(
+                selectedTool.itemType,
+                selectedTool.ConstructionWorkPower,
+                workPointId,
+                senderClientId) ||
             !TryGetStateIndex(componentID, out int stateIndex))
         {
             return;
@@ -623,6 +728,58 @@ public class GameplayManager : MonoBehaviour
         CheckCurrentStageMountingProgress();
         NotifyBridgeRequirementsChanged();
         BroadcastBridgeState();
+    }
+
+    public void NotifyGirderFasteningWindowStarted(
+        ulong actorClientId,
+        int componentID,
+        int requiredWorkPointId,
+        double deadline)
+    {
+        if (actorClientId == ulong.MaxValue)
+        {
+            return;
+        }
+
+        if (!IsNetworkSessionActive())
+        {
+            OnLocalGirderFasteningWindowStarted?.Invoke(componentID, requiredWorkPointId, deadline);
+            return;
+        }
+
+        if (!NetworkManager.Singleton.IsServer)
+        {
+            return;
+        }
+
+        if (actorClientId == NetworkManager.Singleton.LocalClientId)
+        {
+            OnLocalGirderFasteningWindowStarted?.Invoke(componentID, requiredWorkPointId, deadline);
+            return;
+        }
+
+        using FastBufferWriter writer = new FastBufferWriter(GirderFasteningWindowMessageSize, Allocator.Temp);
+        writer.WriteValueSafe(componentID);
+        writer.WriteValueSafe(requiredWorkPointId);
+        writer.WriteValueSafe(deadline);
+        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(
+            GirderFasteningWindowMessageName,
+            actorClientId,
+            writer,
+            NetworkDelivery.ReliableSequenced);
+    }
+
+    private void HandleGirderFasteningWindowMessage(ulong senderClientId, FastBufferReader reader)
+    {
+        if (NetworkManager.Singleton != null && senderClientId != NetworkManager.ServerClientId)
+        {
+            return;
+        }
+
+        reader.ReadValueSafe(out int componentID);
+        reader.ReadValueSafe(out int requiredWorkPointId);
+        reader.ReadValueSafe(out double deadline);
+        OnLocalGirderFasteningWindowStarted?.Invoke(componentID, requiredWorkPointId, deadline);
     }
 
     private bool TryGetValidatedPlayerTool(

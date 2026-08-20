@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18ebe672e949c4643ba9d654abc908d8, type: 3}
+  m_Name: WheelbarrowProfile
+  m_EditorClassIdentifier: Assembly-CSharp::WheelbarrowProfileSO
+  baseMass: 22
+  maximumResourceCargoMass: 60
+  concreteBatchMass: 80
+  passengerMass: 75
+  resourceSlots: 3
+  driveForce: 220
+  brakeForce: 420
+  idleBrakeForce: 35
+  idleAngularDamping: 4
+  idleDampingMaximumSpeed: 0.25
+  maximumForwardSpeed: 4
+  maximumReverseSpeed: 2
+  maximumSteeringAngle: 30
+  minimumSteeringSpeed: 0.15
+  steeringTorque: 8
+  driverStabilizingTorque: 60
+  driverStabilizingDamping: 12
+  maximumDrivenYawSpeedDegrees: 75
+  drivenYawResponse: 8
+  maximumDrivenYawAccelerationDegrees: 360
+  emptyLateralVelocityDamping: 8
+  loadedLateralVelocityDamping: 4
+  emptyMaximumLateralGripAcceleration: 14
+  loadedMaximumLateralGripAcceleration: 8
+  inputTimeout: 0.25
+  wheelRadius: 0.44
+  wheelSuspensionDistance: 0.03
+  wheelSuspensionFrequency: 7
+  wheelSuspensionDampingRatio: 1
+  wheelSuspensionTargetPosition: 0.5
+  wheelContactWarmupFixedSteps: 1
+  wheelForwardFrictionStiffness: 1.4
+  wheelSidewaysFrictionStiffness: 1.8
+  steeringInputDeadZone: 0.08
+  steeringResponseDegreesPerSecond: 120
+  steeringReversalDegreesPerSecond: 45
+  driverSupportSpring: 18
+  driverSupportDamping: 7
+  maximumDriverSupportAcceleration: 15
+  driverSupportGroundProbeDistance: 1.5
+  driverSupportGroundFollowSpeed: 4
+  driverFollowSpeed: 8
+  passengerFollowSpeed: 12
+  maximumExitSpeed: 0.8
+  driverHardTetherDistance: 2
+  driverHardTetherDelay: 0.5
+  exitCollisionGraceMinimum: 0.2
+  exitCollisionGraceMaximum: 1.5
+  exitSeparationPadding: 0.05
+  exitSearchRadius: 1.8
+  exitGroundProbeDistance: 2
+  baseStaminaDrain: 0.25
+  loadedStaminaDrain: 1.25
+  uphillStaminaDrain: 1.5
+  maximumStaminaDrain: 3
+  automaticBoardingMinimumSpeed: 1.5
+  automaticBoardingDirectionDot: 0.65
+  tippingAngle: 60
+  tippingDuration: 0.25
+  rightingHoldDuration: 1.5
+  rightingAngularSpeed: 120
+  maximumRightingLinearSpeed: 0.2

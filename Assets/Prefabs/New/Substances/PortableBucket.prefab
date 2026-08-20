@@ -516,7 +516,15 @@ MonoBehaviour:
   capacity: 3
   supportedSubstances:
   - {fileID: 11400000, guid: d05c1462b1c271b4e951b042b4a25388, type: 2}
+  - {fileID: 11400000, guid: e7d22878e3549384194f462a246ad24f, type: 2}
+  - {fileID: 11400000, guid: aa548135c821e77459d8472c922475a4, type: 2}
+  - {fileID: 11400000, guid: d48ca405e3bf3d944bf8519d6016ce17, type: 2}
   loosePilePrefab: {fileID: 2630799584334888697, guid: 731afe1bede86564f9ea67ae9db2a793, type: 3}
   contentVisual: {fileID: 6530070793136205565}
   contentRenderer: {fileID: 6151114343375689527}
   interactionDistance: 2.5
+  actionHoldDuration: 1.5
+  emptyContentLocalScale: {x: 0.27, y: 0.02, z: 0.27}
+  contentBottomLocalY: 0.45
+  contentTopLocalY: 0.55
+  respawnPointIndex: 0

@@ -6,7 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(BaseResourceNew), typeof(NetworkObject))]
 public class PortableSubstanceContainer : NetworkBehaviour
 {
-    private enum ContextTargetKind : byte { None, ConstructionSite, LoosePile }
+    private enum ContextTargetKind : byte { None, ConstructionSite, LoosePile, ExtractionZone, NetworkSink }
 
     [SerializeField, Min(1)] private int capacity = 3;
     [SerializeField] private ContainerSubstanceSO[] supportedSubstances;
@@ -67,11 +67,24 @@ public class PortableSubstanceContainer : NetworkBehaviour
         ulong targetId = 0;
         if (target != null)
         {
+            ISubstanceSink sink = target as ISubstanceSink;
+            sink ??= target.GetComponent<ISubstanceSink>() ?? target.GetComponentInParent<ISubstanceSink>();
             BridgeConstructionSite site = target.GetComponent<BridgeConstructionSite>() ?? target.GetComponentInParent<BridgeConstructionSite>();
-            if (site != null && site.BridgeComponent != null)
+            SubstanceExtractionZone zone = target.GetComponent<SubstanceExtractionZone>() ?? target.GetComponentInParent<SubstanceExtractionZone>();
+            if (sink is MonoBehaviour sinkBehaviour && sinkBehaviour.GetComponentInParent<NetworkObject>() is NetworkObject sinkNetworkObject)
+            {
+                kind = ContextTargetKind.NetworkSink;
+                targetId = sinkNetworkObject.NetworkObjectId;
+            }
+            else if (site != null && site.BridgeComponent != null)
             {
                 kind = ContextTargetKind.ConstructionSite;
                 targetId = (ulong)site.BridgeComponent.ComponentID;
+            }
+            else if (zone != null)
+            {
+                kind = ContextTargetKind.ExtractionZone;
+                targetId = (ulong)zone.SourceId;
             }
             else
             {
@@ -97,6 +110,16 @@ public class PortableSubstanceContainer : NetworkBehaviour
 
     public string GetContextActionDescription(MonoBehaviour target)
     {
+        ISubstanceSink sink = target as ISubstanceSink;
+        if (sink == null && target != null)
+        {
+            sink = target.GetComponent<ISubstanceSink>() ?? target.GetComponentInParent<ISubstanceSink>();
+        }
+        if (sink != null)
+        {
+            return sink.GetDepositPrompt(this);
+        }
+
         ISubstanceSource source = target as ISubstanceSource;
         if (source == null && target != null)
         {
@@ -104,7 +127,18 @@ public class PortableSubstanceContainer : NetworkBehaviour
         }
         if (source != null)
         {
-            return CurrentUnits >= Capacity ? $"Bucket full - {ContentsLabel}" : $"Hold to scoop - {ContentsLabel}";
+            ContainerSubstanceSO availableSubstance = FindSupportedSubstance(source);
+            if (availableSubstance == null)
+            {
+                return ContentsLabel;
+            }
+            if (CurrentUnits > 0 && CurrentSubstance != availableSubstance)
+            {
+                return $"Empty bucket first - {ContentsLabel}";
+            }
+            return CurrentUnits >= Capacity
+                ? $"Bucket full - {ContentsLabel}"
+                : $"Hold to collect {availableSubstance.DisplayName} - {ContentsLabel}";
         }
         return CurrentUnits > 0 ? $"Hold to empty bucket - {ContentsLabel}" : ContentsLabel;
     }
@@ -119,13 +153,27 @@ public class PortableSubstanceContainer : NetworkBehaviour
     {
         if (!ValidateHolder(senderClientId, out PlayerInteractionNew player)) return;
 
+        ISubstanceSink sink = ResolveSink(kind, targetId, localTarget);
+        if (sink != null)
+        {
+            if (CurrentUnits > 0)
+            {
+                sink.TryDeposit(this, player);
+            }
+            return;
+        }
+
         ISubstanceSource source = ResolveSource(kind, targetId, localTarget);
         if (source != null)
         {
-            ContainerSubstanceSO requested = CurrentSubstance ?? FirstSupportedSubstance();
-            Vector3 sourcePoint = source is BridgeConstructionSite site
-                ? site.GetClosestInteractionPoint(player.transform.position)
-                : ((MonoBehaviour)source).transform.position;
+            ContainerSubstanceSO requested = CurrentSubstance ?? FindSupportedSubstance(source);
+            Vector3 sourcePoint = source switch
+            {
+                BridgeConstructionSite site => site.GetClosestInteractionPoint(player.transform.position),
+                SubstanceExtractionZone zone => zone.GetClosestInteractionPoint(player.transform.position),
+                MonoBehaviour sourceBehaviour => sourceBehaviour.transform.position,
+                _ => player.transform.position
+            };
             if (requested == null || CurrentUnits >= Capacity || !source.CanExtract(requested) ||
                 Vector3.Distance(player.transform.position, sourcePoint) > interactionDistance)
             {
@@ -227,6 +275,48 @@ public class PortableSubstanceContainer : NetworkBehaviour
             NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObject))
         {
             return targetObject.GetComponent<LooseSubstancePile>();
+        }
+        if (kind == ContextTargetKind.ExtractionZone && SubstanceExtractionZone.TryGet((int)targetId, out SubstanceExtractionZone zone))
+        {
+            return zone;
+        }
+        return null;
+    }
+
+    private ISubstanceSink ResolveSink(ContextTargetKind kind, ulong targetId, MonoBehaviour localTarget)
+    {
+        if (localTarget is ISubstanceSink direct)
+        {
+            return direct;
+        }
+        if (localTarget != null)
+        {
+            ISubstanceSink localSink = localTarget.GetComponent<ISubstanceSink>() ?? localTarget.GetComponentInParent<ISubstanceSink>();
+            if (localSink != null)
+            {
+                return localSink;
+            }
+        }
+        if (kind == ContextTargetKind.NetworkSink && NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObject))
+        {
+            return targetObject.GetComponent<ISubstanceSink>() ?? targetObject.GetComponentInChildren<ISubstanceSink>();
+        }
+        return null;
+    }
+
+    private ContainerSubstanceSO FindSupportedSubstance(ISubstanceSource source)
+    {
+        if (supportedSubstances == null || source == null)
+        {
+            return null;
+        }
+        foreach (ContainerSubstanceSO candidate in supportedSubstances)
+        {
+            if (candidate != null && source.CanExtract(candidate))
+            {
+                return candidate;
+            }
         }
         return null;
     }
@@ -333,7 +423,6 @@ public class PortableSubstanceContainer : NetworkBehaviour
     }
 
     private ContainerSubstanceSO GetSubstance(int index) => supportedSubstances != null && index >= 0 && index < supportedSubstances.Length ? supportedSubstances[index] : null;
-    private ContainerSubstanceSO FirstSupportedSubstance() => supportedSubstances != null && supportedSubstances.Length > 0 ? supportedSubstances[0] : null;
     private bool IsNetworkSessionActive() => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
     private bool IsAuthority() => !IsNetworkSessionActive() || IsServer;
 }

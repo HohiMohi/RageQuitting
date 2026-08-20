@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c0995a3182a1464a89a990f501066fb, type: 3}
+  m_Name: ClayLump
+  m_EditorClassIdentifier: Assembly-CSharp::BaseResourceSO
+  resourceName: Clay Lump
+  resourcePrefab: {fileID: 8908232955564892484, guid: 5df27fd17cc1aba4086c0b4cd0510f17, type: 3}
+  icon: {fileID: 0}
+  baseResourceDestructionRecipeArray: []
+  resourceDurability: 0
+  movementSpeedPenalty: 0
+  canBeCarried: 1
+  minAmountOfPlayersNeeded: 1
+  allowMultipleCarriers: 0
+  recommendedCarriers: 1
+  maxCarriers: 1
+  underStaffedPenaltyMultiplier: 1
+  sharedCarryUnderstaffedStaminaDrainPerSecond: 1
+  carryMoveSpeed: 4
+  carryPlayerClearance: 0.35
+  carryAttachLocalPoints: []
+  sharedCarryRotationOffsetEuler: {x: 0, y: 0, z: 0}
+  carryPhysicsProfile: {fileID: 0}
+  furnaceFuelAmount: 0
+  impactSurfaceType: 0

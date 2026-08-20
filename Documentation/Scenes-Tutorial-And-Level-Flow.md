@@ -267,3 +267,23 @@ Rzeka jest systemem gameplayowym, nie tylko visualem. Ciagly ground zastapiono z
 Obszar NavMesh `WaterSurface` ma indeks `3` i koszt `4`, a `WaterEntry` indeks `4` i koszt `2`. Bobry posiadaja dostep do obu, koza i NPC ladowe nie. Fizyczne skarpy i dno sa pomijane podczas amfibijnego bake, a niewidoczne collidery nawigacyjne sa wylaczone w runtime. Test kontrolny powinien potwierdzic `PathComplete` przez rzeke z maska `Walkable + WaterEntry + WaterSurface` oraz `PathPartial` dla samego `Walkable`.
 
 Visual rzeki pozostaje osobny od colliderow gameplayowych. Zmiana jego materialu lub skali nie powinna zmieniac `WaterVolume`, punktow wyjscia ani powierzchni nawigacyjnej.
+
+## Przygotowanie betonu w `Tutorial_scene`
+
+`ConcretePreparationV1_Setup` zawiera dwa punkty poboru wody, dwie
+niewyczerpywalne strefy żwiru oraz trzy odnawialne population zones: jedną dla
+wapienia w jaskini i po jednej dla gliny na każdym brzegu. Scena startuje z
+dwoma złożami w każdej strefie.
+
+`ConcretePreparationV1_ConcreteMixer` stoi obok Blast Furnace. Mixer i pięć
+prefabów nowych zasobów są wpisane do obu aktywnych `NetworkPrefabsList`.
+Blast Furnace ma recepturę `Furnace_CementBag`; bucket obsługuje Soil, Water,
+Gravel i Concrete.
+
+`WheelbarrowV1_Setup` dodaje jedną sieciową taczkę, dok pod wylotem betoniarki
+oraz po jednym doku przy każdym fundamencie. Taczka musi zostać ustawiona i
+pozostawiona bez kierowcy, zanim stacja miękko wyrówna ją i zablokuje. Gotowa
+partia trafia do skrzyni po przełączeniu betoniarki na `Pouring`. Kooperacyjne
+wylanie uruchamia `30 s` schnięcia, po czym fundament przechodzi do
+`ReadyForMount`. Profile i prefab znajdują się w `GeneratedAssets/Wheelbarrow`
+oraz `Prefabs/New/Wheelbarrow.prefab`.

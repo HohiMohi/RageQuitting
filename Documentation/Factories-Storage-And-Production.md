@@ -147,10 +147,33 @@ nie z `MountableBridgeComponentSO`.
 | Bolt & Nut Set | 1 Iron Nugget | 2 | 750 | 550 |
 | Connector Plate Set | 1 Iron Nugget | 2 | 850 | 700 |
 | Foundation Anchor Kit | 1 Iron Nugget | 2 | 900 | 800 |
+| Cement Bag | 2 Limestone Stone + 2 Clay Lump | 1 | 700 | 450 |
 
 Progi spalania wynoszą odpowiednio `900`, `950`, `1000` i `1050`, a wymagany
 progress spalania `900`, `950`, `1000` i `1100`. Wraz z trudniejszym produktem
 rośnie wymagana temperatura, a margines do przegrzania maleje.
+
+`Cement Bag` używa temperatury spalania `900` i wymaganego progressu spalania
+`900`. Limestone Vein wymaga trzech trafień kilofem, Clay Deposit trzech trafień
+łopatą; oba złoża tworzą po jednym przenośnym składniku i są odnawiane przez
+`ResourcePopulationZone`.
+
+## Concrete Mixer
+
+`ConcreteMixerController` jest statycznym, sieciowym odbiornikiem substancji i
+niesionego cementu. Stan partii (`Empty`, `Loading`, `Mixing`, `ConcreteReady`,
+`RuinedMix`), tryb bębna, skład, progres korby i operator są autorytatywne po
+stronie serwera. Late join odtwarza cały snapshot z `NetworkVariable`.
+
+Profil tutorialowy wymaga `6 Water + 6 Gravel + 1 Cement Bag`, sześciu obrotów
+i ma pojemność `15`. Progres jest ograniczony przez zapełnienie bębna: poniżej
+`6/15` nie rośnie, a każdy pełny ładunek `3` zwiększa limit o `20%`. Błędny,
+pełny wsad może dojść do `100%` i zakończyć się jako `RuinedMix`. Załadowanie
+może trwać podczas pracy korby. Osiągnięcie aktualnego limitu nie blokuje
+kręcenia korbą ani obrotu bębna; nadmiarowe obroty nie zwiększają progresu i
+nie są odkładane do zaliczenia po dodaniu kolejnych składników. Dźwignia
+`Mixing/Pouring` opróżnia całość po krótkiej animacji; V1 nie tworzy jeszcze
+transportowalnego betonu.
 
 Paliwo pozostaje niezależne od składników receptury. `FurnaceStorage` zużywa
 wyłącznie zasoby z `BaseResourceSO.furnaceFuelAmount > 0`, więc Iron Nugget ani
@@ -195,6 +218,14 @@ produkcji.
 7. Upewnij się, że prefab wyjścia jest przypisany w SO i zarejestrowany.
 8. Dla Carpenter Table ustaw osiągalne Width/Length.
 9. Przetestuj hosta i klienta, w tym brak podwójnego spawnu.
+
+## Wyjście betoniarki
+
+`ConcreteMixerController` przekazuje `ConcreteReady` przez
+`IConcreteBatchReceiver` wyłącznie do pustej taczki zadokowanej w
+`MixerLoading`. Jedna partia dodaje `80 kg`. Zasoby w skrzyni blokują załadunek
+betonu. Jeśli nie ma odbiornika, wsad jest błędny albo taczka jest zajęta,
+dźwignia zachowuje dotychczasowy flow rozlania i resetu bębna.
 
 ## Ograniczenia
 

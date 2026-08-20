@@ -46,9 +46,13 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private FlexibleSaplingController activeFlexibleSapling;
     private FlexibleSaplingGripSide activeFlexibleSaplingSide;
     private PlayerFlexibleSaplingUI flexibleSaplingUI;
+    private PlayerGirderFasteningUI girderFasteningUI;
+    private PlayerWheelbarrowController wheelbarrowController;
     private PortableSubstanceContainer activeBucketHold;
     private MonoBehaviour bucketHoldTarget;
     private float bucketHoldStartedAt;
+    [SerializeField, Min(0f)] private float bucketTargetLossGraceDuration = 0.2f;
+    private float bucketTargetLostAt = -1f;
 
     public bool IsSharedCarryMovementActive => sharedCarryMovementActive && _pickedUpGameObject != null;
     public bool IsPhysicalPointGripActive => IsSharedCarryMovementActive && sharedCarryPhysicsBody != null
@@ -93,9 +97,15 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         _playerInputNew.OnActionAltCanceled += HandleActionAltCanceled;
         _playerHealth = GetComponent<PlayerHealth>();
         flexibleSaplingUI = GetComponent<PlayerFlexibleSaplingUI>();
+        wheelbarrowController = GetComponent<PlayerWheelbarrowController>();
         if (flexibleSaplingUI == null)
         {
             flexibleSaplingUI = gameObject.AddComponent<PlayerFlexibleSaplingUI>();
+        }
+        girderFasteningUI = GetComponent<PlayerGirderFasteningUI>();
+        if (girderFasteningUI == null)
+        {
+            girderFasteningUI = gameObject.AddComponent<PlayerGirderFasteningUI>();
         }
         EnsureCarryBodyAnchor();
         EnsureCarriedPlayerAnchor();
@@ -154,6 +164,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         activeBucketHold = container;
         bucketHoldTarget = target;
         bucketHoldStartedAt = Time.unscaledTime;
+        bucketTargetLostAt = -1f;
         if (container.ActionHoldDuration <= 0f)
         {
             CompleteBucketActionHold();
@@ -167,12 +178,28 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             return;
         }
 
-        if (_pickedUpGameObject != activeBucketHold.gameObject || _currentTarget != bucketHoldTarget ||
+        if (_pickedUpGameObject != activeBucketHold.gameObject ||
             (_playerHealth != null && _playerHealth.IsDowned))
         {
             CancelBucketActionHold();
             return;
         }
+
+        if (_currentTarget != bucketHoldTarget)
+        {
+            if (bucketTargetLostAt < 0f)
+            {
+                bucketTargetLostAt = Time.unscaledTime;
+            }
+
+            if (Time.unscaledTime - bucketTargetLostAt > bucketTargetLossGraceDuration)
+            {
+                CancelBucketActionHold();
+            }
+            return;
+        }
+
+        bucketTargetLostAt = -1f;
 
         if (Time.unscaledTime - bucketHoldStartedAt >= activeBucketHold.ActionHoldDuration)
         {
@@ -199,10 +226,17 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         activeBucketHold = null;
         bucketHoldTarget = null;
         bucketHoldStartedAt = 0f;
+        bucketTargetLostAt = -1f;
     }
 
     private void HandleInteract(object sender, EventArgs e)
     {
+        if (wheelbarrowController != null && wheelbarrowController.TryHandleInteractPressed())
+        {
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
         RopeToolController ropeTool = GetComponent<RopeToolController>();
         if (ropeTool != null && ropeTool.TryHandleInteractPressed())
         {
@@ -241,6 +275,16 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         if (_pickedUpGameObject == target.gameObject)
         {
             TryDropHeldObject();
+            return;
+        }
+
+        ICarriedResourceSink carriedResourceSink = target as ICarriedResourceSink;
+        carriedResourceSink ??= target.GetComponent<ICarriedResourceSink>() ?? target.GetComponentInParent<ICarriedResourceSink>();
+        if (carriedResourceSink != null && _pickedUpGameObject != null &&
+            _pickedUpGameObject.TryGetComponent(out BaseResourceNew carriedResource) &&
+            carriedResourceSink.TryDepositCarriedResource(this, carriedResource))
+        {
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
             return;
         }
 
@@ -838,11 +882,6 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void SetCurrentTarget(MonoBehaviour target)
     {
-        if (activeBucketHold != null && target != bucketHoldTarget)
-        {
-            CancelBucketActionHold();
-        }
-
         _currentInteractable?.LookedAway(transform);
         _currentTarget = target;
         _currentInteractable = target as IInteractableNew;

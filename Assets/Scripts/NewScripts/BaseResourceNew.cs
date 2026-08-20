@@ -30,6 +30,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [SerializeField] private float resourceDurability;
     private readonly NetworkVariable<float> resourceDurabilityNetwork = new NetworkVariable<float>();
     private readonly NetworkVariable<ulong> occupiedAttachPointMaskNetwork = new NetworkVariable<ulong>();
+    private readonly NetworkVariable<bool> securedForTransportNetwork = new NetworkVariable<bool>();
     public EventHandler EquippableItemNeeded;
     [SerializeField] private bool isPickedUp = false;
     [SerializeField] private LayerMask sharedCarryGroundLayerMask = Physics.DefaultRaycastLayers;
@@ -39,6 +40,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [SerializeField] private float sharedCarryGroundVerticalFollowSpeed = 12f;
     [SerializeField] private float sharedCarryMaxVerticalPlacementDelta = 0.75f;
     public bool IsPickedUp => isPickedUp;
+    public bool IsSecuredForTransport => IsNetworkSessionActive() ? securedForTransportNetwork.Value : securedForTransportLocal;
     public bool IsActivelyCarried => isPickedUp;
     public bool CanBeCarried => baseResourceSO != null && baseResourceSO.canBeCarried;
     public bool CanBeDestroyed => baseResourceSO != null
@@ -57,6 +59,8 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     private Rigidbody _rigidbody;
     private SharedCarryPhysicsBody _sharedCarryPhysicsBody;
     private SharedCarryCollisionController _sharedCarryCollisionController;
+    private bool securedForTransportLocal;
+    private Collider[] cachedTransportColliders;
     private readonly List<ulong> holderClientIds = new List<ulong>();
     private readonly Dictionary<ulong, int> holderAttachPointIndices = new Dictionary<ulong, int>();
     private readonly Dictionary<ulong, Vector3> holderAttachLocalPoints = new Dictionary<ulong, Vector3>();
@@ -98,7 +102,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     public void PickedUp(Transform parent)
     {
-        if (!CanBeCarried)
+        if (!CanBeCarried || IsSecuredForTransport)
         {
             return;
         }
@@ -163,6 +167,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         _rigidbody = GetComponent<Rigidbody>();
         _sharedCarryPhysicsBody = GetComponent<SharedCarryPhysicsBody>();
         _sharedCarryCollisionController = GetComponent<SharedCarryCollisionController>();
+        cachedTransportColliders = GetComponentsInChildren<Collider>(true);
         if (_sharedCarryCollisionController == null)
         {
             _sharedCarryCollisionController = gameObject.AddComponent<SharedCarryCollisionController>();
@@ -186,6 +191,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     public override void OnNetworkSpawn()
     {
         resourceDurabilityNetwork.OnValueChanged += ResourceDurabilityNetwork_OnValueChanged;
+        securedForTransportNetwork.OnValueChanged += SecuredForTransportNetwork_OnValueChanged;
         if (IsServer)
         {
             resourceDurabilityNetwork.Value = GetMaxResourceDurability();
@@ -194,11 +200,13 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
         resourceDurability = resourceDurabilityNetwork.Value;
         ApplyCarryabilityPhysicsState();
+        ApplySecuredTransportState(IsSecuredForTransport);
     }
 
     public override void OnNetworkDespawn()
     {
         resourceDurabilityNetwork.OnValueChanged -= ResourceDurabilityNetwork_OnValueChanged;
+        securedForTransportNetwork.OnValueChanged -= SecuredForTransportNetwork_OnValueChanged;
     }
 
     // Update is called once per frame
@@ -386,6 +394,12 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     {
         if (_rigidbody == null)
         {
+            return;
+        }
+
+        if (IsSecuredForTransport)
+        {
+            ApplySecuredTransportState(true);
             return;
         }
 
@@ -961,6 +975,81 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         foreach (ulong actorId in previousNpcHolderActorIds)
         {
             ClearNpcSharedCarryHolder(actorId, true);
+        }
+    }
+
+    public bool TrySecureForTransport()
+    {
+        if (IsNetworkSessionActive() && !IsServer || !CanBeCarried || GetMinAmountOfPlayersNeeded() > 1)
+        {
+            return false;
+        }
+
+        ForceReleaseCurrentHolder();
+        ForceReleaseExternalCarryActor();
+        SetPickedUpState(false);
+        SetSecuredForTransport(true);
+        return true;
+    }
+
+    public void ReleaseFromTransport(Vector3 worldPosition, Quaternion worldRotation)
+    {
+        if (IsNetworkSessionActive() && !IsServer)
+        {
+            return;
+        }
+
+        transform.SetPositionAndRotation(worldPosition, worldRotation);
+        SetSecuredForTransport(false);
+        SetPickedUpState(false);
+    }
+
+    public bool TryGiveFromTransportTo(PlayerInteractionNew player)
+    {
+        if (player == null || IsNetworkSessionActive() && !IsServer)
+        {
+            return false;
+        }
+
+        SetSecuredForTransport(false);
+        PickedUp(player.transform);
+        return IsPickedUp;
+    }
+
+    private void SetSecuredForTransport(bool secured)
+    {
+        securedForTransportLocal = secured;
+        if (IsNetworkSessionActive() && IsServer)
+        {
+            securedForTransportNetwork.Value = secured;
+        }
+        ApplySecuredTransportState(secured);
+    }
+
+    private void SecuredForTransportNetwork_OnValueChanged(bool previous, bool current)
+    {
+        securedForTransportLocal = current;
+        ApplySecuredTransportState(current);
+    }
+
+    private void ApplySecuredTransportState(bool secured)
+    {
+        if (_rigidbody != null)
+        {
+            bool canSimulateWorldPhysics = CanBeCarried && !secured && !isPickedUp;
+            _rigidbody.isKinematic = !canSimulateWorldPhysics;
+            _rigidbody.useGravity = canSimulateWorldPhysics;
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.angularVelocity = Vector3.zero;
+        }
+
+        cachedTransportColliders ??= GetComponentsInChildren<Collider>(true);
+        foreach (Collider itemCollider in cachedTransportColliders)
+        {
+            if (itemCollider != null)
+            {
+                itemCollider.enabled = !secured;
+            }
         }
     }
 
@@ -2004,6 +2093,11 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         }
 
         if (isPickedUp && AllowsMultipleCarriers())
+        {
+            return;
+        }
+
+        if (!CanBeCarried)
         {
             return;
         }

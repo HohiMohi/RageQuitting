@@ -556,3 +556,20 @@ Przy tworzeniu nowego akwenu nalezy przygotowac trigger `WaterBody`, osobny clea
 | `PortableSubstanceContainer` | `loosePilePrefab` | Sieciowy prefab tworzony przy wysypaniu |
 | `LooseSubstancePile` | `initialUnits` | Startowa liczba porcji dla instancji scenowej; runtime dump ją nadpisuje |
 | `BucketRespawnPoint` | `bucketIndex` | Stabilna kolejność wyboru punktów powrotu |
+
+# Przygotowanie betonu
+
+| Komponent / asset | Pole | Znaczenie |
+|---|---|---|
+| `ContainerSubstanceSO` | `substanceKind` | `Soil`, `Water`, `Gravel` albo `Concrete` |
+| `SubstanceExtractionZone` | `sourceId` | Stabilny, zgodny na wszystkich peerach identyfikator niewyczerpywalnego źródła |
+| `ConcreteMixerProfileSO` | `drumCapacity` | Pojemność bębna; tutorial: `15` |
+| `ConcreteMixerProfileSO` | `requiredWaterUnits/requiredGravelUnits` | Po `6` porcji |
+| `ConcreteMixerProfileSO` | `requiredCementBags` | Jeden worek zajmujący `3` jednostki objętości |
+| `ConcreteMixerProfileSO` | `requiredRotations` | Pełne obroty korby; tutorial: `6` |
+| `ConcreteMixerProfileSO` | `minimumLoadedVolumeToStartMixing` | Minimalna objętość przed naliczaniem progresu; tutorial: `6` |
+| `ConcreteMixerProfileSO` | `maximumCrankAngularSpeed` | Serwerowy limit wejścia; tutorial: `240 deg/s` |
+| `ConcreteMixerProfileSO` | `crankResponseTime` | Opór wskaźnika UI; tutorial: `0.12 s` |
+| `ConcreteMixerController` | `water/gravel/cement` | Referencje katalogowe receptury |
+| `ConcreteMixerController` | `drumPivot/drumSpinVisual` | Przechył trybu i wizualny obrót mieszania |
+| `ConcreteMixerModeLever` | `mixing/pouringLocalEuler` | Pozycje dźwigni dla obu trybów |

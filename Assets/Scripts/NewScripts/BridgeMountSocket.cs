@@ -240,6 +240,24 @@ public sealed class BridgeMountSocket : MonoBehaviour
         state.mountAlignmentStartedAt = settleStartedAt;
     }
 
+#if UNITY_EDITOR
+    public void RefreshInitialStatePreview(bool completed)
+    {
+        if (Application.isPlaying)
+        {
+            return;
+        }
+
+        currentAlignmentState = completed
+            ? BridgeMountAlignmentState.Complete
+            : BridgeMountAlignmentState.Inactive;
+        synchronizedCandidateId = NoCandidateNetworkObjectId;
+        settleStartedAt = -1d;
+        mountRequested = completed;
+        SetSocketVolumesActive(!completed);
+    }
+#endif
+
     public bool IsAuthoritativeCandidateReady(MountableBridgeComponent candidate)
     {
         return IsAuthoritative()

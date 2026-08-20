@@ -28,6 +28,8 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     private int removedSoilUnits;
     private FoundationDiggingSubstage diggingSubstage;
     private float soilHardeningDeadline;
+    private int concreteLoadsPoured;
+    private float concreteDryingDeadline;
     private bool initialized;
 
     public virtual BridgeConstructionStage CurrentStage => currentStage;
@@ -49,6 +51,12 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
                                          soilHardeningDeadline > 0f;
     public float RemainingSoilHardeningTime => IsSoilHardeningActive
         ? Mathf.Max(0f, soilHardeningDeadline - GetSynchronizedTime())
+        : 0f;
+    public int ConcreteLoadsPoured => concreteLoadsPoured;
+    public int RequiredConcreteLoads => workflow != null ? workflow.RequiredConcreteLoads : 1;
+    public bool IsConcreteDrying => currentStage == BridgeConstructionStage.ConcreteDrying && concreteDryingDeadline > 0f;
+    public float RemainingConcreteDryingTime => IsConcreteDrying
+        ? Mathf.Max(0f, concreteDryingDeadline - GetSynchronizedTime())
         : 0f;
 
     protected virtual void Awake()
@@ -86,6 +94,12 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     private void Update()
     {
+        if (IsConcreteDrying)
+        {
+            excavationVolume?.ApplyConcreteState(currentStage, concreteLoadsPoured, RequiredConcreteLoads,
+                RemainingConcreteDryingTime, workflow != null ? workflow.ConcreteDryingDuration : 30f);
+        }
+
         if (!HasAuthority())
         {
             return;
@@ -100,6 +114,11 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         if (IsSoilHardeningActive && RemainingSoilHardeningTime <= 0f)
         {
             HardenLoosenedSoil();
+        }
+
+        if (IsConcreteDrying && RemainingConcreteDryingTime <= 0f)
+        {
+            CompleteConcreteDrying();
         }
     }
 
@@ -129,6 +148,15 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         }
 
         return false;
+    }
+
+    public virtual bool TryApplyToolWork(
+        EquippableItemType toolType,
+        float workPower,
+        int workPointId,
+        ulong actorClientId)
+    {
+        return TryApplyToolWork(toolType, workPower, workPointId);
     }
 
     public virtual bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
@@ -183,6 +211,14 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
             case BridgeConstructionStage.ReadyForMount:
                 bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Foundation");
                 break;
+            case BridgeConstructionStage.ConcretePouring:
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                    $"Pour concrete - {concreteLoadsPoured} / {RequiredConcreteLoads}"));
+                break;
+            case BridgeConstructionStage.ConcreteDrying:
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                    $"Concrete drying - {RemainingConcreteDryingTime:F1} s"));
+                break;
             case BridgeConstructionStage.Hammering:
                 prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
                     $"Secure foundation - {Mathf.CeilToInt(currentWorkProgress)} / {Mathf.CeilToInt(RequiredWorkProgress)}"));
@@ -197,10 +233,16 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         diggingCycleIndex = Mathf.Max(0, state.constructionValueA);
         diggingSubstage = (FoundationDiggingSubstage)Mathf.Clamp(state.constructionValueB, 0, 1);
         removedSoilUnits = Mathf.Max(0, Mathf.RoundToInt(state.constructionAux0));
-        soilHardeningDeadline = Mathf.Max(0f, state.constructionAux1);
+        concreteLoadsPoured = Mathf.Max(0, Mathf.RoundToInt(state.constructionAnchor0));
+        soilHardeningDeadline = currentStage == BridgeConstructionStage.Digging ? Mathf.Max(0f, state.constructionAux1) : 0f;
+        concreteDryingDeadline = currentStage == BridgeConstructionStage.ConcreteDrying ? Mathf.Max(0f, state.constructionAux1) : 0f;
         if (currentStage != BridgeConstructionStage.Digging || diggingSubstage != FoundationDiggingSubstage.SoilRemoval)
         {
             ClearSoilHardeningDeadline();
+        }
+        if (currentStage == BridgeConstructionStage.Complete)
+        {
+            SetClearingObstaclesActive(false);
         }
         ApplyVisualState();
         bridgeComponent.RefreshVisualAndColliderState();
@@ -213,7 +255,10 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         state.constructionValueA = diggingCycleIndex;
         state.constructionValueB = (int)diggingSubstage;
         state.constructionAux0 = removedSoilUnits;
-        state.constructionAux1 = IsSoilHardeningActive ? soilHardeningDeadline : 0f;
+        state.constructionAnchor0 = concreteLoadsPoured;
+        state.constructionAux1 = IsSoilHardeningActive
+            ? soilHardeningDeadline
+            : IsConcreteDrying ? concreteDryingDeadline : 0f;
     }
 
     public virtual void NotifyMounted()
@@ -232,6 +277,24 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         currentStage = BridgeConstructionStage.Complete;
         currentWorkProgress = RequiredWorkProgress;
         ClearSoilHardeningDeadline();
+        ApplyVisualState();
+        bridgeComponent?.RefreshVisualAndColliderState();
+    }
+
+    public virtual void ApplyInitialCompletedState()
+    {
+        Initialize();
+        currentStage = BridgeConstructionStage.Complete;
+        currentWorkProgress = RequiredWorkProgress;
+        diggingCycleIndex = workflow != null ? workflow.DiggingCycleCount : 0;
+        removedSoilUnits = workflow != null
+            ? workflow.DiggingCycleCount * workflow.SoilUnitsPerCycle
+            : 0;
+        concreteLoadsPoured = RequiredConcreteLoads;
+        diggingSubstage = FoundationDiggingSubstage.SoilRemoval;
+        ClearSoilHardeningDeadline();
+        concreteDryingDeadline = 0f;
+        SetClearingObstaclesActive(false);
         ApplyVisualState();
         bridgeComponent?.RefreshVisualAndColliderState();
     }
@@ -306,6 +369,31 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         return count;
     }
 
+    private void SetClearingObstaclesActive(bool active)
+    {
+        if (clearingObstacles != null)
+        {
+            foreach (BaseResourceNew obstacle in clearingObstacles)
+            {
+                if (obstacle != null)
+                {
+                    obstacle.gameObject.SetActive(active);
+                }
+            }
+        }
+
+        if (clearingSaplings != null)
+        {
+            foreach (FlexibleSaplingController sapling in clearingSaplings)
+            {
+                if (sapling != null)
+                {
+                    sapling.gameObject.SetActive(active);
+                }
+            }
+        }
+    }
+
     private bool HasAuthority()
     {
         return NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
@@ -316,7 +404,9 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         if (constructionInteractionCollider != null)
         {
             constructionInteractionCollider.enabled = currentStage == BridgeConstructionStage.Clearing ||
-                                                     currentStage == BridgeConstructionStage.Digging;
+                                                      currentStage == BridgeConstructionStage.Digging ||
+                                                      currentStage == BridgeConstructionStage.ConcretePouring ||
+                                                      currentStage == BridgeConstructionStage.ConcreteDrying;
         }
         if (markedGroundVisual != null)
         {
@@ -329,10 +419,14 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         }
 
         excavationVolume?.ApplyDiggingState(currentStage, diggingSubstage, currentWorkProgress, removedSoilUnits, workflow);
+        excavationVolume?.ApplyConcreteState(currentStage, concreteLoadsPoured, RequiredConcreteLoads, RemainingConcreteDryingTime,
+            workflow != null ? workflow.ConcreteDryingDuration : 30f);
 
         if (completedDigVisual != null)
         {
-            completedDigVisual.SetActive(currentStage == BridgeConstructionStage.ReadyForMount);
+            completedDigVisual.SetActive(currentStage == BridgeConstructionStage.ConcretePouring ||
+                                         currentStage == BridgeConstructionStage.ConcreteDrying ||
+                                         currentStage == BridgeConstructionStage.ReadyForMount);
         }
     }
 
@@ -353,6 +447,32 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         clearingAreaSize.y = Mathf.Max(0.1f, clearingAreaSize.y);
         ApplyClearingAreaSize();
     }
+
+#if UNITY_EDITOR
+    public void RefreshInitialStatePreview(bool completed)
+    {
+        if (Application.isPlaying)
+        {
+            return;
+        }
+
+        Initialize();
+        if (completed)
+        {
+            currentStage = BridgeConstructionStage.Complete;
+            currentWorkProgress = RequiredWorkProgress;
+            SetClearingObstaclesActive(false);
+        }
+        else
+        {
+            SetClearingObstaclesActive(true);
+            currentStage = GetInitialStage();
+            currentWorkProgress = 0f;
+        }
+
+        ApplyVisualState();
+    }
+#endif
 
     public bool IsConstructionInteractionCollider(Collider candidate)
     {
@@ -407,6 +527,40 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         soilHardeningDeadline = 0f;
     }
 
+    public bool TryAcceptConcreteLoad(int loads = 1)
+    {
+        if (!HasAuthority() || workflow == null || currentStage != BridgeConstructionStage.ConcretePouring || loads <= 0)
+        {
+            return false;
+        }
+
+        concreteLoadsPoured = Mathf.Clamp(concreteLoadsPoured + loads, 0, workflow.RequiredConcreteLoads);
+        if (concreteLoadsPoured >= workflow.RequiredConcreteLoads)
+        {
+            currentStage = BridgeConstructionStage.ConcreteDrying;
+            concreteDryingDeadline = GetSynchronizedTime() + workflow.ConcreteDryingDuration;
+        }
+
+        ApplyVisualState();
+        bridgeComponent.RefreshVisualAndColliderState();
+        GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
+        return true;
+    }
+
+    private void CompleteConcreteDrying()
+    {
+        if (!IsConcreteDrying)
+        {
+            return;
+        }
+
+        concreteDryingDeadline = 0f;
+        currentStage = BridgeConstructionStage.ReadyForMount;
+        ApplyVisualState();
+        bridgeComponent.RefreshVisualAndColliderState();
+        GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
+    }
+
     private static float GetSynchronizedTime()
     {
         NetworkManager networkManager = NetworkManager.Singleton;
@@ -437,7 +591,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
             currentWorkProgress = 0f;
             if (diggingCycleIndex >= workflow.DiggingCycleCount)
             {
-                currentStage = BridgeConstructionStage.ReadyForMount;
+                currentStage = BridgeConstructionStage.ConcretePouring;
             }
             else
             {
@@ -466,7 +620,8 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     public int ReturnSoil(int units)
     {
         if (!HasAuthority() || units <= 0 || workflow == null || currentStage == BridgeConstructionStage.Hammering ||
-            currentStage == BridgeConstructionStage.Complete || removedSoilUnits <= 0)
+            currentStage == BridgeConstructionStage.Complete || currentStage == BridgeConstructionStage.ConcreteDrying ||
+            concreteLoadsPoured > 0 || removedSoilUnits <= 0)
         {
             return 0;
         }
@@ -475,7 +630,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         removedSoilUnits = Mathf.Clamp(removedSoilUnits, 0, totalSoilUnits);
         int accepted = Mathf.Min(units, removedSoilUnits);
         removedSoilUnits = Mathf.Clamp(removedSoilUnits - accepted, 0, totalSoilUnits);
-        if (currentStage == BridgeConstructionStage.ReadyForMount)
+        if (currentStage == BridgeConstructionStage.ReadyForMount || currentStage == BridgeConstructionStage.ConcretePouring)
         {
             currentStage = BridgeConstructionStage.Digging;
             diggingCycleIndex = workflow.DiggingCycleCount - 1;

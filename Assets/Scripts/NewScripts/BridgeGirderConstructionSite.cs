@@ -5,6 +5,8 @@ using UnityEngine;
 public class BridgeGirderConstructionSite : BridgeConstructionSite
 {
     private const int FastenerCount = 4;
+    private const int FastenerPairCount = 2;
+    private const int NoActiveFastener = -1;
 
     [Header("Dependencies")]
     [SerializeField] private BridgeComponent[] prerequisiteSupports;
@@ -22,11 +24,30 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
     private int startLevelStep;
     private int endLevelStep;
     private readonly float[] fastenerProgress = new float[FastenerCount];
+    private int activeFirstFastenerIndex = NoActiveFastener;
+    private double fastenerPairDeadline = -1d;
     private MaterialPropertyBlock levelIndicatorPropertyBlock;
 
     public int StartLevelStep => startLevelStep;
     public int EndLevelStep => endLevelStep;
     public IReadOnlyList<float> FastenerProgress => fastenerProgress;
+    public float FirstPairProgress => fastenerProgress[0];
+    public float SecondPairProgress => fastenerProgress[1];
+    public int ActiveFastenerPairIndex => GetPairIndex(activeFirstFastenerIndex);
+    public BridgeGirderWorkPointId ActiveFirstFastener => activeFirstFastenerIndex >= 0
+        ? (BridgeGirderWorkPointId)((int)BridgeGirderWorkPointId.Fastener0 + activeFirstFastenerIndex)
+        : (BridgeGirderWorkPointId)(-1);
+    public BridgeGirderWorkPointId RequiredPairedFastener => activeFirstFastenerIndex >= 0
+        ? (BridgeGirderWorkPointId)((int)BridgeGirderWorkPointId.Fastener0 + GetPairedFastenerIndex(activeFirstFastenerIndex))
+        : (BridgeGirderWorkPointId)(-1);
+    public bool IsFastenerPairWindowActive => currentStage == BridgeConstructionStage.Fastening &&
+                                               activeFirstFastenerIndex >= 0 &&
+                                               RemainingFastenerPairTime > 0f;
+    public float RemainingFastenerPairTime => activeFirstFastenerIndex >= 0 && fastenerPairDeadline > 0d
+        ? Mathf.Max(0f, (float)(fastenerPairDeadline - GetSynchronizedTime()))
+        : 0f;
+    public double FastenerPairDeadline => fastenerPairDeadline;
+    public float FastenerPairWindowDuration => GetWorkflow() != null ? GetWorkflow().FastenerPairWindowDuration : 15f;
     public override bool CanAcceptMountedComponent => currentStage == BridgeConstructionStage.ReadyForMount;
 
     protected override void Awake()
@@ -41,6 +62,14 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
 
     private void Update()
     {
+        if (currentStage == BridgeConstructionStage.Fastening && HasAuthority() &&
+            activeFirstFastenerIndex >= 0 && RemainingFastenerPairTime <= 0f)
+        {
+            ClearFastenerPairWindow();
+            ApplyVisualState();
+            GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
+        }
+
         if (currentStage != BridgeConstructionStage.WaitingForSupports || !HasAuthority() || !ArePrerequisitesComplete())
         {
             return;
@@ -125,27 +154,82 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
             if (startLevelStep == endLevelStep)
             {
                 currentStage = BridgeConstructionStage.Fastening;
+                ClearFastenerPairWindow();
             }
 
             ApplyVisualState();
             return true;
         }
 
-        if (currentStage != BridgeConstructionStage.Fastening || toolType != settings.FasteningTool)
+        return TryApplyFastenerPairWork(toolType, workPower, workPointId, ulong.MaxValue);
+    }
+
+    public override bool TryApplyToolWork(
+        EquippableItemType toolType,
+        float workPower,
+        int workPointId,
+        ulong actorClientId)
+    {
+        if (currentStage != BridgeConstructionStage.Fastening)
+        {
+            return TryApplyToolWork(toolType, workPower, workPointId);
+        }
+
+        return TryApplyFastenerPairWork(toolType, workPower, workPointId, actorClientId);
+    }
+
+    private bool TryApplyFastenerPairWork(
+        EquippableItemType toolType,
+        float workPower,
+        int workPointId,
+        ulong actorClientId)
+    {
+        BridgeGirderConstructionWorkflowSO settings = GetWorkflow();
+        if (settings == null || currentStage != BridgeConstructionStage.Fastening ||
+            toolType != settings.FasteningTool || workPower <= 0f)
         {
             return false;
         }
 
         int fastenerIndex = workPointId - (int)BridgeGirderWorkPointId.Fastener0;
-        if (fastenerIndex < 0 || fastenerIndex >= FastenerCount || fastenerProgress[fastenerIndex] >= settings.FastenerProgressNeeded)
+        int pairIndex = GetPairIndex(fastenerIndex);
+        if (pairIndex < 0 || IsPairComplete(pairIndex, settings.FastenerProgressNeeded))
         {
             return false;
         }
 
-        fastenerProgress[fastenerIndex] = Mathf.Min(
-            settings.FastenerProgressNeeded,
-            fastenerProgress[fastenerIndex] + workPower);
-        if (AreAllFastenersComplete(settings.FastenerProgressNeeded))
+        if (activeFirstFastenerIndex >= 0 && RemainingFastenerPairTime <= 0f)
+        {
+            ClearFastenerPairWindow();
+        }
+
+        if (activeFirstFastenerIndex < 0)
+        {
+            activeFirstFastenerIndex = fastenerIndex;
+            fastenerPairDeadline = GetSynchronizedTime() + settings.FastenerPairWindowDuration;
+            GameplayManager.Instance?.NotifyGirderFasteningWindowStarted(
+                actorClientId,
+                bridgeComponent.ComponentID,
+                (int)RequiredPairedFastener,
+                fastenerPairDeadline);
+            ApplyVisualState();
+            return true;
+        }
+
+        if (fastenerIndex == activeFirstFastenerIndex || pairIndex != ActiveFastenerPairIndex)
+        {
+            return false;
+        }
+
+        if (fastenerIndex != GetPairedFastenerIndex(activeFirstFastenerIndex))
+        {
+            return false;
+        }
+
+        float pairProgress = Mathf.Min(settings.FastenerProgressNeeded, GetPairProgress(pairIndex) + workPower);
+        SetPairProgress(pairIndex, pairProgress);
+        ClearFastenerPairWindow();
+        if (AreAllFastenerPairsComplete(settings.FastenerProgressNeeded))
         {
             currentStage = BridgeConstructionStage.Complete;
             bridgeComponent.CompleteConstructionFromSite();
@@ -169,10 +253,15 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         }
 
         int index = workPointId - (int)BridgeGirderWorkPointId.Fastener0;
+        int pairIndex = GetPairIndex(index);
+        bool fastenerAvailable = pairIndex >= 0 && !IsPairComplete(pairIndex, settings.FastenerProgressNeeded);
+        if (IsFastenerPairWindowActive)
+        {
+            fastenerAvailable &= index == GetPairedFastenerIndex(activeFirstFastenerIndex);
+        }
         return currentStage == BridgeConstructionStage.Fastening &&
                toolType == settings.FasteningTool &&
-               index >= 0 && index < FastenerCount &&
-               fastenerProgress[index] < settings.FastenerProgressNeeded;
+               fastenerAvailable;
     }
 
     public void GetWorkPointPrompts(BridgeGirderWorkPointId pointId, List<InteractionPrompt> prompts)
@@ -198,8 +287,30 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
             int index = (int)pointId - (int)BridgeGirderWorkPointId.Fastener0;
             if (index >= 0 && index < FastenerCount)
             {
+                int pairIndex = GetPairIndex(index);
+                string pairName = GetPairDisplayName(pairIndex);
+                if (IsFastenerPairWindowActive)
+                {
+                    if (index == GetPairedFastenerIndex(activeFirstFastenerIndex))
+                    {
+                        prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
+                            $"Strike paired fastener - {RemainingFastenerPairTime:F1} s"));
+                    }
+                    else if (index == activeFirstFastenerIndex)
+                    {
+                        prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                            "Strike the diagonal fastener"));
+                    }
+                    else
+                    {
+                        prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                            "Finish the active diagonal pair first"));
+                    }
+                    return;
+                }
+
                 prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
-                    $"Secure girder {index + 1} - {Mathf.CeilToInt(fastenerProgress[index])} / {Mathf.CeilToInt(settings.FastenerProgressNeeded)}"));
+                    $"Secure diagonal pair {pairName} - {Mathf.CeilToInt(GetPairProgress(pairIndex))} / {Mathf.CeilToInt(settings.FastenerProgressNeeded)}"));
             }
         }
     }
@@ -225,6 +336,8 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         state.constructionAnchor1 = fastenerProgress[1];
         state.constructionAnchor2 = fastenerProgress[2];
         state.constructionAnchor3 = fastenerProgress[3];
+        state.constructionAux0 = activeFirstFastenerIndex + 1;
+        state.constructionAux1 = activeFirstFastenerIndex >= 0 ? (float)fastenerPairDeadline : 0f;
     }
 
     public override void ApplyNetworkState(BridgeComponentNetworkState state)
@@ -237,6 +350,13 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         fastenerProgress[1] = state.constructionAnchor1;
         fastenerProgress[2] = state.constructionAnchor2;
         fastenerProgress[3] = state.constructionAnchor3;
+        NormalizePairProgress();
+        activeFirstFastenerIndex = Mathf.Clamp(Mathf.RoundToInt(state.constructionAux0) - 1, -1, FastenerCount - 1);
+        fastenerPairDeadline = activeFirstFastenerIndex >= 0 ? state.constructionAux1 : -1d;
+        if (currentStage != BridgeConstructionStage.Fastening)
+        {
+            ClearFastenerPairWindow();
+        }
         ApplyVisualState();
         bridgeComponent.RefreshVisualAndColliderState();
     }
@@ -338,13 +458,81 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         return true;
     }
 
-    private bool AreAllFastenersComplete(float required)
+    private bool AreAllFastenerPairsComplete(float required)
     {
-        for (int i = 0; i < FastenerCount; i++)
+        for (int i = 0; i < FastenerPairCount; i++)
         {
-            if (fastenerProgress[i] < required) return false;
+            if (!IsPairComplete(i, required)) return false;
         }
         return true;
+    }
+
+    private float GetPairProgress(int pairIndex)
+    {
+        return pairIndex == 0 ? fastenerProgress[0] : pairIndex == 1 ? fastenerProgress[1] : 0f;
+    }
+
+    private void SetPairProgress(int pairIndex, float progress)
+    {
+        if (pairIndex == 0)
+        {
+            fastenerProgress[0] = progress;
+            fastenerProgress[3] = progress;
+        }
+        else if (pairIndex == 1)
+        {
+            fastenerProgress[1] = progress;
+            fastenerProgress[2] = progress;
+        }
+    }
+
+    private void NormalizePairProgress()
+    {
+        SetPairProgress(0, Mathf.Max(fastenerProgress[0], fastenerProgress[3]));
+        SetPairProgress(1, Mathf.Max(fastenerProgress[1], fastenerProgress[2]));
+    }
+
+    private bool IsPairComplete(int pairIndex, float required)
+    {
+        return pairIndex >= 0 && GetPairProgress(pairIndex) >= required;
+    }
+
+    private void ClearFastenerPairWindow()
+    {
+        activeFirstFastenerIndex = NoActiveFastener;
+        fastenerPairDeadline = -1d;
+    }
+
+    private static int GetPairIndex(int fastenerIndex)
+    {
+        if (fastenerIndex == 0 || fastenerIndex == 3) return 0;
+        if (fastenerIndex == 1 || fastenerIndex == 2) return 1;
+        return -1;
+    }
+
+    private static int GetPairedFastenerIndex(int fastenerIndex)
+    {
+        switch (fastenerIndex)
+        {
+            case 0: return 3;
+            case 1: return 2;
+            case 2: return 1;
+            case 3: return 0;
+            default: return -1;
+        }
+    }
+
+    private static string GetPairDisplayName(int pairIndex)
+    {
+        return pairIndex == 0 ? "A" : pairIndex == 1 ? "B" : "?";
+    }
+
+    private static double GetSynchronizedTime()
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        return networkManager != null && networkManager.IsListening
+            ? networkManager.ServerTime.Time
+            : Time.timeAsDouble;
     }
 
     private static void SetLocalHeight(Transform target, float height)

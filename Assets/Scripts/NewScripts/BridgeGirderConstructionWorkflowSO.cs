@@ -9,6 +9,7 @@ public class BridgeGirderConstructionWorkflowSO : ScriptableObject
     [SerializeField, Min(1)] private int initialLevelDifference = 2;
     [SerializeField, Min(0.01f)] private float levelStepHeight = 0.1f;
     [SerializeField, Min(0.01f)] private float fastenerProgressNeeded = 40f;
+    [SerializeField, Min(0.1f)] private float fastenerPairWindowDuration = 15f;
 
     public EquippableItemType LevelingTool => levelingTool;
     public EquippableItemType FasteningTool => fasteningTool;
@@ -16,4 +17,5 @@ public class BridgeGirderConstructionWorkflowSO : ScriptableObject
     public int InitialLevelDifference => Mathf.Clamp(initialLevelDifference, 1, MaximumLevelStep);
     public float LevelStepHeight => Mathf.Max(0.01f, levelStepHeight);
     public float FastenerProgressNeeded => Mathf.Max(0.01f, fastenerProgressNeeded);
+    public float FastenerPairWindowDuration => Mathf.Max(0.1f, fastenerPairWindowDuration);
 }
