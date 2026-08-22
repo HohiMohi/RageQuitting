@@ -196,7 +196,7 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                 {
                     ""name"": ""WASD"",
                     ""id"": ""aac8cb91-371b-4366-8b08-c8fcef5f1291"",
-                    ""path"": ""2DVector"",
+                    ""path"": ""2DVector(mode=1)"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",

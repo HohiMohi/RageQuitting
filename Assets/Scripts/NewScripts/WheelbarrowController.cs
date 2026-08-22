@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.AI;
 
 [RequireComponent(typeof(NetworkObject), typeof(Rigidbody))]
 public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
@@ -15,6 +16,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     [SerializeField] private Rigidbody physicsBody;
     [SerializeField] private Collider wheelContactCollider;
     [SerializeField] private WheelCollider drivenWheelCollider;
+    [SerializeField] private NavMeshObstacle navigationObstacle;
     [SerializeField] private Transform wheelVisual;
     [SerializeField, Min(0.01f)] private float wheelVisualRadius = 0.44f;
     [SerializeField] private Collider[] restingSupportColliders = Array.Empty<Collider>();
@@ -29,6 +31,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     [SerializeField] private Transform leftPourAnchor;
     [SerializeField] private Transform rightPourAnchor;
     [SerializeField] private Transform[] safeExitPoints = Array.Empty<Transform>();
+    [SerializeField] private Collider rightingInteractionCollider;
 
     private readonly NetworkVariable<byte> stateNetwork = new NetworkVariable<byte>((byte)WheelbarrowState.Free);
     private readonly NetworkVariable<ulong> driverNetwork = new NetworkVariable<ulong>(NoClient);
@@ -52,10 +55,46 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private int localConcreteLoads;
     private float throttleInput;
     private float steeringInput;
+    private float lastReceivedThrottleInput;
+    private float lastReceivedSteeringInput;
+    private float smoothedSteeringInput;
+    private float currentYawAcceleration;
+    private float targetYawRate;
+    private float residualLateralSpeed;
+    private float currentSteeringAngle;
+    private float corneringRolloverRisk;
+    private float corneringLateralAcceleration;
+    private float corneringLoadRatio;
+    private float corneringSpeedRatio;
+    private float corneringDemand;
+    private float lastPositiveCorneringDemand;
+    private float lastPositiveCorneringDemandTime = float.NegativeInfinity;
+    private bool corneringRolloverCommitted;
+    private float lastDrivenWheelContactTime = float.NegativeInfinity;
+    private string corneringLoadSource = "Empty";
+    private float effectiveRolloverReferenceSpeed;
+    private float targetCorneringRollAngle;
+    private float previousCorneringDirectionSign;
+    private bool drivenWheelGrounded;
+    private RaycastHit drivenWheelHit;
+    private Vector3 filteredGroundNormal = Vector3.up;
+    private Vector3 filteredWheelContactPoint;
+    private float wheelSuspensionError;
+    private float wheelSupportAcceleration;
+    private float driverSupportAcceleration;
+    private float longitudinalAcceleration;
+    private bool drivenContactInitialized;
     private float lastInputTime;
     private float tippingElapsed;
     private float rightingStartedAt = -1f;
     private ulong rightingClient = NoClient;
+    private bool rightingPlacementStarted;
+    private float rightingPlacementStartedAt;
+    private Vector3 rightingStartPosition;
+    private Quaternion rightingStartRotation = Quaternion.identity;
+    private Vector3 rightingTargetPosition;
+    private Quaternion rightingTargetRotation = Quaternion.identity;
+    private Vector3 tippedRestUp = Vector3.up;
     private WheelbarrowDockingStation activeDock;
     private Vector3 securedDockPosition;
     private Quaternion securedDockRotation = Quaternion.identity;
@@ -76,7 +115,9 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private float driverSupportTargetWorldY;
     private bool driverSupportTargetInitialized;
     private readonly RaycastHit[] driverSupportGroundHits = new RaycastHit[12];
+    private readonly RaycastHit[] wheelContactHits = new RaycastHit[12];
     private Collider[] physicalColliders = Array.Empty<Collider>();
+    private float navObstacleSettledTime;
 
     public WheelbarrowProfileSO Profile => profile;
     public Rigidbody PhysicsBody => physicsBody;
@@ -90,6 +131,24 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     public float Speed => physicsBody != null ? physicsBody.linearVelocity.magnitude : 0f;
     public bool IsDocked => State == WheelbarrowState.Docked || State == WheelbarrowState.Pouring;
     public bool IsDockSecured => IsDocked;
+    public float CorneringRolloverRisk => corneringRolloverRisk;
+    public float CorneringLoadRatio => corneringLoadRatio;
+    public float EffectiveRolloverReferenceSpeed => effectiveRolloverReferenceSpeed;
+    public float CorneringRolloverDemand => corneringDemand;
+    public float TimeSinceDrivenWheelContact => Time.time - lastDrivenWheelContactTime;
+    public string CorneringLoadSource => corneringLoadSource;
+    public bool IsBeingRighted => State == WheelbarrowState.Righting;
+    public float NormalizedRightingProgress
+    {
+        get
+        {
+            if (!IsBeingRighted) return 0f;
+            float hold = profile != null ? profile.RightingHoldDuration : 1.5f;
+            if (!rightingPlacementStarted) return Mathf.Clamp01((Time.time - rightingStartedAt) / Mathf.Max(0.01f, hold));
+            float placement = profile != null ? profile.RightingPlacementDuration : 0.4f;
+            return Mathf.Clamp01((Time.time - rightingPlacementStartedAt) / Mathf.Max(0.01f, placement));
+        }
+    }
     public bool CanReceiveConcreteBatch => IsDockSecured && !HasConcrete && !HasResourceCargo;
     private bool IsSessionActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
     private bool HasAuthority => !IsSessionActive || IsServer;
@@ -98,6 +157,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     {
         Instances.Add(this);
         physicsBody ??= GetComponent<Rigidbody>();
+        navigationObstacle ??= GetComponent<NavMeshObstacle>();
         if (wheelVisual != null)
         {
             wheelVisualPoseOffset = Quaternion.Inverse(transform.rotation) * wheelVisual.rotation;
@@ -109,6 +169,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             .ToArray();
         ConfigureBody();
         ConfigureWheelContactMode();
+        UpdateNavigationObstacle(true);
         if (spillVisual != null) spillVisual.SetActive(false);
     }
 
@@ -156,6 +217,35 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             Gizmos.color = new Color(1f, 0.2f, 0.1f, 0.9f);
             Gizmos.DrawSphere(physicsBody.centerOfMass, 0.06f);
         }
+        if (Application.isPlaying && profile != null && profile.EnableDiagnostics)
+        {
+            Gizmos.matrix = Matrix4x4.identity;
+            Vector3 origin = physicsBody != null ? physicsBody.worldCenterOfMass : transform.position;
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(origin, origin + transform.forward * targetYawRate);
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawLine(origin, origin + transform.right * residualLateralSpeed);
+            Gizmos.color = new Color(1f, 0.45f, 0.05f, 0.95f);
+            Gizmos.DrawLine(origin, origin + transform.right * corneringLateralAcceleration * 0.1f);
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(origin, origin + transform.up * corneringRolloverRisk);
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(origin, origin + transform.forward * corneringSpeedRatio);
+            Gizmos.color = Color.white;
+            Gizmos.DrawWireSphere(origin, 0.05f + corneringLoadRatio * 0.1f);
+            Vector3 rollDirection = Quaternion.AngleAxis(targetCorneringRollAngle, transform.forward) * transform.up;
+            Gizmos.DrawLine(origin, origin + rollDirection * 0.8f);
+            if (drivenWheelGrounded)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawSphere(filteredWheelContactPoint, 0.045f);
+                Gizmos.DrawLine(filteredWheelContactPoint,
+                    filteredWheelContactPoint + filteredGroundNormal * 0.75f);
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawLine(filteredWheelContactPoint,
+                    filteredWheelContactPoint + filteredGroundNormal * wheelSupportAcceleration * 0.05f);
+            }
+        }
         Gizmos.matrix = Matrix4x4.identity;
     }
 
@@ -188,6 +278,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
         ConfigureBody();
         ConfigureWheelContactMode();
+        UpdateNavigationObstacle(true);
         RefreshCargoReferences();
     }
 
@@ -225,6 +316,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         if (!HasAuthority || physicsBody == null)
         {
             ConfigureWheelContactMode();
+            UpdateNavigationObstacle();
             UpdateWheelVisual();
             return;
         }
@@ -239,9 +331,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
         else if (State == WheelbarrowState.Righting) SimulateRighting();
         else if (State == WheelbarrowState.Driven) SimulateDrive();
+        else if (State == WheelbarrowState.Tipped) ApplyTippedDamping();
         else if (State != WheelbarrowState.Docked && State != WheelbarrowState.Pouring) ApplyIdleBrake();
         UpdateWheelVisual();
         DetectTipping();
+        UpdateNavigationObstacle();
     }
 
     private void SimulateDrive()
@@ -252,7 +346,39 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             steeringInput = 0f;
         }
 
-        float forwardSpeed = Vector3.Dot(physicsBody.linearVelocity, transform.forward);
+        float unsupportedTilt = profile != null ? profile.StabilizationFadeEndAngle : 55f;
+        if (Vector3.Angle(transform.up, Vector3.up) >= unsupportedTilt)
+        {
+            bool keepsCommittingToTurn = corneringRolloverRisk > 0f &&
+                Mathf.Abs(throttleInput) > 0.01f &&
+                Mathf.Abs(steeringInput) > (profile != null ? profile.SteeringInputDeadZone : 0.08f);
+            if (keepsCommittingToTurn)
+            {
+                float duration = profile != null ? profile.CorneringRolloverDuration : 2f;
+                float committedDemand = Mathf.Max(corneringDemand, lastPositiveCorneringDemand);
+                corneringRolloverRisk = Mathf.MoveTowards(
+                    corneringRolloverRisk,
+                    1f,
+                    committedDemand / Mathf.Max(0.1f, duration) * Time.fixedDeltaTime);
+                if (corneringRolloverRisk >= 0.99f) corneringRolloverCommitted = true;
+                Vector3 rolloverGroundForward = Vector3.ProjectOnPlane(transform.forward, filteredGroundNormal).normalized;
+                float rolloverForwardSpeed = rolloverGroundForward.sqrMagnitude > 0.0001f
+                    ? Vector3.Dot(physicsBody.linearVelocity, rolloverGroundForward)
+                    : 0f;
+                ApplyCorneringRollTorque(rolloverForwardSpeed, targetYawRate);
+            }
+            drivenWheelGrounded = false;
+            drivenContactInitialized = false;
+            wheelSupportAcceleration = 0f;
+            driverSupportAcceleration = 0f;
+            return;
+        }
+
+        UpdateDrivenWheelContact();
+        Vector3 groundNormal = drivenWheelGrounded ? filteredGroundNormal : Vector3.up;
+        Vector3 groundForward = Vector3.ProjectOnPlane(transform.forward, groundNormal).normalized;
+        if (groundForward.sqrMagnitude <= 0.0001f) groundForward = transform.forward;
+        float forwardSpeed = Vector3.Dot(physicsBody.linearVelocity, groundForward);
         float speedLimit = throttleInput >= 0f
             ? (profile != null ? profile.MaximumForwardSpeed : 4f)
             : (profile != null ? profile.MaximumReverseSpeed : 2f);
@@ -260,44 +386,160 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         bool changingDirection = hasThrottle && Mathf.Abs(forwardSpeed) > 0.05f &&
             Mathf.Sign(throttleInput) != Mathf.Sign(forwardSpeed);
         bool belowSpeedLimit = Mathf.Abs(forwardSpeed) < speedLimit;
-        float motor = hasThrottle && !changingDirection && belowSpeedLimit
-            ? throttleInput * (profile != null ? profile.DriveForce : 220f)
-            : 0f;
-        float brake = !hasThrottle || changingDirection ? (profile != null ? profile.BrakeForce : 420f) : 0f;
-
         if (driveContactWarmupStepsRemaining > 0)
         {
             driveContactWarmupStepsRemaining--;
-            if (drivenWheelCollider != null && drivenWheelCollider.enabled)
-            {
-                drivenWheelCollider.motorTorque = 0f;
-                drivenWheelCollider.brakeTorque = 0f;
-                drivenWheelCollider.steerAngle = 0f;
-            }
+            UpdateSteeringAngle(false);
+            ApplyDrivenWheelSupport();
             ApplyDriverSupport();
             ApplyDriverStabilization();
             return;
         }
 
-        float filteredSteering = 0f;
-        if (drivenWheelCollider != null && drivenWheelCollider.enabled)
-        {
-            float steeringDeadZone = profile != null ? profile.SteeringInputDeadZone : 0.08f;
-            filteredSteering = Mathf.Abs(steeringInput) > steeringDeadZone ? steeringInput : 0f;
-            float targetSteer = hasThrottle
-                ? filteredSteering * (profile != null ? profile.MaximumSteeringAngle : 30f)
-                : 0f;
-            drivenWheelCollider.steerAngle = CalculateNextSteeringAngle(
-                drivenWheelCollider.steerAngle,
-                targetSteer,
-                Time.fixedDeltaTime);
-            drivenWheelCollider.motorTorque = motor;
-            drivenWheelCollider.brakeTorque = brake;
-        }
-        ApplyDrivenYawControl(forwardSpeed, hasThrottle, filteredSteering);
+        UpdateSteeringAngle(hasThrottle);
+        ApplyDrivenWheelSupport();
+        ApplyDrivenLongitudinalGrip(groundForward, forwardSpeed, hasThrottle, changingDirection, belowSpeedLimit);
+        ApplyDrivenYawControl(forwardSpeed, hasThrottle);
         ApplyDrivenLateralGrip();
+        ApplyCorneringRollover(forwardSpeed, speedLimit);
         ApplyDriverSupport();
         ApplyDriverStabilization();
+    }
+
+    private void UpdateSteeringAngle(bool hasThrottle)
+    {
+        float filteredSteering = UpdateSmoothedSteeringInput(hasThrottle);
+        float targetSteer = hasThrottle
+            ? filteredSteering * (profile != null ? profile.MaximumSteeringAngle : 30f)
+            : 0f;
+        currentSteeringAngle = CalculateNextSteeringAngle(
+            currentSteeringAngle,
+            targetSteer,
+            Time.fixedDeltaTime);
+    }
+
+    private void UpdateDrivenWheelContact()
+    {
+        float radius = profile != null ? profile.WheelRadius : wheelVisualRadius;
+        float probeDistance = profile != null ? profile.WheelContactProbeDistance : 0.12f;
+        float castOriginOffset = radius + probeDistance;
+        Vector3 wheelCenter = transform.TransformPoint(wheelVisualRootLocalPosition);
+        Vector3 castUp = transform.up;
+        Vector3 origin = wheelCenter + castUp * castOriginOffset;
+        int count = Physics.SphereCastNonAlloc(
+            origin,
+            radius,
+            -castUp,
+            wheelContactHits,
+            castOriginOffset + (profile != null ? profile.WheelSuspensionDistance : 0.03f),
+            Physics.DefaultRaycastLayers,
+            QueryTriggerInteraction.Ignore);
+
+        float nearestDistance = float.PositiveInfinity;
+        drivenWheelGrounded = false;
+        for (int i = 0; i < count; i++)
+        {
+            RaycastHit hit = wheelContactHits[i];
+            Collider hitCollider = hit.collider;
+            if (hitCollider == null || hitCollider.transform == transform || hitCollider.transform.IsChildOf(transform)) continue;
+            if (hit.distance >= nearestDistance) continue;
+            nearestDistance = hit.distance;
+            drivenWheelHit = hit;
+            drivenWheelGrounded = true;
+        }
+
+        if (!drivenWheelGrounded)
+        {
+            drivenContactInitialized = false;
+            wheelSuspensionError = 0f;
+            wheelSupportAcceleration = 0f;
+            return;
+        }
+
+        lastDrivenWheelContactTime = Time.time;
+
+        Vector3 rawNormal = drivenWheelHit.normal.sqrMagnitude > 0.0001f
+            ? drivenWheelHit.normal.normalized
+            : Vector3.up;
+        float normalFilter = 1f - Mathf.Exp(-(profile != null ? profile.GroundNormalFilterSpeed : 12f) * Time.fixedDeltaTime);
+        float heightFilter = 1f - Mathf.Exp(-(profile != null ? profile.GroundHeightFilterSpeed : 4f) * Time.fixedDeltaTime);
+        if (!drivenContactInitialized)
+        {
+            filteredGroundNormal = rawNormal;
+            filteredWheelContactPoint = drivenWheelHit.point;
+            drivenContactInitialized = true;
+        }
+        else
+        {
+            filteredGroundNormal = Vector3.Slerp(filteredGroundNormal, rawNormal, normalFilter).normalized;
+            filteredWheelContactPoint = Vector3.Lerp(filteredWheelContactPoint, drivenWheelHit.point, heightFilter);
+        }
+        wheelSuspensionError = Mathf.Clamp(castOriginOffset - nearestDistance,
+            -(profile != null ? profile.WheelSuspensionDistance : 0.03f),
+            profile != null ? profile.WheelSuspensionDistance : 0.03f);
+    }
+
+    private void ApplyDrivenWheelSupport()
+    {
+        if (!drivenWheelGrounded) return;
+        float normalVelocity = Vector3.Dot(physicsBody.linearVelocity, filteredGroundNormal);
+        float gravitySupport = Mathf.Max(0f, -Vector3.Dot(Physics.gravity, filteredGroundNormal)) * wheelLoadShare;
+        float spring = profile != null ? profile.WheelSuspensionSpring : 45f;
+        float damping = profile != null ? profile.WheelSuspensionDamping : 10f;
+        float maximumAcceleration = profile != null ? profile.WheelMaximumSupportAcceleration : 18f;
+        wheelSupportAcceleration = Mathf.Clamp(
+            gravitySupport +
+            wheelSuspensionError * spring * wheelLoadShare -
+            normalVelocity * damping * wheelLoadShare,
+            0f,
+            maximumAcceleration * wheelLoadShare);
+    }
+
+    private void ApplyDrivenLongitudinalGrip(Vector3 groundForward, float forwardSpeed,
+        bool hasThrottle, bool changingDirection, bool belowSpeedLimit)
+    {
+        longitudinalAcceleration = 0f;
+        if (!drivenWheelGrounded) return;
+
+        float requestedForce = 0f;
+        if (hasThrottle && !changingDirection && belowSpeedLimit)
+            requestedForce = throttleInput * (profile != null ? profile.DriveForce : 220f);
+        else if (changingDirection || (!hasThrottle && Mathf.Abs(forwardSpeed) > 0.02f))
+            requestedForce = -Mathf.Sign(forwardSpeed) * (profile != null ? profile.BrakeForce : 420f);
+
+        float maximumAcceleration = profile != null ? profile.MaximumLongitudinalGripAcceleration : 10f;
+        longitudinalAcceleration = Mathf.Clamp(
+            requestedForce / Mathf.Max(1f, physicsBody.mass),
+            -maximumAcceleration,
+            maximumAcceleration);
+        Vector3 appliedForce = groundForward * longitudinalAcceleration * physicsBody.mass;
+        physicsBody.AddForceAtPosition(
+            appliedForce,
+            filteredWheelContactPoint,
+            ForceMode.Force);
+
+        // The driver carries the handles and counters the pitch generated where the
+        // wheel transmits traction. Keep the physical contact force without turning
+        // acceleration into a suspension impulse.
+        Vector3 tractionTorque = Vector3.Cross(
+            filteredWheelContactPoint - physicsBody.worldCenterOfMass,
+            appliedForce);
+        Vector3 nonYawTractionTorque = Vector3.ProjectOnPlane(tractionTorque, filteredGroundNormal);
+        physicsBody.AddTorque(-nonYawTractionTorque, ForceMode.Force);
+    }
+
+    private float UpdateSmoothedSteeringInput(bool hasThrottle)
+    {
+        float deadZone = profile != null ? profile.SteeringInputDeadZone : 0.08f;
+        float rawTarget = hasThrottle && Mathf.Abs(steeringInput) > deadZone ? steeringInput : 0f;
+        float rate = Mathf.Approximately(rawTarget, 0f)
+            ? (profile != null ? profile.SteeringInputRelease : 6f)
+            : (profile != null ? profile.SteeringInputRampUp : 2.5f);
+        smoothedSteeringInput = Mathf.MoveTowards(
+            smoothedSteeringInput,
+            rawTarget,
+            rate * Time.fixedDeltaTime);
+        return smoothedSteeringInput;
     }
 
     private void ApplyDriverSupport()
@@ -317,16 +559,27 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
 
         Vector3 point = support.position;
-        float verticalVelocity = Vector3.Dot(physicsBody.GetPointVelocity(point), Vector3.up);
-        float gravitySupport = Mathf.Abs(Physics.gravity.y) * driverSupportLoadShare;
+        Vector3 supportNormal = drivenWheelGrounded ? filteredGroundNormal : Vector3.up;
+        float normalVelocity = Vector3.Dot(physicsBody.linearVelocity, supportNormal);
+        float gravitySupport = Mathf.Max(0f, -Vector3.Dot(Physics.gravity, supportNormal)) * driverSupportLoadShare;
         float spring = profile != null ? profile.DriverSupportSpring : 18f;
         float damping = profile != null ? profile.DriverSupportDamping : 7f;
         float maximumAcceleration = profile != null ? profile.MaximumDriverSupportAcceleration : 15f;
-        float acceleration = gravitySupport +
-            (driverSupportTargetWorldY - point.y) * spring -
-            verticalVelocity * damping;
-        acceleration = Mathf.Clamp(acceleration, -maximumAcceleration, maximumAcceleration);
-        physicsBody.AddForceAtPosition(Vector3.up * (physicsBody.mass * acceleration), point, ForceMode.Force);
+        float maximumHeightCorrection = profile != null ? profile.DriverSupportMaximumHeightCorrection : 0.12f;
+        float heightError = Mathf.Clamp(
+            driverSupportTargetWorldY - point.y,
+            -maximumHeightCorrection,
+            maximumHeightCorrection);
+        driverSupportAcceleration = gravitySupport +
+            heightError * spring * driverSupportLoadShare -
+            normalVelocity * damping * driverSupportLoadShare;
+        driverSupportAcceleration = Mathf.Clamp(
+            driverSupportAcceleration,
+            0f,
+            maximumAcceleration * driverSupportLoadShare);
+        physicsBody.AddForce(
+            supportNormal * (wheelSupportAcceleration + driverSupportAcceleration),
+            ForceMode.Acceleration);
     }
 
     private void CaptureDriverSupportTarget()
@@ -380,12 +633,12 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             Mathf.Sign(currentAngle) != Mathf.Sign(targetAngle);
         float resolvedTarget = reversesDirection ? 0f : targetAngle;
         float response = reversesDirection
-            ? (profile != null ? profile.SteeringReversalDegreesPerSecond : 45f)
-            : (profile != null ? profile.SteeringResponseDegreesPerSecond : 120f);
+            ? (profile != null ? profile.SteeringReversalDegreesPerSecond : 60f)
+            : (profile != null ? profile.SteeringResponseDegreesPerSecond : 240f);
         return Mathf.MoveTowards(currentAngle, resolvedTarget, response * Mathf.Max(0f, deltaTime));
     }
 
-    private void ApplyDrivenYawControl(float forwardSpeed, bool hasThrottle, float filteredSteering)
+    private void ApplyDrivenYawControl(float forwardSpeed, bool hasThrottle)
     {
         Vector3 worldUp = Vector3.up;
         Vector3 angularVelocity = physicsBody.angularVelocity;
@@ -400,27 +653,41 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
 
         float minimumSpeed = profile != null ? profile.MinimumSteeringSpeed : 0.15f;
-        float referenceSpeed = Mathf.Max(
-            profile != null ? profile.MaximumForwardSpeed : 4f,
-            profile != null ? profile.MaximumReverseSpeed : 2f);
-        float speedFactor = Mathf.InverseLerp(minimumSpeed, Mathf.Max(minimumSpeed + 0.01f, referenceSpeed), Mathf.Abs(forwardSpeed));
-        float direction = Mathf.Abs(forwardSpeed) >= minimumSpeed ? Mathf.Sign(forwardSpeed) : 0f;
-        float wheelSteering = drivenWheelCollider != null && Mathf.Abs(profile != null ? profile.MaximumSteeringAngle : 30f) > 0.01f
-            ? Mathf.Clamp(drivenWheelCollider.steerAngle / (profile != null ? profile.MaximumSteeringAngle : 30f), -1f, 1f)
-            : filteredSteering;
-        float targetYaw = hasThrottle ? maximumYaw * wheelSteering * direction * speedFactor : 0f;
+        float wheelbase = GetWheelbase();
+        float steeringRadians = currentSteeringAngle * Mathf.Deg2Rad;
+        float requestedYaw = hasThrottle && Mathf.Abs(forwardSpeed) >= minimumSpeed
+            ? forwardSpeed / wheelbase * Mathf.Tan(steeringRadians)
+            : 0f;
+        targetYawRate = Mathf.Clamp(requestedYaw, -maximumYaw, maximumYaw);
         float response = profile != null ? profile.DrivenYawResponse : 8f;
-        float maximumAcceleration = (profile != null ? profile.MaximumDrivenYawAccelerationDegrees : 360f) * Mathf.Deg2Rad;
-        float acceleration = Mathf.Clamp((targetYaw - currentYaw) * response, -maximumAcceleration, maximumAcceleration);
-        physicsBody.AddTorque(worldUp * acceleration, ForceMode.Acceleration);
+        float maximumAcceleration = (profile != null ? profile.MaximumDrivenYawAccelerationDegrees : 240f) * Mathf.Deg2Rad;
+        float desiredAcceleration = Mathf.Clamp(
+            (targetYawRate - currentYaw) * response,
+            -maximumAcceleration,
+            maximumAcceleration);
+        float maximumJerk = (profile != null ? profile.MaximumDrivenYawJerkDegrees : 1080f) * Mathf.Deg2Rad;
+        currentYawAcceleration = Mathf.MoveTowards(
+            currentYawAcceleration,
+            desiredAcceleration,
+            maximumJerk * Time.fixedDeltaTime);
+        physicsBody.AddTorque(worldUp * currentYawAcceleration, ForceMode.Acceleration);
+    }
+
+    private float GetWheelbase()
+    {
+        Transform support = driverSupportPoint != null ? driverSupportPoint : driverAnchor;
+        float wheelZ = wheelVisualRootLocalPosition.z;
+        float supportZ = support != null
+            ? transform.InverseTransformPoint(support.position).z
+            : wheelZ - 2f;
+        return Mathf.Max(0.25f, Mathf.Abs(wheelZ - supportZ));
     }
 
     private void ApplyDrivenLateralGrip()
     {
-        if (drivenWheelCollider == null || !drivenWheelCollider.enabled ||
-            !drivenWheelCollider.GetGroundHit(out WheelHit wheelHit)) return;
+        if (!drivenWheelGrounded) return;
 
-        Vector3 lateral = Vector3.ProjectOnPlane(transform.right, wheelHit.normal);
+        Vector3 lateral = Vector3.ProjectOnPlane(transform.right, filteredGroundNormal);
         if (lateral.sqrMagnitude <= 0.0001f) return;
         lateral.Normalize();
 
@@ -434,30 +701,188 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             profile != null ? profile.EmptyLateralVelocityDamping : 8f,
             profile != null ? profile.LoadedLateralVelocityDamping : 4f,
             loadRatio);
-        float maximumAcceleration = Mathf.Lerp(
+        float legacyMaximumAcceleration = Mathf.Lerp(
             profile != null ? profile.EmptyMaximumLateralGripAcceleration : 14f,
             profile != null ? profile.LoadedMaximumLateralGripAcceleration : 8f,
             loadRatio);
+        float maximumAcceleration = Mathf.Min(
+            legacyMaximumAcceleration,
+            profile != null ? profile.MaximumLateralGripAcceleration : 12f);
         float lateralSpeed = Vector3.Dot(physicsBody.linearVelocity, lateral);
-        float acceleration = Mathf.Clamp(-lateralSpeed * damping, -maximumAcceleration, maximumAcceleration);
+        float wheelZ = transform.InverseTransformPoint(filteredWheelContactPoint).z;
+        float centerOfMassZ = physicsBody.centerOfMass.z;
+        float currentYaw = Vector3.Dot(physicsBody.angularVelocity, filteredGroundNormal);
+        float expectedLateralSpeed = -currentYaw * (wheelZ - centerOfMassZ);
+        residualLateralSpeed = lateralSpeed - expectedLateralSpeed;
+        float acceleration = Mathf.Clamp(-residualLateralSpeed * damping, -maximumAcceleration, maximumAcceleration);
         physicsBody.AddForce(lateral * acceleration, ForceMode.Acceleration);
     }
 
     private void ApplyDriverStabilization()
     {
-        Vector3 axis = Vector3.Cross(transform.up, Vector3.up);
-        Vector3 localAngular = physicsBody.angularVelocity;
-        localAngular.y = 0f;
-        Vector3 torque = axis * (profile != null ? profile.DriverStabilizingTorque : 18f) -
-            localAngular * (profile != null ? profile.DriverStabilizingDamping : 4f);
+        Vector3 targetUp = drivenWheelGrounded ? filteredGroundNormal : Vector3.up;
+        float tiltAngle = Vector3.Angle(transform.up, targetUp);
+        float fadeStart = profile != null ? profile.StabilizationFadeStartAngle : 35f;
+        float fadeEnd = profile != null ? profile.StabilizationFadeEndAngle : 55f;
+        float stabilizationWeight = 1f - Mathf.InverseLerp(fadeStart, Mathf.Max(fadeStart + 0.01f, fadeEnd), tiltAngle);
+        stabilizationWeight *= 1f - corneringRolloverRisk;
+        if (stabilizationWeight <= 0f) return;
+        Vector3 axis = Vector3.Cross(transform.up, targetUp);
+        Vector3 nonYawAngular = Vector3.ProjectOnPlane(physicsBody.angularVelocity, targetUp);
+        float configuredHeight = profile != null ? profile.MaximumStabilizationCenterOfMassHeight : 0.65f;
+        float actualHeight = Mathf.Max(0.05f, Mathf.Abs(physicsBody.centerOfMass.y));
+        float centerOfMassScale = Mathf.Clamp01(configuredHeight / actualHeight);
+        Vector3 torque = (axis * (profile != null ? profile.DriverStabilizingTorque : 18f) * centerOfMassScale -
+            nonYawAngular * (profile != null ? profile.DriverStabilizingDamping : 4f)) * stabilizationWeight;
         physicsBody.AddTorque(torque, ForceMode.Acceleration);
+    }
 
-        if (drivenWheelCollider != null && drivenWheelCollider.enabled &&
-            Mathf.Abs(drivenWheelCollider.motorTorque) > 0.01f)
+    private void ApplyCorneringRollover(float forwardSpeed, float speedLimit)
+    {
+        bool enabled = profile == null || profile.EnableCorneringRollover;
+        corneringLoadRatio = GetCorneringLoadRatio();
+        float maximumSteering = profile != null ? profile.MaximumSteeringAngle : 30f;
+        float fullLoadReferenceRatio = profile != null ? profile.FullLoadRolloverReferenceSpeedRatio : 0.6f;
+        effectiveRolloverReferenceSpeed = speedLimit * Mathf.Lerp(1f, fullLoadReferenceRatio, corneringLoadRatio);
+        corneringSpeedRatio = Mathf.Clamp01(
+            Mathf.Abs(forwardSpeed) / Mathf.Max(0.01f, effectiveRolloverReferenceSpeed));
+        float steeringRatio = Mathf.Clamp01(Mathf.Abs(currentSteeringAngle) / Mathf.Max(0.01f, maximumSteering));
+        float minimumSpeed = profile != null ? profile.MinimumRolloverSpeedRatio : 0.65f;
+        float minimumSteering = profile != null ? profile.MinimumRolloverSteeringRatio : 0.7f;
+        float activeSpeed = Mathf.InverseLerp(minimumSpeed, 1f, corneringSpeedRatio);
+        float activeSteering = Mathf.InverseLerp(minimumSteering, 1f, steeringRatio);
+        float yawRate = Vector3.Dot(physicsBody.angularVelocity, filteredGroundNormal);
+        corneringLateralAcceleration = Mathf.Abs(forwardSpeed * yawRate);
+        float corneringDirectionSign = Mathf.Abs(targetYawRate) > 0.001f ? Mathf.Sign(targetYawRate) : 0f;
+        if (corneringDirectionSign != 0f && previousCorneringDirectionSign != 0f &&
+            corneringDirectionSign != previousCorneringDirectionSign)
         {
-            Vector3 wheelAxle = Quaternion.AngleAxis(drivenWheelCollider.steerAngle, transform.up) * transform.right;
-            physicsBody.AddTorque(-wheelAxle * drivenWheelCollider.motorTorque, ForceMode.Force);
+            corneringRolloverRisk = 0f;
+            corneringRolloverCommitted = false;
         }
+        if (corneringDirectionSign != 0f) previousCorneringDirectionSign = corneringDirectionSign;
+        float contactGrace = profile != null ? profile.RolloverGroundContactGraceDuration : 0.15f;
+        bool hasRolloverContact = drivenWheelGrounded || Time.time - lastDrivenWheelContactTime <= contactGrace;
+        float rawDemand = enabled && hasRolloverContact
+            ? activeSpeed * activeSteering * corneringLoadRatio
+            : 0f;
+        bool maintainsTurnIntent = Mathf.Abs(throttleInput) > 0.01f &&
+            Mathf.Abs(steeringInput) > (profile != null ? profile.SteeringInputDeadZone : 0.08f);
+        if (!maintainsTurnIntent) corneringRolloverCommitted = false;
+
+        if (rawDemand > 0f)
+        {
+            corneringDemand = rawDemand;
+            lastPositiveCorneringDemand = rawDemand;
+            lastPositiveCorneringDemandTime = Time.time;
+        }
+        else
+        {
+            float maneuverGrace = profile != null ? profile.RolloverManeuverGraceDuration : 0.2f;
+            corneringDemand = maintainsTurnIntent && Time.time - lastPositiveCorneringDemandTime <= maneuverGrace
+                ? lastPositiveCorneringDemand
+                : 0f;
+        }
+
+        if (corneringRolloverCommitted && maintainsTurnIntent)
+        {
+            corneringRolloverRisk = 1f;
+            corneringDemand = Mathf.Max(corneringDemand, lastPositiveCorneringDemand);
+        }
+
+        if (corneringDemand > 0f)
+        {
+            float duration = profile != null ? profile.CorneringRolloverDuration : 2f;
+            corneringRolloverRisk = Mathf.MoveTowards(
+                corneringRolloverRisk,
+                1f,
+                corneringDemand / Mathf.Max(0.1f, duration) * Time.fixedDeltaTime);
+            if (corneringRolloverRisk >= 0.99f) corneringRolloverCommitted = true;
+        }
+        else
+        {
+            float recovery = profile != null ? profile.CorneringRolloverRecoveryRate : 1f;
+            corneringRolloverRisk = Mathf.MoveTowards(corneringRolloverRisk, 0f, recovery * Time.fixedDeltaTime);
+        }
+
+        ApplyCorneringRollTorque(forwardSpeed, yawRate);
+    }
+
+    private void ApplyCorneringRollTorque(float forwardSpeed, float yawRate)
+    {
+        if (corneringRolloverRisk <= 0f || Mathf.Abs(yawRate) <= 0.001f)
+        {
+            targetCorneringRollAngle = 0f;
+            return;
+        }
+
+        Vector3 groundForward = Vector3.ProjectOnPlane(transform.forward, filteredGroundNormal).normalized;
+        if (groundForward.sqrMagnitude <= 0.0001f) return;
+        Vector3 velocityDirection = Mathf.Sign(forwardSpeed) * groundForward;
+        Vector3 inward = Vector3.Cross(filteredGroundNormal, velocityDirection) * Mathf.Sign(yawRate);
+        Vector3 outward = -inward.normalized;
+        float maximumRoll = profile != null ? profile.MaximumCorneringRollAngle : 70f;
+        targetCorneringRollAngle = maximumRoll * corneringRolloverRisk;
+        Vector3 desiredUp = Quaternion.AngleAxis(targetCorneringRollAngle, velocityDirection) * filteredGroundNormal;
+        if (Vector3.Dot(desiredUp, outward) < 0f)
+            desiredUp = Quaternion.AngleAxis(-targetCorneringRollAngle, velocityDirection) * filteredGroundNormal;
+
+        Vector3 rollAxis = Vector3.Cross(transform.up, desiredUp);
+        float rollSpeed = Vector3.Dot(physicsBody.angularVelocity, velocityDirection);
+        float rollError = Vector3.Dot(rollAxis, velocityDirection);
+        float acceleration = rollError *
+            (profile != null ? profile.CorneringRollSpring : 22f) -
+            rollSpeed * (profile != null ? profile.CorneringRollDamping : 5f);
+        float committedWeight = Mathf.InverseLerp(0.85f, 1f, corneringRolloverRisk);
+        float committedAcceleration = committedWeight *
+            (profile != null ? profile.MinimumCommittedRolloverAcceleration : 28f);
+        if (Mathf.Abs(rollError) > 0.001f && Mathf.Abs(acceleration) < committedAcceleration)
+            acceleration = Mathf.Sign(rollError) * committedAcceleration;
+        float maximumAcceleration = profile != null ? profile.MaximumCorneringRollAcceleration : 28f;
+        physicsBody.AddTorque(velocityDirection * Mathf.Clamp(acceleration, -maximumAcceleration, maximumAcceleration),
+            ForceMode.Acceleration);
+    }
+
+    private float GetCorneringLoadRatio()
+    {
+        int resourceCount = CargoCount;
+#if UNITY_EDITOR
+        if (editorProbeResourceCount >= 0) resourceCount = editorProbeResourceCount;
+#endif
+        float resourceFactor = resourceCount switch
+        {
+            <= 0 => 0f,
+            1 => profile != null ? profile.OneResourceRolloverLoadFactor : 0.25f,
+            2 => profile != null ? profile.TwoResourcesRolloverLoadFactor : 0.5f,
+            _ => profile != null ? profile.ThreeResourcesRolloverLoadFactor : 0.8f
+        };
+        float concreteFactor = ConcreteLoads > 0
+            ? (profile != null ? profile.ConcreteRolloverLoadFactor : 1f)
+            : 0f;
+        float passengerFactor = PassengerClientId != NoClient
+            ? (profile != null ? profile.PassengerRolloverLoadFactor : 1f)
+            : 0f;
+        corneringLoadSource = ConcreteLoads > 0
+            ? "Concrete"
+            : resourceCount > 0
+                ? $"Resources:{resourceCount}"
+                : PassengerClientId != NoClient ? "Passenger" : "Empty";
+        return Mathf.Clamp01(resourceFactor + concreteFactor + passengerFactor);
+    }
+
+    private void ApplyTippedDamping()
+    {
+        float damping = profile != null ? profile.TippedAngularDamping : 3f;
+        Vector3 torque = -physicsBody.angularVelocity * damping;
+        Vector3 currentUp = transform.up;
+        Vector3 correctionAxis = Vector3.Cross(currentUp, tippedRestUp);
+        float correctionAngle = Vector3.Angle(currentUp, tippedRestUp) * Mathf.Deg2Rad;
+        if (correctionAxis.sqrMagnitude > 0.0001f && correctionAngle > 0.001f)
+        {
+            torque += correctionAxis.normalized * correctionAngle *
+                (profile != null ? profile.TippedRecoveryTorque : 12f);
+        }
+        physicsBody.AddTorque(torque, ForceMode.Acceleration);
     }
 
     private void ApplyIdleBrake()
@@ -481,22 +906,64 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
     }
 
+    private void UpdateNavigationObstacle(bool force = false)
+    {
+        if (navigationObstacle == null) return;
+
+        if (!HasAuthority)
+        {
+            if (navigationObstacle.enabled) navigationObstacle.enabled = false;
+            navObstacleSettledTime = 0f;
+            return;
+        }
+
+        WheelbarrowState state = State;
+        bool secured = state == WheelbarrowState.Docked || state == WheelbarrowState.Pouring;
+        bool canBecomeStationaryObstacle = state == WheelbarrowState.Free || state == WheelbarrowState.Tipped;
+        bool shouldEnable = secured || canBecomeStationaryObstacle;
+
+        bool isSettled = physicsBody != null &&
+            physicsBody.linearVelocity.magnitude <= (profile != null ? profile.NavObstacleLinearSpeedThreshold : 0.15f) &&
+            physicsBody.angularVelocity.magnitude * Mathf.Rad2Deg <=
+                (profile != null ? profile.NavObstacleAngularSpeedThresholdDegrees : 10f);
+        if (secured)
+        {
+            navObstacleSettledTime = profile != null ? profile.NavObstacleSettleDuration : 0.5f;
+        }
+        else if (canBecomeStationaryObstacle && isSettled)
+        {
+            navObstacleSettledTime += Time.fixedDeltaTime;
+        }
+        else
+        {
+            navObstacleSettledTime = 0f;
+        }
+
+        float settleDuration = profile != null ? profile.NavObstacleSettleDuration : 0.5f;
+        bool shouldCarve = secured ||
+            (canBecomeStationaryObstacle && navObstacleSettledTime >= settleDuration);
+        if (force || navigationObstacle.carving != shouldCarve)
+            navigationObstacle.carving = shouldCarve;
+        if (force || navigationObstacle.enabled != shouldEnable)
+            navigationObstacle.enabled = shouldEnable;
+    }
+
     private void ConfigureWheelContactMode()
     {
         bool isDriven = State == WheelbarrowState.Driven;
-        bool simulateDrivenWheel = isDriven && HasAuthority;
-
-        if (drivenWheelCollider != null && drivenWheelCollider.enabled != simulateDrivenWheel)
+        bool canUseParkingContacts = State != WheelbarrowState.Driven &&
+            State != WheelbarrowState.Tipped && State != WheelbarrowState.Righting && tippingElapsed <= 0f;
+        if (drivenWheelCollider != null && drivenWheelCollider.enabled)
         {
             ResetDrivenWheel();
-            if (simulateDrivenWheel) ConfigureDrivenWheelPhysics(true);
-            drivenWheelCollider.enabled = simulateDrivenWheel;
+            drivenWheelCollider.enabled = false;
         }
-        if (simulateDrivenWheel) ConfigureDrivenWheelPhysics();
 
-        SetRestingSupportsEnabled(!isDriven);
-        if (wheelContactCollider != null && wheelContactCollider.enabled == isDriven)
-            wheelContactCollider.enabled = !isDriven;
+        SetRestingSupportsEnabled(canUseParkingContacts);
+        if (wheelContactCollider != null && wheelContactCollider.enabled != canUseParkingContacts)
+            wheelContactCollider.enabled = canUseParkingContacts;
+        if (rightingInteractionCollider != null)
+            rightingInteractionCollider.enabled = State == WheelbarrowState.Tipped;
     }
 
     private void ConfigureDrivenWheelPhysics(bool force = false)
@@ -554,8 +1021,42 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     {
         throttleInput = 0f;
         steeringInput = 0f;
+        smoothedSteeringInput = 0f;
+        currentSteeringAngle = 0f;
+        corneringRolloverRisk = 0f;
+        corneringRolloverCommitted = false;
+        corneringLateralAcceleration = 0f;
+        corneringLoadRatio = 0f;
+        corneringSpeedRatio = 0f;
+        effectiveRolloverReferenceSpeed = 0f;
+        targetCorneringRollAngle = 0f;
+        previousCorneringDirectionSign = 0f;
+        currentYawAcceleration = 0f;
+        targetYawRate = 0f;
+        residualLateralSpeed = 0f;
+        drivenWheelGrounded = false;
+        drivenContactInitialized = false;
+        wheelSuspensionError = 0f;
+        wheelSupportAcceleration = 0f;
+        driverSupportAcceleration = 0f;
+        longitudinalAcceleration = 0f;
         lastInputTime = Time.time;
         ResetDrivenWheel();
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (profile == null || !profile.EnableDiagnostics || !IsDocked || collision == null) return;
+        NavMeshAgent agent = collision.collider != null
+            ? collision.collider.GetComponentInParent<NavMeshAgent>()
+            : null;
+        if (agent == null) return;
+        Debug.Log(
+            $"Wheelbarrow NPC contact: state={State}, secured={IsDockSecured}, " +
+            $"kinematic={physicsBody != null && physicsBody.isKinematic}, " +
+            $"obstacleEnabled={navigationObstacle != null && navigationObstacle.enabled}, " +
+            $"carving={navigationObstacle != null && navigationObstacle.carving}",
+            this);
     }
 
     private void DetectTipping()
@@ -574,6 +1075,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private void TipOver()
     {
         ulong previousDriver = DriverClientId;
+        tippedRestUp = ResolveTippedRestUp();
         SetState(WheelbarrowState.Tipped);
         if (previousDriver != NoClient) BeginSafeExit(previousDriver);
         SetDriver(NoClient);
@@ -583,6 +1085,24 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         activeDock?.ForceReleaseWheelbarrow(this);
         activeDock = null;
     }
+
+    private Vector3 ResolveTippedRestUp()
+    {
+        float targetTilt = profile != null ? profile.TippedTargetRestAngle : 72f;
+        Vector3 leanDirection = Vector3.ProjectOnPlane(transform.up, Vector3.up);
+        if (leanDirection.sqrMagnitude <= 0.0001f)
+        {
+            Vector3 rollAxis = Vector3.ProjectOnPlane(physicsBody.angularVelocity, Vector3.up);
+            leanDirection = rollAxis.sqrMagnitude > 0.0001f
+                ? Vector3.Cross(rollAxis.normalized, Vector3.up)
+                : transform.right;
+        }
+        leanDirection.Normalize();
+        float radians = targetTilt * Mathf.Deg2Rad;
+        return (Vector3.up * Mathf.Cos(radians) + leanDirection * Mathf.Sin(radians)).normalized;
+    }
+
+    public float TippedRestTilt => Vector3.Angle(tippedRestUp, Vector3.up);
 
     public void TryAutomaticBoarding(Collider other)
     {
@@ -597,10 +1117,14 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     public void SubmitDriveInput(float throttle, float steering, ulong senderClientId)
     {
         if (!HasAuthority || DriverClientId != senderClientId || State != WheelbarrowState.Driven) return;
-        if (TryGetPlayer(senderClientId, out NetworkObject player) && player.TryGetComponent(out PlayerStaminaController stamina) && stamina.CurrentStamina <= 0f)
+        if ((profile == null || profile.EnableDrivingStaminaDrain) &&
+            TryGetPlayer(senderClientId, out NetworkObject player) &&
+            player.TryGetComponent(out PlayerStaminaController stamina) && stamina.CurrentStamina <= 0f)
             throttle = 0f;
         throttleInput = Mathf.Clamp(throttle, -1f, 1f);
         steeringInput = Mathf.Abs(throttleInput) > 0.01f ? Mathf.Clamp(steering, -1f, 1f) : 0f;
+        lastReceivedThrottleInput = throttleInput;
+        lastReceivedSteeringInput = steeringInput;
         lastInputTime = Time.time;
         if (Mathf.Abs(throttleInput) > 0.01f) physicsBody?.WakeUp();
     }
@@ -669,6 +1193,32 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     {
         return RequestRole(interactor, WheelbarrowOccupantRole.Driver);
     }
+
+#if UNITY_EDITOR
+    private int editorProbeResourceCount = -1;
+
+    internal void BeginEditorPhysicsProbe(bool loaded)
+    {
+        editorProbeResourceCount = -1;
+        SetConcreteLoads(loaded ? 1 : 0);
+        SetDriver(0);
+        SetState(WheelbarrowState.Driven);
+        physicsBody.isKinematic = false;
+        physicsBody.useGravity = true;
+        physicsBody.WakeUp();
+    }
+
+    internal void BeginEditorPhysicsProbe(int resourceCount)
+    {
+        editorProbeResourceCount = Mathf.Clamp(resourceCount, 0, 3);
+        SetConcreteLoads(0);
+        SetDriver(0);
+        SetState(WheelbarrowState.Driven);
+        physicsBody.isKinematic = false;
+        physicsBody.useGravity = true;
+        physicsBody.WakeUp();
+    }
+#endif
 
     public bool RequestEnterPassenger(Transform interactor)
     {
@@ -767,6 +1317,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     public float GetDrivingStaminaDrain()
     {
+        if (profile != null && !profile.EnableDrivingStaminaDrain) return 0f;
         if (DriverClientId == NoClient || State != WheelbarrowState.Driven || Mathf.Abs(throttleInput) < 0.01f) return 0f;
         float loadRatio = Mathf.Clamp01((physicsBody.mass - (profile != null ? profile.BaseMass : 22f)) / 140f);
         float uphill = Mathf.Clamp01(Vector3.Dot(transform.forward * Mathf.Sign(throttleInput), Vector3.up));
@@ -778,6 +1329,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     public float GetEstimatedDrivingStaminaDrain(float throttle)
     {
+        if (profile != null && !profile.EnableDrivingStaminaDrain) return 0f;
         if (Mathf.Abs(throttle) < 0.01f) return 0f;
         float cargoMass = GetResourceCargoMass() + ConcreteLoads * (profile != null ? profile.ConcreteBatchMass : 80f) +
             (PassengerClientId != NoClient ? profile != null ? profile.PassengerMass : 75f : 0f);
@@ -1021,32 +1573,152 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private void BeginRighting(ulong clientId)
     {
-        if (State != WheelbarrowState.Tipped || Speed > (profile != null ? profile.MaximumRightingLinearSpeed : 0.2f)) return;
+        float maximumSpeed = profile != null ? profile.MaximumRightingLinearSpeed : 0.5f;
+        if (State != WheelbarrowState.Tipped || rightingClient != NoClient || Speed > maximumSpeed ||
+            !TryGetPlayer(clientId, out NetworkObject player) ||
+            Vector3.Distance(player.transform.position, transform.position) > 3f) return;
+        PlayerHealth health = player.GetComponent<PlayerHealth>();
+        if (health != null && health.IsDowned) return;
+
         rightingClient = clientId;
         rightingStartedAt = Time.time;
+        rightingPlacementStarted = false;
+        rightingStartPosition = physicsBody.position;
+        rightingStartRotation = physicsBody.rotation;
+        physicsBody.linearVelocity = Vector3.zero;
+        physicsBody.angularVelocity = Vector3.zero;
+        physicsBody.isKinematic = true;
+        physicsBody.useGravity = false;
         SetState(WheelbarrowState.Righting);
     }
 
     private void SimulateRighting()
     {
-        if (rightingClient == NoClient || Time.time - rightingStartedAt < (profile != null ? profile.RightingHoldDuration : 1.5f)) return;
-        Quaternion upright = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
-        physicsBody.MoveRotation(Quaternion.RotateTowards(physicsBody.rotation, upright,
-            (profile != null ? profile.RightingAngularSpeed : 120f) * Time.fixedDeltaTime));
-        if (Quaternion.Angle(physicsBody.rotation, upright) <= 1f)
+        if (!IsRightingOperatorValid())
         {
-            physicsBody.rotation = upright;
-            rightingClient = NoClient;
-            SetState(WheelbarrowState.Free);
+            CancelRighting();
+            return;
         }
+
+        float holdDuration = profile != null ? profile.RightingHoldDuration : 1.5f;
+        if (!rightingPlacementStarted)
+        {
+            if (Time.time - rightingStartedAt < holdDuration) return;
+            if (!TryResolveRightingTarget(out rightingTargetPosition, out rightingTargetRotation))
+            {
+                CancelRighting();
+                return;
+            }
+            rightingPlacementStarted = true;
+            rightingPlacementStartedAt = Time.time;
+        }
+
+        float duration = profile != null ? profile.RightingPlacementDuration : 0.4f;
+        float normalized = Mathf.Clamp01((Time.time - rightingPlacementStartedAt) / Mathf.Max(0.01f, duration));
+        float eased = Mathf.SmoothStep(0f, 1f, normalized);
+        float lift = Mathf.Sin(eased * Mathf.PI) * (profile != null ? profile.RightingLiftClearance : 0.25f);
+        Vector3 position = Vector3.Lerp(rightingStartPosition, rightingTargetPosition, eased) + Vector3.up * lift;
+        Quaternion rotation = Quaternion.Slerp(rightingStartRotation, rightingTargetRotation, eased);
+        physicsBody.position = position;
+        physicsBody.rotation = rotation;
+        transform.SetPositionAndRotation(position, rotation);
+        if (normalized < 1f) return;
+
+        physicsBody.position = rightingTargetPosition;
+        physicsBody.rotation = rightingTargetRotation;
+        transform.SetPositionAndRotation(rightingTargetPosition, rightingTargetRotation);
+        physicsBody.linearVelocity = Vector3.zero;
+        physicsBody.angularVelocity = Vector3.zero;
+        rightingClient = NoClient;
+        rightingStartedAt = -1f;
+        rightingPlacementStarted = false;
+        SetState(WheelbarrowState.Free);
+        physicsBody.isKinematic = false;
+        physicsBody.useGravity = true;
     }
 
     public void CancelRighting()
     {
         if (!HasAuthority || State != WheelbarrowState.Righting) return;
+        physicsBody.position = rightingStartPosition;
+        physicsBody.rotation = rightingStartRotation;
+        transform.SetPositionAndRotation(rightingStartPosition, rightingStartRotation);
+        physicsBody.linearVelocity = Vector3.zero;
+        physicsBody.angularVelocity = Vector3.zero;
+        physicsBody.isKinematic = false;
+        physicsBody.useGravity = true;
         rightingClient = NoClient;
         rightingStartedAt = -1f;
+        rightingPlacementStarted = false;
         SetState(WheelbarrowState.Tipped);
+    }
+
+    private bool IsRightingOperatorValid()
+    {
+        if (rightingClient == NoClient || !TryGetPlayer(rightingClient, out NetworkObject player) ||
+            Vector3.Distance(player.transform.position, transform.position) > 3f) return false;
+        PlayerHealth health = player.GetComponent<PlayerHealth>();
+        return health == null || !health.IsDowned;
+    }
+
+    private bool TryResolveRightingTarget(out Vector3 targetPosition, out Quaternion targetRotation)
+    {
+        Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+        if (forward.sqrMagnitude <= 0.001f) forward = Vector3.ProjectOnPlane(transform.up, Vector3.up);
+        if (forward.sqrMagnitude <= 0.001f) forward = Vector3.forward;
+        targetRotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
+
+        float radius = profile != null ? profile.RightingPlacementSearchRadius : 0.75f;
+        Vector3[] directions =
+        {
+            Vector3.zero, Vector3.right, Vector3.left, Vector3.forward, Vector3.back,
+            (Vector3.right + Vector3.forward).normalized, (Vector3.left + Vector3.forward).normalized,
+            (Vector3.right + Vector3.back).normalized, (Vector3.left + Vector3.back).normalized
+        };
+        float[] distances = radius > 0.01f ? new[] { 0f, radius * 0.5f, radius } : new[] { 0f };
+        foreach (float distance in distances)
+        {
+            foreach (Vector3 direction in directions)
+            {
+                if (distance <= 0f && direction != Vector3.zero) continue;
+                Vector3 sample = rightingStartPosition + direction * distance;
+                if (!TryGroundRightingPosition(sample, out Vector3 grounded) ||
+                    !IsRightingPoseFree(grounded, targetRotation)) continue;
+                targetPosition = grounded;
+                return true;
+            }
+        }
+
+        targetPosition = rightingStartPosition;
+        return false;
+    }
+
+    private bool TryGroundRightingPosition(Vector3 sample, out Vector3 grounded)
+    {
+        grounded = sample;
+        RaycastHit[] hits = Physics.RaycastAll(sample + Vector3.up * 2f, Vector3.down, 4f,
+            Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider == null || hit.normal.y < 0.5f ||
+                hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform)) continue;
+            grounded.y = hit.point.y;
+            return true;
+        }
+        return false;
+    }
+
+    private bool IsRightingPoseFree(Vector3 position, Quaternion rotation)
+    {
+        Vector3 center = position + rotation * new Vector3(0f, 0.8f, -0.1f);
+        Vector3 halfExtents = new Vector3(0.72f, 0.68f, 1.3f);
+        Collider[] overlaps = Physics.OverlapBox(center, halfExtents, rotation,
+            Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+        Transform operatorRoot = TryGetPlayer(rightingClient, out NetworkObject player) ? player.transform : null;
+        return overlaps.All(item => item == null ||
+            item.transform == transform || item.transform.IsChildOf(transform) ||
+            operatorRoot != null && (item.transform == operatorRoot || item.transform.IsChildOf(operatorRoot)));
     }
 
     private void RefreshMassAndCenterOfMass()
@@ -1055,8 +1727,10 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         float cargoMass = GetResourceCargoMass() + ConcreteLoads * (profile != null ? profile.ConcreteBatchMass : 80f) +
             (PassengerClientId != NoClient ? profile != null ? profile.PassengerMass : 75f : 0f);
         physicsBody.mass = baseMass + cargoMass;
+        Vector3 baseCenterOfMass = profile != null ? profile.BaseCenterOfMassLocal : new Vector3(0f, 0.45f, -0.15f);
         Vector3 cargoPoint = cargoRoot != null ? transform.InverseTransformPoint(cargoRoot.position) : Vector3.up * 0.4f;
-        physicsBody.centerOfMass = Vector3.Lerp(Vector3.zero, cargoPoint, cargoMass / Mathf.Max(1f, baseMass + cargoMass));
+        physicsBody.centerOfMass = (baseCenterOfMass * baseMass + cargoPoint * cargoMass) /
+            Mathf.Max(1f, baseMass + cargoMass);
         RefreshSupportLoadDistribution();
     }
 
@@ -1332,8 +2006,8 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             wheelVisualSpinDegrees += forwardDistance / Mathf.Max(0.01f, radius) * Mathf.Rad2Deg;
         }
 
-        float targetSteer = State == WheelbarrowState.Driven && drivenWheelCollider != null && HasAuthority
-            ? drivenWheelCollider.steerAngle
+        float targetSteer = State == WheelbarrowState.Driven && HasAuthority
+            ? currentSteeringAngle
             : 0f;
         wheelVisualSteerDegrees = Mathf.MoveTowards(
             wheelVisualSteerDegrees,

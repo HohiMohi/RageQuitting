@@ -13,31 +13,62 @@ MonoBehaviour:
   m_Name: WheelbarrowProfile
   m_EditorClassIdentifier: Assembly-CSharp::WheelbarrowProfileSO
   baseMass: 22
+  baseCenterOfMassLocal: {x: 0, y: 0.45, z: -0.15}
   maximumResourceCargoMass: 60
   concreteBatchMass: 80
   passengerMass: 75
   resourceSlots: 3
-  driveForce: 220
+  driveForce: 280
   brakeForce: 420
   idleBrakeForce: 35
   idleAngularDamping: 4
   idleDampingMaximumSpeed: 0.25
-  maximumForwardSpeed: 4
-  maximumReverseSpeed: 2
-  maximumSteeringAngle: 30
+  maximumForwardSpeed: 5
+  maximumReverseSpeed: 2.5
+  maximumSteeringAngle: 36
   minimumSteeringSpeed: 0.15
   steeringTorque: 8
   driverStabilizingTorque: 60
   driverStabilizingDamping: 12
-  maximumDrivenYawSpeedDegrees: 75
+  stabilizationFadeStartAngle: 35
+  stabilizationFadeEndAngle: 55
+  maximumDrivenYawSpeedDegrees: 90
   drivenYawResponse: 8
-  maximumDrivenYawAccelerationDegrees: 360
+  maximumDrivenYawAccelerationDegrees: 300
+  maximumDrivenYawJerkDegrees: 1350
   emptyLateralVelocityDamping: 8
   loadedLateralVelocityDamping: 4
   emptyMaximumLateralGripAcceleration: 14
   loadedMaximumLateralGripAcceleration: 8
   inputTimeout: 0.25
+  enableCorneringRollover: 1
+  corneringRolloverDuration: 2
+  corneringRolloverRecoveryRate: 1
+  minimumRolloverSpeedRatio: 0.65
+  minimumRolloverSteeringRatio: 0.7
+  fullLoadRolloverReferenceSpeedRatio: 0.6
+  oneResourceRolloverLoadFactor: 0.25
+  twoResourcesRolloverLoadFactor: 0.5
+  threeResourcesRolloverLoadFactor: 0.8
+  concreteRolloverLoadFactor: 1
+  passengerRolloverLoadFactor: 1
+  rolloverGroundContactGraceDuration: 0.15
+  rolloverManeuverGraceDuration: 0.2
+  maximumCorneringRollAngle: 70
+  corneringRollSpring: 22
+  corneringRollDamping: 5
+  maximumCorneringRollAcceleration: 28
+  minimumCommittedRolloverAcceleration: 28
   wheelRadius: 0.44
+  wheelContactProbeDistance: 0.12
+  wheelSuspensionSpring: 45
+  wheelSuspensionDamping: 10
+  wheelMaximumSupportAcceleration: 18
+  groundNormalFilterSpeed: 12
+  groundHeightFilterSpeed: 4
+  maximumLongitudinalGripAcceleration: 10
+  maximumLateralGripAcceleration: 12
+  maximumStabilizationCenterOfMassHeight: 0.65
   wheelSuspensionDistance: 0.03
   wheelSuspensionFrequency: 7
   wheelSuspensionDampingRatio: 1
@@ -46,13 +77,20 @@ MonoBehaviour:
   wheelForwardFrictionStiffness: 1.4
   wheelSidewaysFrictionStiffness: 1.8
   steeringInputDeadZone: 0.08
-  steeringResponseDegreesPerSecond: 120
-  steeringReversalDegreesPerSecond: 45
+  steeringInputRampUp: 3.5
+  steeringInputRelease: 6
+  steeringResponseDegreesPerSecond: 240
+  steeringReversalDegreesPerSecond: 60
   driverSupportSpring: 18
   driverSupportDamping: 7
   maximumDriverSupportAcceleration: 15
+  driverSupportMaximumHeightCorrection: 0.12
   driverSupportGroundProbeDistance: 1.5
   driverSupportGroundFollowSpeed: 4
+  navObstacleSettleDuration: 0.5
+  navObstacleLinearSpeedThreshold: 0.15
+  navObstacleAngularSpeedThresholdDegrees: 10
+  enableDiagnostics: 0
   driverFollowSpeed: 8
   passengerFollowSpeed: 12
   maximumExitSpeed: 0.8
@@ -63,6 +101,7 @@ MonoBehaviour:
   exitSeparationPadding: 0.05
   exitSearchRadius: 1.8
   exitGroundProbeDistance: 2
+  enableDrivingStaminaDrain: 0
   baseStaminaDrain: 0.25
   loadedStaminaDrain: 1.25
   uphillStaminaDrain: 1.5
@@ -73,4 +112,11 @@ MonoBehaviour:
   tippingDuration: 0.25
   rightingHoldDuration: 1.5
   rightingAngularSpeed: 120
-  maximumRightingLinearSpeed: 0.2
+  maximumRightingLinearSpeed: 0.5
+  tippedAngularDamping: 3
+  tippedMinimumRestAngle: 55
+  tippedTargetRestAngle: 72
+  tippedRecoveryTorque: 60
+  rightingPlacementDuration: 0.4
+  rightingLiftClearance: 0.25
+  rightingPlacementSearchRadius: 0.75

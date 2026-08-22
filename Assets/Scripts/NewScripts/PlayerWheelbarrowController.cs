@@ -91,14 +91,18 @@ public class PlayerWheelbarrowController : MonoBehaviour
 
         if (CurrentRole == WheelbarrowOccupantRole.Driver)
         {
-            Vector2 move = Vector2.ClampMagnitude(input.GetMoveVectorValue(), 1f);
+            Vector2 rawMove = input.GetMoveVectorValue();
+            Vector2 move = new Vector2(
+                Mathf.Clamp(rawMove.x, -1f, 1f),
+                Mathf.Clamp(rawMove.y, -1f, 1f));
             if (health != null && health.IsDowned)
             {
                 if (IsNetworkActive && !current.IsServer) current.RequestExitServerRpc();
                 else current.RequestExit(LocalClientId);
                 return;
             }
-            if (stamina != null && stamina.CurrentStamina <= 0f) move.y = 0f;
+            bool usesDrivingStamina = current.Profile == null || current.Profile.EnableDrivingStaminaDrain;
+            if (usesDrivingStamina && stamina != null && stamina.CurrentStamina <= 0f) move.y = 0f;
             inputTimer += Time.deltaTime;
             if (inputTimer >= inputSendInterval)
             {
@@ -106,7 +110,10 @@ public class PlayerWheelbarrowController : MonoBehaviour
                 if (IsNetworkActive && !current.IsServer) current.SubmitDriveInputServerRpc(move.y, move.x);
                 else current.SubmitDriveInput(move.y, move.x, LocalClientId);
             }
-            stamina?.SetDrainSource(StaminaDrainSource.WheelbarrowDriving, current.GetEstimatedDrivingStaminaDrain(move.y));
+            if (usesDrivingStamina)
+                stamina?.SetDrainSource(StaminaDrainSource.WheelbarrowDriving, current.GetEstimatedDrivingStaminaDrain(move.y));
+            else
+                stamina?.ClearDrainSource(StaminaDrainSource.WheelbarrowDriving);
         }
         else stamina?.ClearDrainSource(StaminaDrainSource.WheelbarrowDriving);
     }

@@ -5,6 +5,7 @@ using Unity.Netcode;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 
 public static class WheelbarrowSetup
@@ -59,6 +60,13 @@ public static class WheelbarrowSetup
         body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         root.AddComponent<ServerNetworkTransform>();
         WheelbarrowController controller = root.AddComponent<WheelbarrowController>();
+        NavMeshObstacle navigationObstacle = root.AddComponent<NavMeshObstacle>();
+        navigationObstacle.shape = NavMeshObstacleShape.Box;
+        navigationObstacle.center = new Vector3(0f, 0.62f, -0.15f);
+        navigationObstacle.size = new Vector3(1.45f, 1.2f, 2.3f);
+        navigationObstacle.carving = false;
+        navigationObstacle.carveOnlyStationary = false;
+        navigationObstacle.enabled = false;
 
         AddBox(root, new Vector3(0f, 0.7f, -0.1475f), new Vector3(1.25f, 0.12f, 0.755f));
         AddBox(root, new Vector3(-0.375f, 0.7f, 0.5275f), new Vector3(0.5f, 0.12f, 0.595f));
@@ -131,6 +139,9 @@ public static class WheelbarrowSetup
         CreateInteraction(root.transform, "HandlesInteraction", new Vector3(0f, 0.95f, -1.55f), new Vector3(1.45f, 1.2f, 0.65f), controller, WheelbarrowInteractionKind.Handles);
         CreateInteraction(root.transform, "CargoInteraction", new Vector3(0f, 1.1f, 0.1f), new Vector3(1.25f, 0.65f, 1f), controller, WheelbarrowInteractionKind.Cargo);
         CreateInteraction(root.transform, "PassengerInteraction", new Vector3(0f, 1.1f, 0.78f), new Vector3(1.1f, 0.6f, 0.25f), controller, WheelbarrowInteractionKind.Passenger);
+        BoxCollider rightingInteraction = CreateInteraction(root.transform, "RightingInteraction", new Vector3(0f, 0.8f, -0.15f),
+            new Vector3(2.1f, 1.8f, 2.8f), controller, WheelbarrowInteractionKind.Righting);
+        rightingInteraction.enabled = false;
         GameObject autoBoard = new GameObject("FrontBoardingTrigger");
         autoBoard.transform.SetParent(root.transform, false);
         autoBoard.transform.localPosition = new Vector3(0f, 0.9f, 1f);
@@ -141,12 +152,14 @@ public static class WheelbarrowSetup
         SerializedObject serialized = new SerializedObject(controller);
         Set(serialized, "profile", profile); Set(serialized, "physicsBody", body); Set(serialized, "wheelContactCollider", wheelContactCollider);
         Set(serialized, "drivenWheelCollider", drivenWheelCollider);
+        Set(serialized, "navigationObstacle", navigationObstacle);
         Set(serialized, "wheelVisual", wheel.transform); Set(serialized, "driverAnchor", driverAnchor); Set(serialized, "driverSupportPoint", driverSupportPoint); Set(serialized, "passengerAnchor", passengerAnchor);
         serialized.FindProperty("wheelVisualRadius").floatValue = profile.WheelRadius;
         SetObjectArray(serialized, "restingSupportColliders", new UnityEngine.Object[] { supportLeftCollider, supportRightCollider });
         Set(serialized, "cargoRoot", cargoRoot); SetArray(serialized, "cargoSlots", slots);
         Set(serialized, "concreteCargoVisual", concreteCargo); Set(serialized, "spillVisual", spill);
         Set(serialized, "leftPourAnchor", leftPour); Set(serialized, "rightPourAnchor", rightPour); SetArray(serialized, "safeExitPoints", new[] { exitLeft, exitRight });
+        Set(serialized, "rightingInteractionCollider", rightingInteraction);
         serialized.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
@@ -182,7 +195,7 @@ public static class WheelbarrowSetup
 
         if (mixer != null)
         {
-            Vector3 target = mixer.transform.TransformPoint(new Vector3(2.1f, 0.02f, 0f));
+            Vector3 target = mixer.transform.TransformPoint(new Vector3(2.45f, 0.02f, 0f));
             WheelbarrowDockingStation mixerDock = CreateDock(setupRoot.transform, "WheelbarrowV1_MixerDock", WheelbarrowDockType.MixerLoading,
                 target, mixer.transform.rotation * Quaternion.Euler(0f, -90f, 0f), null, pouringProfile);
             SetReference(mixer, "concreteOutputStation", mixerDock);
@@ -336,12 +349,13 @@ public static class WheelbarrowSetup
         return hasBounds;
     }
 
-    private static void CreateInteraction(Transform parent, string name, Vector3 position, Vector3 size, WheelbarrowController controller, WheelbarrowInteractionKind kind)
+    private static BoxCollider CreateInteraction(Transform parent, string name, Vector3 position, Vector3 size, WheelbarrowController controller, WheelbarrowInteractionKind kind)
     {
         GameObject item = new GameObject(name); item.transform.SetParent(parent, false); item.transform.localPosition = position;
         BoxCollider collider = item.AddComponent<BoxCollider>(); collider.isTrigger = true; collider.size = size;
         WheelbarrowInteractionPoint point = item.AddComponent<WheelbarrowInteractionPoint>();
         SerializedObject serialized = new SerializedObject(point); Set(serialized, "wheelbarrow", controller); serialized.FindProperty("interactionKind").enumValueIndex = (int)kind; serialized.ApplyModifiedPropertiesWithoutUndo();
+        return collider;
     }
 
     private static GameObject CreatePrimitive(Transform parent, PrimitiveType type, string name, Vector3 position, Vector3 scale, Vector3 euler, Material material)

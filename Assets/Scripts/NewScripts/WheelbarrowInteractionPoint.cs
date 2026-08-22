@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum WheelbarrowInteractionKind : byte { Handles, Cargo, Passenger }
+public enum WheelbarrowInteractionKind : byte { Handles, Cargo, Passenger, Righting }
 
 public class WheelbarrowInteractionPoint : MonoBehaviour, IInteractableNew, IInteractionPromptProvider, ICarriedResourceSink
 {
@@ -15,7 +15,11 @@ public class WheelbarrowInteractionPoint : MonoBehaviour, IInteractableNew, IInt
     {
         if (wheelbarrow == null || interactor == null) return;
         PlayerInteractionNew player = interactor.GetComponent<PlayerInteractionNew>();
-        if (interactionKind == WheelbarrowInteractionKind.Handles)
+        if (interactionKind == WheelbarrowInteractionKind.Righting)
+        {
+            interactor.GetComponent<PlayerWheelbarrowController>()?.BeginRighting(wheelbarrow);
+        }
+        else if (interactionKind == WheelbarrowInteractionKind.Handles)
         {
             if (wheelbarrow.State == WheelbarrowState.Tipped)
             {
@@ -35,8 +39,10 @@ public class WheelbarrowInteractionPoint : MonoBehaviour, IInteractableNew, IInt
     {
         if (wheelbarrow == null) return;
         string prompt;
-        if (interactionKind == WheelbarrowInteractionKind.Handles)
-            prompt = wheelbarrow.State == WheelbarrowState.Tipped ? "Right wheelbarrow" : "Drive wheelbarrow";
+        if (interactionKind == WheelbarrowInteractionKind.Righting)
+            prompt = "Hold E - Right wheelbarrow";
+        else if (interactionKind == WheelbarrowInteractionKind.Handles)
+            prompt = wheelbarrow.State == WheelbarrowState.Tipped ? "Hold E - Right wheelbarrow" : "Drive wheelbarrow";
         else if (interactionKind == WheelbarrowInteractionKind.Passenger) prompt = "Ride in wheelbarrow";
         else prompt = wheelbarrow.CargoCount > 0 ? "Take last cargo" : "Load carried resource";
         prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, prompt));
