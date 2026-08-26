@@ -136,7 +136,7 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
-        if (IsRopeSelected())
+        if (IsSpecialInputToolSelected())
         {
             return;
         }
@@ -152,7 +152,7 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleAction(object sender, EventArgs e)
     {
-        if (IsRopeSelected())
+        if (IsSpecialInputToolSelected())
         {
             performAction = false;
             return;
@@ -291,6 +291,8 @@ public class PlayerActionController : NetworkBehaviour
                              bridgeComponent.IsMounted &&
                              !bridgeComponent.IsAssembled &&
                              bridgeComponent.NeedAssembling &&
+                             (bridgeComponent.ConstructionSite == null ||
+                              bridgeComponent.ConstructionSite.AllowsStandardAssemblyWork) &&
                              bridgeComponent.SupportsEquippableItemType(selectedItem.itemType);
         }
         else if (BridgeTargetResolver.TryGetConstructionWorkTarget(
@@ -716,7 +718,7 @@ public class PlayerActionController : NetworkBehaviour
 
     public void TryPerformAction()
     {
-        if (IsRopeSelected())
+        if (IsSpecialInputToolSelected())
         {
             performAction = false;
             CancelCurrentAction();
@@ -759,6 +761,13 @@ public class PlayerActionController : NetworkBehaviour
     {
         EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
         return selectedItem != null && selectedItem.itemType == EquippableItemType.Rope;
+    }
+
+    private bool IsSpecialInputToolSelected()
+    {
+        EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
+        return selectedItem != null &&
+               (selectedItem.itemType == EquippableItemType.Rope || selectedItem.itemType == EquippableItemType.SpiritLevel);
     }
 
     public void SetActionParameters(EquippableItemSO equippableItemSO)

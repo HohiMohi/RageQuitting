@@ -48,6 +48,8 @@ public class PlayerEquippableItemVisuals : NetworkBehaviour
     private GameObject backVisual;
     private int currentHandItemTypeValue = -2;
     private int currentBackItemTypeValue = -2;
+    private bool spiritLevelMeasurementActive;
+    private Transform spiritLevelMeasurementPose;
 
     private void Awake()
     {
@@ -101,6 +103,32 @@ public class PlayerEquippableItemVisuals : NetworkBehaviour
         if ((rightHandBone == null || backBone == null) && ResolveBones())
         {
             RefreshVisuals();
+        }
+
+        if (spiritLevelMeasurementActive && handVisual != null && spiritLevelMeasurementPose != null)
+        {
+            handVisual.transform.SetPositionAndRotation(
+                spiritLevelMeasurementPose.position,
+                spiritLevelMeasurementPose.rotation);
+        }
+    }
+
+    public void SetSpiritLevelMeasurementPose(bool active, Transform measurementPose)
+    {
+        if (spiritLevelMeasurementActive == active && spiritLevelMeasurementPose == measurementPose)
+        {
+            return;
+        }
+
+        spiritLevelMeasurementActive = active;
+        spiritLevelMeasurementPose = measurementPose;
+        if (!active && handVisual != null && currentHandItemTypeValue == (int)EquippableItemType.SpiritLevel)
+        {
+            AttachmentPose pose = GetPose(EquippableItemType.SpiritLevel, true);
+            handVisual.transform.SetParent(rightHandBone, false);
+            handVisual.transform.localPosition = pose.localPosition;
+            handVisual.transform.localRotation = Quaternion.Euler(pose.localEulerAngles);
+            handVisual.transform.localScale = pose.localScale;
         }
     }
 
@@ -265,7 +293,8 @@ public class PlayerEquippableItemVisuals : NetworkBehaviour
                itemType == EquippableItemType.Shovel ||
                itemType == EquippableItemType.IndustrialHammer ||
                itemType == EquippableItemType.Wrench ||
-               itemType == EquippableItemType.Rope;
+               itemType == EquippableItemType.Rope ||
+               itemType == EquippableItemType.SpiritLevel;
     }
 
     private static void ClearVisual(ref GameObject visual)

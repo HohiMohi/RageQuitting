@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class BridgeAbutmentConstructionSite : BridgeConstructionSite
+public class BridgeAbutmentConstructionSite : BridgeConstructionSite, ILevelingMeasurementTarget
 {
     private const int AnchorCount = 4;
 
@@ -11,21 +11,20 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
 
     [Header("Ramp visuals")]
     [SerializeField] private Transform rampVisualRoot;
-    [SerializeField] private Transform leftWedgeVisual;
-    [SerializeField] private Transform rightWedgeVisual;
-    [SerializeField] private Renderer levelIndicatorRenderer;
-    [SerializeField] private Color unlevelColor = new Color(0.8f, 0.15f, 0.1f, 1f);
-    [SerializeField] private Color levelColor = new Color(0.15f, 0.8f, 0.2f, 1f);
+    [SerializeField, HideInInspector] private Renderer levelIndicatorRenderer;
 
     private BridgeAbutmentConstructionWorkflowSO abutmentWorkflow;
     private BridgeAbutmentWorkPoint[] workPoints;
-    private int leftLevelStep;
-    private int rightLevelStep;
+    private int lengthTilt;
+    private int widthTilt;
     private readonly float[] anchorProgress = new float[AnchorCount];
-    private MaterialPropertyBlock levelIndicatorPropertyBlock;
+    private Quaternion rampBaseLocalRotation;
 
-    public int LeftLevelStep => leftLevelStep;
-    public int RightLevelStep => rightLevelStep;
+    public int LengthTilt => lengthTilt;
+    public int WidthTilt => widthTilt;
+    public bool IsLevelingCorrect => IsAxisCorrect(lengthTilt) && IsAxisCorrect(widthTilt);
+    public bool IsLevelingActive => currentStage == BridgeConstructionStage.Leveling;
+    public int MaximumLogicalTilt => GetWorkflow() != null ? GetWorkflow().MaximumLogicalTilt : 8;
     public IReadOnlyList<float> AnchorProgress => anchorProgress;
     public float BackfillProgress => currentWorkProgress;
     public override bool CanAcceptMountedComponent => currentStage == BridgeConstructionStage.ReadyForMount;
@@ -36,10 +35,12 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
     protected override void Awake()
     {
         workPoints = GetComponentsInChildren<BridgeAbutmentWorkPoint>(true);
+        rampBaseLocalRotation = rampVisualRoot != null ? rampVisualRoot.localRotation : Quaternion.identity;
         base.Awake();
         abutmentWorkflow = bridgeComponent != null && bridgeComponent.GetBridgeComponentSO() != null
             ? bridgeComponent.GetBridgeComponentSO().abutmentConstructionWorkflow
             : null;
+        if (levelIndicatorRenderer != null) levelIndicatorRenderer.gameObject.SetActive(false);
         ApplyVisualState();
     }
 
@@ -72,22 +73,17 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
             return;
         }
 
-        BridgeAbutmentConstructionWorkflowSO settings = GetWorkflow();
-        int difference = settings != null ? settings.InitialLevelDifference : 2;
-        if (HasAuthority() && Random.Range(0, 2) == 0)
-        {
-            leftLevelStep = difference;
-            rightLevelStep = 0;
-        }
-        else
-        {
-            leftLevelStep = 0;
-            rightLevelStep = difference;
-        }
+        RandomizeAxis(ref lengthTilt);
+        RandomizeAxis(ref widthTilt);
 
         currentStage = BridgeConstructionStage.Leveling;
         currentWorkProgress = 0f;
         ApplyVisualState();
+    }
+
+    public int GetLogicalTilt(SpiritLevelMeasurementAxis axis)
+    {
+        return axis == SpiritLevelMeasurementAxis.Length ? lengthTilt : widthTilt;
     }
 
     public void RequestToolWork(EquippableItemSO item, int workPointId)
@@ -114,24 +110,18 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
 
         if (currentStage == BridgeConstructionStage.Leveling && toolType == settings.LevelingTool)
         {
-            if (workPointId == (int)BridgeAbutmentWorkPointId.LeftWedge)
-            {
-                if (leftLevelStep <= 0) return false;
-                leftLevelStep--;
-            }
-            else if (workPointId == (int)BridgeAbutmentWorkPointId.RightWedge)
-            {
-                if (rightLevelStep <= 0) return false;
-                rightLevelStep--;
-            }
-            else
+            if (!TryGetLevelingAdjustment(workPointId, out SpiritLevelMeasurementAxis axis, out int delta))
             {
                 return false;
             }
 
-            if (leftLevelStep == rightLevelStep)
+            if (axis == SpiritLevelMeasurementAxis.Length)
             {
-                currentStage = BridgeConstructionStage.Anchoring;
+                lengthTilt = Mathf.Clamp(lengthTilt + delta, -settings.MaximumLogicalTilt, settings.MaximumLogicalTilt);
+            }
+            else
+            {
+                widthTilt = Mathf.Clamp(widthTilt + delta, -settings.MaximumLogicalTilt, settings.MaximumLogicalTilt);
             }
 
             ApplyVisualState();
@@ -183,9 +173,10 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
 
         if (currentStage == BridgeConstructionStage.Leveling && toolType == settings.LevelingTool)
         {
-            return workPointId == (int)BridgeAbutmentWorkPointId.LeftWedge
-                ? leftLevelStep > 0
-                : workPointId == (int)BridgeAbutmentWorkPointId.RightWedge && rightLevelStep > 0;
+            return TryGetLevelingAdjustment(workPointId, out SpiritLevelMeasurementAxis axis, out int delta) &&
+                   (axis == SpiritLevelMeasurementAxis.Length
+                       ? lengthTilt + delta >= -settings.MaximumLogicalTilt && lengthTilt + delta <= settings.MaximumLogicalTilt
+                       : widthTilt + delta >= -settings.MaximumLogicalTilt && widthTilt + delta <= settings.MaximumLogicalTilt);
         }
 
         if (currentStage == BridgeConstructionStage.Anchoring && toolType == settings.AnchoringTool)
@@ -200,7 +191,7 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
                currentWorkProgress < settings.BackfillProgressNeeded;
     }
 
-    public void GetWorkPointPrompts(BridgeAbutmentWorkPointId pointId, List<InteractionPrompt> prompts)
+    public void GetWorkPointPrompts(int requestId, List<InteractionPrompt> prompts)
     {
         BridgeAbutmentConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null)
@@ -210,22 +201,23 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
 
         if (currentStage == BridgeConstructionStage.Leveling)
         {
-            string side = pointId == BridgeAbutmentWorkPointId.LeftWedge ? "left" : "right";
-            int step = pointId == BridgeAbutmentWorkPointId.LeftWedge ? leftLevelStep : rightLevelStep;
-            string suffix = step <= 0 ? " - already at minimum" : string.Empty;
-            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
-                $"Lower {side} side - step {step} / {settings.MaximumLevelStep}{suffix}"));
+            if (TryGetLevelingAdjustment(requestId, out SpiritLevelMeasurementAxis axis, out _))
+            {
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
+                    $"Adjust {axis.ToString().ToLowerInvariant()} support"));
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Confirm leveling"));
+            }
         }
         else if (currentStage == BridgeConstructionStage.Anchoring)
         {
-            int anchorIndex = (int)pointId - (int)BridgeAbutmentWorkPointId.Anchor0;
+            int anchorIndex = requestId - (int)BridgeAbutmentWorkPointId.Anchor0;
             if (anchorIndex >= 0 && anchorIndex < AnchorCount)
             {
                 prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
                     $"Secure anchor {anchorIndex + 1} - {Mathf.CeilToInt(anchorProgress[anchorIndex])} / {Mathf.CeilToInt(settings.AnchorProgressNeeded)}"));
             }
         }
-        else if (currentStage == BridgeConstructionStage.Backfilling && pointId == BridgeAbutmentWorkPointId.Backfill)
+        else if (currentStage == BridgeConstructionStage.Backfilling && requestId == (int)BridgeAbutmentWorkPointId.Backfill)
         {
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
                 $"Backfill abutment - {Mathf.CeilToInt(currentWorkProgress)} / {Mathf.CeilToInt(settings.BackfillProgressNeeded)}"));
@@ -242,13 +234,38 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
         {
             bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Abutment");
         }
+        else if (currentStage == BridgeConstructionStage.Leveling)
+        {
+            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Confirm leveling"));
+        }
+    }
+
+    public override bool TryConfirmLeveling()
+    {
+        if (currentStage != BridgeConstructionStage.Leveling || !HasAuthority())
+        {
+            return false;
+        }
+
+        if (IsLevelingCorrect)
+        {
+            currentStage = BridgeConstructionStage.Anchoring;
+        }
+        else
+        {
+            if (!IsAxisCorrect(lengthTilt)) RandomizeAxis(ref lengthTilt);
+            if (!IsAxisCorrect(widthTilt)) RandomizeAxis(ref widthTilt);
+        }
+
+        ApplyVisualState();
+        return true;
     }
 
     public override void PopulateNetworkState(ref BridgeComponentNetworkState state)
     {
         base.PopulateNetworkState(ref state);
-        state.constructionValueA = leftLevelStep;
-        state.constructionValueB = rightLevelStep;
+        state.constructionValueA = lengthTilt;
+        state.constructionValueB = widthTilt;
         state.constructionAnchor0 = anchorProgress[0];
         state.constructionAnchor1 = anchorProgress[1];
         state.constructionAnchor2 = anchorProgress[2];
@@ -259,8 +276,8 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
     {
         currentStage = (BridgeConstructionStage)state.constructionStage;
         currentWorkProgress = Mathf.Max(0f, state.constructionProgress);
-        leftLevelStep = state.constructionValueA;
-        rightLevelStep = state.constructionValueB;
+        lengthTilt = state.constructionValueA;
+        widthTilt = state.constructionValueB;
         anchorProgress[0] = state.constructionAnchor0;
         anchorProgress[1] = state.constructionAnchor1;
         anchorProgress[2] = state.constructionAnchor2;
@@ -280,7 +297,7 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
         {
             foreach (BridgeAbutmentWorkPoint point in workPoints)
             {
-                if (point != null && (int)point.WorkPointId == workPointId)
+                if (point != null && point.RequestId == workPointId)
                 {
                     return point;
                 }
@@ -292,11 +309,9 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
 
     protected override void ApplyVisualState()
     {
-        bool showLevelIndicator = currentStage == BridgeConstructionStage.Leveling ||
-                                  currentStage == BridgeConstructionStage.Anchoring;
         if (levelIndicatorRenderer != null)
         {
-            levelIndicatorRenderer.gameObject.SetActive(showLevelIndicator);
+            levelIndicatorRenderer.gameObject.SetActive(false);
         }
 
         if (workPoints != null)
@@ -305,7 +320,7 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
             {
                 if (point == null) continue;
                 int id = (int)point.WorkPointId;
-                bool active = (currentStage == BridgeConstructionStage.Leveling && id <= 1) ||
+                bool active = (currentStage == BridgeConstructionStage.Leveling && point.IsLevelingPoint) ||
                               (currentStage == BridgeConstructionStage.Anchoring && id >= 10 && id <= 13) ||
                               (currentStage == BridgeConstructionStage.Backfilling && id == 20);
                 point.gameObject.SetActive(active);
@@ -318,25 +333,13 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
             return;
         }
 
-        float leftHeight = leftLevelStep * settings.LevelStepHeight;
-        float rightHeight = rightLevelStep * settings.LevelStepHeight;
-        if (leftWedgeVisual != null) leftWedgeVisual.localPosition = new Vector3(leftWedgeVisual.localPosition.x, leftHeight, leftWedgeVisual.localPosition.z);
-        if (rightWedgeVisual != null) rightWedgeVisual.localPosition = new Vector3(rightWedgeVisual.localPosition.x, rightHeight, rightWedgeVisual.localPosition.z);
         if (rampVisualRoot != null)
         {
-            float roll = Mathf.Atan2(rightHeight - leftHeight, 2.4f) * Mathf.Rad2Deg;
-            rampVisualRoot.localRotation = Quaternion.Euler(0f, 0f, roll);
-        }
-
-        bool isLevel = leftLevelStep == rightLevelStep;
-        if (levelIndicatorRenderer != null)
-        {
-            levelIndicatorPropertyBlock ??= new MaterialPropertyBlock();
-            levelIndicatorRenderer.GetPropertyBlock(levelIndicatorPropertyBlock);
-            Color indicatorColor = isLevel ? levelColor : unlevelColor;
-            levelIndicatorPropertyBlock.SetColor("_BaseColor", indicatorColor);
-            levelIndicatorPropertyBlock.SetColor("_Color", indicatorColor);
-            levelIndicatorRenderer.SetPropertyBlock(levelIndicatorPropertyBlock);
+            float pitch = BridgeLevelingUtility.GetVisualAngle(lengthTilt, settings.MaximumLogicalTilt,
+                settings.VisuallyStraightTiltRange, settings.MaximumVisualTiltDegrees);
+            float roll = BridgeLevelingUtility.GetVisualAngle(widthTilt, settings.MaximumLogicalTilt,
+                settings.VisuallyStraightTiltRange, settings.MaximumVisualTiltDegrees);
+            rampVisualRoot.localRotation = rampBaseLocalRotation * Quaternion.Euler(pitch, 0f, roll);
         }
 
     }
@@ -357,6 +360,44 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite
             if (anchorProgress[i] < required) return false;
         }
         return true;
+    }
+
+    private bool IsAxisCorrect(int value)
+    {
+        BridgeAbutmentConstructionWorkflowSO settings = GetWorkflow();
+        return Mathf.Abs(value) <= (settings != null ? settings.LevelingSuccessTolerance : 0);
+    }
+
+    private void RandomizeAxis(ref int axis)
+    {
+        BridgeAbutmentConstructionWorkflowSO settings = GetWorkflow();
+        axis = BridgeLevelingUtility.RandomNonZeroTilt(
+            settings != null ? settings.MinimumInitialAbsoluteTilt : 1,
+            settings != null ? settings.MaximumLogicalTilt : 8);
+    }
+
+    private bool TryGetLevelingAdjustment(int workPointId, out SpiritLevelMeasurementAxis axis, out int delta)
+    {
+        if (workPoints != null)
+        {
+            foreach (BridgeAbutmentWorkPoint point in workPoints)
+            {
+                if (point != null && point.IsLevelingPoint && point.RequestId == workPointId)
+                {
+                    BridgeLevelingAdjustmentRoleUtility.Resolve(point.LevelingRole, out axis, out delta);
+                    return true;
+                }
+            }
+        }
+
+        switch ((BridgeAbutmentWorkPointId)workPointId)
+        {
+            case BridgeAbutmentWorkPointId.StartWedge: axis = SpiritLevelMeasurementAxis.Length; delta = 1; return true;
+            case BridgeAbutmentWorkPointId.EndWedge: axis = SpiritLevelMeasurementAxis.Length; delta = -1; return true;
+            case BridgeAbutmentWorkPointId.LeftWedge: axis = SpiritLevelMeasurementAxis.Width; delta = 1; return true;
+            case BridgeAbutmentWorkPointId.RightWedge: axis = SpiritLevelMeasurementAxis.Width; delta = -1; return true;
+            default: axis = default; delta = 0; return false;
+        }
     }
 
     private static bool HasAuthority()

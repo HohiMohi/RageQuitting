@@ -286,14 +286,56 @@ public static class WheelbarrowSetup
         if (volume == null) return;
         SerializedObject serialized = new SerializedObject(volume);
         Transform soil = serialized.FindProperty("soilSurface")?.objectReferenceValue as Transform;
-        GameObject fill = CreatePrimitive(volume.transform, PrimitiveType.Cube, "ConcreteFill", soil != null ? soil.localPosition : new Vector3(0f, -1.2f, 0f),
-            soil != null ? new Vector3(Mathf.Max(0.2f, soil.localScale.x * 0.9f), 0.18f, Mathf.Max(0.2f, soil.localScale.z * 0.9f)) : new Vector3(2f, 0.18f, 2f), Vector3.zero, wet);
-        BoxCollider collider = fill.AddComponent<BoxCollider>(); collider.enabled = false;
+        Transform excavationRoot = volume.transform.parent != null ? volume.transform.parent : volume.transform;
+        Transform pitBottom = excavationRoot.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(item => item.name == "PitBottom");
+        Transform exitRamp = excavationRoot.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(item => item.name == "ExitRamp");
+
+        float bottomLocalY = -1.2f;
+        if (pitBottom != null && TryGetWorldBounds(pitBottom.gameObject, out Bounds bottomBounds))
+        {
+            bottomLocalY = excavationRoot.InverseTransformPoint(
+                new Vector3(bottomBounds.center.x, bottomBounds.max.y, bottomBounds.center.z)).y;
+        }
+
+        float fullTopLocalY = 0.08f;
+        Renderer soilRenderer = soil != null ? soil.GetComponent<Renderer>() : null;
+        if (soilRenderer != null)
+        {
+            Bounds soilBounds = soilRenderer.bounds;
+            fullTopLocalY = excavationRoot.InverseTransformPoint(
+                new Vector3(soilBounds.center.x, soilBounds.max.y, soilBounds.center.z)).y;
+        }
+
+        Vector2 footprint = soil != null
+            ? new Vector2(Mathf.Max(0.2f, soil.localScale.x), Mathf.Max(0.2f, soil.localScale.z))
+            : new Vector2(6.5f, 4f);
+        float height = Mathf.Max(0.001f, fullTopLocalY - bottomLocalY);
+        Transform existingFill = excavationRoot.Find("ConcreteFill");
+        GameObject fill = existingFill != null
+            ? existingFill.gameObject
+            : CreatePrimitive(excavationRoot, PrimitiveType.Cube, "ConcreteFill", Vector3.zero, Vector3.one, Vector3.zero, wet);
+        fill.transform.SetParent(excavationRoot, false);
+        fill.transform.localPosition = new Vector3(
+            soil != null ? soil.localPosition.x : 0f,
+            bottomLocalY + height * 0.5f,
+            soil != null ? soil.localPosition.z : 0f);
+        fill.transform.localRotation = Quaternion.identity;
+        fill.transform.localScale = new Vector3(footprint.x, height, footprint.y);
+        fill.GetComponent<Renderer>().sharedMaterial = wet;
+
+        BoxCollider collider = fill.GetComponent<BoxCollider>();
+        if (collider == null) collider = fill.AddComponent<BoxCollider>();
+        collider.enabled = false;
         fill.SetActive(false);
         Set(serialized, "concreteFillVisual", fill.transform); Set(serialized, "concreteRenderer", fill.GetComponent<Renderer>());
         Set(serialized, "driedConcreteCollider", collider); Set(serialized, "wetConcreteMaterial", wet); Set(serialized, "dryConcreteMaterial", dry);
-        serialized.FindProperty("concreteEmptyLocalY").floatValue = (soil != null ? soil.localPosition.y : -1.2f) - 0.2f;
-        serialized.FindProperty("concreteFullLocalY").floatValue = soil != null ? soil.localPosition.y : 0f;
+        serialized.FindProperty("concreteFootprintSize").vector2Value = footprint;
+        serialized.FindProperty("concreteBottomLocalY").floatValue = bottomLocalY;
+        serialized.FindProperty("concreteFullTopLocalY").floatValue = fullTopLocalY;
+        Set(serialized, "exitRampRenderer", exitRamp != null ? exitRamp.GetComponent<Renderer>() : null);
+        Set(serialized, "exitRampCollider", exitRamp != null ? exitRamp.GetComponent<Collider>() : null);
         serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 

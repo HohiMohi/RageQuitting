@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class BridgeGirderConstructionSite : BridgeConstructionSite
+public class BridgeGirderConstructionSite : BridgeConstructionSite, ILevelingMeasurementTarget
 {
     private const int FastenerCount = 4;
     private const int FastenerPairCount = 2;
@@ -13,23 +13,22 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
 
     [Header("Girder visuals")]
     [SerializeField] private Transform girderVisualRoot;
-    [SerializeField] private Transform startWedgeVisual;
-    [SerializeField] private Transform endWedgeVisual;
-    [SerializeField] private Renderer levelIndicatorRenderer;
-    [SerializeField] private Color unlevelColor = new Color(0.8f, 0.15f, 0.1f, 1f);
-    [SerializeField] private Color levelColor = new Color(0.15f, 0.8f, 0.2f, 1f);
+    [SerializeField, HideInInspector] private Renderer levelIndicatorRenderer;
 
     private BridgeGirderConstructionWorkflowSO girderWorkflow;
     private BridgeGirderWorkPoint[] workPoints;
-    private int startLevelStep;
-    private int endLevelStep;
+    private int lengthTilt;
+    private int widthTilt;
     private readonly float[] fastenerProgress = new float[FastenerCount];
     private int activeFirstFastenerIndex = NoActiveFastener;
     private double fastenerPairDeadline = -1d;
-    private MaterialPropertyBlock levelIndicatorPropertyBlock;
+    private Quaternion girderBaseLocalRotation;
 
-    public int StartLevelStep => startLevelStep;
-    public int EndLevelStep => endLevelStep;
+    public int LengthTilt => lengthTilt;
+    public int WidthTilt => widthTilt;
+    public bool IsLevelingCorrect => IsAxisCorrect(lengthTilt) && IsAxisCorrect(widthTilt);
+    public bool IsLevelingActive => currentStage == BridgeConstructionStage.Leveling;
+    public int MaximumLogicalTilt => GetWorkflow() != null ? GetWorkflow().MaximumLogicalTilt : 8;
     public IReadOnlyList<float> FastenerProgress => fastenerProgress;
     public float FirstPairProgress => fastenerProgress[0];
     public float SecondPairProgress => fastenerProgress[1];
@@ -53,10 +52,12 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
     protected override void Awake()
     {
         workPoints = GetComponentsInChildren<BridgeGirderWorkPoint>(true);
+        girderBaseLocalRotation = girderVisualRoot != null ? girderVisualRoot.localRotation : Quaternion.identity;
         base.Awake();
         girderWorkflow = bridgeComponent != null && bridgeComponent.GetBridgeComponentSO() != null
             ? bridgeComponent.GetBridgeComponentSO().girderConstructionWorkflow
             : null;
+        if (levelIndicatorRenderer != null) levelIndicatorRenderer.gameObject.SetActive(false);
         ApplyVisualState();
     }
 
@@ -94,22 +95,17 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
             return;
         }
 
-        BridgeGirderConstructionWorkflowSO settings = GetWorkflow();
-        int difference = settings != null ? settings.InitialLevelDifference : 2;
-        if (HasAuthority() && Random.Range(0, 2) == 0)
-        {
-            startLevelStep = difference;
-            endLevelStep = 0;
-        }
-        else
-        {
-            startLevelStep = 0;
-            endLevelStep = difference;
-        }
+        RandomizeAxis(ref lengthTilt);
+        RandomizeAxis(ref widthTilt);
 
         currentStage = BridgeConstructionStage.Leveling;
         currentWorkProgress = 0f;
         ApplyVisualState();
+    }
+
+    public int GetLogicalTilt(SpiritLevelMeasurementAxis axis)
+    {
+        return axis == SpiritLevelMeasurementAxis.Length ? lengthTilt : widthTilt;
     }
 
     public void RequestToolWork(EquippableItemSO item, int workPointId)
@@ -136,25 +132,18 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
 
         if (currentStage == BridgeConstructionStage.Leveling && toolType == settings.LevelingTool)
         {
-            if (workPointId == (int)BridgeGirderWorkPointId.StartWedge)
-            {
-                if (startLevelStep <= 0) return false;
-                startLevelStep--;
-            }
-            else if (workPointId == (int)BridgeGirderWorkPointId.EndWedge)
-            {
-                if (endLevelStep <= 0) return false;
-                endLevelStep--;
-            }
-            else
+            if (!TryGetLevelingAdjustment(workPointId, out SpiritLevelMeasurementAxis axis, out int delta))
             {
                 return false;
             }
 
-            if (startLevelStep == endLevelStep)
+            if (axis == SpiritLevelMeasurementAxis.Length)
             {
-                currentStage = BridgeConstructionStage.Fastening;
-                ClearFastenerPairWindow();
+                lengthTilt = Mathf.Clamp(lengthTilt + delta, -settings.MaximumLogicalTilt, settings.MaximumLogicalTilt);
+            }
+            else
+            {
+                widthTilt = Mathf.Clamp(widthTilt + delta, -settings.MaximumLogicalTilt, settings.MaximumLogicalTilt);
             }
 
             ApplyVisualState();
@@ -247,9 +236,10 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
 
         if (currentStage == BridgeConstructionStage.Leveling && toolType == settings.LevelingTool)
         {
-            return workPointId == (int)BridgeGirderWorkPointId.StartWedge
-                ? startLevelStep > 0
-                : workPointId == (int)BridgeGirderWorkPointId.EndWedge && endLevelStep > 0;
+            return TryGetLevelingAdjustment(workPointId, out SpiritLevelMeasurementAxis axis, out int delta) &&
+                   (axis == SpiritLevelMeasurementAxis.Length
+                       ? lengthTilt + delta >= -settings.MaximumLogicalTilt && lengthTilt + delta <= settings.MaximumLogicalTilt
+                       : widthTilt + delta >= -settings.MaximumLogicalTilt && widthTilt + delta <= settings.MaximumLogicalTilt);
         }
 
         int index = workPointId - (int)BridgeGirderWorkPointId.Fastener0;
@@ -264,7 +254,7 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
                fastenerAvailable;
     }
 
-    public void GetWorkPointPrompts(BridgeGirderWorkPointId pointId, List<InteractionPrompt> prompts)
+    public void GetWorkPointPrompts(int requestId, List<InteractionPrompt> prompts)
     {
         BridgeGirderConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null)
@@ -274,17 +264,18 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
 
         if (currentStage == BridgeConstructionStage.Leveling)
         {
-            bool isStart = pointId == BridgeGirderWorkPointId.StartWedge;
-            int step = isStart ? startLevelStep : endLevelStep;
-            string suffix = step <= 0 ? " - already at minimum" : string.Empty;
-            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
-                $"Lower {(isStart ? "start" : "end")} end - step {step} / {settings.MaximumLevelStep}{suffix}"));
+            if (TryGetLevelingAdjustment(requestId, out SpiritLevelMeasurementAxis axis, out _))
+            {
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
+                    $"Adjust {axis.ToString().ToLowerInvariant()} support"));
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Confirm leveling"));
+            }
             return;
         }
 
         if (currentStage == BridgeConstructionStage.Fastening)
         {
-            int index = (int)pointId - (int)BridgeGirderWorkPointId.Fastener0;
+            int index = requestId - (int)BridgeGirderWorkPointId.Fastener0;
             if (index >= 0 && index < FastenerCount)
             {
                 int pairIndex = GetPairIndex(index);
@@ -325,13 +316,39 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         {
             bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Main Girder");
         }
+        else if (currentStage == BridgeConstructionStage.Leveling)
+        {
+            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Confirm leveling"));
+        }
+    }
+
+    public override bool TryConfirmLeveling()
+    {
+        if (currentStage != BridgeConstructionStage.Leveling || !HasAuthority())
+        {
+            return false;
+        }
+
+        if (IsLevelingCorrect)
+        {
+            currentStage = BridgeConstructionStage.Fastening;
+            ClearFastenerPairWindow();
+        }
+        else
+        {
+            if (!IsAxisCorrect(lengthTilt)) RandomizeAxis(ref lengthTilt);
+            if (!IsAxisCorrect(widthTilt)) RandomizeAxis(ref widthTilt);
+        }
+
+        ApplyVisualState();
+        return true;
     }
 
     public override void PopulateNetworkState(ref BridgeComponentNetworkState state)
     {
         base.PopulateNetworkState(ref state);
-        state.constructionValueA = startLevelStep;
-        state.constructionValueB = endLevelStep;
+        state.constructionValueA = lengthTilt;
+        state.constructionValueB = widthTilt;
         state.constructionAnchor0 = fastenerProgress[0];
         state.constructionAnchor1 = fastenerProgress[1];
         state.constructionAnchor2 = fastenerProgress[2];
@@ -344,8 +361,8 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
     {
         currentStage = (BridgeConstructionStage)state.constructionStage;
         currentWorkProgress = Mathf.Max(0f, state.constructionProgress);
-        startLevelStep = state.constructionValueA;
-        endLevelStep = state.constructionValueB;
+        lengthTilt = state.constructionValueA;
+        widthTilt = state.constructionValueB;
         fastenerProgress[0] = state.constructionAnchor0;
         fastenerProgress[1] = state.constructionAnchor1;
         fastenerProgress[2] = state.constructionAnchor2;
@@ -372,7 +389,7 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
         {
             foreach (BridgeGirderWorkPoint point in workPoints)
             {
-                if (point != null && (int)point.WorkPointId == workPointId)
+                if (point != null && point.RequestId == workPointId)
                 {
                     return point;
                 }
@@ -384,11 +401,9 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
 
     protected override void ApplyVisualState()
     {
-        bool showLevelIndicator = currentStage == BridgeConstructionStage.Leveling ||
-                                  currentStage == BridgeConstructionStage.Fastening;
         if (levelIndicatorRenderer != null)
         {
-            levelIndicatorRenderer.gameObject.SetActive(showLevelIndicator);
+            levelIndicatorRenderer.gameObject.SetActive(false);
         }
 
         if (workPoints != null)
@@ -397,7 +412,7 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
             {
                 if (point == null) continue;
                 int id = (int)point.WorkPointId;
-                bool active = (currentStage == BridgeConstructionStage.Leveling && id <= 1) ||
+                bool active = (currentStage == BridgeConstructionStage.Leveling && point.IsLevelingPoint) ||
                               (currentStage == BridgeConstructionStage.Fastening && id >= 10 && id <= 13);
                 point.gameObject.SetActive(active);
             }
@@ -409,25 +424,13 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
             return;
         }
 
-        float startHeight = startLevelStep * settings.LevelStepHeight;
-        float endHeight = endLevelStep * settings.LevelStepHeight;
-        SetLocalHeight(startWedgeVisual, startHeight);
-        SetLocalHeight(endWedgeVisual, endHeight);
         if (girderVisualRoot != null)
         {
-            float pitch = Mathf.Atan2(endHeight - startHeight, 14f) * Mathf.Rad2Deg;
-            girderVisualRoot.localRotation = Quaternion.Euler(0f, 0f, pitch);
-        }
-
-        bool isLevel = startLevelStep == endLevelStep;
-        if (levelIndicatorRenderer != null)
-        {
-            levelIndicatorPropertyBlock ??= new MaterialPropertyBlock();
-            levelIndicatorRenderer.GetPropertyBlock(levelIndicatorPropertyBlock);
-            Color indicatorColor = isLevel ? levelColor : unlevelColor;
-            levelIndicatorPropertyBlock.SetColor("_BaseColor", indicatorColor);
-            levelIndicatorPropertyBlock.SetColor("_Color", indicatorColor);
-            levelIndicatorRenderer.SetPropertyBlock(levelIndicatorPropertyBlock);
+            float pitch = BridgeLevelingUtility.GetVisualAngle(lengthTilt, settings.MaximumLogicalTilt,
+                settings.VisuallyStraightTiltRange, settings.MaximumVisualTiltDegrees);
+            float roll = BridgeLevelingUtility.GetVisualAngle(widthTilt, settings.MaximumLogicalTilt,
+                settings.VisuallyStraightTiltRange, settings.MaximumVisualTiltDegrees);
+            girderVisualRoot.localRotation = girderBaseLocalRotation * Quaternion.Euler(pitch, 0f, roll);
         }
 
     }
@@ -535,11 +538,41 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite
             : Time.timeAsDouble;
     }
 
-    private static void SetLocalHeight(Transform target, float height)
+    private bool IsAxisCorrect(int value)
     {
-        if (target != null)
+        BridgeGirderConstructionWorkflowSO settings = GetWorkflow();
+        return Mathf.Abs(value) <= (settings != null ? settings.LevelingSuccessTolerance : 0);
+    }
+
+    private void RandomizeAxis(ref int axis)
+    {
+        BridgeGirderConstructionWorkflowSO settings = GetWorkflow();
+        axis = BridgeLevelingUtility.RandomNonZeroTilt(
+            settings != null ? settings.MinimumInitialAbsoluteTilt : 1,
+            settings != null ? settings.MaximumLogicalTilt : 8);
+    }
+
+    private bool TryGetLevelingAdjustment(int workPointId, out SpiritLevelMeasurementAxis axis, out int delta)
+    {
+        if (workPoints != null)
         {
-            target.localPosition = new Vector3(target.localPosition.x, height, target.localPosition.z);
+            foreach (BridgeGirderWorkPoint point in workPoints)
+            {
+                if (point != null && point.IsLevelingPoint && point.RequestId == workPointId)
+                {
+                    BridgeLevelingAdjustmentRoleUtility.Resolve(point.LevelingRole, out axis, out delta);
+                    return true;
+                }
+            }
+        }
+
+        switch ((BridgeGirderWorkPointId)workPointId)
+        {
+            case BridgeGirderWorkPointId.StartWedge: axis = SpiritLevelMeasurementAxis.Length; delta = 1; return true;
+            case BridgeGirderWorkPointId.EndWedge: axis = SpiritLevelMeasurementAxis.Length; delta = -1; return true;
+            case BridgeGirderWorkPointId.LeftWedge: axis = SpiritLevelMeasurementAxis.Width; delta = 1; return true;
+            case BridgeGirderWorkPointId.RightWedge: axis = SpiritLevelMeasurementAxis.Width; delta = -1; return true;
+            default: axis = default; delta = 0; return false;
         }
     }
 

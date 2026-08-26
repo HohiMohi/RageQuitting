@@ -104,6 +104,9 @@ public class EquippableToolVisualBuilder : MonoBehaviour
             case EquippableItemType.Rope:
                 BuildRope(generatedRoot.transform, materials);
                 break;
+            case EquippableItemType.SpiritLevel:
+                BuildSpiritLevel(generatedRoot.transform, materials);
+                break;
             default:
                 DestroyVisualObject(generatedRoot);
                 return null;
@@ -300,6 +303,38 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         CreateSecondaryGrip(root, new Vector3(-0.22f, 0f, 0f));
     }
 
+    private static void BuildSpiritLevel(Transform root, ToolVisualMaterials materials)
+    {
+        Material body = GetMaterial(materials.handleMaterial, new Color(0.92f, 0.72f, 0.08f, 1f));
+        Material frame = GetMaterial(materials.pickaxeMaterial, new Color(0.12f, 0.14f, 0.15f, 1f));
+        Material liquid = GetMaterial(null, new Color(0.3f, 0.78f, 0.38f, 0.72f));
+        Material bubbleMaterial = GetMaterial(null, new Color(0.94f, 1f, 0.72f, 1f));
+        Material greenMarkMaterial = GetMaterial(null, new Color(0.18f, 0.95f, 0.25f, 1f));
+        Material yellowMarkMaterial = GetMaterial(null, new Color(1f, 0.72f, 0.05f, 1f));
+
+        CreateCube("Body", root, Vector3.zero, Quaternion.identity, new Vector3(0.92f, 0.12f, 0.1f), body);
+        CreateCube("VialCutout", root, new Vector3(0f, 0f, -0.055f), Quaternion.identity, new Vector3(0.38f, 0.075f, 0.025f), frame);
+
+        GameObject vial = new GameObject("Vial");
+        vial.transform.SetParent(root, false);
+        vial.transform.localPosition = new Vector3(0f, 0f, -0.075f);
+        CreateCapsule("Liquid", vial.transform, Vector3.zero, Quaternion.Euler(0f, 0f, 90f),
+            new Vector3(0.035f, 0.18f, 0.035f), liquid);
+        GameObject bubble = CreateSphere("Bubble", vial.transform, Vector3.zero, Quaternion.identity,
+            new Vector3(0.055f, 0.045f, 0.045f), bubbleMaterial);
+        vial.AddComponent<SpiritLevelVial>();
+
+        CreateCube("GreenMarkLeft", root, new Vector3(-0.035f, 0f, -0.102f), Quaternion.identity,
+            new Vector3(0.012f, 0.11f, 0.008f), greenMarkMaterial);
+        CreateCube("GreenMarkRight", root, new Vector3(0.035f, 0f, -0.102f), Quaternion.identity,
+            new Vector3(0.012f, 0.11f, 0.008f), greenMarkMaterial);
+        CreateCube("YellowMarkLeft", root, new Vector3(-0.105f, 0f, -0.102f), Quaternion.identity,
+            new Vector3(0.012f, 0.11f, 0.008f), yellowMarkMaterial);
+        CreateCube("YellowMarkRight", root, new Vector3(0.105f, 0f, -0.102f), Quaternion.identity,
+            new Vector3(0.012f, 0.11f, 0.008f), yellowMarkMaterial);
+        CreateSecondaryGrip(root, new Vector3(-0.32f, 0f, 0f));
+    }
+
     private static void CreateCapsule(string objectName, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)
     {
         GameObject capsule = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -316,6 +351,13 @@ public class EquippableToolVisualBuilder : MonoBehaviour
     {
         GameObject cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         SetupPart(cylinder, objectName, parent, localPosition, localRotation, localScale, material);
+    }
+
+    private static GameObject CreateSphere(string objectName, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)
+    {
+        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        SetupPart(sphere, objectName, parent, localPosition, localRotation, localScale, material);
+        return sphere;
     }
 
     private static void SetupPart(GameObject part, string objectName, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)

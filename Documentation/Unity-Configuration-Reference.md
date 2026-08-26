@@ -25,8 +25,9 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 | `MountableBridgeComponentSO` | identity/prefab, recipe, bridge type, carrier limits, jawne anchory, profil fizyki, furnace i carpenter dimensions |
 | `ProductionRecipeSO` | identity/icon, składniki, typ i ilość wyjścia oraz opcjonalne parametry pieca |
 | `BridgeComponentSO` | identity/final prefab, category, simple assembly i sześć opcjonalnych workflow |
-| `EquippableItemSO` | identity/prefab, slots/two-handed, range, cooldown, combat/resource damage, work power, action profile, impact impulse, movement penalty, repeatability i enum |
+| `EquippableItemSO` | identity/prefab, slots/two-handed, range, cooldown, combat/resource damage, work power, action/impact/Spirit Level profile, movement penalty, repeatability i enum |
 | `EquippableActionProfileSO` | fazy akcji, pozy narzędzia/rąk, movement multiplier, camera kick, feedback strength i swing audio |
+| `SpiritLevelProfileSO` | zasięg pomiaru, czas przejścia, skok/wygładzanie pęcherzyka, centralne pozy FPP, kreski idealnego środka oraz kolory i pulsowanie markerów pomiaru |
 | `CarryPhysicsProfileSO` | Tryb `DirectYaw`/`PhysicalPointGrip`, Rigidbody, point grip, tether, limity udźwigu oraz fully-staffed load distribution i leveling |
 | `ExternalImpulseProfileSO` | initial velocity, decay, gravity, control, clamps i forced drop |
 | `NPCDefinitionSO` | identity, faction, behavior, prefab/visual, stats i AI ranges |
@@ -475,6 +476,13 @@ Przy zmianie warstw zweryfikuj równocześnie:
 11. Zarejestruj prefab i umieść source w scenie/storage.
 12. Sprawdź slot reservation, chwyt obu dłoni, trafienie, impuls, pudło,
     hold/click, cancel, surface feedback i host/client.
+
+Dla `SpiritLevel` zamiast profilu ataku przypisz `SpiritLevelProfileSO`, dodaj
+`SpiritLevelVial` do wspólnego visuala oraz `PlayerSpiritLevelController` do
+prefabu gracza. Każda poziomowana część wymaga dwóch triggerów
+`SpiritLevelMeasurementPoint` z jawną osią, znakiem odczytu i pozą przyłożenia.
+Prefab świata musi pozostać NetworkPrefabem z fizyką equippable oraz punktem
+respawnu w scenie. Wbudowane `LevelIndicator` nie powinny pozostać aktywne.
 
 ### Nowy NPC
 

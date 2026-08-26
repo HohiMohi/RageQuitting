@@ -15,8 +15,10 @@ MonoBehaviour:
   levelingTool: 5
   anchoringTool: 5
   backfillingTool: 6
-  maximumLevelStep: 4
-  initialLevelDifference: 2
-  levelStepHeight: 0.08
+  maximumLogicalTilt: 8
+  minimumInitialAbsoluteTilt: 1
+  levelingSuccessTolerance: 0
+  visuallyStraightTiltRange: 4
+  maximumVisualTiltDegrees: 3
   anchorProgressNeeded: 40
   backfillProgressNeeded: 100

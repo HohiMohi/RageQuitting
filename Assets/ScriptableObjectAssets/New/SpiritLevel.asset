@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6022b08370b0baa42b8b2acf2ce498eb, type: 3}
+  m_Name: SpiritLevel
+  m_EditorClassIdentifier: Assembly-CSharp::EquippableItemSO
+  itemName: Spirit Level
+  uiSprite: {fileID: -7154258494070566323, guid: f2f48580ad9a9f34d8023367e43dd8e9, type: 3}
+  equippableItemPrefab: {fileID: 5532002865230366914, guid: 57b874c7e9e44ef45871796b5107ac5b, type: 3}
+  inventorySlotsRequired: 2
+  actionRange: 2.5
+  actionCooldown: 0
+  damage: 0
+  resourceDamage: 0
+  constructionWorkPower: 0
+  movementSpeedPenalty: 0.02
+  actionRepeatability: 0
+  itemType: 10
+  actionProfile: {fileID: 0}
+  impactImpulseProfile: {fileID: 0}
+  worldPhysicsProfile: {fileID: 11400000, guid: bf45add7b257a3644b46b1fbdb855049, type: 2}
+  ropeProfile: {fileID: 0}
+  spiritLevelProfile: {fileID: 11400000, guid: 9191b7e1edc987a4fa8a0bd64fb693f0, type: 2}

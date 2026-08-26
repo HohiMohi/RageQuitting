@@ -62,10 +62,10 @@ public static class BridgeTargetResolver
         switch (target)
         {
             case BridgeAbutmentWorkPoint point:
-                workPointId = (int)point.WorkPointId;
+                workPointId = point.RequestId;
                 break;
             case BridgeGirderWorkPoint point:
-                workPointId = (int)point.WorkPointId;
+                workPointId = point.RequestId;
                 break;
             case BridgeCrossBeamWorkPoint point:
                 workPointId = (int)point.WorkPointId;

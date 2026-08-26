@@ -63,6 +63,9 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     private Transform leftHandVisual;
     private Transform rightArmRoot;
     private Transform rightToolAnchor;
+    private Transform spiritLevelToolAnchor;
+    private bool spiritLevelMeasurementActive;
+    private float spiritLevelPoseBlend;
     private Transform secondaryGrip;
     private GameObject rightToolVisual;
     private Material skinMaterial;
@@ -279,6 +282,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         leftArmRoot = CreateArm("Left", -armSpacing, out leftHandVisual);
         rightArmRoot = CreateArm("Right", armSpacing, out _);
         rightToolAnchor = CreateToolAnchor(rightArmRoot);
+        spiritLevelToolAnchor = CreateSpiritLevelToolAnchor();
         RefreshToolVisual();
     }
 
@@ -391,7 +395,23 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         Transform anchor = anchorObject.transform;
         anchor.SetParent(parent, false);
         rightToolAnchor = anchor;
-        ApplyToolAnchorPose(0f, false);
+        anchor.localPosition = toolLocalPosition;
+        anchor.localRotation = Quaternion.Euler(toolLocalEulerAngles);
+        anchor.localScale = toolLocalScale;
+        return anchor;
+    }
+
+    private Transform CreateSpiritLevelToolAnchor()
+    {
+        if (armsRoot == null)
+        {
+            return null;
+        }
+
+        GameObject anchorObject = new GameObject("FPP_SpiritLevelCenterAnchor");
+        Transform anchor = anchorObject.transform;
+        anchor.SetParent(armsRoot, false);
+        ApplySpiritLevelAnchorPose(anchor, false, true);
         return anchor;
     }
 
@@ -735,6 +755,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         return !isCarrying &&
                !isDowned &&
                selectedItem != null &&
+               selectedItem.itemType != EquippableItemType.SpiritLevel &&
                selectedItem.IsTwoHanded &&
                secondaryGrip != null &&
                rightToolVisual != null &&
@@ -764,12 +785,20 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         Vector3 profiledPositionOffset,
         Vector3 profiledEulerOffset)
     {
-        if (rightToolAnchor == null)
+        Transform activeAnchor = GetActiveToolAnchor();
+        if (activeAnchor == null)
         {
             return;
         }
 
-        ApplyToolAnchorPose(actionCurve, isDowned, profiledPositionOffset, profiledEulerOffset);
+        if (IsSpiritLevelSelectedInSlot())
+        {
+            ApplySpiritLevelAnchorPose(activeAnchor, isDowned, false);
+        }
+        else
+        {
+            ApplyRegularToolAnchorPose(activeAnchor, actionCurve, isDowned, profiledPositionOffset, profiledEulerOffset);
+        }
 
         if (rightToolVisual != null && rightToolVisual.activeSelf == isDowned)
         {
@@ -777,17 +806,13 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         }
     }
 
-    private void ApplyToolAnchorPose(
+    private void ApplyRegularToolAnchorPose(
+        Transform anchor,
         float actionCurve,
         bool isDowned,
         Vector3 profiledPositionOffset = default,
         Vector3 profiledEulerOffset = default)
     {
-        if (rightToolAnchor == null)
-        {
-            return;
-        }
-
         Vector3 targetPosition = toolLocalPosition + toolSwingPositionOffset * actionCurve + profiledPositionOffset;
         Vector3 targetEuler = toolLocalEulerAngles + toolSwingEulerOffset * actionCurve + profiledEulerOffset;
 
@@ -797,14 +822,58 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             targetEuler += new Vector3(18f, 0f, 0f);
         }
 
-        rightToolAnchor.localPosition = targetPosition;
-        rightToolAnchor.localRotation = Quaternion.Euler(targetEuler);
-        rightToolAnchor.localScale = toolLocalScale;
+        anchor.localPosition = targetPosition;
+        anchor.localRotation = Quaternion.Euler(targetEuler);
+        anchor.localScale = toolLocalScale;
+    }
+
+    private void ApplySpiritLevelAnchorPose(Transform anchor, bool isDowned, bool immediate)
+    {
+        EquippableItemSO selectedItem = playerInventory != null ? playerInventory.GetCurrentSelectedItem() : null;
+        SpiritLevelProfileSO profile = selectedItem != null ? selectedItem.spiritLevelProfile : null;
+        Vector3 idlePosition = profile != null ? profile.idleLocalPosition : new Vector3(0f, -0.12f, 0.34f);
+        Vector3 idleEuler = profile != null ? profile.idleLocalEuler : Vector3.zero;
+        Vector3 measurementPosition = profile != null ? profile.measurementLocalPosition : new Vector3(0f, -0.02f, 0.27f);
+        Vector3 measurementEuler = profile != null ? profile.measurementLocalEuler : Vector3.zero;
+        float duration = profile != null ? profile.measurementTransitionDuration : 0.2f;
+
+        if (immediate)
+        {
+            spiritLevelPoseBlend = spiritLevelMeasurementActive ? 1f : 0f;
+        }
+        else
+        {
+            float step = duration > 0.001f ? Time.deltaTime / duration : 1f;
+            spiritLevelPoseBlend = Mathf.MoveTowards(
+                spiritLevelPoseBlend,
+                spiritLevelMeasurementActive ? 1f : 0f,
+                step);
+        }
+
+        Vector3 targetPosition = Vector3.Lerp(idlePosition, measurementPosition, spiritLevelPoseBlend);
+        Quaternion targetRotation = Quaternion.Slerp(
+            Quaternion.Euler(idleEuler),
+            Quaternion.Euler(measurementEuler),
+            spiritLevelPoseBlend);
+        if (isDowned)
+        {
+            targetPosition += new Vector3(0f, -0.08f, -0.08f);
+            targetRotation *= Quaternion.Euler(18f, 0f, 0f);
+        }
+
+        anchor.localPosition = targetPosition;
+        anchor.localRotation = targetRotation;
+        anchor.localScale = toolLocalScale;
+    }
+
+    public void SetSpiritLevelMeasurement(bool active, SpiritLevelMeasurementAxis axis)
+    {
+        spiritLevelMeasurementActive = active;
     }
 
     private void RefreshToolVisual()
     {
-        if (rightToolAnchor == null || playerInventory == null)
+        if (rightToolAnchor == null || spiritLevelToolAnchor == null || playerInventory == null)
         {
             return;
         }
@@ -829,7 +898,15 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             return;
         }
 
-        rightToolVisual = EquippableToolVisualBuilder.BuildVisual(itemType, rightToolAnchor, toolVisualMaterials);
+        Transform visualParent = itemType == EquippableItemType.SpiritLevel
+            ? spiritLevelToolAnchor
+            : rightToolAnchor;
+        if (itemType == EquippableItemType.SpiritLevel)
+        {
+            spiritLevelPoseBlend = spiritLevelMeasurementActive ? 1f : 0f;
+            ApplySpiritLevelAnchorPose(spiritLevelToolAnchor, false, true);
+        }
+        rightToolVisual = EquippableToolVisualBuilder.BuildVisual(itemType, visualParent, toolVisualMaterials);
         if (rightToolVisual != null)
         {
             secondaryGrip = FindChildRecursive(rightToolVisual.transform, EquippableToolVisualBuilder.SecondaryGripName);
@@ -896,6 +973,16 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         return item != null ? (int)item.itemType : -1;
     }
 
+    private bool IsSpiritLevelSelectedInSlot()
+    {
+        return GetSlot0ItemTypeValue() == (int)EquippableItemType.SpiritLevel;
+    }
+
+    private Transform GetActiveToolAnchor()
+    {
+        return IsSpiritLevelSelectedInSlot() ? spiritLevelToolAnchor : rightToolAnchor;
+    }
+
     private static bool IsSupportedToolType(EquippableItemType itemType)
     {
         return itemType == EquippableItemType.Axe ||
@@ -903,7 +990,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
                itemType == EquippableItemType.Shovel ||
                itemType == EquippableItemType.IndustrialHammer ||
                itemType == EquippableItemType.Wrench ||
-               itemType == EquippableItemType.Rope;
+               itemType == EquippableItemType.Rope ||
+               itemType == EquippableItemType.SpiritLevel;
     }
 
     private void ClearToolVisual()
@@ -1130,6 +1218,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             leftArmRoot = null;
             rightArmRoot = null;
             rightToolAnchor = null;
+            spiritLevelToolAnchor = null;
             rightToolVisual = null;
             currentToolItemTypeValue = -2;
         }

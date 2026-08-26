@@ -41,6 +41,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         ? workflow.LooseningProgressPerCycle
         : bridgeComponent != null ? bridgeComponent.GetAssemblingProgressNeeded() : 0f;
     public virtual bool CanAcceptMountedComponent => currentStage == BridgeConstructionStage.ReadyForMount;
+    public virtual bool AllowsStandardAssemblyWork => currentStage == BridgeConstructionStage.Hammering;
     public BridgeComponent BridgeComponent => bridgeComponent;
     public FoundationDiggingSubstage DiggingSubstage => diggingSubstage;
     public int DiggingCycleIndex => diggingCycleIndex;
@@ -157,6 +158,81 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         ulong actorClientId)
     {
         return TryApplyToolWork(toolType, workPower, workPointId);
+    }
+
+    public virtual bool TryConfirmLeveling()
+    {
+        return false;
+    }
+
+    public void RequestLevelingConfirmation(
+        Transform interactor,
+        LevelingConfirmationSourceType sourceType = LevelingConfirmationSourceType.Component,
+        int sourcePointId = -1)
+    {
+        if (bridgeComponent == null || interactor == null)
+        {
+            return;
+        }
+
+        GameplayManager.Instance?.RequestLevelingConfirmation(
+            bridgeComponent,
+            interactor,
+            sourceType,
+            sourcePointId);
+    }
+
+    public bool TryResolveLevelingConfirmationPoint(
+        LevelingConfirmationSourceType sourceType,
+        int sourcePointId,
+        out Collider validationCollider)
+    {
+        validationCollider = null;
+        if (this is not ILevelingMeasurementTarget levelingTarget || !levelingTarget.IsLevelingActive)
+        {
+            return false;
+        }
+
+        if (sourceType == LevelingConfirmationSourceType.Component)
+        {
+            if (sourcePointId != -1 || constructionInteractionCollider == null ||
+                !constructionInteractionCollider.enabled || !constructionInteractionCollider.gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+
+            validationCollider = constructionInteractionCollider;
+            return true;
+        }
+
+        ILevelingConfirmationSource resolved = null;
+        MonoBehaviour[] behaviours = GetComponentsInChildren<MonoBehaviour>(true);
+        foreach (MonoBehaviour behaviour in behaviours)
+        {
+            if (behaviour is not ILevelingConfirmationSource candidate ||
+                candidate.ConfirmationSite != this ||
+                candidate.ConfirmationSourceType != sourceType ||
+                candidate.ConfirmationPointId != sourcePointId)
+            {
+                continue;
+            }
+
+            if (resolved != null)
+            {
+                return false;
+            }
+
+            resolved = candidate;
+        }
+
+        if (resolved == null || !resolved.IsLevelingConfirmationAvailable ||
+            resolved.ConfirmationCollider == null || !resolved.ConfirmationCollider.enabled)
+        {
+            return false;
+        }
+
+        validationCollider = resolved.ConfirmationCollider;
+        return true;
     }
 
     public virtual bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)

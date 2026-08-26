@@ -467,6 +467,7 @@ GameObject:
   - component: {fileID: 6765605657286188049}
   - component: {fileID: 1759615207400898478}
   - component: {fileID: 8272239400986367473}
+  - component: {fileID: 6339907342742729142}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -786,6 +787,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4478bc4d44471af49881f9b4c0cfb400, type: 2}
   - {fileID: 11400000, guid: 3727fc9a9cf5efa478ce9c3ef4ca37da, type: 2}
   - {fileID: 11400000, guid: c5d4b23af0b101b49b6a69db7d20d4ef, type: 2}
+  - {fileID: 11400000, guid: b33c0b6ac7ee79d4da639b0df10359bd, type: 2}
   _selectedItemIndex: 0
   _inventorySlots: 2
   _currentInventoryOccupiedSlots: 0
@@ -1344,6 +1346,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14cde028ea2734d4fb954a6552088c44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWheelbarrowPouringUI
+--- !u!114 &6339907342742729142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91a053a7cb19f3644924e804e852b262, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSpiritLevelController
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0

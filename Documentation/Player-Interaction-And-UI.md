@@ -205,6 +205,16 @@ zamach. Rozpoczęcie akcji wyłącza sprint i stosuje profilowy mnożnik zwykłe
 ruchu. Axe, Pickaxe, Shovel i Industrial Hammer rozpoczynają kolejny cykl przy
 przytrzymaniu LPM. Wrench wymaga osobnego kliknięcia.
 
+`SpiritLevel` i `Rope` przejmują LPM przed zwykłą akcją narzędzia. Poziomica
+nie zadaje obrażeń ani work progressu. LPM na `SpiritLevelMeasurementPoint`
+rozpoczyna autoryzowany pomiar osi długości lub szerokości, a puszczenie LPM,
+utrata celu/zasięgu, zmiana narzędzia, downed albo modalne UI kończą pomiar.
+Bez aktywnego pomiaru pęcherzyk reaguje lokalnie na orientację narzędzia wobec
+grawitacji; podczas pomiaru płynnie pokazuje zsynchronizowany logiczny przechył.
+Para wyraźnych kresek na rurce otacza idealną pozycję pęcherzyka przy odczycie
+`0`. Cztery punkty pomiaru są oznaczane lokalnie na cyjanowo. W tym samym etapie
+gracz z Industrial Hammerem widzi pomarańczowe cele na czterech punktach klinów.
+
 | Pole | Znaczenie |
 |---|---|
 | `baseActionRange` | Fallback zasięgu bez poprawnego SO |
@@ -259,9 +269,10 @@ drugi egzemplarz SO, więc kara ruchu jest liczona tylko raz.
 | `constructionWorkPower` | Progress montażu; zero używa `damage` |
 | `movementSpeedPenalty` | Dodatnia kara noszenia; sumowana dla obu slotów |
 | `actionRepeatability` | Powtarzanie przy przytrzymaniu |
-| `itemType` | Axe, Saw, Pickaxe, Hammer, Weapon, IndustrialHammer, Shovel, None lub Wrench |
+| `itemType` | Axe, Saw, Pickaxe, Hammer, Weapon, IndustrialHammer, Shovel, None, Wrench, Rope lub SpiritLevel |
 | `actionProfile` | Opcjonalny profil faz, pozy, ruchu, camera kicku i audio |
 | `impactImpulseProfile` | Opcjonalny odrzut żywego gracza lub NPC po potwierdzonym trafieniu |
+| `spiritLevelProfile` | Zasięg, poza pomiarowa, dynamika pęcherzyka, kreski środka oraz markery punktów poziomicy |
 
 ### `EquippableActionProfileSO`
 
@@ -291,6 +302,13 @@ Kary inventory wynoszą odpowiednio `0.02`, `0.04`, `0.03`, `0.06` i `0.01`.
 Shovel i Industrial Hammer mają `inventorySlotsRequired = 2`; pozostałe
 narzędzia z tabeli są jednoslotowe. HUD pokazuje w zarezerwowanym slocie BACK
 tekst `TWO-HANDED`, a swap narzędzia dwuręcznego nie zmienia inventory.
+
+Rope oraz Spirit Level również zajmują dwa sloty. W FPP poziomica spoczywa
+poziomo między domyślnie ustawionymi dłońmi i podczas pomiaru jest unoszona ku
+środkowi ekranu. `PlayerSpiritLevelController` synchronizuje jedynie rozpoczęcie
+i zakończenie pomiaru, ID części oraz stabilne ID konkretnego punktu.
+Odczyt pęcherzyka powstaje lokalnie z `constructionValueA/B`, więc nie wymaga
+ciągłych RPC i jest poprawnie odtwarzany przez late join.
 
 Industrial Hammer ma przypisany `IndustrialHammerImpactImpulse`: `6 m/s`
 poziomo, `2 m/s` w górę, `1.5 s` maksymalnego czasu i `50%` zachowanej kontroli.

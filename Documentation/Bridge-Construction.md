@@ -202,14 +202,25 @@ Backfilling -> Complete`
 | `levelingTool` | Narzędzie klinów |
 | `anchoringTool` | Narzędzie czterech kotew |
 | `backfillingTool` | Narzędzie zasypania |
-| `maximumLevelStep` | Zakres wysokości |
-| `initialLevelDifference` | Początkowy przechył |
-| `levelStepHeight` | Metry na krok |
+| `maximumLogicalTilt` | Granica obu osi logicznych; tutorial: `8` |
+| `minimumInitialTiltMagnitude` | Najmniejsza wartość losowana na początku; tutorial: `1` |
+| `levelingSuccessTolerance` | Tolerancja zatwierdzenia; tutorial: dokładnie `0` |
+| `visuallyStraightTiltRange` | Zakres ukrywany przez visual; tutorial: `-4...4` |
+| `maximumVisualTiltDegrees` | Maksymalny pitch/roll części; tutorial: `3°` |
 | `anchorProgressNeeded` | Progress jednej kotwy |
 | `backfillProgressNeeded` | Łączny progress zasypania |
 
-Uderzenie młotem obniża wskazaną, podniesioną stronę. Po zrównaniu aktywują
-się cztery kotwy, a potem Backfill Area.
+Poziomowanie ma niezależne osie długości i szerokości. Cztery kliny zmieniają
+odpowiednią podpisaną wartość o jeden krok i pozwalają przestrzelić zero.
+Prompty nie ujawniają wartości ani kierunku korekty. Odczyt wykonuje dwuslotowa
+poziomica `SpiritLevel`: LPM przy jednej z czterech stref przykłada narzędzie i
+pokazuje daną oś. Długość jest dostępna z przodu i z tyłu, a szerokość z lewej
+i prawej strony. Lokalne cyjanowe obrysy widzi wyłącznie gracz z wyposażoną
+poziomicą. Posiadacz Industrial Hammera widzi zamiast nich cztery pomarańczowe
+cele wskazujące aktywne kliny; znaczniki nie ujawniają kierunku korekty.
+Po ustawieniu `0/0` dowolny gracz zatwierdza wynik
+przez E na części albo punkcie. Błędne zatwierdzenie losuje ponownie tylko
+niepoprawne osie; poprawna oś pozostaje na zerze.
 
 ### Dźwigar główny
 
@@ -218,12 +229,13 @@ się cztery kotwy, a potem Backfill Area.
 | Pole workflow | Znaczenie |
 |---|---|
 | `levelingTool`, `fasteningTool` | Narzędzia etapów |
-| `maximumLevelStep`, `initialLevelDifference` | Zakres i przechył |
-| `levelStepHeight` | Metry na krok |
+| pola logicznego/visualnego przechyłu | Te same dwie osie i ograniczony visual co przyczółek |
 | `fastenerProgressNeeded` | Progress każdego z czterech mocowań |
 
-Placeholder dźwigara ma około 14 m i przekracza tutorialową rzekę. Start/End
-Wedge obniża odpowiadający koniec.
+Placeholder dźwigara ma około 14 m i przekracza tutorialową rzekę. Punkty
+Start/End regulują długość, a Left/Right szerokość. Zakres `-4...4` wygląda
+prosto, dlatego wiarygodne ustawienie wymaga pomiaru poziomicą i osobnego
+zatwierdzenia E. Dopiero poprawne zatwierdzenie przechodzi do `Fastening`.
 
 ### Belka poprzeczna
 

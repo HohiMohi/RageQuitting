@@ -84,6 +84,18 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     public event EventHandler OnCurrentTargetChanged;
     public event Action<SharedCarryPickupRejectedEventArgs> OnSharedCarryPickupRejected;
     public MonoBehaviour CurrentTarget => _currentTarget;
+    public Transform AimCameraTransform
+    {
+        get
+        {
+            if (aimCamera == null || !aimCamera.isActiveAndEnabled)
+            {
+                aimCamera = Camera.main;
+            }
+
+            return aimCamera != null ? aimCamera.transform : transform;
+        }
+    }
     public class UpdateHoldedItemMovementSpeedPenaltyEventArgs : EventArgs
     {
         public float currentMovementSpeedPenaltyMultiplier;

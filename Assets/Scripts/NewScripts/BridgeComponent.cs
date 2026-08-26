@@ -49,6 +49,15 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void Interact(Transform interactor)
     {
+        if (constructionSite is ILevelingMeasurementTarget levelingTarget && levelingTarget.IsLevelingActive)
+        {
+            constructionSite.RequestLevelingConfirmation(
+                interactor,
+                LevelingConfirmationSourceType.Component,
+                -1);
+            return;
+        }
+
         if (mountSocket != null)
         {
             return;
@@ -89,6 +98,10 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void HandleAssemblingLocal(EquippableItemSO equippableItemSO, float damage)
     {
+        if (constructionSite != null && !constructionSite.AllowsStandardAssemblyWork)
+        {
+            return;
+        }
 
         if (equippableItemSO != null && bridgeComponentSO.supportedEquippableItemTypeList.Contains(equippableItemSO.itemType))
         {
@@ -225,7 +238,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void DamageReceived(EquippableItemSO equippableItemSO, float damage)
     {
-        if (isMounted && !isAssembled && needAssembling && equippableItemSO != null)
+        if (isMounted && !isAssembled && needAssembling && equippableItemSO != null &&
+            (constructionSite == null || constructionSite.AllowsStandardAssemblyWork))
         {
             HandleAssembling(equippableItemSO, equippableItemSO.ConstructionWorkPower);
         }

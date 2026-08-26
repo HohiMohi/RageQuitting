@@ -151,6 +151,7 @@ public class GameplayManager : MonoBehaviour
     private const string RequestMountMessageName = "GameplayManager_RequestMountBridgeComponent";
     private const string RequestAssembleMessageName = "GameplayManager_RequestAssembleBridgeComponent";
     private const string RequestConstructionWorkMessageName = "GameplayManager_RequestConstructionWork";
+    private const string RequestLevelingConfirmationMessageName = "GameplayManager_RequestLevelingConfirmation";
     private const string GirderFasteningWindowMessageName = "GameplayManager_GirderFasteningWindow";
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
     private const int StateMessageBaseSize = sizeof(int);
@@ -158,6 +159,7 @@ public class GameplayManager : MonoBehaviour
     private const int MountRequestMessageSize = sizeof(int) + sizeof(ulong);
     private const int AssembleRequestMessageSize = sizeof(int) * 2;
     private const int ConstructionWorkRequestMessageSize = sizeof(int) * 3;
+    private const int LevelingConfirmationRequestMessageSize = sizeof(int) * 3;
     private const int GirderFasteningWindowMessageSize = sizeof(int) * 2 + sizeof(double);
 
     public static GameplayManager Instance { get; private set; }
@@ -277,6 +279,7 @@ public class GameplayManager : MonoBehaviour
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestMountMessageName);
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestAssembleMessageName);
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestConstructionWorkMessageName);
+            NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RequestLevelingConfirmationMessageName);
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(GirderFasteningWindowMessageName);
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(StateSyncMessageName);
             networkMessagingRegistered = false;
@@ -310,6 +313,7 @@ public class GameplayManager : MonoBehaviour
             NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RequestMountMessageName, HandleRequestMountMessage);
             NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RequestAssembleMessageName, HandleRequestAssembleMessage);
             NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RequestConstructionWorkMessageName, HandleRequestConstructionWorkMessage);
+            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RequestLevelingConfirmationMessageName, HandleRequestLevelingConfirmationMessage);
         }
 
         networkMessagingRegistered = true;
@@ -688,6 +692,135 @@ public class GameplayManager : MonoBehaviour
         BroadcastBridgeState();
     }
 
+    public void RequestLevelingConfirmation(
+        BridgeComponent bridgeComponent,
+        Transform interactor,
+        LevelingConfirmationSourceType sourceType,
+        int sourcePointId)
+    {
+        if (bridgeComponent == null || bridgeComponent.ConstructionSite == null || interactor == null)
+        {
+            return;
+        }
+
+        if (!IsNetworkSessionActive())
+        {
+            bool sourceValid = bridgeComponent.ConstructionSite.TryResolveLevelingConfirmationPoint(
+                sourceType,
+                sourcePointId,
+                out Collider validationCollider);
+            float distance = sourceValid
+                ? Vector3.Distance(interactor.position, validationCollider.ClosestPoint(interactor.position))
+                : float.PositiveInfinity;
+            bool accepted = sourceValid && distance <= 3f && bridgeComponent.ConstructionSite.TryConfirmLeveling();
+            LogLevelingConfirmation(bridgeComponent, sourceType, sourcePointId, distance, sourceValid, accepted);
+            if (accepted)
+            {
+                ObserveConstructionStage(bridgeComponent.ComponentID);
+                NotifyBridgeRequirementsChanged();
+            }
+            return;
+        }
+
+        if (NetworkManager.Singleton.IsServer)
+        {
+            TryConfirmLevelingServer(
+                NetworkManager.Singleton.LocalClientId,
+                bridgeComponent.ComponentID,
+                sourceType,
+                sourcePointId);
+            return;
+        }
+
+        using FastBufferWriter writer = new FastBufferWriter(LevelingConfirmationRequestMessageSize, Allocator.Temp);
+        writer.WriteValueSafe(bridgeComponent.ComponentID);
+        writer.WriteValueSafe((int)sourceType);
+        writer.WriteValueSafe(sourcePointId);
+        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(
+            RequestLevelingConfirmationMessageName,
+            NetworkManager.ServerClientId,
+            writer);
+    }
+
+    private void HandleRequestLevelingConfirmationMessage(ulong senderClientId, FastBufferReader reader)
+    {
+        reader.ReadValueSafe(out int componentID);
+        reader.ReadValueSafe(out int sourceTypeValue);
+        reader.ReadValueSafe(out int sourcePointId);
+        TryConfirmLevelingServer(
+            senderClientId,
+            componentID,
+            (LevelingConfirmationSourceType)sourceTypeValue,
+            sourcePointId);
+    }
+
+    private void TryConfirmLevelingServer(
+        ulong senderClientId,
+        int componentID,
+        LevelingConfirmationSourceType sourceType,
+        int sourcePointId)
+    {
+        if (!NetworkManager.Singleton.IsServer ||
+            !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent) ||
+            bridgeComponent.ConstructionSite == null ||
+            !NetworkManager.Singleton.ConnectedClients.TryGetValue(senderClientId, out NetworkClient client) ||
+            client.PlayerObject == null)
+        {
+            return;
+        }
+
+        PlayerHealth health = client.PlayerObject.GetComponent<PlayerHealth>();
+        Vector3 playerPosition = client.PlayerObject.transform.position;
+        Collider validationCollider = null;
+        bool sourceValid = System.Enum.IsDefined(typeof(LevelingConfirmationSourceType), sourceType) &&
+                           bridgeComponent.ConstructionSite.TryResolveLevelingConfirmationPoint(
+                               sourceType,
+                               sourcePointId,
+                               out validationCollider);
+        float distance = sourceValid
+            ? Vector3.Distance(playerPosition, validationCollider.ClosestPoint(playerPosition))
+            : float.PositiveInfinity;
+        if ((health != null && health.IsDowned) || !sourceValid || distance > 3f)
+        {
+            LogLevelingConfirmation(bridgeComponent, sourceType, sourcePointId, distance, sourceValid, false);
+            return;
+        }
+
+        bool accepted = bridgeComponent.ConstructionSite.TryConfirmLeveling();
+        LogLevelingConfirmation(bridgeComponent, sourceType, sourcePointId, distance, true, accepted);
+        if (!accepted || !TryGetStateIndex(componentID, out int stateIndex)) return;
+
+        BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
+        bridgeComponent.ConstructionSite.PopulateNetworkState(ref state);
+        bridgeComponentStates[stateIndex] = state;
+        ApplyNetworkState(state);
+        ObserveConstructionStage(componentID);
+        NotifyBridgeRequirementsChanged();
+        BroadcastBridgeState();
+    }
+
+    [System.Diagnostics.Conditional("UNITY_EDITOR")]
+    private static void LogLevelingConfirmation(
+        BridgeComponent bridgeComponent,
+        LevelingConfirmationSourceType sourceType,
+        int sourcePointId,
+        float distance,
+        bool sourceValid,
+        bool accepted)
+    {
+        BridgeConstructionSite site = bridgeComponent != null ? bridgeComponent.ConstructionSite : null;
+        int lengthTilt = site is ILevelingMeasurementTarget target
+            ? target.GetLogicalTilt(SpiritLevelMeasurementAxis.Length)
+            : 0;
+        int widthTilt = site is ILevelingMeasurementTarget widthTarget
+            ? widthTarget.GetLogicalTilt(SpiritLevelMeasurementAxis.Width)
+            : 0;
+        string distanceText = float.IsPositiveInfinity(distance) ? "invalid" : distance.ToString("F2");
+        Debug.Log($"[Leveling confirmation] component={bridgeComponent?.ComponentID}, source={sourceType}, " +
+                  $"point={sourcePointId}, distance={distanceText}, sourceValid={sourceValid}, " +
+                  $"tilt={lengthTilt}/{widthTilt}, accepted={accepted}");
+    }
+
     private void HandleRequestConstructionWorkMessage(ulong senderClientId, FastBufferReader reader)
     {
         reader.ReadValueSafe(out int componentID);
@@ -989,7 +1122,9 @@ public class GameplayManager : MonoBehaviour
             return;
         }
 
-        if (!bridgeComponent.IsMounted || bridgeComponent.IsAssembled || !bridgeComponent.NeedAssembling || !bridgeComponent.SupportsEquippableItemType(equippableItemType))
+        if (!bridgeComponent.IsMounted || bridgeComponent.IsAssembled || !bridgeComponent.NeedAssembling ||
+            !bridgeComponent.SupportsEquippableItemType(equippableItemType) ||
+            (bridgeComponent.ConstructionSite != null && !bridgeComponent.ConstructionSite.AllowsStandardAssemblyWork))
         {
             return;
         }
@@ -1000,13 +1135,19 @@ public class GameplayManager : MonoBehaviour
         }
 
         BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
+        if (bridgeComponent.ConstructionSite != null &&
+            state.constructionStage != (int)BridgeConstructionStage.Hammering)
+        {
+            return;
+        }
+
         state.currentAssemblingProgress = Mathf.Clamp(
             state.currentAssemblingProgress + selectedTool.ConstructionWorkPower,
             0f,
             bridgeComponent.GetAssemblingProgressNeeded());
         if (bridgeComponent.ConstructionSite != null)
         {
-            state.constructionStage = (int)BridgeConstructionStage.Hammering;
+            state.constructionStage = (int)bridgeComponent.ConstructionSite.CurrentStage;
             state.constructionProgress = state.currentAssemblingProgress;
         }
         if (state.currentAssemblingProgress >= bridgeComponent.GetAssemblingProgressNeeded())

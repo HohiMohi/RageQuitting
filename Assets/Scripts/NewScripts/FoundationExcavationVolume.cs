@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class FoundationExcavationVolume : MonoBehaviour
 {
@@ -14,8 +15,13 @@ public class FoundationExcavationVolume : MonoBehaviour
     [SerializeField] private Collider driedConcreteCollider;
     [SerializeField] private Material wetConcreteMaterial;
     [SerializeField] private Material dryConcreteMaterial;
-    [SerializeField] private float concreteEmptyLocalY = -1.2f;
-    [SerializeField] private float concreteFullLocalY;
+    [SerializeField] private Vector2 concreteFootprintSize = new Vector2(6.5f, 4f);
+    [FormerlySerializedAs("concreteEmptyLocalY")]
+    [SerializeField] private float concreteBottomLocalY = -1.2f;
+    [FormerlySerializedAs("concreteFullLocalY")]
+    [SerializeField] private float concreteFullTopLocalY = 0.08f;
+    [SerializeField] private Renderer exitRampRenderer;
+    [SerializeField] private Collider exitRampCollider;
 
     private Material runtimeMaterial;
 
@@ -64,14 +70,25 @@ public class FoundationExcavationVolume : MonoBehaviour
         if (concreteFillVisual != null)
         {
             concreteFillVisual.gameObject.SetActive(visible);
+            float concreteTop = Mathf.Lerp(concreteBottomLocalY, concreteFullTopLocalY, fill);
+            float concreteHeight = Mathf.Max(0.001f, concreteTop - concreteBottomLocalY);
             Vector3 position = concreteFillVisual.localPosition;
-            position.y = Mathf.Lerp(concreteEmptyLocalY, concreteFullLocalY, fill);
+            position.y = concreteBottomLocalY + concreteHeight * 0.5f;
             concreteFillVisual.localPosition = position;
+
+            Vector3 scale = concreteFillVisual.localScale;
+            scale.x = concreteFootprintSize.x;
+            scale.y = concreteHeight;
+            scale.z = concreteFootprintSize.y;
+            concreteFillVisual.localScale = scale;
         }
 
         bool dry = stage == BridgeConstructionStage.ReadyForMount || stage == BridgeConstructionStage.Hammering ||
                    stage == BridgeConstructionStage.Complete;
+        bool fullyPoured = fill >= 0.999f;
         if (driedConcreteCollider != null) driedConcreteCollider.enabled = dry && visible;
+        if (exitRampRenderer != null) exitRampRenderer.enabled = !fullyPoured;
+        if (exitRampCollider != null) exitRampCollider.enabled = !(fullyPoured && dry);
         if (concreteRenderer != null && wetConcreteMaterial != null && dryConcreteMaterial != null)
         {
             float drying = stage == BridgeConstructionStage.ConcreteDrying && dryingDuration > 0f
