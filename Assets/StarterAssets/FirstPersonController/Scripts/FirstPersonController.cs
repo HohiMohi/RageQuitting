@@ -487,6 +487,23 @@ namespace StarterAssets
 			}
 		}
 
+		public void SetForcedViewYaw(float yaw)
+		{
+			float resolvedYaw = yaw % 360f;
+			_aimYaw = resolvedYaw;
+			_bodyYawVelocity = 0f;
+			_cameraBodyYawOffset = 0f;
+			_lookRotationInitialized = true;
+			transform.rotation = Quaternion.Euler(0f, resolvedYaw, 0f);
+			if (CinemachineCameraTarget != null)
+			{
+				CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(
+					_cinemachineTargetPitch,
+					0f,
+					0f);
+			}
+		}
+
 		private void EnsureLookRotationInitialized()
 		{
 			if (!_lookRotationInitialized)

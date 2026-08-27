@@ -58,7 +58,7 @@ MonoBehaviour:
   wallJumpCooldown: 0.3
   obstructionMask:
     serializedVersion: 2
-    m_Bits: 4294967291
+    m_Bits: 1073742843
   obstructionRadius: 0.06
   maximumReelingStaminaDrain: 5
   allowTargetEscape: 1

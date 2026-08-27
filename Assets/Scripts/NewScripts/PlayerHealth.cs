@@ -538,6 +538,25 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         TeleportLocally(position, rotation);
     }
 
+    public void ApplyTechnicalTransportExit(Vector3 position, Quaternion rotation)
+    {
+        TeleportLocally(position, rotation);
+        GetComponent<PlayerWheelbarrowController>()?.CompleteTechnicalSafeExit();
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsServer &&
+            OwnerClientId != NetworkManager.ServerClientId)
+            TechnicalTransportExitOwnerClientRpc(position, rotation, CreateTargetClientRpcParams(OwnerClientId));
+    }
+
+    [ClientRpc]
+    private void TechnicalTransportExitOwnerClientRpc(
+        Vector3 position,
+        Quaternion rotation,
+        ClientRpcParams clientRpcParams = default)
+    {
+        TeleportLocally(position, rotation);
+        GetComponent<PlayerWheelbarrowController>()?.CompleteTechnicalSafeExit();
+    }
+
     private void TeleportLocally(Vector3 position, Quaternion rotation)
     {
         CharacterController characterController = GetComponent<CharacterController>();
@@ -553,6 +572,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         {
             characterController.enabled = true;
         }
+        GetComponent<PlayerTransportCollisionController>()?.EnsureSuppressed();
     }
 
     private ClientRpcParams CreateTargetClientRpcParams(ulong clientId)

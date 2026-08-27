@@ -41,6 +41,23 @@ MonoBehaviour:
   emptyMaximumLateralGripAcceleration: 14
   loadedMaximumLateralGripAcceleration: 8
   inputTimeout: 0.25
+  clientPresentationMaximumPositionLead: 0.35
+  clientPresentationMaximumYawLead: 10
+  clientPresentationReconciliationSpeed: 6
+  clientPresentationVelocityResponse: 5
+  clientPresentationBufferTicks: 2
+  clientPresentationMaximumExtrapolation: 0.1
+  clientPresentationTeleportDistance: 2
+  clientPresentationTeleportAngle: 45
+  clientPresentationSnapshotCapacity: 24
+  motionSnapshotRate: 50
+  observerPresentationDelay: 0.04
+  motionMaximumLinearSpeed: 14
+  motionMaximumAngularSpeedDegrees: 240
+  motionPositionTolerance: 0.2
+  motionRotationToleranceDegrees: 8
+  motionCorrectionPositionThreshold: 0.45
+  motionCorrectionRotationThresholdDegrees: 15
   enableCorneringRollover: 1
   corneringRolloverDuration: 2
   corneringRolloverRecoveryRate: 1
@@ -101,6 +118,10 @@ MonoBehaviour:
   exitSeparationPadding: 0.05
   exitSearchRadius: 1.8
   exitGroundProbeDistance: 2
+  passengerExitPreparationTimeout: 0.5
+  forcedExitSearchRadiusGrowthRate: 0.75
+  maximumForcedExitSearchRadius: 4
+  exitDeniedMessageDuration: 1.25
   enableDrivingStaminaDrain: 0
   baseStaminaDrain: 0.25
   loadedStaminaDrain: 1.25
@@ -108,6 +129,9 @@ MonoBehaviour:
   maximumStaminaDrain: 3
   automaticBoardingMinimumSpeed: 1.5
   automaticBoardingDirectionDot: 0.65
+  passengerBoardingPreparationTimeout: 0.5
+  passengerPlacementDuration: 0.2
+  automaticBoardingLeadDistance: 0.6
   tippingAngle: 60
   tippingDuration: 0.25
   rightingHoldDuration: 1.5

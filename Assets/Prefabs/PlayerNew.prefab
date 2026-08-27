@@ -1332,7 +1332,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b72a8d4da0937a4fb2f0edfba8b164d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWheelbarrowController
-  inputSendInterval: 0.05
+  inputSendInterval: 0.033333335
   anchorSnapDistance: 2
 --- !u!114 &8272239400986367473
 MonoBehaviour:

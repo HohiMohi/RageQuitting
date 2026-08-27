@@ -9,13 +9,19 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
 {
     private const ulong NoNetworkObject = ulong.MaxValue;
     private const string ColliderRootName = "WorldPhysicsColliders";
+    private const string PickupColliderRootName = "PickupInteractionColliders";
+    private const string ItemVisualsPath = "Item_visuals";
+    private const string InteractableLayerName = "Interactable";
 
     private readonly NetworkVariable<bool> returningNetwork = new NetworkVariable<bool>();
     private readonly List<Collider> itemColliders = new List<Collider>(4);
+    private readonly List<Collider> pickupInteractionColliders = new List<Collider>(4);
     private readonly List<Collider> ignoredDropperColliders = new List<Collider>(4);
     private readonly Dictionary<ulong, float> playerPushTimes = new Dictionary<ulong, float>();
     private readonly Dictionary<int, float> npcPushTimes = new Dictionary<int, float>();
     private readonly Dictionary<int, float> impactDamageTimes = new Dictionary<int, float>();
+
+    [SerializeField] private Transform colliderShapeRoot;
 
     private EquippableItem equippableItem;
     private Rigidbody body;
@@ -32,6 +38,22 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
     public Rigidbody PhysicsBody => body;
     public bool IsReturning => IsSpawned ? returningNetwork.Value : returnRoutine != null;
     public EquippableWorldPhysicsProfileSO Profile => profile;
+    public Transform ColliderShapeRoot => ResolveColliderShapeRoot();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void ConfigurePickupInteractionLayer()
+    {
+        int interactableLayer = LayerMask.NameToLayer(InteractableLayerName);
+        if (interactableLayer < 0)
+        {
+            return;
+        }
+
+        for (int layer = 0; layer < 32; layer++)
+        {
+            Physics.IgnoreLayerCollision(interactableLayer, layer, true);
+        }
+    }
 
     private void Awake()
     {
@@ -340,6 +362,9 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
 
     private void BuildCompoundColliders()
     {
+        itemColliders.Clear();
+        pickupInteractionColliders.Clear();
+
         Collider[] existing = GetComponentsInChildren<Collider>(true);
         for (int i = 0; i < existing.Length; i++)
         {
@@ -349,15 +374,30 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
             }
         }
 
-        Transform previous = transform.Find(ColliderRootName);
-        if (previous != null)
-        {
-            Destroy(previous.gameObject);
-        }
+        DestroyGeneratedColliderRoot(ColliderRootName);
+        DestroyGeneratedColliderRoot(PickupColliderRootName);
+
+        Transform shapeRoot = ResolveColliderShapeRoot();
 
         GameObject colliderRoot = new GameObject(ColliderRootName);
-        colliderRoot.transform.SetParent(transform, false);
+        colliderRoot.transform.SetParent(shapeRoot, false);
         colliderRoot.layer = gameObject.layer;
+
+        GameObject pickupColliderRoot = null;
+        int interactableLayer = LayerMask.NameToLayer(InteractableLayerName);
+        bool generatePickupColliders = profile == null || profile.GeneratePickupInteractionColliders;
+        if (generatePickupColliders && interactableLayer < 0)
+        {
+            Debug.LogError($"Equippable item '{name}' cannot create pickup colliders because layer '{InteractableLayerName}' does not exist.", this);
+            generatePickupColliders = false;
+        }
+
+        if (generatePickupColliders)
+        {
+            pickupColliderRoot = new GameObject(PickupColliderRootName);
+            pickupColliderRoot.transform.SetParent(shapeRoot, false);
+            pickupColliderRoot.layer = interactableLayer;
+        }
 
         EquippableColliderShape[] shapes = profile != null ? profile.ColliderShapes : null;
         if (shapes == null || shapes.Length == 0)
@@ -377,35 +417,92 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
         for (int i = 0; i < shapes.Length; i++)
         {
             EquippableColliderShape shape = shapes[i];
-            GameObject shapeObject = new GameObject($"Shape_{i}_{shape.shapeType}");
-            shapeObject.layer = gameObject.layer;
-            shapeObject.transform.SetParent(colliderRoot.transform, false);
-            shapeObject.transform.localPosition = shape.center;
-            shapeObject.transform.localRotation = Quaternion.Euler(shape.rotationEuler);
             Vector3 safeSize = new Vector3(
                 Mathf.Max(0.02f, shape.size.x),
                 Mathf.Max(0.02f, shape.size.y),
                 Mathf.Max(0.02f, shape.size.z));
-
-            Collider collider;
-            if (shape.shapeType == EquippableColliderShapeType.Box)
-            {
-                BoxCollider box = shapeObject.AddComponent<BoxCollider>();
-                box.size = safeSize;
-                collider = box;
-            }
-            else
-            {
-                CapsuleCollider capsule = shapeObject.AddComponent<CapsuleCollider>();
-                capsule.direction = 1;
-                capsule.radius = Mathf.Max(safeSize.x, safeSize.z) * 0.5f;
-                capsule.height = Mathf.Max(safeSize.y, capsule.radius * 2f);
-                collider = capsule;
-            }
-
+            Collider collider = CreateShapeCollider(
+                colliderRoot.transform,
+                $"Shape_{i}_{shape.shapeType}",
+                gameObject.layer,
+                shape,
+                safeSize,
+                false);
             collider.material = profile != null ? profile.PhysicsMaterial : null;
             itemColliders.Add(collider);
+
+            if (pickupColliderRoot != null)
+            {
+                float padding = profile != null ? profile.PickupInteractionPadding : 0.04f;
+                Vector3 interactionSize = safeSize + Vector3.one * (padding * 2f);
+                Collider interactionCollider = CreateShapeCollider(
+                    pickupColliderRoot.transform,
+                    $"PickupShape_{i}_{shape.shapeType}",
+                    interactableLayer,
+                    shape,
+                    interactionSize,
+                    true);
+                pickupInteractionColliders.Add(interactionCollider);
+            }
         }
+    }
+
+    private Transform ResolveColliderShapeRoot()
+    {
+        if (colliderShapeRoot != null && colliderShapeRoot.IsChildOf(transform))
+        {
+            return colliderShapeRoot;
+        }
+
+        Transform itemVisuals = transform.Find(ItemVisualsPath);
+        return itemVisuals != null ? itemVisuals : transform;
+    }
+
+    private void DestroyGeneratedColliderRoot(string rootName)
+    {
+        Transform[] children = GetComponentsInChildren<Transform>(true);
+        for (int i = children.Length - 1; i >= 0; i--)
+        {
+            Transform child = children[i];
+            if (child != null && child != transform && child.name == rootName)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
+    private static Collider CreateShapeCollider(
+        Transform parent,
+        string objectName,
+        int layer,
+        EquippableColliderShape shape,
+        Vector3 size,
+        bool isTrigger)
+    {
+        GameObject shapeObject = new GameObject(objectName);
+        shapeObject.layer = layer;
+        shapeObject.transform.SetParent(parent, false);
+        shapeObject.transform.localPosition = shape.center;
+        shapeObject.transform.localRotation = Quaternion.Euler(shape.rotationEuler);
+
+        Collider collider;
+        if (shape.shapeType == EquippableColliderShapeType.Box)
+        {
+            BoxCollider box = shapeObject.AddComponent<BoxCollider>();
+            box.size = size;
+            collider = box;
+        }
+        else
+        {
+            CapsuleCollider capsule = shapeObject.AddComponent<CapsuleCollider>();
+            capsule.direction = 1;
+            capsule.radius = Mathf.Max(size.x, size.z) * 0.5f;
+            capsule.height = Mathf.Max(size.y, capsule.radius * 2f);
+            collider = capsule;
+        }
+
+        collider.isTrigger = isTrigger;
+        return collider;
     }
 
     private void ConfigureRigidbody()

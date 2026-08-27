@@ -41,3 +41,5 @@ MonoBehaviour:
     center: {x: 0, y: 0.39, z: 0}
     rotationEuler: {x: 0, y: 0, z: 0}
     size: {x: 0.45, y: 0.45, z: 0.14}
+  generatePickupInteractionColliders: 1
+  pickupInteractionPadding: 0.04

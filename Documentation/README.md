@@ -44,6 +44,7 @@ flowchart LR
 | [Scenes-Tutorial-And-Level-Flow](Scenes-Tutorial-And-Level-Flow.md) | aktywne sceny, timer i tutorial |
 | [Unity-Configuration-Reference](Unity-Configuration-Reference.md) | indeks komponentów, pól i procedury tworzenia contentu |
 | [Roadmap-And-Audit](Roadmap-And-Audit.md) | ograniczenia, roadmap oraz rekomendacje techniczne |
+| [Known-Issues](Known-Issues.md) | potwierdzone problemy o odłożonym, niskim priorytecie |
 
 ## Statusy
 

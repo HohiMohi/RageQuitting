@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -26,6 +27,54 @@ public static class WheelbarrowSetup
     {
         RunSetup();
         EditorApplication.Exit(0);
+    }
+
+    public static string ConfigureWheelbarrowNetworkAuthority()
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents(PrefabPath);
+        try
+        {
+            NetworkObject networkObject = root.GetComponent<NetworkObject>();
+            if (networkObject == null) networkObject = root.AddComponent<NetworkObject>();
+            networkObject.DontDestroyWithOwner = true;
+
+            foreach (NetworkTransform networkTransform in root.GetComponents<NetworkTransform>())
+            {
+                if (networkTransform is WheelbarrowNetworkTransform) continue;
+                UnityEngine.Object.DestroyImmediate(networkTransform);
+            }
+
+            WheelbarrowNetworkTransform ownerTransform = root.GetComponent<WheelbarrowNetworkTransform>();
+            if (ownerTransform == null) ownerTransform = root.AddComponent<WheelbarrowNetworkTransform>();
+            ownerTransform.Interpolate = true;
+            ownerTransform.PositionInterpolationType = NetworkTransform.InterpolationTypes.Lerp;
+            ownerTransform.RotationInterpolationType = NetworkTransform.InterpolationTypes.Lerp;
+            ownerTransform.PositionLerpSmoothing = false;
+            ownerTransform.RotationLerpSmoothing = false;
+            ownerTransform.UseUnreliableDeltas = true;
+            PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+
+        WheelbarrowProfileSO profile = AssetDatabase.LoadAssetAtPath<WheelbarrowProfileSO>(WheelbarrowProfilePath);
+        if (profile == null) throw new InvalidOperationException($"Missing wheelbarrow profile at {WheelbarrowProfilePath}.");
+        SerializedObject serializedProfile = new SerializedObject(profile);
+        serializedProfile.FindProperty("motionSnapshotRate").floatValue = 50f;
+        serializedProfile.FindProperty("observerPresentationDelay").floatValue = 0.04f;
+        serializedProfile.FindProperty("motionMaximumLinearSpeed").floatValue = 14f;
+        serializedProfile.FindProperty("motionMaximumAngularSpeedDegrees").floatValue = 240f;
+        serializedProfile.FindProperty("motionPositionTolerance").floatValue = 0.2f;
+        serializedProfile.FindProperty("motionRotationToleranceDegrees").floatValue = 8f;
+        serializedProfile.FindProperty("motionCorrectionPositionThreshold").floatValue = 0.45f;
+        serializedProfile.FindProperty("motionCorrectionRotationThresholdDegrees").floatValue = 15f;
+        serializedProfile.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(profile);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        return "Wheelbarrow owner authority prefab and 50 Hz motion profile configured.";
     }
 
     private static void RunSetup()
@@ -54,11 +103,17 @@ public static class WheelbarrowSetup
     {
         GameObject root = new GameObject("Wheelbarrow");
         NetworkObject networkObject = root.AddComponent<NetworkObject>();
+        networkObject.DontDestroyWithOwner = true;
         Rigidbody body = root.AddComponent<Rigidbody>();
         body.mass = profile.BaseMass;
         body.interpolation = RigidbodyInterpolation.Interpolate;
         body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-        root.AddComponent<ServerNetworkTransform>();
+        WheelbarrowNetworkTransform networkTransform = root.AddComponent<WheelbarrowNetworkTransform>();
+        networkTransform.PositionInterpolationType = NetworkTransform.InterpolationTypes.Lerp;
+        networkTransform.RotationInterpolationType = NetworkTransform.InterpolationTypes.Lerp;
+        networkTransform.PositionLerpSmoothing = false;
+        networkTransform.RotationLerpSmoothing = false;
+        networkTransform.UseUnreliableDeltas = true;
         WheelbarrowController controller = root.AddComponent<WheelbarrowController>();
         NavMeshObstacle navigationObstacle = root.AddComponent<NavMeshObstacle>();
         navigationObstacle.shape = NavMeshObstacleShape.Box;
@@ -144,8 +199,11 @@ public static class WheelbarrowSetup
         rightingInteraction.enabled = false;
         GameObject autoBoard = new GameObject("FrontBoardingTrigger");
         autoBoard.transform.SetParent(root.transform, false);
-        autoBoard.transform.localPosition = new Vector3(0f, 0.9f, 1f);
-        BoxCollider autoCollider = autoBoard.AddComponent<BoxCollider>(); autoCollider.isTrigger = true; autoCollider.size = new Vector3(1.1f, 1.2f, 0.35f);
+        float boardingLeadDistance = profile.AutomaticBoardingLeadDistance;
+        autoBoard.transform.localPosition = new Vector3(0f, 0.9f, 0.9f + boardingLeadDistance * 0.5f);
+        BoxCollider autoCollider = autoBoard.AddComponent<BoxCollider>();
+        autoCollider.isTrigger = true;
+        autoCollider.size = new Vector3(1.1f, 1.2f, boardingLeadDistance);
         WheelbarrowAutoBoardingTrigger boarding = autoBoard.AddComponent<WheelbarrowAutoBoardingTrigger>();
         SetReference(boarding, "wheelbarrow", controller);
 
@@ -158,6 +216,7 @@ public static class WheelbarrowSetup
         SetObjectArray(serialized, "restingSupportColliders", new UnityEngine.Object[] { supportLeftCollider, supportRightCollider });
         Set(serialized, "cargoRoot", cargoRoot); SetArray(serialized, "cargoSlots", slots);
         Set(serialized, "concreteCargoVisual", concreteCargo); Set(serialized, "spillVisual", spill);
+        Set(serialized, "presentationVisualRoot", visual.transform); Set(serialized, "automaticBoardingTrigger", autoCollider);
         Set(serialized, "leftPourAnchor", leftPour); Set(serialized, "rightPourAnchor", rightPour); SetArray(serialized, "safeExitPoints", new[] { exitLeft, exitRight });
         Set(serialized, "rightingInteractionCollider", rightingInteraction);
         serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -172,7 +231,11 @@ public static class WheelbarrowSetup
         GameObject root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
         try
         {
-            if (root.GetComponent<PlayerWheelbarrowController>() == null) root.AddComponent<PlayerWheelbarrowController>();
+            PlayerWheelbarrowController controller = root.GetComponent<PlayerWheelbarrowController>();
+            if (controller == null) controller = root.AddComponent<PlayerWheelbarrowController>();
+            SerializedObject serialized = new SerializedObject(controller);
+            serialized.FindProperty("inputSendInterval").floatValue = 1f / 30f;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
             if (root.GetComponent<PlayerWheelbarrowPouringUI>() == null) root.AddComponent<PlayerWheelbarrowPouringUI>();
             PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
         }
@@ -244,27 +307,42 @@ public static class WheelbarrowSetup
         if (type == WheelbarrowDockType.FoundationPouring)
         {
             WheelbarrowPouringMinigame minigame = root.AddComponent<WheelbarrowPouringMinigame>();
-            Transform leftAnchor = Point(root.transform, "LeftPourPlayerAnchor", new Vector3(-0.55f, 1.02f, -1.75f));
-            Transform rightAnchor = Point(root.transform, "RightPourPlayerAnchor", new Vector3(0.55f, 1.02f, -1.75f));
+            Transform leftAnchor = Point(root.transform, "LeftPourPlayerAnchor", new Vector3(-0.7f, 0.05f, -2.65f));
+            Transform rightAnchor = Point(root.transform, "RightPourPlayerAnchor", new Vector3(0.7f, 0.05f, -2.65f));
+            Transform soloAnchor = Point(root.transform, "SoloPourPlayerAnchor", new Vector3(0f, 0.05f, -2.65f));
+            WheelbarrowPourGripInteraction leftGrip = CreatePourGrip(
+                root.transform, "LeftPourGrip", new Vector3(-0.55f, 1.05f, -1.55f), minigame, true);
+            WheelbarrowPourGripInteraction rightGrip = CreatePourGrip(
+                root.transform, "RightPourGrip", new Vector3(0.55f, 1.05f, -1.55f), minigame, false);
             SerializedObject minigameSerialized = new SerializedObject(minigame);
-            Set(minigameSerialized, "profile", pouringProfile); Set(minigameSerialized, "leftPlayerAnchor", leftAnchor); Set(minigameSerialized, "rightPlayerAnchor", rightAnchor);
+            Set(minigameSerialized, "profile", pouringProfile);
+            Set(minigameSerialized, "leftPlayerAnchor", leftAnchor);
+            Set(minigameSerialized, "rightPlayerAnchor", rightAnchor);
+            Set(minigameSerialized, "soloPlayerAnchor", soloAnchor);
+            Set(minigameSerialized, "leftGrip", leftGrip);
+            Set(minigameSerialized, "rightGrip", rightGrip);
             minigameSerialized.ApplyModifiedPropertiesWithoutUndo();
             Set(stationSerialized, "pouringMinigame", minigame);
-            CreatePourGrip(root.transform, "LeftPourGrip", new Vector3(-0.55f, 1.05f, -1.55f), minigame, true);
-            CreatePourGrip(root.transform, "RightPourGrip", new Vector3(0.55f, 1.05f, -1.55f), minigame, false);
         }
         stationSerialized.ApplyModifiedPropertiesWithoutUndo();
         return station;
     }
 
-    private static void CreatePourGrip(Transform parent, string name, Vector3 position, WheelbarrowPouringMinigame minigame, bool left)
+    private static WheelbarrowPourGripInteraction CreatePourGrip(
+        Transform parent,
+        string name,
+        Vector3 position,
+        WheelbarrowPouringMinigame minigame,
+        bool left)
     {
         GameObject grip = new GameObject(name);
         grip.transform.SetParent(parent, false); grip.transform.localPosition = position;
         BoxCollider collider = grip.AddComponent<BoxCollider>(); collider.isTrigger = true; collider.size = new Vector3(0.45f, 0.8f, 0.45f);
         WheelbarrowPourGripInteraction interaction = grip.AddComponent<WheelbarrowPourGripInteraction>();
+        grip.AddComponent<WheelbarrowPourStationVisualizer>();
         SerializedObject serialized = new SerializedObject(interaction);
         Set(serialized, "minigame", minigame); serialized.FindProperty("leftSide").boolValue = left; serialized.ApplyModifiedPropertiesWithoutUndo();
+        return interaction;
     }
 
     private static void ConfigureWorkflow(BridgeConstructionSite site)

@@ -85,6 +85,55 @@ internal static class WheelbarrowPhysicsProbe
         minimumTiltAngle = Vector3.Angle(wheelbarrow.transform.up, Vector3.up);
     }
 
+    [MenuItem("Tools/Wheelbarrow Physics Probe/Passenger Mass Transition")]
+    private static void RunPassengerMassTransition()
+    {
+        Run("passenger-mass-transition", BuildFlat, 0f, 0f, false);
+        if (wheelbarrow == null) return;
+        bool passed = wheelbarrow.RunEditorPassengerMassTransitionProbe(out string result);
+        if (passed) Debug.Log($"[WheelbarrowPhysicsProbe] Passenger mass transition PASS: {result}");
+        else Debug.LogError($"[WheelbarrowPhysicsProbe] Passenger mass transition FAIL: {result}");
+    }
+
+    [MenuItem("Tools/Wheelbarrow Physics Probe/Passenger Transport Lifecycle")]
+    private static void RunPassengerTransportLifecycle()
+    {
+        GameObject player = new GameObject("PassengerTransportLifecycleProbe");
+        CharacterController characterController = player.AddComponent<CharacterController>();
+        BoxCollider extraCollider = player.AddComponent<BoxCollider>();
+        PlayerTransportCollisionController transport = player.AddComponent<PlayerTransportCollisionController>();
+        LayerMask originalCharacterMask = characterController.excludeLayers;
+        LayerMask originalExtraMask = extraCollider.excludeLayers;
+        bool originalDetectCollisions = characterController.detectCollisions;
+        bool originalOverlapRecovery = characterController.enableOverlapRecovery;
+        GameObject firstTransport = new GameObject("DestroyedTransportProbe");
+        GameObject secondTransport = new GameObject("ReplacementTransportProbe");
+
+        bool firstBegin = transport.BeginTransport(firstTransport);
+        Object.DestroyImmediate(firstTransport);
+        transport.EnsureSuppressed();
+        bool restoredAfterDestroy = !transport.IsTransportCollisionSuppressed &&
+            characterController.excludeLayers == originalCharacterMask &&
+            extraCollider.excludeLayers == originalExtraMask &&
+            characterController.detectCollisions == originalDetectCollisions &&
+            characterController.enableOverlapRecovery == originalOverlapRecovery;
+        bool secondBegin = transport.BeginTransport(secondTransport);
+        transport.EndTransport(secondTransport);
+        bool restoredAfterSecondTransport = !transport.IsTransportCollisionSuppressed &&
+            characterController.excludeLayers == originalCharacterMask &&
+            extraCollider.excludeLayers == originalExtraMask &&
+            characterController.detectCollisions == originalDetectCollisions &&
+            characterController.enableOverlapRecovery == originalOverlapRecovery;
+        bool passed = firstBegin && restoredAfterDestroy && secondBegin && restoredAfterSecondTransport;
+        string result = $"firstBegin={firstBegin}, restoredAfterDestroy={restoredAfterDestroy}, " +
+            $"secondBegin={secondBegin}, restoredAfterSecondTransport={restoredAfterSecondTransport}";
+
+        Object.DestroyImmediate(secondTransport);
+        Object.DestroyImmediate(player);
+        if (passed) Debug.Log($"[WheelbarrowPhysicsProbe] Passenger transport lifecycle PASS: {result}");
+        else Debug.LogError($"[WheelbarrowPhysicsProbe] Passenger transport lifecycle FAIL: {result}");
+    }
+
     internal static void RunLoadedFlatFromAutomation() => RunLoadedFlat();
 
     private static void RunResourceFullTurn(int resourceCount)

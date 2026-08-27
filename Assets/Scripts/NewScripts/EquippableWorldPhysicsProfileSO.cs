@@ -51,6 +51,10 @@ public sealed class EquippableWorldPhysicsProfileSO : ScriptableObject
     [Header("Colliders")]
     [SerializeField] private EquippableColliderShape[] colliderShapes = Array.Empty<EquippableColliderShape>();
 
+    [Header("Pickup Interaction")]
+    [SerializeField] private bool generatePickupInteractionColliders = true;
+    [SerializeField, Min(0f)] private float pickupInteractionPadding = 0.04f;
+
     public float Mass => mass;
     public float LinearDamping => linearDamping;
     public float AngularDamping => angularDamping;
@@ -72,4 +76,6 @@ public sealed class EquippableWorldPhysicsProfileSO : ScriptableObject
     public float ImpactDamageCooldown => impactDamageCooldown;
     public float DropperAttributionDuration => dropperAttributionDuration;
     public EquippableColliderShape[] ColliderShapes => colliderShapes;
+    public bool GeneratePickupInteractionColliders => generatePickupInteractionColliders;
+    public float PickupInteractionPadding => Mathf.Max(0f, pickupInteractionPadding);
 }

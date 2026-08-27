@@ -20,6 +20,19 @@ MonoBehaviour:
   inputSendRate: 20
   maximumPourAngle: 55
   returnDuration: 0.5
-  allowSinglePlayerTesting: 1
+  allowSinglePlayerTesting: 0
   automaticPartnerDelay: 0.12
   automaticPartnerSpeed: 0.8
+  participantPlacementDuration: 0.25
+  maximumJoinDistance: 3
+  participantGroundProbeDistance: 3
+  participantCapsulePadding: 0.05
+  availableStationColor: {r: 0.1, g: 0.9, b: 1, a: 0.85}
+  targetedStationColor: {r: 0.25, g: 1, b: 0.55, a: 1}
+  occupiedStationColor: {r: 0.42, g: 0.45, b: 0.48, a: 0.5}
+  stationMarkerLineWidth: 0.035
+  stationMarkerPulseAmount: 0.08
+  stationMarkerPulseSpeed: 2.5
+  stationFootprintSize: {x: 0.18, y: 0.36}
+  stationFootprintSeparation: 0.24
+  gripMarkerPadding: 0.05

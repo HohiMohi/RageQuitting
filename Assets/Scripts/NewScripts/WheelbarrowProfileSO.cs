@@ -36,6 +36,27 @@ public class WheelbarrowProfileSO : ScriptableObject
     [SerializeField, Min(0f)] private float loadedMaximumLateralGripAcceleration = 8f;
     [SerializeField, Min(0.05f)] private float inputTimeout = 0.25f;
 
+    [Header("Client presentation")]
+    [SerializeField, Min(0f)] private float clientPresentationMaximumPositionLead = 0.35f;
+    [SerializeField, Min(0f)] private float clientPresentationMaximumYawLead = 10f;
+    [SerializeField, Min(0.01f)] private float clientPresentationReconciliationSpeed = 6f;
+    [SerializeField, Min(0.01f)] private float clientPresentationVelocityResponse = 5f;
+    [SerializeField, Range(1, 6)] private int clientPresentationBufferTicks = 2;
+    [SerializeField, Min(0f)] private float clientPresentationMaximumExtrapolation = 0.1f;
+    [SerializeField, Min(0.1f)] private float clientPresentationTeleportDistance = 2f;
+    [SerializeField, Range(1f, 180f)] private float clientPresentationTeleportAngle = 45f;
+    [SerializeField, Range(4, 64)] private int clientPresentationSnapshotCapacity = 24;
+
+    [Header("Network motion authority")]
+    [SerializeField, Range(20f, 120f)] private float motionSnapshotRate = 50f;
+    [SerializeField, Range(0f, 0.2f)] private float observerPresentationDelay = 0.04f;
+    [SerializeField, Min(0.1f)] private float motionMaximumLinearSpeed = 14f;
+    [SerializeField, Min(1f)] private float motionMaximumAngularSpeedDegrees = 240f;
+    [SerializeField, Min(0f)] private float motionPositionTolerance = 0.2f;
+    [SerializeField, Min(0f)] private float motionRotationToleranceDegrees = 8f;
+    [SerializeField, Min(0f)] private float motionCorrectionPositionThreshold = 0.45f;
+    [SerializeField, Min(0f)] private float motionCorrectionRotationThresholdDegrees = 15f;
+
     [Header("Cornering rollover")]
     [SerializeField] private bool enableCorneringRollover = true;
     [SerializeField, Min(0.1f)] private float corneringRolloverDuration = 2f;
@@ -109,6 +130,10 @@ public class WheelbarrowProfileSO : ScriptableObject
     [SerializeField, Min(0f)] private float exitSeparationPadding = 0.05f;
     [SerializeField, Min(0.1f)] private float exitSearchRadius = 1.8f;
     [SerializeField, Min(0.1f)] private float exitGroundProbeDistance = 2f;
+    [SerializeField, Min(0.1f)] private float passengerExitPreparationTimeout = 0.5f;
+    [SerializeField, Min(0f)] private float forcedExitSearchRadiusGrowthRate = 0.75f;
+    [SerializeField, Min(0.1f)] private float maximumForcedExitSearchRadius = 4f;
+    [SerializeField, Min(0f)] private float exitDeniedMessageDuration = 1.25f;
 
     [Header("Stamina")]
     [SerializeField] private bool enableDrivingStaminaDrain = true;
@@ -120,6 +145,9 @@ public class WheelbarrowProfileSO : ScriptableObject
     [Header("Boarding and tipping")]
     [SerializeField, Min(0f)] private float automaticBoardingMinimumSpeed = 1.5f;
     [SerializeField, Range(-1f, 1f)] private float automaticBoardingDirectionDot = 0.65f;
+    [SerializeField, Min(0.1f)] private float passengerBoardingPreparationTimeout = 0.5f;
+    [SerializeField, Min(0.05f)] private float passengerPlacementDuration = 0.2f;
+    [SerializeField, Min(0f)] private float automaticBoardingLeadDistance = 0.6f;
     [SerializeField, Range(1f, 89f)] private float tippingAngle = 60f;
     [SerializeField, Min(0.05f)] private float tippingDuration = 0.25f;
     [SerializeField, Min(0.1f)] private float rightingHoldDuration = 1.5f;
@@ -162,6 +190,23 @@ public class WheelbarrowProfileSO : ScriptableObject
     public float EmptyMaximumLateralGripAcceleration => Mathf.Max(0f, emptyMaximumLateralGripAcceleration);
     public float LoadedMaximumLateralGripAcceleration => Mathf.Max(0f, loadedMaximumLateralGripAcceleration);
     public float InputTimeout => Mathf.Max(0.05f, inputTimeout);
+    public float ClientPresentationMaximumPositionLead => Mathf.Max(0f, clientPresentationMaximumPositionLead);
+    public float ClientPresentationMaximumYawLead => Mathf.Max(0f, clientPresentationMaximumYawLead);
+    public float ClientPresentationReconciliationSpeed => Mathf.Max(0.01f, clientPresentationReconciliationSpeed);
+    public float ClientPresentationVelocityResponse => Mathf.Max(0.01f, clientPresentationVelocityResponse);
+    public int ClientPresentationBufferTicks => Mathf.Clamp(clientPresentationBufferTicks, 1, 6);
+    public float ClientPresentationMaximumExtrapolation => Mathf.Max(0f, clientPresentationMaximumExtrapolation);
+    public float ClientPresentationTeleportDistance => Mathf.Max(0.1f, clientPresentationTeleportDistance);
+    public float ClientPresentationTeleportAngle => Mathf.Clamp(clientPresentationTeleportAngle, 1f, 180f);
+    public int ClientPresentationSnapshotCapacity => Mathf.Clamp(clientPresentationSnapshotCapacity, 4, 64);
+    public float MotionSnapshotRate => Mathf.Clamp(motionSnapshotRate, 20f, 120f);
+    public float ObserverPresentationDelay => Mathf.Clamp(observerPresentationDelay, 0f, 0.2f);
+    public float MotionMaximumLinearSpeed => Mathf.Max(0.1f, motionMaximumLinearSpeed);
+    public float MotionMaximumAngularSpeedDegrees => Mathf.Max(1f, motionMaximumAngularSpeedDegrees);
+    public float MotionPositionTolerance => Mathf.Max(0f, motionPositionTolerance);
+    public float MotionRotationToleranceDegrees => Mathf.Max(0f, motionRotationToleranceDegrees);
+    public float MotionCorrectionPositionThreshold => Mathf.Max(0f, motionCorrectionPositionThreshold);
+    public float MotionCorrectionRotationThresholdDegrees => Mathf.Max(0f, motionCorrectionRotationThresholdDegrees);
     public bool EnableCorneringRollover => enableCorneringRollover;
     public float CorneringRolloverDuration => Mathf.Max(0.1f, corneringRolloverDuration);
     public float CorneringRolloverRecoveryRate => Mathf.Max(0f, corneringRolloverRecoveryRate);
@@ -222,6 +267,10 @@ public class WheelbarrowProfileSO : ScriptableObject
     public float ExitSeparationPadding => Mathf.Max(0f, exitSeparationPadding);
     public float ExitSearchRadius => Mathf.Max(0.1f, exitSearchRadius);
     public float ExitGroundProbeDistance => Mathf.Max(0.1f, exitGroundProbeDistance);
+    public float PassengerExitPreparationTimeout => Mathf.Max(0.1f, passengerExitPreparationTimeout);
+    public float ForcedExitSearchRadiusGrowthRate => Mathf.Max(0f, forcedExitSearchRadiusGrowthRate);
+    public float MaximumForcedExitSearchRadius => Mathf.Max(ExitSearchRadius, maximumForcedExitSearchRadius);
+    public float ExitDeniedMessageDuration => Mathf.Max(0f, exitDeniedMessageDuration);
     public bool EnableDrivingStaminaDrain => enableDrivingStaminaDrain;
     public float BaseStaminaDrain => baseStaminaDrain;
     public float LoadedStaminaDrain => loadedStaminaDrain;
@@ -229,6 +278,9 @@ public class WheelbarrowProfileSO : ScriptableObject
     public float MaximumStaminaDrain => maximumStaminaDrain;
     public float AutomaticBoardingMinimumSpeed => automaticBoardingMinimumSpeed;
     public float AutomaticBoardingDirectionDot => automaticBoardingDirectionDot;
+    public float PassengerBoardingPreparationTimeout => Mathf.Max(0.1f, passengerBoardingPreparationTimeout);
+    public float PassengerPlacementDuration => Mathf.Max(0.05f, passengerPlacementDuration);
+    public float AutomaticBoardingLeadDistance => Mathf.Max(0f, automaticBoardingLeadDistance);
     public float TippingAngle => tippingAngle;
     public float TippingDuration => tippingDuration;
     public float RightingHoldDuration => rightingHoldDuration;

@@ -5,7 +5,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
-[RequireComponent(typeof(NetworkObject), typeof(Rigidbody))]
+[RequireComponent(typeof(NetworkObject), typeof(Rigidbody), typeof(WheelbarrowPresentationController))]
 public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 {
     public const ulong NoClient = ulong.MaxValue;
@@ -24,6 +24,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     [SerializeField] private Transform driverSupportPoint;
     [SerializeField] private Transform passengerAnchor;
     [SerializeField] private Transform cargoRoot;
+    [SerializeField] private Transform presentationVisualRoot;
     [SerializeField] private Transform[] cargoSlots = Array.Empty<Transform>();
     [SerializeField] private GameObject concreteCargoVisual;
     [SerializeField] private GameObject spillVisual;
@@ -32,6 +33,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     [SerializeField] private Transform rightPourAnchor;
     [SerializeField] private Transform[] safeExitPoints = Array.Empty<Transform>();
     [SerializeField] private Collider rightingInteractionCollider;
+    [SerializeField] private BoxCollider automaticBoardingTrigger;
 
     private readonly NetworkVariable<byte> stateNetwork = new NetworkVariable<byte>((byte)WheelbarrowState.Free);
     private readonly NetworkVariable<ulong> driverNetwork = new NetworkVariable<ulong>(NoClient);
@@ -39,14 +41,39 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private readonly NetworkVariable<int> concreteLoadsNetwork = new NetworkVariable<int>();
     private readonly NetworkVariable<ulong> dockNetwork = new NetworkVariable<ulong>(NoClient);
     private readonly NetworkVariable<int> spillSequenceNetwork = new NetworkVariable<int>();
+    private readonly NetworkVariable<uint> authorityEpochNetwork = new NetworkVariable<uint>();
     private readonly NetworkList<ulong> cargoNetwork = new NetworkList<ulong>();
     private readonly List<BaseResourceNew> localCargo = new List<BaseResourceNew>();
     private readonly Dictionary<ulong, PendingSafeExit> pendingSafeExits = new Dictionary<ulong, PendingSafeExit>();
     private readonly HashSet<ulong> collisionIgnoredPlayers = new HashSet<ulong>();
+    private readonly HashSet<ulong> locallyAppliedCollisionIgnores = new HashSet<ulong>();
+
+    private sealed class PendingPassengerBoarding
+    {
+        public ulong ClientId;
+        public uint Token;
+        public float StartedAt;
+        public bool Automatic;
+        public bool StartedDowned;
+        public Vector3 VelocityBefore;
+        public Vector3 AngularVelocityBefore;
+        public ulong PhysicsOwnerClientId;
+        public bool PassengerOwnerReady;
+        public bool PhysicsOwnerReady;
+    }
 
     private sealed class PendingSafeExit
     {
+        public ulong ClientId;
+        public uint Token;
         public float StartedAt;
+        public float SearchRadius;
+        public bool Passenger;
+        public bool Forced;
+        public bool PlacementRequested;
+        public bool PlacementConfirmed;
+        public bool RoleCleared;
+        public Vector3 RequestedPosition;
     }
 
     private WheelbarrowState localState;
@@ -118,9 +145,29 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private readonly RaycastHit[] wheelContactHits = new RaycastHit[12];
     private Collider[] physicalColliders = Array.Empty<Collider>();
     private float navObstacleSettledTime;
+    private WheelbarrowPresentationController presentationController;
+    private PendingPassengerBoarding pendingPassengerBoarding;
+    private uint nextPassengerBoardingToken;
+    private bool massPropertiesDirty = true;
+    private float motionSnapshotAccumulator;
+    private uint localMotionSequence;
+    private uint lastAcceptedMotionSequence;
+    private bool hasAcceptedMotionSnapshot;
+    private WheelbarrowMotionSnapshot lastAcceptedMotionSnapshot;
+    private WheelbarrowAuthorityPhysicsSeed pendingAuthoritySeed;
+    private bool hasPendingAuthoritySeed;
+    private bool pendingAuthorityPreparationAck;
+    private ulong pendingAuthorityGrantClient = NoClient;
+    private uint pendingAuthorityGrantEpoch;
+    private float pendingAuthorityGrantDeadline;
+    private double lastAcceptedMotionReceiveTime;
+    private float remoteTippingElapsed;
+    private uint nextSafeExitToken;
+    private WheelbarrowNetworkTransform wheelbarrowNetworkTransform;
 
     public WheelbarrowProfileSO Profile => profile;
     public Rigidbody PhysicsBody => physicsBody;
+    public Transform PassengerAnchor => passengerAnchor;
     public WheelbarrowState State => IsSessionActive ? (WheelbarrowState)stateNetwork.Value : localState;
     public ulong DriverClientId => IsSessionActive ? driverNetwork.Value : localDriver;
     public ulong PassengerClientId => IsSessionActive ? passengerNetwork.Value : localPassenger;
@@ -128,7 +175,9 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     public bool HasConcrete => ConcreteLoads > 0;
     public bool HasResourceCargo => CargoCount > 0;
     public int CargoCount => IsSessionActive ? cargoNetwork.Count : localCargo.Count;
-    public float Speed => physicsBody != null ? physicsBody.linearVelocity.magnitude : 0f;
+    public float Speed => HasLocalPhysicsAuthority && physicsBody != null
+        ? physicsBody.linearVelocity.magnitude
+        : hasAcceptedMotionSnapshot ? lastAcceptedMotionSnapshot.LinearVelocity.magnitude : 0f;
     public bool IsDocked => State == WheelbarrowState.Docked || State == WheelbarrowState.Pouring;
     public bool IsDockSecured => IsDocked;
     public float CorneringRolloverRisk => corneringRolloverRisk;
@@ -150,13 +199,35 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
     }
     public bool CanReceiveConcreteBatch => IsDockSecured && !HasConcrete && !HasResourceCargo;
+    public float PresentationWheelbase
+    {
+        get
+        {
+            Transform support = driverSupportPoint != null ? driverSupportPoint : driverAnchor;
+            if (support == null || wheelVisual == null) return 2f;
+            return Mathf.Abs(transform.InverseTransformPoint(wheelVisual.position).z -
+                transform.InverseTransformPoint(support.position).z);
+        }
+    }
     private bool IsSessionActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
     private bool HasAuthority => !IsSessionActive || IsServer;
+    public bool HasLocalPhysicsAuthority => !IsSessionActive || IsOwner;
+    public uint AuthorityEpoch => IsSessionActive ? authorityEpochNetwork.Value : 0;
+    public float CurrentSteeringAngle => currentSteeringAngle;
+    public float CurrentWheelSpinDegrees => wheelVisualSpinDegrees;
 
     private void Awake()
     {
         Instances.Add(this);
         physicsBody ??= GetComponent<Rigidbody>();
+        presentationController = GetComponent<WheelbarrowPresentationController>();
+        wheelbarrowNetworkTransform = GetComponent<WheelbarrowNetworkTransform>();
+        presentationVisualRoot ??= transform.Find("Visual");
+        presentationController?.Initialize(
+            this,
+            driverAnchor,
+            presentationVisualRoot,
+            concreteCargoVisual != null ? concreteCargoVisual.transform : null);
         navigationObstacle ??= GetComponent<NavMeshObstacle>();
         if (wheelVisual != null)
         {
@@ -168,6 +239,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             .Where(item => item != null && !item.isTrigger)
             .ToArray();
         ConfigureBody();
+        ConfigureAutomaticBoardingTrigger();
         ConfigureWheelContactMode();
         UpdateNavigationObstacle(true);
         if (spillVisual != null) spillVisual.SetActive(false);
@@ -269,9 +341,14 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     {
         cargoNetwork.OnListChanged += OnCargoChanged;
         spillSequenceNetwork.OnValueChanged += OnSpillSequenceChanged;
+        driverNetwork.OnValueChanged += OnDriverChanged;
+        passengerNetwork.OnValueChanged += OnPassengerChanged;
+        authorityEpochNetwork.OnValueChanged += OnAuthorityEpochChanged;
+        if (IsServer) NetworkManager.OnClientDisconnectCallback += OnClientDisconnected;
         if (IsServer)
         {
             activeDock = null;
+            authorityEpochNetwork.Value = 1;
             SetState(WheelbarrowState.Free);
             SetDriver(NoClient);
             SetPassenger(NoClient);
@@ -280,12 +357,42 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         ConfigureWheelContactMode();
         UpdateNavigationObstacle(true);
         RefreshCargoReferences();
+        RestoreReplicatedOccupantCollisions();
+        ResetMotionStream();
+    }
+
+    public override void OnGainedOwnership()
+    {
+        base.OnGainedOwnership();
+        pendingAuthorityPreparationAck = false;
+        ConfigureBody();
+        if (hasPendingAuthoritySeed && pendingAuthoritySeed.Motion.AuthorityEpoch == AuthorityEpoch)
+        {
+            ApplyAuthorityPhysicsSeed(pendingAuthoritySeed, true);
+            hasPendingAuthoritySeed = false;
+            driveContactWarmupStepsRemaining = Mathf.Max(1, profile != null ? profile.WheelContactWarmupFixedSteps : 1);
+        }
+        ResetMotionStream();
+        presentationController?.ResetPresentation();
+    }
+
+    public override void OnLostOwnership()
+    {
+        base.OnLostOwnership();
+        pendingAuthorityPreparationAck = false;
+        ConfigureBody();
+        ResetDriveInput();
+        presentationController?.ResetPresentation();
     }
 
     public override void OnNetworkDespawn()
     {
         cargoNetwork.OnListChanged -= OnCargoChanged;
         spillSequenceNetwork.OnValueChanged -= OnSpillSequenceChanged;
+        driverNetwork.OnValueChanged -= OnDriverChanged;
+        passengerNetwork.OnValueChanged -= OnPassengerChanged;
+        authorityEpochNetwork.OnValueChanged -= OnAuthorityEpochChanged;
+        if (NetworkManager != null && IsServer) NetworkManager.OnClientDisconnectCallback -= OnClientDisconnected;
         if (IsServer)
         {
             activeDock?.ForceReleaseWheelbarrow(this);
@@ -293,6 +400,399 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             SpillAllCargo();
         }
         RestoreAllPlayerCollisions(false);
+    }
+
+    private void ResetMotionStream()
+    {
+        motionSnapshotAccumulator = 0f;
+        localMotionSequence = 0;
+        presentationController?.ResetPresentation();
+    }
+
+    private WheelbarrowMotionSnapshot CaptureMotionSnapshot(uint sequence)
+    {
+        double timestamp = NetworkManager != null
+            ? (IsServer ? NetworkManager.ServerTime.Time : NetworkManager.LocalTime.Time)
+            : Time.unscaledTimeAsDouble;
+        return new WheelbarrowMotionSnapshot(
+            AuthorityEpoch,
+            sequence,
+            timestamp,
+            physicsBody != null ? physicsBody.position : transform.position,
+            physicsBody != null ? physicsBody.rotation : transform.rotation,
+            physicsBody != null ? physicsBody.linearVelocity : Vector3.zero,
+            physicsBody != null ? physicsBody.angularVelocity : Vector3.zero,
+            currentSteeringAngle,
+            wheelVisualSpinDegrees,
+            throttleInput,
+            steeringInput);
+    }
+
+    private WheelbarrowAuthorityPhysicsSeed CaptureAuthorityPhysicsSeed(uint authorityEpoch)
+    {
+        massPropertiesDirty = true;
+        RefreshMassAndCenterOfMass();
+        WheelbarrowMotionSnapshot motion = CaptureMotionSnapshot(0);
+        motion.AuthorityEpoch = authorityEpoch;
+        motion.ServerTimestamp = NetworkManager != null ? NetworkManager.ServerTime.Time : Time.unscaledTimeAsDouble;
+        return new WheelbarrowAuthorityPhysicsSeed
+        {
+            Motion = motion,
+            TotalMass = physicsBody != null ? physicsBody.mass : profile != null ? profile.BaseMass : 22f,
+            LocalCenterOfMass = physicsBody != null ? physicsBody.centerOfMass : Vector3.zero,
+            DriverSupportLoadShare = driverSupportLoadShare,
+            WheelLoadShare = wheelLoadShare
+        };
+    }
+
+    private void ApplyAuthorityPhysicsSeed(WheelbarrowAuthorityPhysicsSeed seed, bool applyMotion)
+    {
+        if (physicsBody == null) return;
+        physicsBody.mass = Mathf.Max(0.01f, seed.TotalMass);
+        physicsBody.centerOfMass = seed.LocalCenterOfMass;
+        driverSupportLoadShare = Mathf.Clamp01(seed.DriverSupportLoadShare);
+        wheelLoadShare = Mathf.Clamp01(seed.WheelLoadShare);
+        massPropertiesDirty = false;
+        if (applyMotion) ApplyMotionSeed(seed.Motion, true);
+    }
+
+    private void PublishMotionIfDue(float deltaTime)
+    {
+        if (!IsSessionActive || !HasLocalPhysicsAuthority || physicsBody == null) return;
+        float rate = profile != null ? profile.MotionSnapshotRate : 50f;
+        float interval = 1f / Mathf.Max(1f, rate);
+        motionSnapshotAccumulator += Mathf.Max(0f, deltaTime);
+        if (motionSnapshotAccumulator < interval) return;
+        motionSnapshotAccumulator %= interval;
+        WheelbarrowMotionSnapshot snapshot = CaptureMotionSnapshot(++localMotionSequence);
+        if (IsServer)
+            AcceptMotionSnapshot(snapshot, NetworkManager.ServerClientId);
+        else
+            SubmitMotionSnapshotServerRpc(snapshot);
+    }
+
+    [ServerRpc(RequireOwnership = true, Delivery = RpcDelivery.Unreliable)]
+    private void SubmitMotionSnapshotServerRpc(WheelbarrowMotionSnapshot snapshot, ServerRpcParams rpc = default)
+    {
+        if (!AcceptMotionSnapshot(snapshot, rpc.Receive.SenderClientId))
+            SendMotionCorrection(rpc.Receive.SenderClientId);
+    }
+
+    private bool AcceptMotionSnapshot(WheelbarrowMotionSnapshot snapshot, ulong senderClientId)
+    {
+        if (!TryNormalizeQuaternion(snapshot.Rotation, out Quaternion normalizedRotation)) return false;
+        snapshot.Rotation = normalizedRotation;
+        if (!IsServer || NetworkObject == null || senderClientId != NetworkObject.OwnerClientId ||
+            snapshot.AuthorityEpoch != AuthorityEpoch ||
+            (State != WheelbarrowState.Driven && senderClientId != NetworkManager.ServerClientId) ||
+            (State == WheelbarrowState.Driven && senderClientId != DriverClientId) ||
+            (hasAcceptedMotionSnapshot && !IsSequenceNewer(snapshot.Sequence, lastAcceptedMotionSequence)) ||
+            !ValidateMotionEnvelope(snapshot))
+            return false;
+
+        snapshot.ServerTimestamp = NetworkManager.ServerTime.Time;
+        lastAcceptedMotionSequence = snapshot.Sequence;
+        lastAcceptedMotionReceiveTime = snapshot.ServerTimestamp;
+        lastAcceptedMotionSnapshot = snapshot;
+        hasAcceptedMotionSnapshot = true;
+        lastReceivedThrottleInput = throttleInput = Mathf.Clamp(snapshot.ThrottleInput, -1f, 1f);
+        lastReceivedSteeringInput = steeringInput = Mathf.Clamp(snapshot.SteeringInput, -1f, 1f);
+        currentSteeringAngle = snapshot.SteeringAngle;
+        wheelVisualSpinDegrees = snapshot.WheelSpinDegrees;
+        lastInputTime = Time.time;
+
+        if (!HasLocalPhysicsAuthority)
+        {
+            ApplyAcceptedMotionToServerRoot();
+            UpdateCargoTransforms();
+            EvaluateRemoteTipping(snapshot);
+        }
+        ReceiveMotionSnapshotClientRpc(snapshot);
+        return true;
+    }
+
+    private bool ValidateMotionEnvelope(WheelbarrowMotionSnapshot snapshot)
+    {
+        if (!IsFinite(snapshot.Position) || !IsFinite(snapshot.Rotation) ||
+            !IsFinite(snapshot.LinearVelocity) || !IsFinite(snapshot.AngularVelocity) ||
+            !float.IsFinite(snapshot.SteeringAngle) || !float.IsFinite(snapshot.WheelSpinDegrees) ||
+            Mathf.Abs(snapshot.ThrottleInput) > 1.001f || Mathf.Abs(snapshot.SteeringInput) > 1.001f)
+            return false;
+
+        float maximumLinear = profile != null ? profile.MotionMaximumLinearSpeed : 14f;
+        float maximumAngular = (profile != null ? profile.MotionMaximumAngularSpeedDegrees : 240f) * Mathf.Deg2Rad;
+        if (snapshot.LinearVelocity.magnitude > maximumLinear || snapshot.AngularVelocity.magnitude > maximumAngular ||
+            Mathf.Abs(snapshot.SteeringAngle) > (profile != null ? profile.MaximumSteeringAngle : 36f) + 1f)
+            return false;
+        if (!hasAcceptedMotionSnapshot || snapshot.AuthorityEpoch != lastAcceptedMotionSnapshot.AuthorityEpoch) return true;
+
+        double elapsed = Math.Max(0.001d, NetworkManager.ServerTime.Time - lastAcceptedMotionReceiveTime);
+        float positionAllowance = maximumLinear * (float)elapsed + (profile != null ? profile.MotionPositionTolerance : 0.2f);
+        float rotationAllowance = (profile != null ? profile.MotionMaximumAngularSpeedDegrees : 240f) * (float)elapsed +
+            (profile != null ? profile.MotionRotationToleranceDegrees : 8f);
+        return Vector3.Distance(lastAcceptedMotionSnapshot.Position, snapshot.Position) <= positionAllowance &&
+            Quaternion.Angle(lastAcceptedMotionSnapshot.Rotation, snapshot.Rotation) <= rotationAllowance;
+    }
+
+    [ClientRpc(Delivery = RpcDelivery.Unreliable)]
+    private void ReceiveMotionSnapshotClientRpc(WheelbarrowMotionSnapshot snapshot)
+    {
+        if (HasLocalPhysicsAuthority) return;
+        presentationController?.ReceiveSnapshot(snapshot);
+    }
+
+    private void SendMotionCorrection(ulong clientId)
+    {
+        if (!IsServer || !hasAcceptedMotionSnapshot || clientId == NetworkManager.ServerClientId) return;
+        ApplyMotionCorrectionClientRpc(lastAcceptedMotionSnapshot, Target(clientId));
+        wheelbarrowNetworkTransform?.SetState(
+            lastAcceptedMotionSnapshot.Position,
+            lastAcceptedMotionSnapshot.Rotation,
+            transform.localScale,
+            false);
+    }
+
+    [ClientRpc]
+    private void ApplyMotionCorrectionClientRpc(WheelbarrowMotionSnapshot snapshot, ClientRpcParams rpc = default)
+    {
+        if (!HasLocalPhysicsAuthority || snapshot.AuthorityEpoch != AuthorityEpoch) return;
+        ApplyMotionSeed(snapshot, true);
+    }
+
+    private static bool IsSequenceNewer(uint sequence, uint previous) =>
+        sequence != previous && unchecked(sequence - previous) < 0x80000000u;
+
+    private static bool IsFinite(Vector3 value) =>
+        float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
+
+    private static bool IsFinite(Quaternion value) =>
+        float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z) && float.IsFinite(value.w);
+
+    private static bool TryNormalizeQuaternion(Quaternion value, out Quaternion normalized)
+    {
+        normalized = Quaternion.identity;
+        if (!IsFinite(value)) return false;
+
+        double lengthSquared = (double)value.x * value.x + (double)value.y * value.y +
+            (double)value.z * value.z + (double)value.w * value.w;
+        if (!double.IsFinite(lengthSquared) || lengthSquared < 1e-12d) return false;
+
+        float inverseLength = (float)(1d / Math.Sqrt(lengthSquared));
+        normalized = new Quaternion(
+            value.x * inverseLength,
+            value.y * inverseLength,
+            value.z * inverseLength,
+            value.w * inverseLength);
+        return IsFinite(normalized);
+    }
+
+    private void ApplyMotionSeed(WheelbarrowMotionSnapshot snapshot, bool resetSequence)
+    {
+        if (physicsBody == null || !TryNormalizeQuaternion(snapshot.Rotation, out Quaternion normalizedRotation)) return;
+        snapshot.Rotation = normalizedRotation;
+        physicsBody.position = snapshot.Position;
+        physicsBody.rotation = snapshot.Rotation;
+        transform.SetPositionAndRotation(snapshot.Position, snapshot.Rotation);
+        physicsBody.linearVelocity = snapshot.LinearVelocity;
+        physicsBody.angularVelocity = snapshot.AngularVelocity;
+        currentSteeringAngle = snapshot.SteeringAngle;
+        wheelVisualSpinDegrees = snapshot.WheelSpinDegrees;
+        wheelVisualSteerDegrees = snapshot.SteeringAngle;
+        throttleInput = Mathf.Clamp(snapshot.ThrottleInput, -1f, 1f);
+        steeringInput = Mathf.Clamp(snapshot.SteeringInput, -1f, 1f);
+        previousWheelbarrowPosition = snapshot.Position;
+        if (resetSequence) localMotionSequence = snapshot.Sequence;
+        physicsBody.WakeUp();
+    }
+
+    private void ApplyAcceptedMotionToServerRoot()
+    {
+        if (!IsServer || HasLocalPhysicsAuthority || !hasAcceptedMotionSnapshot || physicsBody == null) return;
+        physicsBody.position = lastAcceptedMotionSnapshot.Position;
+        physicsBody.rotation = lastAcceptedMotionSnapshot.Rotation;
+        transform.SetPositionAndRotation(lastAcceptedMotionSnapshot.Position, lastAcceptedMotionSnapshot.Rotation);
+    }
+
+    private void EvaluateRemoteTipping(WheelbarrowMotionSnapshot snapshot)
+    {
+        if (!IsServer || HasLocalPhysicsAuthority || State != WheelbarrowState.Driven) return;
+        float angle = Vector3.Angle(snapshot.Rotation * Vector3.up, Vector3.up);
+        if (angle < (profile != null ? profile.TippingAngle : 60f))
+        {
+            remoteTippingElapsed = 0f;
+            return;
+        }
+        remoteTippingElapsed += 1f / (profile != null ? profile.MotionSnapshotRate : 50f);
+        if (remoteTippingElapsed >= (profile != null ? profile.TippingDuration : 0.25f))
+        {
+            remoteTippingElapsed = 0f;
+            TipOver();
+        }
+    }
+
+    public bool TryValidateOwnerTransformRequest(
+        Vector3 requestedPosition,
+        Quaternion requestedRotation,
+        out Vector3 acceptedPosition,
+        out Quaternion acceptedRotation)
+    {
+        acceptedPosition = transform.position;
+        acceptedRotation = transform.rotation;
+        if (!IsServer || NetworkObject == null) return false;
+        if (NetworkObject.OwnerClientId == NetworkManager.ServerClientId)
+        {
+            acceptedPosition = requestedPosition;
+            acceptedRotation = requestedRotation;
+            return true;
+        }
+        if (State != WheelbarrowState.Driven || DriverClientId != NetworkObject.OwnerClientId || !hasAcceptedMotionSnapshot)
+            return false;
+
+        float positionLimit = profile != null ? profile.MotionCorrectionPositionThreshold : 0.45f;
+        float rotationLimit = profile != null ? profile.MotionCorrectionRotationThresholdDegrees : 15f;
+        if (Vector3.Distance(lastAcceptedMotionSnapshot.Position, requestedPosition) > positionLimit ||
+            Quaternion.Angle(lastAcceptedMotionSnapshot.Rotation, requestedRotation) > rotationLimit)
+        {
+            acceptedPosition = lastAcceptedMotionSnapshot.Position;
+            acceptedRotation = lastAcceptedMotionSnapshot.Rotation;
+            return false;
+        }
+        acceptedPosition = requestedPosition;
+        acceptedRotation = requestedRotation;
+        return true;
+    }
+
+    private void GrantDriverPhysicsAuthority(ulong clientId)
+    {
+        if (!IsSessionActive || !IsServer || NetworkObject == null) return;
+        uint epoch = authorityEpochNetwork.Value + 1u;
+        if (epoch == 0u) epoch = 1u;
+        authorityEpochNetwork.Value = epoch;
+        localMotionSequence = 0;
+        lastAcceptedMotionSequence = 0;
+        WheelbarrowAuthorityPhysicsSeed seed = CaptureAuthorityPhysicsSeed(epoch);
+        if (profile != null && profile.EnableDiagnostics)
+            Debug.Log($"[Wheelbarrow] Authority seed client={clientId} epoch={epoch} mass={seed.TotalMass:F2} " +
+                $"com={seed.LocalCenterOfMass} support={seed.DriverSupportLoadShare:F2}/{seed.WheelLoadShare:F2}.", this);
+        lastAcceptedMotionSnapshot = seed.Motion;
+        hasAcceptedMotionSnapshot = true;
+        lastAcceptedMotionReceiveTime = seed.Motion.ServerTimestamp;
+
+        if (clientId != NetworkManager.ServerClientId)
+        {
+            pendingAuthorityGrantClient = clientId;
+            pendingAuthorityGrantEpoch = epoch;
+            pendingAuthorityGrantDeadline = Time.unscaledTime + 1f;
+            ConfigureBody();
+            PrepareDriverAuthorityClientRpc(seed, Target(clientId));
+        }
+        else if (NetworkObject.OwnerClientId != NetworkManager.ServerClientId)
+        {
+            NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
+        }
+        ResetMotionStream();
+    }
+
+    [ClientRpc]
+    private void PrepareDriverAuthorityClientRpc(WheelbarrowAuthorityPhysicsSeed seed, ClientRpcParams rpc = default)
+    {
+        if (seed.Motion.AuthorityEpoch < AuthorityEpoch) return;
+        pendingAuthoritySeed = seed;
+        hasPendingAuthoritySeed = true;
+        pendingAuthorityPreparationAck = true;
+        ConfigureBody();
+        ApplyAuthorityPhysicsSeed(seed, false);
+        TryConfirmDriverAuthorityPrepared();
+    }
+
+    private void TryConfirmDriverAuthorityPrepared()
+    {
+        if (!pendingAuthorityPreparationAck || IsServer || !hasPendingAuthoritySeed) return;
+        if (PassengerClientId != NoClient &&
+            !SetPassengerTransportCollisionState(PassengerClientId, true, false)) return;
+
+        pendingAuthorityPreparationAck = false;
+        ConfirmDriverAuthorityPreparedServerRpc(pendingAuthoritySeed.Motion.AuthorityEpoch);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ConfirmDriverAuthorityPreparedServerRpc(uint epoch, ServerRpcParams rpc = default)
+    {
+        ulong sender = rpc.Receive.SenderClientId;
+        if (!IsServer || NetworkObject == null || pendingAuthorityGrantClient != sender ||
+            pendingAuthorityGrantEpoch != epoch || AuthorityEpoch != epoch ||
+            DriverClientId != sender || State != WheelbarrowState.Driven ||
+            NetworkObject.OwnerClientId != NetworkManager.ServerClientId)
+            return;
+
+        pendingAuthorityGrantClient = NoClient;
+        pendingAuthorityGrantEpoch = 0;
+        pendingAuthorityGrantDeadline = 0f;
+        NetworkObject.ChangeOwnership(sender);
+        ConfigureBody();
+    }
+
+    private void ProcessPendingPhysicsAuthorityGrant()
+    {
+        if (!IsServer || pendingAuthorityGrantClient == NoClient ||
+            Time.unscaledTime <= pendingAuthorityGrantDeadline) return;
+
+        ulong clientId = pendingAuthorityGrantClient;
+        pendingAuthorityGrantClient = NoClient;
+        pendingAuthorityGrantEpoch = 0;
+        pendingAuthorityGrantDeadline = 0f;
+        if (DriverClientId != clientId || State != WheelbarrowState.Driven) return;
+
+        SetDriver(NoClient);
+        SetState(WheelbarrowState.Free);
+        ConfigureBody();
+        BeginSafeExit(clientId);
+    }
+
+    private void ReclaimPhysicsAuthority(bool preserveVelocity)
+    {
+        if (!IsSessionActive || !IsServer || NetworkObject == null) return;
+        pendingAuthorityGrantClient = NoClient;
+        pendingAuthorityGrantEpoch = 0;
+        pendingAuthorityGrantDeadline = 0f;
+        ulong previousOwner = NetworkObject.OwnerClientId;
+        WheelbarrowMotionSnapshot seed = hasAcceptedMotionSnapshot
+            ? lastAcceptedMotionSnapshot
+            : CaptureMotionSnapshot(0);
+        if (!preserveVelocity)
+        {
+            seed.LinearVelocity = Vector3.zero;
+            seed.AngularVelocity = Vector3.zero;
+            seed.ThrottleInput = 0f;
+            seed.SteeringInput = 0f;
+        }
+        uint epoch = authorityEpochNetwork.Value + 1u;
+        if (epoch == 0u) epoch = 1u;
+        authorityEpochNetwork.Value = epoch;
+        seed.AuthorityEpoch = epoch;
+        seed.Sequence = 0;
+        seed.ServerTimestamp = NetworkManager.ServerTime.Time;
+        lastAcceptedMotionSnapshot = seed;
+        hasAcceptedMotionSnapshot = true;
+        lastAcceptedMotionSequence = 0;
+        lastAcceptedMotionReceiveTime = seed.ServerTimestamp;
+
+        if (previousOwner != NetworkManager.ServerClientId)
+        {
+            EndDriverAuthorityClientRpc(seed, Target(previousOwner));
+            NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
+        }
+        ConfigureBody();
+        ApplyMotionSeed(seed, true);
+        ResetMotionStream();
+    }
+
+    [ClientRpc]
+    private void EndDriverAuthorityClientRpc(WheelbarrowMotionSnapshot seed, ClientRpcParams rpc = default)
+    {
+        if (seed.AuthorityEpoch < AuthorityEpoch) return;
+        ApplyMotionSeed(seed, true);
+        presentationController?.ResetPresentation();
     }
 
     private void Update()
@@ -304,25 +804,60 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private void ConfigureBody()
     {
         if (physicsBody == null) return;
-        physicsBody.mass = profile != null ? profile.BaseMass : 22f;
-        physicsBody.isKinematic = IsSessionActive && !IsServer;
+        bool controlledKinematicState = IsDockSecured || State == WheelbarrowState.Righting;
+        bool awaitingRemotePhysicsOwner = IsServer && pendingAuthorityGrantClient != NoClient;
+        physicsBody.isKinematic = controlledKinematicState || awaitingRemotePhysicsOwner ||
+            IsSessionActive && !HasLocalPhysicsAuthority;
         physicsBody.useGravity = !physicsBody.isKinematic;
-        physicsBody.interpolation = RigidbodyInterpolation.Interpolate;
+        physicsBody.interpolation = physicsBody.isKinematic
+            ? RigidbodyInterpolation.None
+            : RigidbodyInterpolation.Interpolate;
         physicsBody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        massPropertiesDirty = true;
+    }
+
+    private void ConfigureAutomaticBoardingTrigger()
+    {
+        automaticBoardingTrigger ??= transform.Find("FrontBoardingTrigger")?.GetComponent<BoxCollider>();
+        if (automaticBoardingTrigger == null) return;
+        float lead = profile != null ? profile.AutomaticBoardingLeadDistance : 0.6f;
+        Vector3 size = automaticBoardingTrigger.size;
+        size.z = Mathf.Max(0.1f, lead);
+        automaticBoardingTrigger.size = size;
+        Vector3 localPosition = automaticBoardingTrigger.transform.localPosition;
+        localPosition.z = 0.9f + size.z * 0.5f;
+        automaticBoardingTrigger.transform.localPosition = localPosition;
     }
 
     private void FixedUpdate()
     {
-        if (!HasAuthority || physicsBody == null)
+        EnsureReplicatedOccupantCollisions();
+        TryConfirmDriverAuthorityPrepared();
+        if (physicsBody == null) return;
+
+        if (HasAuthority)
+        {
+            ProcessPendingPhysicsAuthorityGrant();
+            ProcessPendingPassengerBoarding();
+            ProcessPendingSafeExits();
+        }
+
+        if (IsServer && pendingAuthorityGrantClient != NoClient)
         {
             ConfigureWheelContactMode();
             UpdateNavigationObstacle();
-            UpdateWheelVisual();
+            return;
+        }
+
+        if (!HasLocalPhysicsAuthority)
+        {
+            if (IsServer) ApplyAcceptedMotionToServerRoot();
+            ConfigureWheelContactMode();
+            UpdateNavigationObstacle();
             return;
         }
         RefreshMassAndCenterOfMass();
         ConfigureWheelContactMode();
-        ProcessPendingSafeExits();
         UpdateCargoTransforms();
         if (State == WheelbarrowState.Docked)
         {
@@ -334,8 +869,9 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         else if (State == WheelbarrowState.Tipped) ApplyTippedDamping();
         else if (State != WheelbarrowState.Docked && State != WheelbarrowState.Pouring) ApplyIdleBrake();
         UpdateWheelVisual();
-        DetectTipping();
+        if (HasAuthority) DetectTipping();
         UpdateNavigationObstacle();
+        PublishMotionIfDue(Time.fixedDeltaTime);
     }
 
     private void SimulateDrive()
@@ -1007,6 +1543,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     {
         lastConfiguredWheelMass = float.NaN;
         lastConfiguredWheelProfile = null;
+        massPropertiesDirty = true;
     }
 
     private void ResetDrivenWheel()
@@ -1074,6 +1611,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private void TipOver()
     {
+        if (IsServer) ReclaimPhysicsAuthority(true);
         ulong previousDriver = DriverClientId;
         tippedRestUp = ResolveTippedRestUp();
         SetState(WheelbarrowState.Tipped);
@@ -1106,17 +1644,33 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     public void TryAutomaticBoarding(Collider other)
     {
-        if (!HasAuthority || PassengerClientId != NoClient || Speed < (profile != null ? profile.AutomaticBoardingMinimumSpeed : 1.5f) || other == null) return;
+        if (!HasLocalPhysicsAuthority || PassengerClientId != NoClient || pendingPassengerBoarding != null ||
+            Speed < (profile != null ? profile.AutomaticBoardingMinimumSpeed : 1.5f) || other == null) return;
         NetworkObject player = other.GetComponentInParent<NetworkObject>();
         if (player == null || player.GetComponent<PlayerInteractionNew>() == null) return;
         Vector3 toPlayer = (player.transform.position - transform.position).normalized;
         if (Vector3.Dot(transform.forward, toPlayer) < (profile != null ? profile.AutomaticBoardingDirectionDot : 0.65f)) return;
-        AssignRole(player.OwnerClientId, WheelbarrowOccupantRole.Passenger);
+        if (IsSessionActive && !IsServer)
+            RequestAutomaticBoardingServerRpc(player.NetworkObjectId);
+        else
+            BeginPassengerBoarding(player.OwnerClientId, true);
+    }
+
+    [ServerRpc(RequireOwnership = true)]
+    private void RequestAutomaticBoardingServerRpc(ulong playerNetworkObjectId, ServerRpcParams rpc = default)
+    {
+        if (rpc.Receive.SenderClientId != DriverClientId || State != WheelbarrowState.Driven ||
+            !TryGetNetworkObject(playerNetworkObjectId, out NetworkObject player) ||
+            player.GetComponent<PlayerInteractionNew>() == null ||
+            Speed < (profile != null ? profile.AutomaticBoardingMinimumSpeed : 1.5f)) return;
+        Vector3 toPlayer = (player.transform.position - transform.position).normalized;
+        if (Vector3.Dot(transform.forward, toPlayer) < (profile != null ? profile.AutomaticBoardingDirectionDot : 0.65f)) return;
+        BeginPassengerBoarding(player.OwnerClientId, true);
     }
 
     public void SubmitDriveInput(float throttle, float steering, ulong senderClientId)
     {
-        if (!HasAuthority || DriverClientId != senderClientId || State != WheelbarrowState.Driven) return;
+        if (!HasLocalPhysicsAuthority || DriverClientId != senderClientId || State != WheelbarrowState.Driven) return;
         if ((profile == null || profile.EnableDrivingStaminaDrain) &&
             TryGetPlayer(senderClientId, out NetworkObject player) &&
             player.TryGetComponent(out PlayerStaminaController stamina) && stamina.CurrentStamina <= 0f)
@@ -1127,6 +1681,29 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         lastReceivedSteeringInput = steeringInput;
         lastInputTime = Time.time;
         if (Mathf.Abs(throttleInput) > 0.01f) physicsBody?.WakeUp();
+    }
+
+    public void SetLocalPresentationInput(float throttle, float steering)
+    {
+        presentationController?.SetLocalDriveInput(throttle, steering);
+    }
+
+    public bool TryGetLocalDriverPresentationPose(ulong clientId, out Vector3 position, out Quaternion rotation)
+    {
+        position = Vector3.zero;
+        rotation = Quaternion.identity;
+        return DriverClientId == clientId && presentationController != null &&
+            presentationController.TryGetDriverAnchorPose(out position, out rotation);
+    }
+
+    public bool TryGetPresentedAnchorPose(Transform anchor, out Vector3 position, out Quaternion rotation)
+    {
+        if (presentationController != null &&
+            presentationController.TryGetPresentedAnchorPose(anchor, out position, out rotation))
+            return true;
+        position = anchor != null ? anchor.position : transform.position;
+        rotation = anchor != null ? anchor.rotation : transform.rotation;
+        return anchor != null;
     }
 
     public void SetPlayerCollisionIgnored(Transform playerRoot, bool ignored)
@@ -1150,7 +1727,10 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             foreach (Collider playerCollider in playerColliders)
             {
                 if (playerCollider != item)
-                    Physics.IgnoreCollision(playerCollider, item, ignored);
+                {
+                    if (Physics.GetIgnoreCollision(playerCollider, item) != ignored)
+                        Physics.IgnoreCollision(playerCollider, item, ignored);
+                }
             }
         }
     }
@@ -1164,8 +1744,10 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         if (TryFindPlayerOnPeer(clientId, out NetworkObject player))
         {
             SetPlayerCollisionIgnored(player.transform, ignored);
-            if (!ignored) player.GetComponent<PlayerWheelbarrowController>()?.CompleteSafeExit(this);
+            if (ignored) locallyAppliedCollisionIgnores.Add(clientId);
+            else locallyAppliedCollisionIgnores.Remove(clientId);
         }
+        else if (!ignored) locallyAppliedCollisionIgnores.Remove(clientId);
 
         if (broadcast && IsSessionActive && IsServer)
             SetOccupantCollisionIgnoredClientRpc(clientId, ignored);
@@ -1180,14 +1762,102 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private void RestoreAllPlayerCollisions(bool broadcast)
     {
+        if (pendingPassengerBoarding != null) CancelPendingPassengerBoarding(false);
         foreach (ulong clientId in collisionIgnoredPlayers.ToArray())
             SetOccupantCollisionIgnored(clientId, false, broadcast);
+        if (PassengerClientId != NoClient)
+            SetPassengerTransportCollisionState(PassengerClientId, false, broadcast);
         pendingSafeExits.Clear();
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void SubmitDriveInputServerRpc(float throttle, float steering, ServerRpcParams rpc = default) =>
-        SubmitDriveInput(throttle, steering, rpc.Receive.SenderClientId);
+    private void RestoreReplicatedOccupantCollisions()
+    {
+        if (DriverClientId != NoClient) SetOccupantCollisionIgnored(DriverClientId, true, false);
+        if (PassengerClientId != NoClient) SetPassengerTransportCollisionState(PassengerClientId, true, false);
+    }
+
+    private void EnsureReplicatedOccupantCollisions()
+    {
+        foreach (ulong clientId in collisionIgnoredPlayers)
+        {
+            if (!TryFindPlayerOnPeer(clientId, out NetworkObject player)) continue;
+            SetPlayerCollisionIgnored(player.transform, true);
+            locallyAppliedCollisionIgnores.Add(clientId);
+        }
+        if (PassengerClientId != NoClient)
+            SetPassengerTransportCollisionState(PassengerClientId, true, false);
+    }
+
+    private bool SetPassengerTransportCollisionState(ulong clientId, bool active, bool broadcast = true)
+    {
+        if (clientId == NoClient) return false;
+        bool applied = false;
+        if (TryFindPlayerOnPeer(clientId, out NetworkObject player))
+        {
+            if (active)
+            {
+                collisionIgnoredPlayers.Remove(clientId);
+                locallyAppliedCollisionIgnores.Remove(clientId);
+                SetPlayerCollisionIgnored(player.transform, false);
+            }
+            PlayerWheelbarrowController controller = player.GetComponent<PlayerWheelbarrowController>();
+            applied = controller != null && controller.SetPassengerTransportCollisionState(this, active);
+        }
+        if (broadcast && IsSessionActive && IsServer)
+            SetPassengerTransportCollisionStateClientRpc(clientId, active);
+        return applied;
+    }
+
+    [ClientRpc]
+    private void SetPassengerTransportCollisionStateClientRpc(ulong clientId, bool active)
+    {
+        if (IsServer) return;
+        SetPassengerTransportCollisionState(clientId, active, false);
+    }
+
+    private void OnDriverChanged(ulong previous, ulong current)
+    {
+        localDriver = current;
+        if (current != NoClient) SetOccupantCollisionIgnored(current, true, false);
+    }
+
+    private void OnPassengerChanged(ulong previous, ulong current)
+    {
+        localPassenger = current;
+        massPropertiesDirty = true;
+        if (current != NoClient) SetPassengerTransportCollisionState(current, true, false);
+    }
+
+    private void OnAuthorityEpochChanged(uint previous, uint current)
+    {
+        if (hasPendingAuthoritySeed && pendingAuthoritySeed.Motion.AuthorityEpoch == current && HasLocalPhysicsAuthority)
+        {
+            ConfigureBody();
+            ApplyAuthorityPhysicsSeed(pendingAuthoritySeed, true);
+            hasPendingAuthoritySeed = false;
+            driveContactWarmupStepsRemaining = Mathf.Max(1, profile != null ? profile.WheelContactWarmupFixedSteps : 1);
+        }
+        presentationController?.ResetPresentation();
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (!IsServer) return;
+        if (pendingPassengerBoarding != null && pendingPassengerBoarding.ClientId == clientId)
+            CancelPendingPassengerBoarding(false);
+        if (PassengerClientId == clientId)
+        {
+            SetPassenger(NoClient);
+            SetPassengerTransportCollisionState(clientId, false);
+        }
+        if (DriverClientId == clientId)
+        {
+            ReclaimPhysicsAuthority(true);
+            SetDriver(NoClient);
+            if (State == WheelbarrowState.Driven) SetState(WheelbarrowState.Free);
+            SetOccupantCollisionIgnored(clientId, false);
+        }
+    }
 
     public bool RequestEnterDriver(Transform interactor)
     {
@@ -1217,6 +1887,30 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         physicsBody.isKinematic = false;
         physicsBody.useGravity = true;
         physicsBody.WakeUp();
+    }
+
+    public bool RunEditorPassengerMassTransitionProbe(out string result)
+    {
+        SetConcreteLoads(0);
+        SetPassenger(123u);
+        massPropertiesDirty = true;
+        RefreshMassAndCenterOfMass();
+        float expectedMass = (profile != null ? profile.BaseMass : 22f) +
+            (profile != null ? profile.PassengerMass : 75f);
+        float seededMass = physicsBody.mass;
+        Vector3 seededCenterOfMass = physicsBody.centerOfMass;
+        ConfigureBody();
+        float immediateAfterConfigure = physicsBody.mass;
+        RefreshMassAndCenterOfMass();
+        float afterRefresh = physicsBody.mass;
+        bool passed = Mathf.Abs(seededMass - expectedMass) < 0.01f &&
+            Mathf.Abs(immediateAfterConfigure - expectedMass) < 0.01f &&
+            Mathf.Abs(afterRefresh - expectedMass) < 0.01f &&
+            Vector3.Distance(seededCenterOfMass, physicsBody.centerOfMass) < 0.001f;
+        result = $"expected={expectedMass:F2}, seeded={seededMass:F2}, " +
+            $"immediateAfterConfigure={immediateAfterConfigure:F2}, afterRefresh={afterRefresh:F2}, " +
+            $"com={physicsBody.centerOfMass}, passed={passed}";
+        return passed;
     }
 #endif
 
@@ -1260,17 +1954,204 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             }
 
             SetState(WheelbarrowState.Driven);
+            GrantDriverPhysicsAuthority(clientId);
             return true;
         }
         if (role == WheelbarrowOccupantRole.Passenger)
         {
-            if (PassengerClientId != NoClient) return false;
-            pendingSafeExits.Remove(clientId);
-            SetOccupantCollisionIgnored(clientId, true);
-            SetPassenger(clientId);
-            return true;
+            return BeginPassengerBoarding(clientId, false);
         }
         return false;
+    }
+
+    private bool BeginPassengerBoarding(ulong clientId, bool automatic)
+    {
+        if (!HasAuthority || clientId == DriverClientId || PassengerClientId != NoClient || pendingPassengerBoarding != null ||
+            !TryGetPlayer(clientId, out NetworkObject player)) return false;
+
+        if (!automatic && passengerAnchor != null &&
+            Vector3.Distance(player.transform.position, passengerAnchor.position) > 3f) return false;
+        if (!IsPassengerAnchorClear(player)) return false;
+
+        pendingSafeExits.Remove(clientId);
+        uint token = ++nextPassengerBoardingToken;
+        if (token == 0) token = ++nextPassengerBoardingToken;
+        pendingPassengerBoarding = new PendingPassengerBoarding
+        {
+            ClientId = clientId,
+            Token = token,
+            StartedAt = Time.time,
+            Automatic = automatic,
+            StartedDowned = player.GetComponent<PlayerHealth>() is PlayerHealth boardingHealth && boardingHealth.IsDowned,
+            VelocityBefore = physicsBody != null ? physicsBody.linearVelocity : Vector3.zero,
+            AngularVelocityBefore = physicsBody != null ? physicsBody.angularVelocity : Vector3.zero,
+            PhysicsOwnerClientId = IsSessionActive && NetworkObject != null
+                ? NetworkObject.OwnerClientId
+                : NoClient
+        };
+
+        SetPassengerTransportCollisionState(clientId, true, false);
+        float duration = profile != null ? profile.PassengerPlacementDuration : 0.2f;
+        if (!IsSessionActive)
+        {
+            PlayerWheelbarrowController controller = player.GetComponent<PlayerWheelbarrowController>();
+            if (controller == null || !controller.PreparePassengerBoarding(this, token, duration))
+            {
+                CancelPendingPassengerBoarding(false);
+                return false;
+            }
+            pendingPassengerBoarding.PassengerOwnerReady = true;
+            pendingPassengerBoarding.PhysicsOwnerReady = true;
+            TryCompletePassengerBoarding();
+            return true;
+        }
+
+        if (clientId == NetworkManager.ServerClientId)
+        {
+            PlayerWheelbarrowController controller = player.GetComponent<PlayerWheelbarrowController>();
+            pendingPassengerBoarding.PassengerOwnerReady = controller != null &&
+                controller.PreparePassengerBoarding(this, token, duration);
+        }
+        else
+        {
+            PreparePassengerBoardingClientRpc(token, duration, Target(clientId));
+        }
+
+        ulong physicsOwner = pendingPassengerBoarding.PhysicsOwnerClientId;
+        if (physicsOwner == NetworkManager.ServerClientId)
+        {
+            pendingPassengerBoarding.PhysicsOwnerReady = SetPassengerTransportCollisionState(clientId, true, false);
+        }
+        else
+        {
+            PreparePassengerPhysicsOwnerClientRpc(clientId, token, Target(physicsOwner));
+        }
+        TryCompletePassengerBoarding();
+        if (profile != null && profile.EnableDiagnostics)
+            Debug.Log($"[Wheelbarrow] Passenger boarding prepared ({(automatic ? "automatic" : "manual")}) client={clientId} token={token} speed={Speed:F2}.", this);
+        return true;
+    }
+
+    [ClientRpc]
+    private void PreparePassengerBoardingClientRpc(uint token, float duration, ClientRpcParams rpc = default)
+    {
+        NetworkObject player = NetworkManager.Singleton?.LocalClient?.PlayerObject;
+        PlayerWheelbarrowController controller = player != null
+            ? player.GetComponent<PlayerWheelbarrowController>()
+            : null;
+        if (controller != null && controller.PreparePassengerBoarding(this, token, duration))
+            ConfirmPassengerOwnerBoardingReadyServerRpc(token);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ConfirmPassengerOwnerBoardingReadyServerRpc(uint token, ServerRpcParams rpc = default)
+    {
+        if (pendingPassengerBoarding == null || pendingPassengerBoarding.Token != token ||
+            pendingPassengerBoarding.ClientId != rpc.Receive.SenderClientId) return;
+        pendingPassengerBoarding.PassengerOwnerReady = true;
+        TryCompletePassengerBoarding();
+    }
+
+    [ClientRpc]
+    private void PreparePassengerPhysicsOwnerClientRpc(ulong passengerClientId, uint token, ClientRpcParams rpc = default)
+    {
+        if (SetPassengerTransportCollisionState(passengerClientId, true, false))
+            ConfirmPassengerPhysicsOwnerReadyServerRpc(passengerClientId, token);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ConfirmPassengerPhysicsOwnerReadyServerRpc(ulong passengerClientId, uint token, ServerRpcParams rpc = default)
+    {
+        if (pendingPassengerBoarding == null || pendingPassengerBoarding.Token != token ||
+            pendingPassengerBoarding.ClientId != passengerClientId ||
+            pendingPassengerBoarding.PhysicsOwnerClientId != rpc.Receive.SenderClientId) return;
+        pendingPassengerBoarding.PhysicsOwnerReady = true;
+        TryCompletePassengerBoarding();
+    }
+
+    private void TryCompletePassengerBoarding()
+    {
+        if (!HasAuthority || pendingPassengerBoarding == null || PassengerClientId != NoClient ||
+            !pendingPassengerBoarding.PassengerOwnerReady || !pendingPassengerBoarding.PhysicsOwnerReady) return;
+        if (!IsPendingPassengerStillValid())
+        {
+            CancelPendingPassengerBoarding(true);
+            return;
+        }
+
+        bool automatic = pendingPassengerBoarding.Automatic;
+        ulong clientId = pendingPassengerBoarding.ClientId;
+        Vector3 velocityBefore = pendingPassengerBoarding.VelocityBefore;
+        Vector3 angularVelocityBefore = pendingPassengerBoarding.AngularVelocityBefore;
+        pendingPassengerBoarding = null;
+        SetPassenger(clientId);
+        SetPassengerTransportCollisionState(clientId, true);
+        if (profile != null && profile.EnableDiagnostics)
+            Debug.Log($"[Wheelbarrow] Passenger boarding committed ({(automatic ? "automatic" : "manual")}) client={clientId} " +
+                $"velocity={velocityBefore}->{physicsBody.linearVelocity} angular={angularVelocityBefore}->{physicsBody.angularVelocity}.", this);
+    }
+
+    private void ProcessPendingPassengerBoarding()
+    {
+        if (!HasAuthority || pendingPassengerBoarding == null) return;
+        if (!IsPendingPassengerStillValid())
+        {
+            CancelPendingPassengerBoarding(true);
+            return;
+        }
+        float timeout = profile != null ? profile.PassengerBoardingPreparationTimeout : 0.5f;
+        if (Time.time - pendingPassengerBoarding.StartedAt >= timeout)
+            CancelPendingPassengerBoarding(true);
+    }
+
+    private bool IsPendingPassengerStillValid()
+    {
+        if (pendingPassengerBoarding == null ||
+            !TryGetPlayer(pendingPassengerBoarding.ClientId, out NetworkObject player)) return false;
+        if (IsSessionActive && NetworkObject != null &&
+            NetworkObject.OwnerClientId != pendingPassengerBoarding.PhysicsOwnerClientId) return false;
+        PlayerHealth health = player.GetComponent<PlayerHealth>();
+        return pendingPassengerBoarding.StartedDowned || health == null || !health.IsDowned;
+    }
+
+    private void CancelPendingPassengerBoarding(bool notifyOwner)
+    {
+        if (pendingPassengerBoarding == null) return;
+        ulong clientId = pendingPassengerBoarding.ClientId;
+        uint token = pendingPassengerBoarding.Token;
+        pendingPassengerBoarding = null;
+        SetPassengerTransportCollisionState(clientId, false);
+        if (notifyOwner && IsSessionActive && IsServer)
+            CancelPassengerBoardingClientRpc(token, Target(clientId));
+        else if (TryFindPlayerOnPeer(clientId, out NetworkObject player))
+            player.GetComponent<PlayerWheelbarrowController>()?.CancelPassengerBoarding(this, token);
+    }
+
+    private bool IsPassengerAnchorClear(NetworkObject player)
+    {
+        if (passengerAnchor == null || player == null) return false;
+        CharacterController controller = player.GetComponent<CharacterController>();
+        if (controller == null) return true;
+
+        Vector3 center = passengerAnchor.position + passengerAnchor.rotation * controller.center;
+        Vector3 capsuleAxis = passengerAnchor.up;
+        float half = Mathf.Max(controller.radius, controller.height * 0.5f - controller.radius);
+        Collider[] overlaps = Physics.OverlapCapsule(
+            center - capsuleAxis * half,
+            center + capsuleAxis * half,
+            controller.radius,
+            Physics.DefaultRaycastLayers,
+            QueryTriggerInteraction.Ignore);
+        return overlaps.All(item => item == null ||
+            item.transform == player.transform || item.transform.IsChildOf(player.transform) ||
+            item.transform == transform || item.transform.IsChildOf(transform));
+    }
+
+    [ClientRpc]
+    private void CancelPassengerBoardingClientRpc(uint token, ClientRpcParams rpc = default)
+    {
+        NetworkObject player = NetworkManager.Singleton?.LocalClient?.PlayerObject;
+        player?.GetComponent<PlayerWheelbarrowController>()?.CancelPassengerBoarding(this, token);
     }
 
     public bool RequestExit(ulong clientId)
@@ -1279,8 +2160,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         if (DriverClientId == clientId) return RequestDriverExitAndDock(clientId);
         if (PassengerClientId == clientId)
         {
-            ReleasePassenger(false);
-            return true;
+            return ReleasePassenger(false);
         }
         return false;
     }
@@ -1292,6 +2172,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         WheelbarrowDockingStation requestedDock = FindReadyDockForDriverExit();
         if (requestedDock != null && requestedDock.TryDockImmediately(this, clientId)) return true;
 
+        ReclaimPhysicsAuthority(true);
         SetDriver(NoClient);
         SetState(WheelbarrowState.Free);
         BeginSafeExit(clientId);
@@ -1425,6 +2306,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         if (!HasAuthority || station == null || targetPose == null || DriverClientId != clientId ||
             State != WheelbarrowState.Driven || physicsBody == null) return false;
 
+        ReclaimPhysicsAuthority(false);
         SetDriver(NoClient);
         BeginSafeExit(clientId);
         physicsBody.linearVelocity = Vector3.zero;
@@ -1534,8 +2416,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             !TryGetPlayer(PassengerClientId, out NetworkObject passenger)) return false;
         PlayerHealth health = passenger.GetComponent<PlayerHealth>();
         if (health == null || !health.IsDowned) return false;
-        ReleasePassenger(false);
-        return true;
+        return ReleasePassenger(false);
     }
 
     public bool RequestRemoveDownedPassenger(PlayerInteractionNew rescuer)
@@ -1723,15 +2604,32 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private void RefreshMassAndCenterOfMass()
     {
+        if (!massPropertiesDirty || physicsBody == null) return;
+        massPropertiesDirty = false;
+        float previousMass = physicsBody.mass;
         float baseMass = profile != null ? profile.BaseMass : 22f;
-        float cargoMass = GetResourceCargoMass() + ConcreteLoads * (profile != null ? profile.ConcreteBatchMass : 80f) +
-            (PassengerClientId != NoClient ? profile != null ? profile.PassengerMass : 75f : 0f);
-        physicsBody.mass = baseMass + cargoMass;
+        float cargoMass = GetResourceCargoMass() + ConcreteLoads * (profile != null ? profile.ConcreteBatchMass : 80f);
+        float passengerMass = PassengerClientId != NoClient
+            ? (profile != null ? profile.PassengerMass : 75f)
+            : 0f;
+        float totalMass = baseMass + cargoMass + passengerMass;
+        physicsBody.mass = totalMass;
         Vector3 baseCenterOfMass = profile != null ? profile.BaseCenterOfMassLocal : new Vector3(0f, 0.45f, -0.15f);
         Vector3 cargoPoint = cargoRoot != null ? transform.InverseTransformPoint(cargoRoot.position) : Vector3.up * 0.4f;
-        physicsBody.centerOfMass = (baseCenterOfMass * baseMass + cargoPoint * cargoMass) /
-            Mathf.Max(1f, baseMass + cargoMass);
+        Vector3 passengerPoint = passengerAnchor != null
+            ? transform.InverseTransformPoint(passengerAnchor.position)
+            : cargoPoint;
+        physicsBody.centerOfMass = (baseCenterOfMass * baseMass + cargoPoint * cargoMass +
+            passengerPoint * passengerMass) / Mathf.Max(1f, totalMass);
         RefreshSupportLoadDistribution();
+        if (State == WheelbarrowState.Driven)
+        {
+            driverSupportTargetInitialized = false;
+            CaptureDriverSupportTarget();
+        }
+        if (profile != null && profile.EnableDiagnostics && !Mathf.Approximately(previousMass, totalMass))
+            Debug.Log($"[Wheelbarrow] Mass/COM updated {previousMass:F2}->{totalMass:F2}, com={physicsBody.centerOfMass}, " +
+                $"support={driverSupportLoadShare:F2}/{wheelLoadShare:F2}, passenger={PassengerClientId}.", this);
     }
 
     private void RefreshSupportLoadDistribution()
@@ -1794,6 +2692,27 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
     }
 
+    public void ApplyPresentedCargoTransforms(Vector3 rootPosition, Quaternion rootRotation)
+    {
+        if (HasLocalPhysicsAuthority) return;
+        List<BaseResourceNew> cargo = localCargo;
+        Quaternion sourceRootRotation = transform.rotation;
+        for (int i = 0; i < cargo.Count; i++)
+        {
+            BaseResourceNew resource = cargo[i];
+            if (resource == null) continue;
+            Transform slot = cargoSlots != null && i < cargoSlots.Length && cargoSlots[i] != null
+                ? cargoSlots[i]
+                : cargoRoot;
+            if (slot == null) continue;
+            Vector3 localPosition = transform.InverseTransformPoint(slot.position);
+            Quaternion localRotation = Quaternion.Inverse(sourceRootRotation) * slot.rotation;
+            resource.transform.SetPositionAndRotation(
+                rootPosition + rootRotation * localPosition,
+                rootRotation * localRotation);
+        }
+    }
+
     private void RemoveCargoReference(BaseResourceNew resource)
     {
         if (resource == null) return;
@@ -1815,60 +2734,87 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
     }
 
-    private void ReleasePassenger(bool tipped)
+    private bool ReleasePassenger(bool tipped)
     {
+        if (pendingPassengerBoarding != null) CancelPendingPassengerBoarding(true);
         ulong clientId = PassengerClientId;
-        if (clientId == NoClient) return;
-        BeginSafeExit(clientId);
-        SetPassenger(NoClient);
+        if (clientId == NoClient) return false;
+        return BeginSafeExit(clientId, true, tipped);
     }
 
     private void ReleaseAllOccupants(bool force)
     {
         ulong driver = DriverClientId;
         ulong passenger = PassengerClientId;
+        if (force)
+        {
+            if (driver != NoClient) TechnicalReleaseOccupant(driver, false);
+            if (passenger != NoClient) TechnicalReleaseOccupant(passenger, true);
+            SetDriver(NoClient);
+            SetPassenger(NoClient);
+            return;
+        }
         if (driver != NoClient) BeginSafeExit(driver);
-        if (passenger != NoClient) BeginSafeExit(passenger);
-        SetDriver(NoClient); SetPassenger(NoClient);
+        if (passenger != NoClient) BeginSafeExit(passenger, true, true);
     }
 
-    private void BeginSafeExit(ulong clientId)
+    private bool BeginSafeExit(ulong clientId, bool passenger = false, bool forced = false)
     {
-        if (!TryGetPlayer(clientId, out NetworkObject player)) return;
-        SetOccupantCollisionIgnored(clientId, true);
-        Vector3 candidate = ResolveSafeExitPosition(player);
-        ApplySafeExitPlacement(player, candidate);
-        pendingSafeExits[clientId] = new PendingSafeExit { StartedAt = Time.time };
+        if (!TryGetPlayer(clientId, out NetworkObject player)) return false;
+        if (pendingSafeExits.ContainsKey(clientId)) return true;
+        float radius = profile != null ? profile.ExitSearchRadius : 1.8f;
+        if (!TryResolveSafeExitPosition(player, radius, out Vector3 candidate) && !forced)
+        {
+            NotifyExitDenied(clientId);
+            return false;
+        }
 
-        if (IsSessionActive)
-            BeginSafeExitClientRpc(candidate, Target(clientId));
-        else
-            player.GetComponent<PlayerWheelbarrowController>()?.BeginSafeExit(this, candidate);
+        PendingSafeExit pending = new PendingSafeExit
+        {
+            ClientId = clientId,
+            Token = NextSafeExitToken(),
+            StartedAt = Time.time,
+            SearchRadius = radius,
+            Passenger = passenger,
+            Forced = forced
+        };
+        pendingSafeExits[clientId] = pending;
+        if (!passenger) SetOccupantCollisionIgnored(clientId, true);
+        else SetPassengerTransportCollisionState(clientId, true, false);
+        if (TryResolveSafeExitPosition(player, radius, out candidate))
+            RequestSafeExitPlacement(pending, player, candidate);
+        return true;
     }
 
-    private Vector3 ResolveSafeExitPosition(NetworkObject player)
+    private uint NextSafeExitToken()
     {
+        uint token = ++nextSafeExitToken;
+        if (token == 0) token = ++nextSafeExitToken;
+        return token;
+    }
+
+    private bool TryResolveSafeExitPosition(NetworkObject player, float radius, out Vector3 resolved)
+    {
+        resolved = default;
         CharacterController controller = player.GetComponent<CharacterController>();
         if (safeExitPoints != null)
         {
             foreach (Transform exit in safeExitPoints)
             {
                 if (exit == null) continue;
-                if (TryResolveGroundedCandidate(exit.position, controller, player.transform, out Vector3 candidate)) return candidate;
+                if (TryResolveGroundedCandidate(exit.position, controller, player.transform, out resolved)) return true;
             }
         }
 
-        float radius = profile != null ? profile.ExitSearchRadius : 1.8f;
         Vector3 center = driverAnchor != null ? driverAnchor.position : transform.position - transform.forward;
         float[] angles = { 0f, -30f, 30f, -60f, 60f, -90f, 90f, 180f };
         foreach (float angle in angles)
         {
             Vector3 direction = Quaternion.AngleAxis(angle, Vector3.up) * -transform.forward;
             Vector3 sample = center + direction * radius;
-            if (TryResolveGroundedCandidate(sample, controller, player.transform, out Vector3 candidate)) return candidate;
+            if (TryResolveGroundedCandidate(sample, controller, player.transform, out resolved)) return true;
         }
-
-        return center - transform.forward * radius;
+        return false;
     }
 
     private bool TryResolveGroundedCandidate(
@@ -1920,15 +2866,54 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         if (wasEnabled) controller.enabled = false;
         player.transform.position = position;
         if (wasEnabled) controller.enabled = true;
+        player.GetComponent<PlayerTransportCollisionController>()?.EnsureSuppressed();
         player.GetComponent<StarterAssets.FirstPersonController>()?.ResetMovementAfterForcedPlacement();
     }
 
+    private void RequestSafeExitPlacement(PendingSafeExit pending, NetworkObject player, Vector3 position)
+    {
+        pending.PlacementRequested = true;
+        pending.PlacementConfirmed = false;
+        pending.RequestedPosition = position;
+        pending.StartedAt = Time.time;
+        if (!IsSessionActive || pending.ClientId == NetworkManager.ServerClientId)
+        {
+            PlayerWheelbarrowController controller = player.GetComponent<PlayerWheelbarrowController>();
+            if (controller != null && controller.BeginSafeExit(this, position))
+                ConfirmSafeExitPlacement(pending.ClientId, pending.Token);
+            return;
+        }
+        BeginSafeExitClientRpc(pending.Token, position, Target(pending.ClientId));
+    }
+
     [ClientRpc]
-    private void BeginSafeExitClientRpc(Vector3 position, ClientRpcParams rpc = default)
+    private void BeginSafeExitClientRpc(uint token, Vector3 position, ClientRpcParams rpc = default)
     {
         if (NetworkManager.Singleton?.LocalClient?.PlayerObject == null) return;
         NetworkObject player = NetworkManager.Singleton.LocalClient.PlayerObject;
-        player.GetComponent<PlayerWheelbarrowController>()?.BeginSafeExit(this, position);
+        if (player.GetComponent<PlayerWheelbarrowController>()?.BeginSafeExit(this, position) == true)
+            ConfirmSafeExitPlacementServerRpc(token);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ConfirmSafeExitPlacementServerRpc(uint token, ServerRpcParams rpc = default)
+    {
+        ConfirmSafeExitPlacement(rpc.Receive.SenderClientId, token);
+    }
+
+    private void ConfirmSafeExitPlacement(ulong clientId, uint token)
+    {
+        if (!pendingSafeExits.TryGetValue(clientId, out PendingSafeExit pending) || pending.Token != token ||
+            !TryGetPlayer(clientId, out NetworkObject player)) return;
+        ApplySafeExitPlacement(player, pending.RequestedPosition);
+        pending.PlacementConfirmed = true;
+        pending.StartedAt = Time.time;
+        if (!pending.RoleCleared)
+        {
+            if (pending.Passenger && PassengerClientId == clientId) SetPassenger(NoClient);
+            else if (!pending.Passenger && DriverClientId == clientId) SetDriver(NoClient);
+            pending.RoleCleared = true;
+        }
     }
 
     private void ProcessPendingSafeExits()
@@ -1945,7 +2930,32 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
                 continue;
             }
 
-            float elapsed = Time.time - pair.Value.StartedAt;
+            PendingSafeExit pending = pair.Value;
+            if (!pending.PlacementRequested)
+            {
+                float growth = profile != null ? profile.ForcedExitSearchRadiusGrowthRate : 0.75f;
+                float maximum = profile != null ? profile.MaximumForcedExitSearchRadius : 4f;
+                pending.SearchRadius = Mathf.Min(maximum, pending.SearchRadius + growth * Time.fixedDeltaTime);
+                if (TryResolveSafeExitPosition(player, pending.SearchRadius, out Vector3 waitingCandidate))
+                    RequestSafeExitPlacement(pending, player, waitingCandidate);
+                continue;
+            }
+
+            float elapsed = Time.time - pending.StartedAt;
+            if (!pending.PlacementConfirmed)
+            {
+                float timeout = profile != null ? profile.PassengerExitPreparationTimeout : 0.5f;
+                if (elapsed < timeout) continue;
+                if (!pending.Forced && pending.Passenger)
+                {
+                    pendingSafeExits.Remove(pair.Key);
+                    CancelSafeExitPlacementClientRpc(Target(pair.Key));
+                    continue;
+                }
+                pending.Forced = true;
+                pending.PlacementRequested = false;
+                continue;
+            }
             if (elapsed >= minimumGrace && IsPlayerSeparatedFromWheelbarrow(player))
             {
                 CompleteSafeExit(pair.Key);
@@ -1953,10 +2963,9 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             }
 
             if (elapsed < maximumGrace) continue;
-            Vector3 candidate = ResolveSafeExitPosition(player);
-            ApplySafeExitPlacement(player, candidate);
-            pair.Value.StartedAt = Time.time;
-            if (IsSessionActive) BeginSafeExitClientRpc(candidate, Target(pair.Key));
+            pending.Forced = true;
+            pending.PlacementRequested = false;
+            pending.PlacementConfirmed = false;
         }
     }
 
@@ -1980,8 +2989,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private void CompleteSafeExit(ulong clientId)
     {
+        if (!pendingSafeExits.TryGetValue(clientId, out PendingSafeExit pending)) return;
+        bool passenger = pending.Passenger;
         pendingSafeExits.Remove(clientId);
-        SetOccupantCollisionIgnored(clientId, false);
+        if (passenger) SetPassengerTransportCollisionState(clientId, false);
+        else SetOccupantCollisionIgnored(clientId, false);
         if (IsSessionActive && IsServer) CompleteSafeExitClientRpc(Target(clientId));
         else if (TryFindPlayerOnPeer(clientId, out NetworkObject player))
             player.GetComponent<PlayerWheelbarrowController>()?.CompleteSafeExit(this);
@@ -1992,6 +3004,52 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     {
         NetworkObject player = NetworkManager.Singleton?.LocalClient?.PlayerObject;
         player?.GetComponent<PlayerWheelbarrowController>()?.CompleteSafeExit(this);
+    }
+
+    [ClientRpc]
+    private void CancelSafeExitPlacementClientRpc(ClientRpcParams rpc = default)
+    {
+        NetworkObject player = NetworkManager.Singleton?.LocalClient?.PlayerObject;
+        player?.GetComponent<PlayerWheelbarrowController>()?.CancelSafeExitPlacement(this);
+    }
+
+    private void NotifyExitDenied(ulong clientId)
+    {
+        float duration = profile != null ? profile.ExitDeniedMessageDuration : 1.25f;
+        if (profile != null && profile.EnableDiagnostics)
+            Debug.Log($"[Wheelbarrow] Exit denied for client={clientId}: no valid capsule placement within " +
+                $"{(profile != null ? profile.ExitSearchRadius : 1.8f):F2}m.", this);
+        if (!IsSessionActive || clientId == NetworkManager.ServerClientId)
+        {
+            if (TryFindPlayerOnPeer(clientId, out NetworkObject player))
+                player.GetComponent<PlayerWheelbarrowController>()?.ShowExitDenied(duration);
+            return;
+        }
+        ExitDeniedClientRpc(duration, Target(clientId));
+    }
+
+    [ClientRpc]
+    private void ExitDeniedClientRpc(float duration, ClientRpcParams rpc = default)
+    {
+        NetworkManager.Singleton?.LocalClient?.PlayerObject?
+            .GetComponent<PlayerWheelbarrowController>()?.ShowExitDenied(duration);
+    }
+
+    private void TechnicalReleaseOccupant(ulong clientId, bool passenger)
+    {
+        if (!TryGetPlayer(clientId, out NetworkObject player)) return;
+        Transform spawn = PlayerSpawnManager.GetSpawnPointForClient(clientId);
+        Vector3 position = spawn != null ? spawn.position : player.transform.position;
+        Quaternion rotation = spawn != null ? spawn.rotation : player.transform.rotation;
+        PlayerHealth health = player.GetComponent<PlayerHealth>();
+        if (health != null) health.ApplyTechnicalTransportExit(position, rotation);
+        else
+        {
+            ApplySafeExitPlacement(player, position);
+            player.GetComponent<PlayerWheelbarrowController>()?.CompleteTechnicalSafeExit();
+        }
+        if (passenger) SetPassengerTransportCollisionState(clientId, false);
+        else SetOccupantCollisionIgnored(clientId, false);
     }
 
     private void UpdateWheelVisual()
@@ -2006,7 +3064,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             wheelVisualSpinDegrees += forwardDistance / Mathf.Max(0.01f, radius) * Mathf.Rad2Deg;
         }
 
-        float targetSteer = State == WheelbarrowState.Driven && HasAuthority
+        float targetSteer = State == WheelbarrowState.Driven && HasLocalPhysicsAuthority
             ? currentSteeringAngle
             : 0f;
         wheelVisualSteerDegrees = Mathf.MoveTowards(
@@ -2023,12 +3081,25 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         previousWheelbarrowPosition = transform.position;
     }
 
+    public void ApplyPresentedWheelVisual(float steeringAngle, float spinDegrees)
+    {
+        if (wheelVisual == null || HasLocalPhysicsAuthority) return;
+        wheelVisualSteerDegrees = steeringAngle;
+        wheelVisualSpinDegrees = spinDegrees;
+        Quaternion rotation = transform.rotation *
+            Quaternion.Euler(0f, steeringAngle, 0f) *
+            Quaternion.AngleAxis(spinDegrees, Vector3.right);
+        wheelVisual.SetPositionAndRotation(
+            transform.TransformPoint(wheelVisualRootLocalPosition),
+            rotation * wheelVisualPoseOffset);
+    }
+
     private void SetState(WheelbarrowState value)
     {
         WheelbarrowState previous = State;
         if (previous != value && (previous == WheelbarrowState.Driven || value == WheelbarrowState.Driven))
             ResetDriveInput();
-        if (previous != value && value == WheelbarrowState.Driven && HasAuthority)
+        if (previous != value && value == WheelbarrowState.Driven && HasLocalPhysicsAuthority)
         {
             RefreshMassAndCenterOfMass();
             InvalidateDrivenWheelPhysics();

@@ -15,6 +15,23 @@ public class ConcretePouringProfileSO : ScriptableObject
     [SerializeField, Min(0f)] private float automaticPartnerDelay = 0.12f;
     [SerializeField, Min(0.05f)] private float automaticPartnerSpeed = 0.8f;
 
+    [Header("Participant Placement")]
+    [SerializeField, Min(0.05f)] private float participantPlacementDuration = 0.25f;
+    [SerializeField, Min(0.25f)] private float maximumJoinDistance = 3f;
+    [SerializeField, Min(0.5f)] private float participantGroundProbeDistance = 3f;
+    [SerializeField, Min(0f)] private float participantCapsulePadding = 0.05f;
+
+    [Header("Participant Markers")]
+    [SerializeField] private Color availableStationColor = new Color(0.1f, 0.9f, 1f, 0.85f);
+    [SerializeField] private Color targetedStationColor = new Color(0.25f, 1f, 0.55f, 1f);
+    [SerializeField] private Color occupiedStationColor = new Color(0.42f, 0.45f, 0.48f, 0.5f);
+    [SerializeField, Min(0.005f)] private float stationMarkerLineWidth = 0.035f;
+    [SerializeField, Range(0f, 0.25f)] private float stationMarkerPulseAmount = 0.08f;
+    [SerializeField, Min(0f)] private float stationMarkerPulseSpeed = 2.5f;
+    [SerializeField] private Vector2 stationFootprintSize = new Vector2(0.18f, 0.36f);
+    [SerializeField, Min(0f)] private float stationFootprintSeparation = 0.24f;
+    [SerializeField, Min(0f)] private float gripMarkerPadding = 0.05f;
+
     public float CursorSensitivity => Mathf.Max(0.0001f, cursorSensitivity);
     public float MaximumCursorSpeed => Mathf.Max(0.05f, maximumCursorSpeed);
     public float SynchronizedTolerance => synchronizedTolerance;
@@ -26,4 +43,19 @@ public class ConcretePouringProfileSO : ScriptableObject
     public bool AllowSinglePlayerTesting => allowSinglePlayerTesting;
     public float AutomaticPartnerDelay => automaticPartnerDelay;
     public float AutomaticPartnerSpeed => automaticPartnerSpeed;
+    public float ParticipantPlacementDuration => Mathf.Max(0.05f, participantPlacementDuration);
+    public float MaximumJoinDistance => Mathf.Max(0.25f, maximumJoinDistance);
+    public float ParticipantGroundProbeDistance => Mathf.Max(0.5f, participantGroundProbeDistance);
+    public float ParticipantCapsulePadding => Mathf.Max(0f, participantCapsulePadding);
+    public Color AvailableStationColor => availableStationColor;
+    public Color TargetedStationColor => targetedStationColor;
+    public Color OccupiedStationColor => occupiedStationColor;
+    public float StationMarkerLineWidth => Mathf.Max(0.005f, stationMarkerLineWidth);
+    public float StationMarkerPulseAmount => Mathf.Clamp(stationMarkerPulseAmount, 0f, 0.25f);
+    public float StationMarkerPulseSpeed => Mathf.Max(0f, stationMarkerPulseSpeed);
+    public Vector2 StationFootprintSize => new Vector2(
+        Mathf.Max(0.05f, stationFootprintSize.x),
+        Mathf.Max(0.1f, stationFootprintSize.y));
+    public float StationFootprintSeparation => Mathf.Max(0f, stationFootprintSeparation);
+    public float GripMarkerPadding => Mathf.Max(0f, gripMarkerPadding);
 }
