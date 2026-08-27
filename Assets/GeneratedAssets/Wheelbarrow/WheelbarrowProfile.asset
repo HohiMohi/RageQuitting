@@ -81,6 +81,8 @@ MonoBehaviour:
   wheelSuspensionSpring: 45
   wheelSuspensionDamping: 10
   wheelMaximumSupportAcceleration: 18
+  minimumWheelGroundNormalDot: 0.25
+  wheelContactValidationMargin: 0.05
   groundNormalFilterSpeed: 12
   groundHeightFilterSpeed: 4
   maximumLongitudinalGripAcceleration: 10

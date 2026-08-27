@@ -30,6 +30,10 @@ internal static class WheelbarrowPhysicsProbe
     private static double firstTippedAt = -1d;
     private static float previousTimeScale = 1f;
     private static bool timeScaleOverridden;
+    private static string expectedContactCollider;
+    private static string expectedContactSource;
+    private static bool contactAssertionFailed;
+    private static bool expectedContactObserved;
 
     [MenuItem("Tools/Wheelbarrow Physics Probe/Loaded - Stationary")]
     private static void RunLoadedStationary() => Run("stationary", BuildFlat, 0f);
@@ -45,6 +49,38 @@ internal static class WheelbarrowPhysicsProbe
 
     [MenuItem("Tools/Wheelbarrow Physics Probe/Loaded - Small Bump")]
     private static void RunLoadedBump() => Run("bump", BuildBump, 1f);
+
+    [MenuItem("Tools/Wheelbarrow Physics Probe/Wheel Contact - Low Ceiling")]
+    private static void RunLowCeiling()
+    {
+        Run("wheel-contact-low-ceiling", BuildLowCeiling, 1f, 0f, true, 4d,
+            "Ground", "SphereCast");
+    }
+
+    [MenuItem("Tools/Wheelbarrow Physics Probe/Wheel Contact - Starting Overlap Fallback")]
+    private static void RunStartingOverlapFallback()
+    {
+        Run("wheel-contact-starting-overlap", BuildStartingOverlap, 0f, 0f, true, 1d,
+            "Ground", "RaycastFallback");
+        if (wheelbarrow == null || body == null) return;
+
+        Vector3 linearVelocity = body.linearVelocity;
+        Vector3 angularVelocity = body.angularVelocity;
+        bool contactPassed = wheelbarrow.RunEditorWheelContactQueryProbe(out string result);
+        string source = Read<object>(wheelbarrow, "drivenWheelContactSource")?.ToString() ?? "None";
+        RaycastHit hit = Read<RaycastHit>(wheelbarrow, "drivenWheelHit");
+        bool expected = contactPassed && source == "RaycastFallback" &&
+            hit.collider != null && hit.collider.name == "Ground" &&
+            hit.point.sqrMagnitude > 0.000001f;
+        bool noImpulse = Vector3.Distance(linearVelocity, body.linearVelocity) <= 0.0001f &&
+            Vector3.Distance(angularVelocity, body.angularVelocity) <= 0.0001f;
+        if (expected && noImpulse)
+            Debug.Log($"[WheelbarrowPhysicsProbe] Starting overlap fallback PASS: {result}, noImpulse={noImpulse}");
+        else
+            Debug.LogError($"[WheelbarrowPhysicsProbe] Starting overlap fallback FAIL: {result}, " +
+                $"expectedSource=RaycastFallback, expectedCollider=Ground, noImpulse={noImpulse}");
+        Cleanup();
+    }
 
     [MenuItem("Tools/Wheelbarrow Physics Probe/Cornering - Empty Full Turn")]
     private static void RunEmptyFullTurn() => Run("cornering-empty", BuildFlat, 1f, 1f, false);
@@ -145,7 +181,8 @@ internal static class WheelbarrowPhysicsProbe
     }
 
     private static void Run(string name, System.Action<Transform> buildSurface, float throttle,
-        float steering = 0f, bool loaded = true, double duration = TestDuration)
+        float steering = 0f, bool loaded = true, double duration = TestDuration,
+        string requiredContactCollider = null, string requiredContactSource = null)
     {
         if (!EditorApplication.isPlaying)
         {
@@ -162,6 +199,10 @@ internal static class WheelbarrowPhysicsProbe
         probeSteering = steering;
         probeLoaded = loaded;
         activeTestDuration = duration;
+        expectedContactCollider = requiredContactCollider;
+        expectedContactSource = requiredContactSource;
+        contactAssertionFailed = false;
+        expectedContactObserved = false;
         firstTippedAt = -1d;
         tippedScenario = false;
         testRoot = new GameObject("__WheelbarrowPhysicsProbe");
@@ -180,6 +221,20 @@ internal static class WheelbarrowPhysicsProbe
         wheelbarrow = instance.GetComponent<WheelbarrowController>();
         body = instance.GetComponent<Rigidbody>();
         wheelbarrow.SendMessage("BeginEditorPhysicsProbe", loaded, SendMessageOptions.RequireReceiver);
+        ConfigureQueryOnlyObstacleCollisions();
+        Physics.SyncTransforms();
+
+        if (!string.IsNullOrEmpty(expectedContactCollider))
+        {
+            bool immediatePassed = wheelbarrow.RunEditorWheelContactQueryProbe(out string immediateResult);
+            EvaluateCurrentContact();
+            if (!immediatePassed || contactAssertionFailed)
+                Debug.LogError($"[WheelbarrowPhysicsProbe] Immediate contact validation FAIL for {name}: " +
+                    immediateResult);
+            else
+                Debug.Log($"[WheelbarrowPhysicsProbe] Immediate contact validation PASS for {name}: " +
+                    immediateResult);
+        }
 
         startedAt = EditorApplication.timeSinceStartup;
         minY = maxY = body.position.y;
@@ -212,6 +267,7 @@ internal static class WheelbarrowPhysicsProbe
         maximumSpeed = Mathf.Max(maximumSpeed, body.linearVelocity.magnitude);
         maximumRolloverRisk = Mathf.Max(maximumRolloverRisk, wheelbarrow.CorneringRolloverRisk);
         maximumTiltAngle = Mathf.Max(maximumTiltAngle, Vector3.Angle(wheelbarrow.transform.up, Vector3.up));
+        EvaluateCurrentContact();
         if (wheelbarrow.State == WheelbarrowState.Tipped)
         {
             if (firstTippedAt < 0d) firstTippedAt = EditorApplication.timeSinceStartup - startedAt;
@@ -243,8 +299,36 @@ internal static class WheelbarrowPhysicsProbe
             $"rolloverReferenceSpeed={wheelbarrow.EffectiveRolloverReferenceSpeed:F3}, " +
             $"minimumTippedTilt={(minimumTiltAngle < 180f ? minimumTiltAngle : 0f):F2}";
         SessionState.SetString("WheelbarrowPhysicsProbe.LastResult", report);
-        Debug.Log(report);
+        bool contactProbePassed = string.IsNullOrEmpty(expectedContactCollider) ||
+            expectedContactObserved && !contactAssertionFailed;
+        if (contactProbePassed) Debug.Log(report);
+        else Debug.LogError(report + $", contactAssertionFailed={contactAssertionFailed}, " +
+            $"expectedContactObserved={expectedContactObserved}, expected={expectedContactSource}/{expectedContactCollider}");
         Cleanup();
+    }
+
+    private static void EvaluateCurrentContact()
+    {
+        if (wheelbarrow == null || string.IsNullOrEmpty(expectedContactCollider)) return;
+        if (!Read<bool>(wheelbarrow, "drivenWheelGrounded")) return;
+
+        RaycastHit hit = Read<RaycastHit>(wheelbarrow, "drivenWheelHit");
+        Vector3 point = Read<Vector3>(wheelbarrow, "filteredWheelContactPoint");
+        string source = Read<object>(wheelbarrow, "drivenWheelContactSource")?.ToString() ?? "None";
+        string colliderName = hit.collider != null ? hit.collider.name : "none";
+        bool invalidPoint = float.IsNaN(point.x) || float.IsNaN(point.y) || float.IsNaN(point.z) ||
+            float.IsInfinity(point.x) || float.IsInfinity(point.y) || float.IsInfinity(point.z) ||
+            point.sqrMagnitude <= 0.000001f;
+        bool forbiddenCollider = colliderName.Contains("Roof") || colliderName.Contains("Passenger");
+        if (invalidPoint || forbiddenCollider)
+        {
+            contactAssertionFailed = true;
+            return;
+        }
+
+        if (colliderName == expectedContactCollider &&
+            (string.IsNullOrEmpty(expectedContactSource) || source == expectedContactSource))
+            expectedContactObserved = true;
     }
 
     private static void BuildFlat(Transform root)
@@ -271,6 +355,45 @@ internal static class WheelbarrowPhysicsProbe
         CreateGround(root, "Bump", new Vector3(0f, TestHeight + 0.025f, 1f), new Vector3(4f, 0.05f, 0.8f));
     }
 
+    private static void BuildLowCeiling(Transform root)
+    {
+        BuildFlat(root);
+        CreateGround(root, "ProbeRoof", new Vector3(0f, TestHeight + 1.25f, -7.34f),
+            new Vector3(1.2f, 0.1f, 1.2f));
+        GameObject passenger = new GameObject("ProbePassenger");
+        passenger.transform.SetParent(root, false);
+        passenger.transform.position = new Vector3(0f, TestHeight + 0.44f, -7.34f);
+        CapsuleCollider passengerCollider = passenger.AddComponent<CapsuleCollider>();
+        passengerCollider.radius = 0.25f;
+        passengerCollider.height = 0.8f;
+        passengerCollider.direction = 1;
+    }
+
+    private static void BuildStartingOverlap(Transform root)
+    {
+        CreateGround(root, "Ground", new Vector3(0f, TestHeight - 0.37f, 10f),
+            new Vector3(120f, 1f, 120f));
+    }
+
+    private static void ConfigureQueryOnlyObstacleCollisions()
+    {
+        if (testRoot == null || wheelbarrow == null) return;
+        Transform roof = testRoot.transform.Find("ProbeRoof");
+        Transform passenger = testRoot.transform.Find("ProbePassenger");
+        if (passenger != null)
+            wheelbarrow.SetEditorWheelContactIgnoredPassenger(passenger);
+        Collider roofCollider = roof != null ? roof.GetComponent<Collider>() : null;
+        Collider passengerCollider = passenger != null ? passenger.GetComponent<Collider>() : null;
+        foreach (Collider wheelbarrowCollider in wheelbarrow.GetComponentsInChildren<Collider>(true))
+        {
+            if (wheelbarrowCollider == null) continue;
+            if (roofCollider != null)
+                Physics.IgnoreCollision(wheelbarrowCollider, roofCollider, true);
+            if (passengerCollider != null)
+                Physics.IgnoreCollision(wheelbarrowCollider, passengerCollider, true);
+        }
+    }
+
     private static GameObject CreateGround(Transform root, string name, Vector3 position, Vector3 scale)
     {
         GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -293,6 +416,10 @@ internal static class WheelbarrowPhysicsProbe
         testRoot = null;
         wheelbarrow = null;
         body = null;
+        expectedContactCollider = null;
+        expectedContactSource = null;
+        contactAssertionFailed = false;
+        expectedContactObserved = false;
     }
 
     private static T Read<T>(object target, string fieldName)

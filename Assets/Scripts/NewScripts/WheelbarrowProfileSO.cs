@@ -83,6 +83,8 @@ public class WheelbarrowProfileSO : ScriptableObject
     [SerializeField, Min(0f)] private float wheelSuspensionSpring = 45f;
     [SerializeField, Min(0f)] private float wheelSuspensionDamping = 10f;
     [SerializeField, Min(0f)] private float wheelMaximumSupportAcceleration = 18f;
+    [SerializeField, Range(0f, 1f)] private float minimumWheelGroundNormalDot = 0.25f;
+    [SerializeField, Min(0f)] private float wheelContactValidationMargin = 0.05f;
     [SerializeField, Min(0f)] private float groundNormalFilterSpeed = 12f;
     [SerializeField, Min(0f)] private float groundHeightFilterSpeed = 4f;
     [SerializeField, Min(0f)] private float maximumLongitudinalGripAcceleration = 10f;
@@ -230,6 +232,8 @@ public class WheelbarrowProfileSO : ScriptableObject
     public float WheelSuspensionSpring => Mathf.Max(0f, wheelSuspensionSpring);
     public float WheelSuspensionDamping => Mathf.Max(0f, wheelSuspensionDamping);
     public float WheelMaximumSupportAcceleration => Mathf.Max(0f, wheelMaximumSupportAcceleration);
+    public float MinimumWheelGroundNormalDot => Mathf.Clamp01(minimumWheelGroundNormalDot);
+    public float WheelContactValidationMargin => Mathf.Max(0f, wheelContactValidationMargin);
     public float GroundNormalFilterSpeed => Mathf.Max(0f, groundNormalFilterSpeed);
     public float GroundHeightFilterSpeed => Mathf.Max(0f, groundHeightFilterSpeed);
     public float MaximumLongitudinalGripAcceleration => Mathf.Max(0f, maximumLongitudinalGripAcceleration);

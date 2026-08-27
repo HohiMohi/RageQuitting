@@ -9,7 +9,34 @@ using UnityEngine.AI;
 public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 {
     public const ulong NoClient = ulong.MaxValue;
+    private const float WheelContactDistanceEpsilon = 0.0001f;
     private static readonly HashSet<WheelbarrowController> Instances = new HashSet<WheelbarrowController>();
+
+    private enum DrivenWheelContactSource : byte
+    {
+        None,
+        SphereCast,
+        RaycastFallback
+    }
+
+    private enum DrivenWheelContactRejection : byte
+    {
+        None,
+        NoHit,
+        IgnoredCollider,
+        InitialOverlap,
+        InvalidPoint,
+        InvalidNormal,
+        SurfaceAboveWheel,
+        PointTooFar
+    }
+
+    private struct DrivenWheelContactSample
+    {
+        public RaycastHit Hit;
+        public float SuspensionError;
+        public DrivenWheelContactSource Source;
+    }
 
     [Header("Configuration")]
     [SerializeField] private WheelbarrowProfileSO profile;
@@ -143,6 +170,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private bool driverSupportTargetInitialized;
     private readonly RaycastHit[] driverSupportGroundHits = new RaycastHit[12];
     private readonly RaycastHit[] wheelContactHits = new RaycastHit[12];
+    private readonly RaycastHit[] wheelContactRayHits = new RaycastHit[12];
+    private DrivenWheelContactSource drivenWheelContactSource;
+    private DrivenWheelContactSource lastLoggedWheelContactSource;
+    private DrivenWheelContactRejection lastLoggedWheelContactRejection;
+    private Collider lastLoggedWheelContactCollider;
     private Collider[] physicalColliders = Array.Empty<Collider>();
     private float navObstacleSettledTime;
     private WheelbarrowPresentationController presentationController;
@@ -903,9 +935,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
                     : 0f;
                 ApplyCorneringRollTorque(rolloverForwardSpeed, targetYawRate);
             }
-            drivenWheelGrounded = false;
-            drivenContactInitialized = false;
-            wheelSupportAcceleration = 0f;
+            ClearDrivenWheelContact(DrivenWheelContactRejection.NoHit, null);
             driverSupportAcceleration = 0f;
             return;
         }
@@ -958,39 +988,27 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     {
         float radius = profile != null ? profile.WheelRadius : wheelVisualRadius;
         float probeDistance = profile != null ? profile.WheelContactProbeDistance : 0.12f;
-        float castOriginOffset = radius + probeDistance;
+        float suspensionDistance = profile != null ? profile.WheelSuspensionDistance : 0.03f;
         Vector3 wheelCenter = transform.TransformPoint(wheelVisualRootLocalPosition);
-        Vector3 castUp = transform.up;
-        Vector3 origin = wheelCenter + castUp * castOriginOffset;
-        int count = Physics.SphereCastNonAlloc(
-            origin,
-            radius,
-            -castUp,
-            wheelContactHits,
-            castOriginOffset + (profile != null ? profile.WheelSuspensionDistance : 0.03f),
-            Physics.DefaultRaycastLayers,
-            QueryTriggerInteraction.Ignore);
-
-        float nearestDistance = float.PositiveInfinity;
-        drivenWheelGrounded = false;
-        for (int i = 0; i < count; i++)
+        Vector3 castUp = transform.up.sqrMagnitude > 0.0001f ? transform.up.normalized : Vector3.up;
+        if (!TryResolveDrivenWheelContact(
+                wheelCenter,
+                castUp,
+                radius,
+                probeDistance,
+                suspensionDistance,
+                out DrivenWheelContactSample sample,
+                out DrivenWheelContactRejection rejection,
+                out Collider rejectedCollider))
         {
-            RaycastHit hit = wheelContactHits[i];
-            Collider hitCollider = hit.collider;
-            if (hitCollider == null || hitCollider.transform == transform || hitCollider.transform.IsChildOf(transform)) continue;
-            if (hit.distance >= nearestDistance) continue;
-            nearestDistance = hit.distance;
-            drivenWheelHit = hit;
-            drivenWheelGrounded = true;
-        }
-
-        if (!drivenWheelGrounded)
-        {
-            drivenContactInitialized = false;
-            wheelSuspensionError = 0f;
-            wheelSupportAcceleration = 0f;
+            ClearDrivenWheelContact(rejection, rejectedCollider);
             return;
         }
+
+        drivenWheelHit = sample.Hit;
+        drivenWheelGrounded = true;
+        drivenWheelContactSource = sample.Source;
+        LogDrivenWheelContactTransition(sample.Source, rejection, sample.Hit.collider);
 
         lastDrivenWheelContactTime = Time.time;
 
@@ -1008,16 +1026,282 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         else
         {
             filteredGroundNormal = Vector3.Slerp(filteredGroundNormal, rawNormal, normalFilter).normalized;
-            filteredWheelContactPoint = Vector3.Lerp(filteredWheelContactPoint, drivenWheelHit.point, heightFilter);
+            float previousHeight = Vector3.Dot(filteredWheelContactPoint, castUp);
+            float rawHeight = Vector3.Dot(drivenWheelHit.point, castUp);
+            float filteredHeight = Mathf.Lerp(previousHeight, rawHeight, heightFilter);
+            filteredWheelContactPoint = drivenWheelHit.point + castUp * (filteredHeight - rawHeight);
         }
-        wheelSuspensionError = Mathf.Clamp(castOriginOffset - nearestDistance,
-            -(profile != null ? profile.WheelSuspensionDistance : 0.03f),
-            profile != null ? profile.WheelSuspensionDistance : 0.03f);
+        wheelSuspensionError = sample.SuspensionError;
+        if (!IsCurrentDrivenWheelContactUsable())
+            ClearDrivenWheelContact(DrivenWheelContactRejection.PointTooFar, drivenWheelHit.collider);
+    }
+
+    private bool TryResolveDrivenWheelContact(
+        Vector3 wheelCenter,
+        Vector3 castUp,
+        float radius,
+        float probeDistance,
+        float suspensionDistance,
+        out DrivenWheelContactSample sample,
+        out DrivenWheelContactRejection rejection,
+        out Collider rejectedCollider)
+    {
+        sample = default;
+        rejection = DrivenWheelContactRejection.NoHit;
+        rejectedCollider = null;
+        ResolveWheelContactIgnoredRoots(out Transform driverRoot, out Transform passengerRoot);
+
+        Vector3 origin = wheelCenter + castUp * probeDistance;
+        int sphereCount = Physics.SphereCastNonAlloc(
+            origin,
+            radius,
+            -castUp,
+            wheelContactHits,
+            probeDistance + suspensionDistance,
+            Physics.DefaultRaycastLayers,
+            QueryTriggerInteraction.Ignore);
+
+        float nearestDistance = float.PositiveInfinity;
+        bool foundSphereContact = false;
+        for (int i = 0; i < sphereCount; i++)
+        {
+            RaycastHit hit = wheelContactHits[i];
+            if (!TryValidateDrivenWheelContact(
+                    hit,
+                    wheelCenter,
+                    castUp,
+                    radius,
+                    suspensionDistance,
+                    driverRoot,
+                    passengerRoot,
+                    out DrivenWheelContactRejection hitRejection))
+            {
+                rejection = hitRejection;
+                rejectedCollider = hit.collider;
+                continue;
+            }
+            if (hit.distance >= nearestDistance) continue;
+
+            nearestDistance = hit.distance;
+            sample.Hit = hit;
+            sample.SuspensionError = Mathf.Clamp(
+                probeDistance - hit.distance,
+                -suspensionDistance,
+                suspensionDistance);
+            sample.Source = DrivenWheelContactSource.SphereCast;
+            foundSphereContact = true;
+        }
+        if (foundSphereContact)
+        {
+            rejection = DrivenWheelContactRejection.None;
+            rejectedCollider = null;
+            return true;
+        }
+
+        DrivenWheelContactRejection sphereRejection = rejection;
+        Collider sphereRejectedCollider = rejectedCollider;
+        float validationMargin = profile != null ? profile.WheelContactValidationMargin : 0.05f;
+        int rayCount = Physics.RaycastNonAlloc(
+            origin,
+            -castUp,
+            wheelContactRayHits,
+            radius + probeDistance + suspensionDistance + validationMargin,
+            Physics.DefaultRaycastLayers,
+            QueryTriggerInteraction.Ignore);
+
+        nearestDistance = float.PositiveInfinity;
+        bool foundRayContact = false;
+        for (int i = 0; i < rayCount; i++)
+        {
+            RaycastHit hit = wheelContactRayHits[i];
+            if (!TryValidateDrivenWheelContact(
+                    hit,
+                    wheelCenter,
+                    castUp,
+                    radius,
+                    suspensionDistance,
+                    driverRoot,
+                    passengerRoot,
+                    out DrivenWheelContactRejection hitRejection))
+            {
+                rejection = hitRejection;
+                rejectedCollider = hit.collider;
+                continue;
+            }
+
+            float verticalDistance = Vector3.Dot(wheelCenter - hit.point, castUp);
+            if (verticalDistance < -validationMargin ||
+                verticalDistance > radius + suspensionDistance + validationMargin)
+            {
+                rejection = verticalDistance < -validationMargin
+                    ? DrivenWheelContactRejection.SurfaceAboveWheel
+                    : DrivenWheelContactRejection.PointTooFar;
+                rejectedCollider = hit.collider;
+                continue;
+            }
+            if (hit.distance >= nearestDistance) continue;
+
+            nearestDistance = hit.distance;
+            sample.Hit = hit;
+            sample.SuspensionError = Mathf.Clamp(
+                radius - verticalDistance,
+                -suspensionDistance,
+                suspensionDistance);
+            sample.Source = DrivenWheelContactSource.RaycastFallback;
+            foundRayContact = true;
+        }
+        if (!foundRayContact) return false;
+
+        rejection = sphereRejection;
+        rejectedCollider = sphereRejectedCollider;
+        return true;
+    }
+
+    private bool TryValidateDrivenWheelContact(
+        RaycastHit hit,
+        Vector3 wheelCenter,
+        Vector3 castUp,
+        float radius,
+        float suspensionDistance,
+        Transform driverRoot,
+        Transform passengerRoot,
+        out DrivenWheelContactRejection rejection)
+    {
+        Collider hitCollider = hit.collider;
+        if (hitCollider == null || IsWheelContactColliderIgnored(hitCollider, driverRoot, passengerRoot))
+        {
+            rejection = DrivenWheelContactRejection.IgnoredCollider;
+            return false;
+        }
+        if (hit.distance <= WheelContactDistanceEpsilon)
+        {
+            rejection = DrivenWheelContactRejection.InitialOverlap;
+            return false;
+        }
+        if (!IsFinite(hit.point) || hit.point.sqrMagnitude <= WheelContactDistanceEpsilon * WheelContactDistanceEpsilon)
+        {
+            rejection = DrivenWheelContactRejection.InvalidPoint;
+            return false;
+        }
+        if (!IsFinite(hit.normal) || hit.normal.sqrMagnitude <= 0.0001f)
+        {
+            rejection = DrivenWheelContactRejection.InvalidNormal;
+            return false;
+        }
+
+        float minimumGroundDot = profile != null ? profile.MinimumWheelGroundNormalDot : 0.25f;
+        if (Vector3.Dot(hit.normal.normalized, castUp) < minimumGroundDot)
+        {
+            rejection = DrivenWheelContactRejection.InvalidNormal;
+            return false;
+        }
+
+        float validationMargin = profile != null ? profile.WheelContactValidationMargin : 0.05f;
+        if (Vector3.Dot(hit.point - wheelCenter, castUp) > validationMargin)
+        {
+            rejection = DrivenWheelContactRejection.SurfaceAboveWheel;
+            return false;
+        }
+        if (Vector3.Distance(hit.point, wheelCenter) > radius + suspensionDistance + validationMargin)
+        {
+            rejection = DrivenWheelContactRejection.PointTooFar;
+            return false;
+        }
+
+        rejection = DrivenWheelContactRejection.None;
+        return true;
+    }
+
+    private bool IsCurrentDrivenWheelContactUsable()
+    {
+        if (!drivenWheelGrounded || drivenWheelHit.collider == null ||
+            !IsFinite(filteredWheelContactPoint) ||
+            filteredWheelContactPoint.sqrMagnitude <= WheelContactDistanceEpsilon * WheelContactDistanceEpsilon ||
+            !IsFinite(filteredGroundNormal) || filteredGroundNormal.sqrMagnitude <= 0.0001f)
+            return false;
+
+        ResolveWheelContactIgnoredRoots(out Transform driverRoot, out Transform passengerRoot);
+        if (IsWheelContactColliderIgnored(drivenWheelHit.collider, driverRoot, passengerRoot)) return false;
+
+        float radius = profile != null ? profile.WheelRadius : wheelVisualRadius;
+        float suspensionDistance = profile != null ? profile.WheelSuspensionDistance : 0.03f;
+        float validationMargin = profile != null ? profile.WheelContactValidationMargin : 0.05f;
+        Vector3 wheelCenter = transform.TransformPoint(wheelVisualRootLocalPosition);
+        Vector3 castUp = transform.up.sqrMagnitude > 0.0001f ? transform.up.normalized : Vector3.up;
+        if (Vector3.Dot(filteredGroundNormal.normalized, castUp) <
+            (profile != null ? profile.MinimumWheelGroundNormalDot : 0.25f)) return false;
+        if (Vector3.Dot(filteredWheelContactPoint - wheelCenter, castUp) > validationMargin) return false;
+        return Vector3.Distance(filteredWheelContactPoint, wheelCenter) <=
+            radius + suspensionDistance + validationMargin;
+    }
+
+    private void ClearDrivenWheelContact(DrivenWheelContactRejection rejection, Collider rejectedCollider)
+    {
+        drivenWheelGrounded = false;
+        drivenWheelHit = default;
+        drivenWheelContactSource = DrivenWheelContactSource.None;
+        drivenContactInitialized = false;
+        filteredWheelContactPoint = Vector3.zero;
+        filteredGroundNormal = Vector3.up;
+        wheelSuspensionError = 0f;
+        wheelSupportAcceleration = 0f;
+        longitudinalAcceleration = 0f;
+        residualLateralSpeed = 0f;
+        targetYawRate = 0f;
+        currentYawAcceleration = 0f;
+        LogDrivenWheelContactTransition(DrivenWheelContactSource.None, rejection, rejectedCollider);
+    }
+
+    private void ResolveWheelContactIgnoredRoots(out Transform driverRoot, out Transform passengerRoot)
+    {
+        driverRoot = DriverClientId != NoClient && TryFindPlayerOnPeer(DriverClientId, out NetworkObject driver)
+            ? driver.transform
+            : null;
+        passengerRoot = PassengerClientId != NoClient && TryFindPlayerOnPeer(PassengerClientId, out NetworkObject passenger)
+            ? passenger.transform
+            : null;
+#if UNITY_EDITOR
+        if (passengerRoot == null && editorProbePassengerRoot != null)
+            passengerRoot = editorProbePassengerRoot;
+#endif
+    }
+
+    private bool IsWheelContactColliderIgnored(Collider collider, Transform driverRoot, Transform passengerRoot)
+    {
+        if (collider == null) return true;
+        Transform candidate = collider.transform;
+        return candidate == transform || candidate.IsChildOf(transform) ||
+            driverRoot != null && (candidate == driverRoot || candidate.IsChildOf(driverRoot)) ||
+            passengerRoot != null && (candidate == passengerRoot || candidate.IsChildOf(passengerRoot));
+    }
+
+    private void LogDrivenWheelContactTransition(
+        DrivenWheelContactSource source,
+        DrivenWheelContactRejection rejection,
+        Collider collider)
+    {
+        if (profile == null || !profile.EnableDiagnostics) return;
+        if (lastLoggedWheelContactSource == source &&
+            lastLoggedWheelContactRejection == rejection &&
+            lastLoggedWheelContactCollider == collider) return;
+
+        lastLoggedWheelContactSource = source;
+        lastLoggedWheelContactRejection = rejection;
+        lastLoggedWheelContactCollider = collider;
+        string colliderName = collider != null ? collider.name : "none";
+        Debug.Log(
+            $"[Wheelbarrow] Wheel contact source={source}, collider={colliderName}, rejection={rejection}.",
+            this);
     }
 
     private void ApplyDrivenWheelSupport()
     {
-        if (!drivenWheelGrounded) return;
+        if (!IsCurrentDrivenWheelContactUsable())
+        {
+            if (drivenWheelGrounded)
+                ClearDrivenWheelContact(DrivenWheelContactRejection.InvalidPoint, drivenWheelHit.collider);
+            return;
+        }
         float normalVelocity = Vector3.Dot(physicsBody.linearVelocity, filteredGroundNormal);
         float gravitySupport = Mathf.Max(0f, -Vector3.Dot(Physics.gravity, filteredGroundNormal)) * wheelLoadShare;
         float spring = profile != null ? profile.WheelSuspensionSpring : 45f;
@@ -1035,7 +1319,12 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         bool hasThrottle, bool changingDirection, bool belowSpeedLimit)
     {
         longitudinalAcceleration = 0f;
-        if (!drivenWheelGrounded) return;
+        if (!IsCurrentDrivenWheelContactUsable())
+        {
+            if (drivenWheelGrounded)
+                ClearDrivenWheelContact(DrivenWheelContactRejection.InvalidPoint, drivenWheelHit.collider);
+            return;
+        }
 
         float requestedForce = 0f;
         if (hasThrottle && !changingDirection && belowSpeedLimit)
@@ -1145,18 +1434,24 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         float nearestDistance = float.PositiveInfinity;
         height = 0f;
         bool found = false;
-        Transform driverRoot = null;
-        if (DriverClientId != NoClient && TryGetPlayer(DriverClientId, out NetworkObject driver))
-            driverRoot = driver.transform;
+        ResolveWheelContactIgnoredRoots(out Transform driverRoot, out Transform passengerRoot);
         for (int i = 0; i < count; i++)
         {
-            Collider hitCollider = driverSupportGroundHits[i].collider;
+            RaycastHit hit = driverSupportGroundHits[i];
+            Collider hitCollider = hit.collider;
             if (hitCollider == null || hitCollider.transform == transform || hitCollider.transform.IsChildOf(transform)) continue;
             if (driverRoot != null &&
                 (hitCollider.transform == driverRoot || hitCollider.transform.IsChildOf(driverRoot))) continue;
-            if (driverSupportGroundHits[i].distance >= nearestDistance) continue;
-            nearestDistance = driverSupportGroundHits[i].distance;
-            height = driverSupportGroundHits[i].point.y;
+            if (passengerRoot != null &&
+                (hitCollider.transform == passengerRoot || hitCollider.transform.IsChildOf(passengerRoot))) continue;
+            if (hit.distance <= WheelContactDistanceEpsilon || !IsFinite(hit.point) ||
+                hit.point.sqrMagnitude <= WheelContactDistanceEpsilon * WheelContactDistanceEpsilon ||
+                !IsFinite(hit.normal) || hit.normal.sqrMagnitude <= 0.0001f ||
+                Vector3.Dot(hit.normal.normalized, Vector3.up) <
+                (profile != null ? profile.MinimumWheelGroundNormalDot : 0.25f)) continue;
+            if (hit.distance >= nearestDistance) continue;
+            nearestDistance = hit.distance;
+            height = hit.point.y;
             found = true;
         }
         return found;
@@ -1176,6 +1471,13 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private void ApplyDrivenYawControl(float forwardSpeed, bool hasThrottle)
     {
+        if (!IsCurrentDrivenWheelContactUsable())
+        {
+            targetYawRate = 0f;
+            currentYawAcceleration = 0f;
+            return;
+        }
+
         Vector3 worldUp = Vector3.up;
         Vector3 angularVelocity = physicsBody.angularVelocity;
         float currentYaw = Vector3.Dot(angularVelocity, worldUp);
@@ -1221,7 +1523,12 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private void ApplyDrivenLateralGrip()
     {
-        if (!drivenWheelGrounded) return;
+        if (!IsCurrentDrivenWheelContactUsable())
+        {
+            if (drivenWheelGrounded)
+                ClearDrivenWheelContact(DrivenWheelContactRejection.InvalidPoint, drivenWheelHit.collider);
+            return;
+        }
 
         Vector3 lateral = Vector3.ProjectOnPlane(transform.right, filteredGroundNormal);
         if (lateral.sqrMagnitude <= 0.0001f) return;
@@ -1572,7 +1879,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         targetYawRate = 0f;
         residualLateralSpeed = 0f;
         drivenWheelGrounded = false;
+        drivenWheelHit = default;
+        drivenWheelContactSource = DrivenWheelContactSource.None;
         drivenContactInitialized = false;
+        filteredWheelContactPoint = Vector3.zero;
+        filteredGroundNormal = Vector3.up;
         wheelSuspensionError = 0f;
         wheelSupportAcceleration = 0f;
         driverSupportAcceleration = 0f;
@@ -1866,6 +2177,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
 #if UNITY_EDITOR
     private int editorProbeResourceCount = -1;
+    private Transform editorProbePassengerRoot;
 
     internal void BeginEditorPhysicsProbe(bool loaded)
     {
@@ -1887,6 +2199,26 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         physicsBody.isKinematic = false;
         physicsBody.useGravity = true;
         physicsBody.WakeUp();
+    }
+
+    public bool RunEditorWheelContactQueryProbe(out string result)
+    {
+        UpdateDrivenWheelContact();
+        string colliderName = drivenWheelHit.collider != null ? drivenWheelHit.collider.name : "none";
+        bool finitePoint = IsFinite(filteredWheelContactPoint);
+        bool nonZeroPoint = filteredWheelContactPoint.sqrMagnitude >
+            WheelContactDistanceEpsilon * WheelContactDistanceEpsilon;
+        bool usable = IsCurrentDrivenWheelContactUsable();
+        bool passed = drivenWheelGrounded && finitePoint && nonZeroPoint && usable;
+        result = $"grounded={drivenWheelGrounded}, source={drivenWheelContactSource}, " +
+            $"collider={colliderName}, point={filteredWheelContactPoint}, finite={finitePoint}, " +
+            $"nonZero={nonZeroPoint}, usable={usable}, error={wheelSuspensionError:F4}";
+        return passed;
+    }
+
+    public void SetEditorWheelContactIgnoredPassenger(Transform passengerRoot)
+    {
+        editorProbePassengerRoot = passengerRoot;
     }
 
     public bool RunEditorPassengerMassTransitionProbe(out string result)
@@ -3163,10 +3495,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             return true;
         }
 
-        foreach (PlayerWheelbarrowController candidate in FindObjectsByType<PlayerWheelbarrowController>(FindObjectsSortMode.None))
+        if (NetworkManager.Singleton?.SpawnManager == null) return false;
+        foreach (NetworkObject candidateNetworkObject in NetworkManager.Singleton.SpawnManager.SpawnedObjectsList)
         {
-            NetworkObject candidateNetworkObject = candidate != null ? candidate.GetComponent<NetworkObject>() : null;
-            if (candidateNetworkObject != null && candidateNetworkObject.OwnerClientId == clientId)
+            if (candidateNetworkObject != null && candidateNetworkObject.IsPlayerObject &&
+                candidateNetworkObject.OwnerClientId == clientId)
             {
                 player = candidateNetworkObject;
                 return true;
