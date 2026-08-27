@@ -123,7 +123,9 @@ MonoBehaviour:
   passengerExitPreparationTimeout: 0.5
   forcedExitSearchRadiusGrowthRate: 0.75
   maximumForcedExitSearchRadius: 4
+  forcedExitFallbackDelay: 3
   exitDeniedMessageDuration: 1.25
+  passengerTippedEjectionImpulseProfile: {fileID: 11400000, guid: 04691b97f58d0ff43b5356918e7a36b8, type: 2}
   enableDrivingStaminaDrain: 0
   baseStaminaDrain: 0.25
   loadedStaminaDrain: 1.25

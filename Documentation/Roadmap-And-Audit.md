@@ -91,6 +91,7 @@ Rekomendacja nie oznacza istniejącej funkcjonalności.
 - Dopracować finalny HUD, ikony i modele FPP arms.
 - Zastąpić proceduralne fallbacki zamachu i impactu docelowymi klipami oraz VFX.
 - Dodać profile akcji przyszłych broni i rozważyć koszt staminy/durability.
+- W późniejszym polishu dopracować kierunek, timing, siłę/odczucie i spójność impulsu wyrzucającego pasażera po przewróceniu taczki; obecne zachowanie wystarcza na bieżący etap produkcji i nie jest blokujące.
 
 ### Produkcja i zasoby
 

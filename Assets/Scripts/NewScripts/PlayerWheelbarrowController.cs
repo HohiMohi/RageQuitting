@@ -25,6 +25,7 @@ public class PlayerWheelbarrowController : MonoBehaviour
     private Vector3 passengerPlacementStartPosition;
     private Quaternion passengerPlacementStartRotation;
     private WheelbarrowController safeExitWheelbarrow;
+    private WheelbarrowController completedSafeExitWheelbarrow;
     private WheelbarrowController pouringCollisionWheelbarrow;
     private bool suppressAnchoredMovement;
     private WheelbarrowPouringMinigame pouringMinigame;
@@ -50,6 +51,8 @@ public class PlayerWheelbarrowController : MonoBehaviour
             if (pouringMinigame != null)
                 return pouringMinigame.LeftPlayer == LocalClientId ? WheelbarrowOccupantRole.PourLeft : WheelbarrowOccupantRole.PourRight;
             if (passengerBoardingWheelbarrow != null) return WheelbarrowOccupantRole.Passenger;
+            if (current != null && current == completedSafeExitWheelbarrow)
+                return WheelbarrowOccupantRole.None;
             return current != null ? current.GetRole(LocalClientId) : WheelbarrowOccupantRole.None;
         }
     }
@@ -90,6 +93,9 @@ public class PlayerWheelbarrowController : MonoBehaviour
         if (!IsLocalPlayer) return;
         SetPouringMinigame(WheelbarrowPouringMinigame.FindForPlayer(LocalClientId));
         current = WheelbarrowController.FindForPlayer(LocalClientId);
+        if (completedSafeExitWheelbarrow != null &&
+            completedSafeExitWheelbarrow.GetRole(LocalClientId) == WheelbarrowOccupantRole.None)
+            completedSafeExitWheelbarrow = null;
         if (passengerBoardingWheelbarrow != null &&
             passengerBoardingWheelbarrow.PassengerClientId == LocalClientId && !passengerPlacementActive)
         {
@@ -337,6 +343,7 @@ public class PlayerWheelbarrowController : MonoBehaviour
     {
         if (safeExitWheelbarrow != wheelbarrow) return;
         safeExitWheelbarrow = null;
+        completedSafeExitWheelbarrow = wheelbarrow;
         suppressAnchoredMovement = false;
         transportCollisions?.EndTransport(wheelbarrow);
     }
@@ -344,6 +351,7 @@ public class PlayerWheelbarrowController : MonoBehaviour
     public void CompleteTechnicalSafeExit()
     {
         safeExitWheelbarrow = null;
+        completedSafeExitWheelbarrow = null;
         passengerBoardingWheelbarrow = null;
         passengerBoardingToken = 0;
         passengerPlacementActive = false;

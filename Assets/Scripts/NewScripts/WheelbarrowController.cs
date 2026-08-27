@@ -94,13 +94,19 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         public ulong ClientId;
         public uint Token;
         public float StartedAt;
+        public float OperationStartedAt;
         public float SearchRadius;
         public bool Passenger;
         public bool Forced;
+        public bool ApplyTippedPassengerImpulse;
         public bool PlacementRequested;
         public bool PlacementConfirmed;
         public bool RoleCleared;
         public Vector3 RequestedPosition;
+        public Vector3 EjectionDirection;
+        public Vector3 ReservedCapsuleBottom;
+        public Vector3 ReservedCapsuleTop;
+        public float ReservedCapsuleRadius;
     }
 
     private WheelbarrowState localState;
@@ -1926,8 +1932,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         ulong previousDriver = DriverClientId;
         tippedRestUp = ResolveTippedRestUp();
         SetState(WheelbarrowState.Tipped);
-        if (previousDriver != NoClient) BeginSafeExit(previousDriver);
-        SetDriver(NoClient);
+        if (previousDriver != NoClient) BeginSafeExit(previousDriver, false, true);
         ReleasePassenger(true);
         SpillAllCargo();
         SpillConcrete();
@@ -3095,7 +3100,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         if (!TryGetPlayer(clientId, out NetworkObject player)) return false;
         if (pendingSafeExits.ContainsKey(clientId)) return true;
         float radius = profile != null ? profile.ExitSearchRadius : 1.8f;
-        if (!TryResolveSafeExitPosition(player, radius, out Vector3 candidate) && !forced)
+        if (!TryResolveSafeExitPosition(player, clientId, radius, out Vector3 candidate) && !forced)
         {
             NotifyExitDenied(clientId);
             return false;
@@ -3106,14 +3111,16 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             ClientId = clientId,
             Token = NextSafeExitToken(),
             StartedAt = Time.time,
+            OperationStartedAt = Time.time,
             SearchRadius = radius,
             Passenger = passenger,
-            Forced = forced
+            Forced = forced,
+            ApplyTippedPassengerImpulse = ShouldApplyTippedPassengerImpulse(passenger, forced, State)
         };
         pendingSafeExits[clientId] = pending;
         if (!passenger) SetOccupantCollisionIgnored(clientId, true);
         else SetPassengerTransportCollisionState(clientId, true, false);
-        if (TryResolveSafeExitPosition(player, radius, out candidate))
+        if (TryResolveSafeExitPosition(player, clientId, radius, out candidate))
             RequestSafeExitPlacement(pending, player, candidate);
         return true;
     }
@@ -3125,7 +3132,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         return token;
     }
 
-    private bool TryResolveSafeExitPosition(NetworkObject player, float radius, out Vector3 resolved)
+    private bool TryResolveSafeExitPosition(
+        NetworkObject player,
+        ulong clientId,
+        float radius,
+        out Vector3 resolved)
     {
         resolved = default;
         CharacterController controller = player.GetComponent<CharacterController>();
@@ -3134,7 +3145,12 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             foreach (Transform exit in safeExitPoints)
             {
                 if (exit == null) continue;
-                if (TryResolveGroundedCandidate(exit.position, controller, player.transform, out resolved)) return true;
+                if (TryResolveGroundedCandidate(
+                    exit.position,
+                    controller,
+                    player.transform,
+                    clientId,
+                    out resolved)) return true;
             }
         }
 
@@ -3144,7 +3160,12 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         {
             Vector3 direction = Quaternion.AngleAxis(angle, Vector3.up) * -transform.forward;
             Vector3 sample = center + direction * radius;
-            if (TryResolveGroundedCandidate(sample, controller, player.transform, out resolved)) return true;
+            if (TryResolveGroundedCandidate(
+                sample,
+                controller,
+                player.transform,
+                clientId,
+                out resolved)) return true;
         }
         return false;
     }
@@ -3153,6 +3174,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         Vector3 sample,
         CharacterController controller,
         Transform playerRoot,
+        ulong clientId,
         out Vector3 grounded)
     {
         grounded = sample;
@@ -3174,20 +3196,127 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
             float centerOffsetY = (controller.transform.rotation * controller.center).y;
             grounded.y = hit.point.y - centerOffsetY + controller.height * 0.5f + controller.skinWidth;
-            return IsCapsuleFree(grounded, controller, playerRoot);
+            if (!IsCapsuleFree(grounded, controller, playerRoot, hit.collider)) return false;
+            BuildPaddedPlayerCapsule(grounded, controller, out Vector3 bottom, out Vector3 top, out float radius);
+            return !IsPendingExitCapsuleReserved(clientId, bottom, top, radius);
         }
         return false;
     }
 
-    private bool IsCapsuleFree(Vector3 rootPosition, CharacterController controller, Transform playerRoot)
+    private bool IsCapsuleFree(
+        Vector3 rootPosition,
+        CharacterController controller,
+        Transform playerRoot,
+        Collider supportingCollider = null)
     {
-        Vector3 center = rootPosition + controller.transform.rotation * controller.center;
-        float half = Mathf.Max(controller.radius, controller.height * 0.5f - controller.radius);
-        Vector3 top = center + Vector3.up * half;
-        Vector3 bottom = center - Vector3.up * half;
-        float radius = controller.radius + (profile != null ? profile.ExitSeparationPadding : 0.05f);
+        BuildPaddedPlayerCapsule(rootPosition, controller, out Vector3 bottom, out Vector3 top, out float radius);
         Collider[] overlaps = Physics.OverlapCapsule(bottom, top, radius, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
-        return overlaps.All(item => item == null || item.transform == playerRoot || item.transform.IsChildOf(playerRoot));
+        return overlaps.All(item => item == null || item == supportingCollider ||
+            item.transform == playerRoot || item.transform.IsChildOf(playerRoot));
+    }
+
+    private void BuildPaddedPlayerCapsule(
+        Vector3 rootPosition,
+        CharacterController controller,
+        out Vector3 bottom,
+        out Vector3 top,
+        out float radius)
+    {
+        radius = controller.radius + (profile != null ? profile.ExitSeparationPadding : 0.05f);
+        Vector3 axis = controller.transform.up;
+        if (axis.sqrMagnitude <= 0.0001f) axis = Vector3.up;
+        else axis.Normalize();
+        Vector3 center = rootPosition + controller.transform.rotation * controller.center;
+        float segmentHalfLength = Mathf.Max(0f, controller.height * 0.5f - radius);
+        bottom = center - axis * segmentHalfLength;
+        top = center + axis * segmentHalfLength;
+    }
+
+    private bool IsPendingExitCapsuleReserved(
+        ulong requestingClientId,
+        Vector3 bottom,
+        Vector3 top,
+        float radius)
+    {
+        foreach (PendingSafeExit pending in pendingSafeExits.Values)
+        {
+            if (pending.ClientId == requestingClientId || !pending.PlacementRequested ||
+                pending.ReservedCapsuleRadius <= 0f) continue;
+            if (CapsulesOverlap(
+                bottom,
+                top,
+                radius,
+                pending.ReservedCapsuleBottom,
+                pending.ReservedCapsuleTop,
+                pending.ReservedCapsuleRadius)) return true;
+        }
+        return false;
+    }
+
+    private static bool CapsulesOverlap(
+        Vector3 firstBottom,
+        Vector3 firstTop,
+        float firstRadius,
+        Vector3 secondBottom,
+        Vector3 secondTop,
+        float secondRadius)
+    {
+        float combinedRadius = Mathf.Max(0f, firstRadius) + Mathf.Max(0f, secondRadius);
+        return SegmentDistanceSquared(firstBottom, firstTop, secondBottom, secondTop) <
+            combinedRadius * combinedRadius;
+    }
+
+    private static float SegmentDistanceSquared(Vector3 firstStart, Vector3 firstEnd, Vector3 secondStart, Vector3 secondEnd)
+    {
+        const float epsilon = 0.000001f;
+        Vector3 firstDirection = firstEnd - firstStart;
+        Vector3 secondDirection = secondEnd - secondStart;
+        Vector3 offset = firstStart - secondStart;
+        float firstLengthSquared = Vector3.Dot(firstDirection, firstDirection);
+        float secondLengthSquared = Vector3.Dot(secondDirection, secondDirection);
+        float secondProjection = Vector3.Dot(secondDirection, offset);
+        float firstT;
+        float secondT;
+
+        if (firstLengthSquared <= epsilon && secondLengthSquared <= epsilon)
+            return offset.sqrMagnitude;
+        if (firstLengthSquared <= epsilon)
+        {
+            firstT = 0f;
+            secondT = Mathf.Clamp01(secondProjection / secondLengthSquared);
+        }
+        else
+        {
+            float firstProjection = Vector3.Dot(firstDirection, offset);
+            if (secondLengthSquared <= epsilon)
+            {
+                secondT = 0f;
+                firstT = Mathf.Clamp01(-firstProjection / firstLengthSquared);
+            }
+            else
+            {
+                float directionsDot = Vector3.Dot(firstDirection, secondDirection);
+                float denominator = firstLengthSquared * secondLengthSquared - directionsDot * directionsDot;
+                firstT = denominator > epsilon
+                    ? Mathf.Clamp01((directionsDot * secondProjection - firstProjection * secondLengthSquared) / denominator)
+                    : 0f;
+                secondT = (directionsDot * firstT + secondProjection) / secondLengthSquared;
+                if (secondT < 0f)
+                {
+                    secondT = 0f;
+                    firstT = Mathf.Clamp01(-firstProjection / firstLengthSquared);
+                }
+                else if (secondT > 1f)
+                {
+                    secondT = 1f;
+                    firstT = Mathf.Clamp01((directionsDot - firstProjection) / firstLengthSquared);
+                }
+            }
+        }
+
+        Vector3 firstClosest = firstStart + firstDirection * firstT;
+        Vector3 secondClosest = secondStart + secondDirection * secondT;
+        return (firstClosest - secondClosest).sqrMagnitude;
     }
 
     private static void ApplySafeExitPlacement(NetworkObject player, Vector3 position)
@@ -3207,6 +3336,16 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         pending.PlacementRequested = true;
         pending.PlacementConfirmed = false;
         pending.RequestedPosition = position;
+        CharacterController characterController = player != null ? player.GetComponent<CharacterController>() : null;
+        if (characterController != null)
+        {
+            BuildPaddedPlayerCapsule(
+                position,
+                characterController,
+                out pending.ReservedCapsuleBottom,
+                out pending.ReservedCapsuleTop,
+                out pending.ReservedCapsuleRadius);
+        }
         pending.StartedAt = Time.time;
         if (!IsSessionActive || pending.ClientId == NetworkManager.ServerClientId)
         {
@@ -3240,6 +3379,14 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         ApplySafeExitPlacement(player, pending.RequestedPosition);
         pending.PlacementConfirmed = true;
         pending.StartedAt = Time.time;
+        Vector3 ejectionOrigin = pending.ApplyTippedPassengerImpulse && passengerAnchor != null
+            ? passengerAnchor.position
+            : transform.position;
+        pending.EjectionDirection = ResolveEjectionDirection(
+            ejectionOrigin,
+            transform.forward,
+            transform.right,
+            pending.RequestedPosition);
         if (!pending.RoleCleared)
         {
             if (pending.Passenger && PassengerClientId == clientId) SetPassenger(NoClient);
@@ -3263,12 +3410,22 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
             }
 
             PendingSafeExit pending = pair.Value;
+            if (HasForcedExitFallbackElapsed(
+                pending.Forced,
+                pending.PlacementConfirmed,
+                pending.OperationStartedAt,
+                Time.time,
+                profile != null ? profile.ForcedExitFallbackDelay : 3f))
+            {
+                CompleteForcedExitAtSpawn(pair.Key, pending);
+                continue;
+            }
             if (!pending.PlacementRequested)
             {
                 float growth = profile != null ? profile.ForcedExitSearchRadiusGrowthRate : 0.75f;
                 float maximum = profile != null ? profile.MaximumForcedExitSearchRadius : 4f;
                 pending.SearchRadius = Mathf.Min(maximum, pending.SearchRadius + growth * Time.fixedDeltaTime);
-                if (TryResolveSafeExitPosition(player, pending.SearchRadius, out Vector3 waitingCandidate))
+                if (TryResolveSafeExitPosition(player, pair.Key, pending.SearchRadius, out Vector3 waitingCandidate))
                     RequestSafeExitPlacement(pending, player, waitingCandidate);
                 continue;
             }
@@ -3306,13 +3463,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         CharacterController controller = player != null ? player.GetComponent<CharacterController>() : null;
         if (controller == null) return true;
 
-        Vector3 center = player.transform.position + controller.transform.rotation * controller.center;
-        float half = Mathf.Max(controller.radius, controller.height * 0.5f - controller.radius);
-        float padding = profile != null ? profile.ExitSeparationPadding : 0.05f;
+        BuildPaddedPlayerCapsule(player.transform.position, controller, out Vector3 bottom, out Vector3 top, out float radius);
         Collider[] overlaps = Physics.OverlapCapsule(
-            center - Vector3.up * half,
-            center + Vector3.up * half,
-            controller.radius + padding,
+            bottom,
+            top,
+            radius,
             Physics.DefaultRaycastLayers,
             QueryTriggerInteraction.Ignore);
         return overlaps.All(item => item == null ||
@@ -3323,19 +3478,81 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     {
         if (!pendingSafeExits.TryGetValue(clientId, out PendingSafeExit pending)) return;
         bool passenger = pending.Passenger;
+        ExternalImpulseData impulse = default;
+        bool applyImpulse = pending.ApplyTippedPassengerImpulse &&
+            profile != null && profile.PassengerTippedEjectionImpulseProfile != null;
+        if (applyImpulse)
+            impulse = profile.PassengerTippedEjectionImpulseProfile.CreateImpulse(pending.EjectionDirection);
         pendingSafeExits.Remove(clientId);
         if (passenger) SetPassengerTransportCollisionState(clientId, false);
         else SetOccupantCollisionIgnored(clientId, false);
-        if (IsSessionActive && IsServer) CompleteSafeExitClientRpc(Target(clientId));
+        if (IsSessionActive && IsServer) CompleteSafeExitClientRpc(applyImpulse, impulse, Target(clientId));
         else if (TryFindPlayerOnPeer(clientId, out NetworkObject player))
-            player.GetComponent<PlayerWheelbarrowController>()?.CompleteSafeExit(this);
+            CompleteSafeExitLocally(player, applyImpulse, impulse);
     }
 
     [ClientRpc]
-    private void CompleteSafeExitClientRpc(ClientRpcParams rpc = default)
+    private void CompleteSafeExitClientRpc(
+        bool applyImpulse,
+        ExternalImpulseData impulse,
+        ClientRpcParams rpc = default)
     {
         NetworkObject player = NetworkManager.Singleton?.LocalClient?.PlayerObject;
-        player?.GetComponent<PlayerWheelbarrowController>()?.CompleteSafeExit(this);
+        CompleteSafeExitLocally(player, applyImpulse, impulse);
+    }
+
+    private void CompleteSafeExitLocally(
+        NetworkObject player,
+        bool applyImpulse,
+        ExternalImpulseData impulse)
+    {
+        if (player == null) return;
+        player.GetComponent<PlayerWheelbarrowController>()?.CompleteSafeExit(this);
+        if (applyImpulse)
+            player.GetComponent<PlayerExternalImpulseController>()?.ApplyServerAuthorizedImpulse(impulse);
+    }
+
+    private void CompleteForcedExitAtSpawn(ulong clientId, PendingSafeExit pending)
+    {
+        pendingSafeExits.Remove(clientId);
+        if (pending.Passenger && PassengerClientId == clientId) SetPassenger(NoClient);
+        else if (!pending.Passenger && DriverClientId == clientId) SetDriver(NoClient);
+        TechnicalReleaseOccupant(clientId, pending.Passenger);
+    }
+
+    private static bool ShouldApplyTippedPassengerImpulse(
+        bool passenger,
+        bool forced,
+        WheelbarrowState state)
+    {
+        return passenger && forced && state == WheelbarrowState.Tipped;
+    }
+
+    private static Vector3 ResolveEjectionDirection(
+        Vector3 ejectionOrigin,
+        Vector3 wheelbarrowForward,
+        Vector3 wheelbarrowRight,
+        Vector3 exitPosition)
+    {
+        Vector3 direction = Vector3.ProjectOnPlane(exitPosition - ejectionOrigin, Vector3.up);
+        if (direction.sqrMagnitude <= 0.0001f)
+            direction = Vector3.ProjectOnPlane(-wheelbarrowForward, Vector3.up);
+        if (direction.sqrMagnitude <= 0.0001f)
+            direction = Vector3.ProjectOnPlane(wheelbarrowRight, Vector3.up);
+        if (direction.sqrMagnitude <= 0.0001f)
+            direction = Vector3.right;
+        return direction.normalized;
+    }
+
+    private static bool HasForcedExitFallbackElapsed(
+        bool forced,
+        bool placementConfirmed,
+        float operationStartedAt,
+        float currentTime,
+        float fallbackDelay)
+    {
+        return forced && !placementConfirmed &&
+            currentTime - operationStartedAt >= Mathf.Max(0.1f, fallbackDelay);
     }
 
     [ClientRpc]

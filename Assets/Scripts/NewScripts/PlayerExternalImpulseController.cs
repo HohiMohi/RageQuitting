@@ -44,6 +44,17 @@ public class PlayerExternalImpulseController : NetworkBehaviour, IExternalImpuls
         return true;
     }
 
+    internal bool ApplyServerAuthorizedImpulse(ExternalImpulseData impulse)
+    {
+        if (!impulse.IsValid || (IsNetworkSessionActive() && !IsOwner))
+        {
+            return false;
+        }
+
+        ApplyImpulseLocally(impulse);
+        return true;
+    }
+
     public Vector3 TickImpulse(float deltaTime, bool grounded)
     {
         if (!IsImpulseActive)

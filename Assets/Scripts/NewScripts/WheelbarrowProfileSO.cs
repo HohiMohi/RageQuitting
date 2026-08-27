@@ -135,7 +135,9 @@ public class WheelbarrowProfileSO : ScriptableObject
     [SerializeField, Min(0.1f)] private float passengerExitPreparationTimeout = 0.5f;
     [SerializeField, Min(0f)] private float forcedExitSearchRadiusGrowthRate = 0.75f;
     [SerializeField, Min(0.1f)] private float maximumForcedExitSearchRadius = 4f;
+    [SerializeField, Min(0.1f)] private float forcedExitFallbackDelay = 3f;
     [SerializeField, Min(0f)] private float exitDeniedMessageDuration = 1.25f;
+    [SerializeField] private ExternalImpulseProfileSO passengerTippedEjectionImpulseProfile;
 
     [Header("Stamina")]
     [SerializeField] private bool enableDrivingStaminaDrain = true;
@@ -274,7 +276,9 @@ public class WheelbarrowProfileSO : ScriptableObject
     public float PassengerExitPreparationTimeout => Mathf.Max(0.1f, passengerExitPreparationTimeout);
     public float ForcedExitSearchRadiusGrowthRate => Mathf.Max(0f, forcedExitSearchRadiusGrowthRate);
     public float MaximumForcedExitSearchRadius => Mathf.Max(ExitSearchRadius, maximumForcedExitSearchRadius);
+    public float ForcedExitFallbackDelay => Mathf.Max(0.1f, forcedExitFallbackDelay);
     public float ExitDeniedMessageDuration => Mathf.Max(0f, exitDeniedMessageDuration);
+    public ExternalImpulseProfileSO PassengerTippedEjectionImpulseProfile => passengerTippedEjectionImpulseProfile;
     public bool EnableDrivingStaminaDrain => enableDrivingStaminaDrain;
     public float BaseStaminaDrain => baseStaminaDrain;
     public float LoadedStaminaDrain => loadedStaminaDrain;

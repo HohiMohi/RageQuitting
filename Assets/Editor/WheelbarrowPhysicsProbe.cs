@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using System.Collections;
 using System.Reflection;
 
 internal static class WheelbarrowPhysicsProbe
@@ -168,6 +169,307 @@ internal static class WheelbarrowPhysicsProbe
         Object.DestroyImmediate(player);
         if (passed) Debug.Log($"[WheelbarrowPhysicsProbe] Passenger transport lifecycle PASS: {result}");
         else Debug.LogError($"[WheelbarrowPhysicsProbe] Passenger transport lifecycle FAIL: {result}");
+    }
+
+    [MenuItem("Tools/Wheelbarrow Physics Probe/Safe Exit Geometry And Ejection Profile")]
+    private static void RunSafeExitGeometryAndEjectionProfile()
+    {
+        GameObject root = new GameObject("__WheelbarrowSafeExitProbe");
+        GameObject wheelbarrowObject = null;
+        GameObject player = null;
+        try
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/New/Wheelbarrow.prefab");
+            wheelbarrowObject = prefab != null ? Object.Instantiate(prefab, root.transform) : null;
+            WheelbarrowController controller = wheelbarrowObject != null
+                ? wheelbarrowObject.GetComponent<WheelbarrowController>()
+                : null;
+            if (controller == null)
+            {
+                Debug.LogError("[WheelbarrowPhysicsProbe] Safe exit probe FAIL: wheelbarrow prefab/controller missing.");
+                return;
+            }
+
+            GameObject ground = CreateGround(root.transform, "ExitProbeGround", new Vector3(0f, -0.5f, 0f), new Vector3(20f, 1f, 20f));
+            Collider groundCollider = ground.GetComponent<Collider>();
+            player = new GameObject("ExitProbePlayer");
+            player.transform.SetParent(root.transform, false);
+            CharacterController characterController = player.AddComponent<CharacterController>();
+            characterController.height = 2f;
+            characterController.radius = 0.5f;
+            characterController.center = new Vector3(0f, 0.93f, 0f);
+            characterController.skinWidth = 0.02f;
+            Vector3 groundedRoot = new Vector3(5f, 0.09f, 0f);
+
+            MethodInfo buildCapsule = typeof(WheelbarrowController).GetMethod(
+                "BuildPaddedPlayerCapsule",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo isCapsuleFree = typeof(WheelbarrowController).GetMethod(
+                "IsCapsuleFree",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo shouldApplyTippedPassengerImpulse = typeof(WheelbarrowController).GetMethod(
+                "ShouldApplyTippedPassengerImpulse",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo hasForcedExitFallbackElapsed = typeof(WheelbarrowController).GetMethod(
+                "HasForcedExitFallbackElapsed",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo isPendingExitCapsuleReserved = typeof(WheelbarrowController).GetMethod(
+                "IsPendingExitCapsuleReserved",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo resolveEjectionDirection = typeof(WheelbarrowController).GetMethod(
+                "ResolveEjectionDirection",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            if (buildCapsule == null || isCapsuleFree == null ||
+                shouldApplyTippedPassengerImpulse == null || hasForcedExitFallbackElapsed == null ||
+                isPendingExitCapsuleReserved == null || resolveEjectionDirection == null)
+            {
+                Debug.LogError("[WheelbarrowPhysicsProbe] Safe exit probe FAIL: required methods missing.");
+                return;
+            }
+
+            object[] capsuleArgs = { groundedRoot, characterController, Vector3.zero, Vector3.zero, 0f };
+            buildCapsule.Invoke(controller, capsuleArgs);
+            Vector3 bottom = (Vector3)capsuleArgs[2];
+            Vector3 top = (Vector3)capsuleArgs[3];
+            float radius = (float)capsuleArgs[4];
+            bool clearOnGround = (bool)isCapsuleFree.Invoke(
+                controller,
+                new object[] { groundedRoot, characterController, player.transform, groundCollider });
+
+            GameObject blocker = CreateGround(root.transform, "ExitProbeBlocker", new Vector3(5f, 1f, 0f), new Vector3(0.5f, 1f, 0.5f));
+            Physics.SyncTransforms();
+            bool blockedByObstacle = !(bool)isCapsuleFree.Invoke(
+                controller,
+                new object[] { groundedRoot, characterController, player.transform, groundCollider });
+
+            WheelbarrowProfileSO wheelbarrowProfile = AssetDatabase.LoadAssetAtPath<WheelbarrowProfileSO>(
+                "Assets/GeneratedAssets/Wheelbarrow/WheelbarrowProfile.asset");
+            ExternalImpulseProfileSO impulseProfile = wheelbarrowProfile != null
+                ? wheelbarrowProfile.PassengerTippedEjectionImpulseProfile
+                : null;
+            ExternalImpulseData impulse = impulseProfile != null
+                ? impulseProfile.CreateImpulse(Vector3.right)
+                : default;
+            bool profileValid = wheelbarrowProfile != null &&
+                Mathf.Approximately(wheelbarrowProfile.ForcedExitFallbackDelay, 3f) &&
+                impulseProfile != null &&
+                Vector3.Distance(impulse.InitialVelocity, new Vector3(6f, 3f, 0f)) <= 0.001f &&
+                Mathf.Approximately(impulse.HorizontalDeceleration, 10f) &&
+                Mathf.Approximately(impulse.MaximumDuration, 1.5f) &&
+                Mathf.Approximately(impulse.MovementControlMultiplier, 0.5f) &&
+                Mathf.Approximately(impulse.MaximumHorizontalSpeed, 10f) &&
+                Mathf.Approximately(impulse.MaximumVerticalSpeed, 6f) &&
+                impulse.ForceDropHeldObject;
+            bool impulseQualificationValid =
+                (bool)shouldApplyTippedPassengerImpulse.Invoke(null, new object[] { true, true, WheelbarrowState.Tipped }) &&
+                !(bool)shouldApplyTippedPassengerImpulse.Invoke(null, new object[] { false, true, WheelbarrowState.Tipped }) &&
+                !(bool)shouldApplyTippedPassengerImpulse.Invoke(null, new object[] { true, false, WheelbarrowState.Tipped }) &&
+                !(bool)shouldApplyTippedPassengerImpulse.Invoke(null, new object[] { true, true, WheelbarrowState.Free });
+            bool fallbackValid =
+                !(bool)hasForcedExitFallbackElapsed.Invoke(null, new object[] { true, false, 10f, 12.99f, 3f }) &&
+                (bool)hasForcedExitFallbackElapsed.Invoke(null, new object[] { true, false, 10f, 13f, 3f }) &&
+                !(bool)hasForcedExitFallbackElapsed.Invoke(null, new object[] { true, true, 10f, 20f, 3f }) &&
+                !(bool)hasForcedExitFallbackElapsed.Invoke(null, new object[] { false, false, 10f, 20f, 3f });
+            bool reservationValid = ValidatePendingExitReservation(
+                controller,
+                bottom,
+                top,
+                radius,
+                isPendingExitCapsuleReserved);
+            Vector3 verticalFallbackDirection = (Vector3)resolveEjectionDirection.Invoke(
+                null,
+                new object[] { Vector3.zero, Vector3.up, Vector3.down, Vector3.up });
+            bool ejectionFallbackValid = Vector3.Distance(verticalFallbackDirection, Vector3.right) <= 0.0001f &&
+                Mathf.Approximately(verticalFallbackDirection.magnitude, 1f);
+            bool rolledEjectionValid = ValidateRolledPassengerEjectionDirections(
+                controller,
+                resolveEjectionDirection,
+                out float positiveRollDot,
+                out float negativeRollDot);
+            bool geometryValid = Mathf.Approximately(radius, 0.55f) &&
+                bottom.y - radius >= -0.0001f && top.y > bottom.y;
+            bool passed = geometryValid && clearOnGround && blockedByObstacle && profileValid &&
+                impulseQualificationValid && fallbackValid && reservationValid && ejectionFallbackValid &&
+                rolledEjectionValid;
+            string result = $"geometry={geometryValid}, bottom={bottom}, top={top}, radius={radius:F3}, " +
+                $"clearOnGround={clearOnGround}, blockedByObstacle={blockedByObstacle}, profile={profileValid}, " +
+                $"impulseQualification={impulseQualificationValid}, fallback={fallbackValid}, " +
+                $"reservation={reservationValid}, ejectionFallback={ejectionFallbackValid}, " +
+                $"rolledEjection={rolledEjectionValid} (+90dot={positiveRollDot:F3}, -90dot={negativeRollDot:F3})";
+            if (passed) Debug.Log($"[WheelbarrowPhysicsProbe] Safe exit/ejection PASS: {result}");
+            else Debug.LogError($"[WheelbarrowPhysicsProbe] Safe exit/ejection FAIL: {result}");
+            Object.DestroyImmediate(blocker);
+        }
+        finally
+        {
+            if (player != null) Object.DestroyImmediate(player);
+            if (wheelbarrowObject != null) Object.DestroyImmediate(wheelbarrowObject);
+            if (root != null) Object.DestroyImmediate(root);
+        }
+    }
+
+    [MenuItem("Tools/Wheelbarrow Physics Probe/Pending Exit Reservation And Ejection Fallback")]
+    private static void RunPendingExitReservationAndEjectionFallback()
+    {
+        GameObject root = new GameObject("__WheelbarrowPendingExitProbe");
+        GameObject wheelbarrowObject = null;
+        GameObject player = null;
+        try
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/New/Wheelbarrow.prefab");
+            wheelbarrowObject = prefab != null ? Object.Instantiate(prefab, root.transform) : null;
+            WheelbarrowController controller = wheelbarrowObject != null
+                ? wheelbarrowObject.GetComponent<WheelbarrowController>()
+                : null;
+            if (controller == null)
+            {
+                Debug.LogError("[WheelbarrowPhysicsProbe] Pending exit probe FAIL: wheelbarrow prefab/controller missing.");
+                return;
+            }
+
+            player = new GameObject("PendingExitProbePlayer");
+            player.transform.SetParent(root.transform, false);
+            CharacterController characterController = player.AddComponent<CharacterController>();
+            characterController.height = 2f;
+            characterController.radius = 0.5f;
+            characterController.center = new Vector3(0f, 0.93f, 0f);
+
+            MethodInfo buildCapsule = typeof(WheelbarrowController).GetMethod(
+                "BuildPaddedPlayerCapsule",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo reservationMethod = typeof(WheelbarrowController).GetMethod(
+                "IsPendingExitCapsuleReserved",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo resolveDirection = typeof(WheelbarrowController).GetMethod(
+                "ResolveEjectionDirection",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            if (buildCapsule == null || reservationMethod == null || resolveDirection == null)
+            {
+                Debug.LogError("[WheelbarrowPhysicsProbe] Pending exit probe FAIL: required methods missing.");
+                return;
+            }
+
+            object[] capsuleArgs = { Vector3.zero, characterController, Vector3.zero, Vector3.zero, 0f };
+            buildCapsule.Invoke(controller, capsuleArgs);
+            Vector3 bottom = (Vector3)capsuleArgs[2];
+            Vector3 top = (Vector3)capsuleArgs[3];
+            float radius = (float)capsuleArgs[4];
+            bool reservationValid = ValidatePendingExitReservation(
+                controller,
+                bottom,
+                top,
+                radius,
+                reservationMethod);
+            Vector3 fallback = (Vector3)resolveDirection.Invoke(
+                null,
+                new object[] { Vector3.zero, Vector3.up, Vector3.down, Vector3.up });
+            bool fallbackValid = Vector3.Distance(fallback, Vector3.right) <= 0.0001f &&
+                Mathf.Approximately(fallback.magnitude, 1f);
+            bool rolledEjectionValid = ValidateRolledPassengerEjectionDirections(
+                controller,
+                resolveDirection,
+                out float positiveRollDot,
+                out float negativeRollDot);
+            string result = $"reservation={reservationValid}, ejectionFallback={fallbackValid}, direction={fallback}, " +
+                $"rolledEjection={rolledEjectionValid} (+90dot={positiveRollDot:F3}, -90dot={negativeRollDot:F3})";
+            if (reservationValid && fallbackValid && rolledEjectionValid)
+                Debug.Log($"[WheelbarrowPhysicsProbe] Pending exit reservation/ejection PASS: {result}");
+            else
+                Debug.LogError($"[WheelbarrowPhysicsProbe] Pending exit reservation/ejection FAIL: {result}");
+        }
+        finally
+        {
+            if (player != null) Object.DestroyImmediate(player);
+            if (wheelbarrowObject != null) Object.DestroyImmediate(wheelbarrowObject);
+            if (root != null) Object.DestroyImmediate(root);
+        }
+    }
+
+    private static bool ValidateRolledPassengerEjectionDirections(
+        WheelbarrowController controller,
+        MethodInfo resolveDirection,
+        out float positiveRollDot,
+        out float negativeRollDot)
+    {
+        positiveRollDot = -1f;
+        negativeRollDot = -1f;
+        if (controller == null || controller.PassengerAnchor == null || resolveDirection == null) return false;
+
+        Quaternion originalRotation = controller.transform.rotation;
+        positiveRollDot = ValidateRolledPassengerEjectionDirection(
+            controller,
+            resolveDirection,
+            90f,
+            new Vector3(1.35f, 0f, -0.4f));
+        negativeRollDot = ValidateRolledPassengerEjectionDirection(
+            controller,
+            resolveDirection,
+            -90f,
+            new Vector3(-1.35f, 0f, -0.4f));
+        controller.transform.rotation = originalRotation;
+        return positiveRollDot > 0.999f && negativeRollDot > 0.999f;
+    }
+
+    private static float ValidateRolledPassengerEjectionDirection(
+        WheelbarrowController controller,
+        MethodInfo resolveDirection,
+        float rollDegrees,
+        Vector3 localExitPosition)
+    {
+        controller.transform.rotation = Quaternion.Euler(0f, 0f, rollDegrees);
+        Vector3 origin = controller.PassengerAnchor.position;
+        Vector3 exitPosition = controller.transform.TransformPoint(localExitPosition);
+        Vector3 expected = Vector3.ProjectOnPlane(exitPosition - origin, Vector3.up);
+        if (expected.sqrMagnitude <= 0.0001f) return -1f;
+
+        Vector3 resolved = (Vector3)resolveDirection.Invoke(
+            null,
+            new object[]
+            {
+                origin,
+                controller.transform.forward,
+                controller.transform.right,
+                exitPosition
+            });
+        if (!Mathf.Approximately(resolved.magnitude, 1f)) return -1f;
+        return Vector3.Dot(resolved, expected.normalized);
+    }
+
+    private static bool ValidatePendingExitReservation(
+        WheelbarrowController controller,
+        Vector3 bottom,
+        Vector3 top,
+        float radius,
+        MethodInfo reservationMethod)
+    {
+        FieldInfo pendingField = typeof(WheelbarrowController).GetField(
+            "pendingSafeExits",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        System.Type pendingType = typeof(WheelbarrowController).GetNestedType(
+            "PendingSafeExit",
+            BindingFlags.NonPublic);
+        if (pendingField?.GetValue(controller) is not IDictionary pending || pendingType == null) return false;
+
+        object reservation = System.Activator.CreateInstance(pendingType);
+        pendingType.GetField("ClientId")?.SetValue(reservation, 101UL);
+        pendingType.GetField("PlacementRequested")?.SetValue(reservation, true);
+        pendingType.GetField("ReservedCapsuleBottom")?.SetValue(reservation, bottom);
+        pendingType.GetField("ReservedCapsuleTop")?.SetValue(reservation, top);
+        pendingType.GetField("ReservedCapsuleRadius")?.SetValue(reservation, radius);
+        pending.Add(101UL, reservation);
+
+        bool identicalBlocked = (bool)reservationMethod.Invoke(
+            controller,
+            new object[] { 202UL, bottom, top, radius });
+        bool ownReservationIgnored = !(bool)reservationMethod.Invoke(
+            controller,
+            new object[] { 101UL, bottom, top, radius });
+        Vector3 separation = Vector3.right * (radius * 2f + 0.1f);
+        bool separatedAvailable = !(bool)reservationMethod.Invoke(
+            controller,
+            new object[] { 202UL, bottom + separation, top + separation, radius });
+        pending.Clear();
+        return identicalBlocked && ownReservationIgnored && separatedAvailable;
     }
 
     internal static void RunLoadedFlatFromAutomation() => RunLoadedFlat();
