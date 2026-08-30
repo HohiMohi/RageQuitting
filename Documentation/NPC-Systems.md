@@ -484,6 +484,23 @@ Jeżeli impuls był następstwem obrażeń od tego samego `NetworkObject`, po
 `Enter()` odtwarzana jest odroczona reakcja bojowa. Impuls niezwiązany z
 obrażeniami nadal restartuje behavior bez sztucznego celu walki.
 
+## Lokalne NavMeshe fundamentów
+
+Każdy wykop fundamentu ma bake-only proxy i własny lokalny `NavMeshSurface`.
+Proxy uczestniczy wyłącznie w bake; runtime nie pokazuje go ani nie używa jako
+fizycznej powierzchni. Pozwala to utrzymać poprawną siatkę na poziomie gruntu
+bez wypiekania przejścia przez rzeczywisty, otwarty wykop.
+
+`NavMeshObstacle` z carvingiem zakrywa lokalną siatkę, gdy wykop jest otwarty
+albo zawiera mokry beton. Podczas `HardenedFailure` obstacle jest wyłączony,
+ponieważ twarda pełna tafla jest powierzchnią dostępną dla NPC. Musi zostać
+włączony ponownie przed `Collapsing`, zanim tafla zniknie i taczka spadnie.
+
+`WheelbarrowSetup` tworzy tę konfigurację dla obu fundamentów, a
+`FoundationConcreteFailureProbe` sprawdza obecność i wiring bake-only proxy,
+lokalnego `NavMeshSurface` oraz carving obstacle wraz z pozostałymi elementami
+awarii fundamentu.
+
 ## Ograniczenia
 
 - Modele i część animacji NPC są placeholderowe.

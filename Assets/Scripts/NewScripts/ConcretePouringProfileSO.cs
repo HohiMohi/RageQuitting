@@ -15,6 +15,12 @@ public class ConcretePouringProfileSO : ScriptableObject
     [SerializeField, Min(0f)] private float automaticPartnerDelay = 0.12f;
     [SerializeField, Min(0.05f)] private float automaticPartnerSpeed = 0.8f;
 
+    [Header("Critical Failure Recovery")]
+    [SerializeField, Min(0.05f)] private float criticalFailureSequenceDuration = 0.8f;
+    [SerializeField, Min(1f)] private float failedConcreteWorkRequired = 100f;
+    [SerializeField, Min(0.05f)] private float failedConcreteCollapseDuration = 0.4f;
+    [SerializeField] private Vector3 failedConcreteCrackThresholds = new Vector3(1f, 34f, 67f);
+
     [Header("Participant Placement")]
     [SerializeField, Min(0.05f)] private float participantPlacementDuration = 0.25f;
     [SerializeField, Min(0.25f)] private float maximumJoinDistance = 3f;
@@ -43,6 +49,19 @@ public class ConcretePouringProfileSO : ScriptableObject
     public bool AllowSinglePlayerTesting => allowSinglePlayerTesting;
     public float AutomaticPartnerDelay => automaticPartnerDelay;
     public float AutomaticPartnerSpeed => automaticPartnerSpeed;
+    public float CriticalFailureSequenceDuration => Mathf.Max(0.05f, criticalFailureSequenceDuration);
+    public float FailedConcreteWorkRequired => Mathf.Max(1f, failedConcreteWorkRequired);
+    public float FailedConcreteCollapseDuration => Mathf.Max(0.05f, failedConcreteCollapseDuration);
+    public Vector3 FailedConcreteCrackThresholds
+    {
+        get
+        {
+            float first = Mathf.Max(0f, failedConcreteCrackThresholds.x);
+            float second = Mathf.Max(first, failedConcreteCrackThresholds.y);
+            float third = Mathf.Max(second, failedConcreteCrackThresholds.z);
+            return new Vector3(first, second, third);
+        }
+    }
     public float ParticipantPlacementDuration => Mathf.Max(0.05f, participantPlacementDuration);
     public float MaximumJoinDistance => Mathf.Max(0.25f, maximumJoinDistance);
     public float ParticipantGroundProbeDistance => Mathf.Max(0.5f, participantGroundProbeDistance);

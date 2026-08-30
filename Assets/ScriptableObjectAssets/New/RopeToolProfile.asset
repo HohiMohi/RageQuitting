@@ -35,6 +35,11 @@ MonoBehaviour:
   resourceSpring: 35
   resourceDamping: 8
   maximumResourceAcceleration: 10
+  wheelbarrowSpring: 20
+  wheelbarrowDamping: 6
+  maximumWheelbarrowAcceleration: 6
+  maximumWheelbarrowPullSpeed: 2.5
+  fullLoadWheelbarrowPullMultiplier: 0.45
   playerPullSpeed: 6
   playerTargetPullShare: 1
   playerHolderReactionShare: 0

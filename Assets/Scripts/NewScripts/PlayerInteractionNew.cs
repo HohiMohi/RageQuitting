@@ -250,6 +250,13 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         }
 
         RopeToolController ropeTool = GetComponent<RopeToolController>();
+        if (ropeTool != null && _currentTarget is WheelbarrowInteractionPoint rightingPoint &&
+            rightingPoint.IsRightingInteraction && ropeTool.IsAttachedTo(rightingPoint.Wheelbarrow))
+        {
+            rightingPoint.Interact(transform);
+            OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+            return;
+        }
         if (ropeTool != null && ropeTool.TryHandleInteractPressed())
         {
             OnInteractionPerformed?.Invoke(this, EventArgs.Empty);

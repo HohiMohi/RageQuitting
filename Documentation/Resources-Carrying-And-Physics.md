@@ -359,14 +359,75 @@ Dwa wiadra stoją przy obozowym stojaku. Wiadro dotykające dna rzeki wymusza re
 
 ## Taczka
 
-`WheelbarrowController` jest serwerowo symulowanym pojazdem Rigidbody z jednym
-`WheelCollider`. W/S napędza i hamuje, a A/D skręca wyłącznie razem z ruchem.
-Kierowca zapewnia miękką stabilizację; bez niego taczka może przewrócić się na
-nierównym podłożu lub po uderzeniu. Obciążenie zwiększa masę, przesuwa środek
-ciężkości i podnosi koszt staminy przy podjeździe.
+Kontakt koła z podłożem i napęd taczki obsługuje własny solver oparty na
+spherecastach. W stanach `Free` i `Tipped` fizyka jest autorytatywna po stronie
+serwera, natomiast w `Driven` własność fizyki przechodzi na kierowcę, a pozostali
+uczestnicy prezentują zsynchronizowany ruch. W/S napędza i hamuje, a A/D skręca
+wyłącznie razem z ruchem. Kierowca zapewnia miękką stabilizację; bez niego taczka
+może przewrócić się na nierównym podłożu lub po uderzeniu. Obciążenie zwiększa
+masę i przesuwa środek ciężkości. Zużycie staminy podczas jazdy jest
+konfigurowalne i aktywny profil może je wyłączyć.
 
 Skrzynia przechowuje trzy widoczne zasoby single-carry jednego typu, do `60 kg`,
 jednego pasażera oraz niezależny ładunek betonu. Zabezpieczony zasób zachowuje
 NetworkObject, ale ma wyłączoną własną fizykę i collidery. Przechył ponad `60°`
 przez `0.25 s` wysypuje ładunek i zwalnia graczy. Pustą, zatrzymaną taczkę można
 postawić na koła po przytrzymaniu E przez `1.5 s`.
+
+Lina może zaczepić taczkę w dokładnym fizycznym punkcie trafienia tylko w
+stanach `Free` i `Tipped`. Serwerowy, konfigurowalny spring z dampingiem używa
+`AddForceAtPosition`, bez `Joint`, więc siła naturalnie przesuwa i obraca
+Rigidbody. Nie powstaje dodatkowa siła reakcji na graczu trzymającym linę.
+Odpowiedź słabnie wraz z aktualną masą ładunku; zasoby, beton i pasażer nadal
+wchodzą do istniejącego, autorytatywnego wyliczenia masy taczki.
+
+Runtime liny deleguje holowanie do `WheelbarrowController`. Siła jest
+przyjmowana wyłącznie przez aktualny autorytet fizyki, kiedy stan nadal wynosi
+`Free` albo `Tipped`, lina nie jest zablokowana, ma dodatnie wydłużenie, a jej
+znormalizowane napięcie przekracza `0.04`. Kierunek jest rzutowany na płaszczyznę
+z krótkiej sondy podłoża, a udział składowej normalnej jest ograniczony do `30%`.
+Siła nadal trafia w dokładny punkt zaczepienia, dzięki czemu boczny zaczep daje
+kontrolowany moment zamiast przesuwać wyłącznie środek masy.
+
+Podczas aktywnego holowania nietriggerowe collidery fizyczne używają tymczasowo
+materiału `RopeTowContact`: tarcie statyczne `0.05`, dynamiczne `0.03`, tryb
+łączenia `Minimum` i brak odbicia. Oryginalny materiał każdego collidera jest
+zapamiętywany i przywracany po pojedynczym `0.2 s` okresie bez poprawnego sygnału
+holowania. Jawne odczepienie, niedozwolony stan lub `Righting`, despawn i utrata
+autorytetu przywracają materiały natychmiast. Aktywne holowanie wstrzymuje idle
+brake i wyłącza carving przeszkody NavMesh; po zakończeniu wraca zwykły timer
+stabilnego postoju. Baseline pustej taczki to `2.5 m/s`, maksymalne przyspieszenie
+`6 m/s^2`, a mnożnik odpowiedzi przy pełnym ładunku wynosi `0.45`.
+
+Lina nie podnosi automatycznie taczki ze stanu `Tipped`. Zaczep pozostaje podczas
+`Righting`, ale siła jest wstrzymana, a tymczasowe tarcie przywrócone na czas
+kinematycznego Rigidbody; visual liny pozostaje i holowanie wraca po przejściu
+do `Free`. E na aktywnym punkcie prostowania ma pierwszeństwo przed
+ręcznym odczepieniem; E poza nim odczepia linę. Nowe zaczepienie jest odrzucane
+w pozostałych stanach, w tym docking, pouring i trapped, a wejście w stan
+zabroniony zwija linę całkowicie do `Ready`.
+
+Wejście kierowcy zwija zaczepioną linę do `Ready` przed przydzieleniem roli i
+transferem własności fizyki, bez tworzenia luźnej końcówki. Pasażer nadal może
+wysiąść istniejącą procedurą bezpiecznego wyjścia. Synchronizacja używa
+istniejących danych celu: network ID, rodzaju i lokalnego punktu zaczepienia;
+nie dodaje cyklicznego RPC ani `NetworkVariable`, obsługuje late join i zachowuje
+zasadę jednej liny na cel. Dotychczasowy cleanup przy despawnie, powaleniu gracza
+i zmianie narzędzia pozostaje bez zmian.
+
+### Walidacja holowania
+
+Kompilacja Unity i Console zakończyły się bez nowych błędów, a fizyczny probe
+przeszedł dla pustej i obciążonej taczki w `Free` oraz `Tipped`. Końcowe próby
+dały około `2.15-2.74 m` przesunięcia w `2 s`, maksymalnie `2.375 m/s`, oraz
+poprawne przywrócenie materiałów wszystkich `12` colliderów po luzie, jawnym
+odczepieniu i braku sygnału holowania. `dotnet build` zakończył się z `0` błędów
+i `78` wcześniejszymi ostrzeżeniami.
+
+Build Unity Pipeline dla `StandaloneWindows64` zakończył się sukcesem. Tymczasowy
+wynik `Temp/CodexValidation/RageQuitting.exe` powstał w `30.6 s`, miał
+`206,542,412` bajtów (około `206.5 MB`) i zgłosił `0` błędów oraz `76` ostrzeżeń
+projektu. Był to istniejący dług techniczny, między innymi przestarzałe API NGO
+`ServerRpc`, ukryte elementy `NetworkBehaviour` i brakujące skrypty na legacy
+`Assets/Prefabs/Player.prefab`; nie pojawił się nowy błąd kompilacji ani buildu
+holowania. Nie wykonano ręcznej walidacji multiplayer, która nadal jest wymagana.

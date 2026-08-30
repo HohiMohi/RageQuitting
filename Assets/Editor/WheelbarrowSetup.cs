@@ -6,6 +6,7 @@ using Unity.Netcode.Components;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using Unity.AI.Navigation;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 
@@ -18,7 +19,10 @@ public static class WheelbarrowSetup
     private const string WheelbarrowProfilePath = Root + "/WheelbarrowProfile.asset";
     private const string PouringProfilePath = Root + "/ConcretePouringProfile.asset";
     private const string WheelContactMaterialPath = Root + "/WheelContact.physicMaterial";
+    private const string RopeTowContactMaterialPath = Root + "/RopeTowContact.physicMaterial";
+    private const string RopeToolProfilePath = "Assets/ScriptableObjectAssets/New/RopeToolProfile.asset";
     private const float FoundationDockWheelClearance = 0.15f;
+    private const float FailedConcreteNavMeshBakeMargin = 0.75f;
 
     [MenuItem("Tools/RageQuitting/Setup Wheelbarrow And Concrete Pouring")]
     public static void RunFromMenu() => RunSetup();
@@ -77,18 +81,36 @@ public static class WheelbarrowSetup
         return "Wheelbarrow owner authority prefab and 50 Hz motion profile configured.";
     }
 
+    public static string ConfigureWheelbarrowRopeTow()
+    {
+        EnsureFolder("Assets/GeneratedAssets");
+        EnsureFolder(Root);
+        WheelbarrowProfileSO wheelbarrowProfile = GetOrCreate<WheelbarrowProfileSO>(WheelbarrowProfilePath);
+        PhysicsMaterial towMaterial = CreateRopeTowContactMaterial();
+        ConfigureRopeTowProfile(wheelbarrowProfile, towMaterial);
+
+        ConfigureRopeToolTowProfile();
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        return "Wheelbarrow rope towing material and profiles configured.";
+    }
+
     private static void RunSetup()
     {
         EnsureFolder("Assets/GeneratedAssets");
         EnsureFolder(Root);
         WheelbarrowProfileSO wheelbarrowProfile = GetOrCreate<WheelbarrowProfileSO>(WheelbarrowProfilePath);
         ConcretePouringProfileSO pouringProfile = GetOrCreate<ConcretePouringProfileSO>(PouringProfilePath);
+        ConfigurePouringProfile(pouringProfile);
         Material wood = CreateMaterial(Root + "/WheelbarrowWood.mat", new Color(0.38f, 0.19f, 0.08f));
         Material metal = CreateMaterial(Root + "/WheelbarrowMetal.mat", new Color(0.22f, 0.25f, 0.26f));
         Material rubber = CreateMaterial(Root + "/WheelbarrowRubber.mat", new Color(0.035f, 0.04f, 0.04f));
         Material wet = CreateMaterial(Root + "/ConcreteWet.mat", new Color(0.36f, 0.39f, 0.39f));
         Material dry = CreateMaterial(Root + "/ConcreteDry.mat", new Color(0.57f, 0.58f, 0.55f));
         PhysicsMaterial wheelContactMaterial = CreateWheelContactMaterial();
+        PhysicsMaterial ropeTowContactMaterial = CreateRopeTowContactMaterial();
+        ConfigureRopeTowProfile(wheelbarrowProfile, ropeTowContactMaterial);
+        ConfigureRopeToolTowProfile();
         GameObject prefab = CreateWheelbarrowPrefab(wheelbarrowProfile, wood, metal, rubber, wet, wheelContactMaterial);
         RegisterNetworkPrefab(prefab);
         ConfigurePlayerPrefab();
@@ -273,7 +295,7 @@ public static class WheelbarrowSetup
             BridgeConstructionSite site = sites.OrderBy(item => (item.transform.position - volume.transform.position).sqrMagnitude).FirstOrDefault();
             if (site == null) continue;
             ConfigureWorkflow(site);
-            ConfigureConcreteVisual(volume, wet, dry);
+            ConfigureConcreteVisual(volume, site, pouringProfile, wet, dry);
 
             if (!TryResolveFoundationDockPose(volume, instance, out Vector3 dockPosition, out Quaternion dockRotation))
             {
@@ -284,6 +306,7 @@ public static class WheelbarrowSetup
             CreateDock(setupRoot.transform, "WheelbarrowV1_FoundationDock_" + (++index), WheelbarrowDockType.FoundationPouring,
                 dockPosition, dockRotation, site, pouringProfile);
         }
+        RebuildSceneNavMesh(scene);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
     }
@@ -359,7 +382,23 @@ public static class WheelbarrowSetup
         EditorUtility.SetDirty(workflow);
     }
 
-    private static void ConfigureConcreteVisual(FoundationExcavationVolume volume, Material wet, Material dry)
+    private static void ConfigurePouringProfile(ConcretePouringProfileSO profile)
+    {
+        SerializedObject serialized = new SerializedObject(profile);
+        serialized.FindProperty("criticalFailureSequenceDuration").floatValue = 0.8f;
+        serialized.FindProperty("failedConcreteWorkRequired").floatValue = 100f;
+        serialized.FindProperty("failedConcreteCollapseDuration").floatValue = 0.4f;
+        serialized.FindProperty("failedConcreteCrackThresholds").vector3Value = new Vector3(1f, 34f, 67f);
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(profile);
+    }
+
+    private static void ConfigureConcreteVisual(
+        FoundationExcavationVolume volume,
+        BridgeConstructionSite site,
+        ConcretePouringProfileSO pouringProfile,
+        Material wet,
+        Material dry)
     {
         if (volume == null) return;
         SerializedObject serialized = new SerializedObject(volume);
@@ -407,6 +446,21 @@ public static class WheelbarrowSetup
         if (collider == null) collider = fill.AddComponent<BoxCollider>();
         collider.enabled = false;
         fill.SetActive(false);
+        ConfigureCriticalFailureObjects(
+            volume,
+            site,
+            excavationRoot,
+            fill,
+            footprint,
+            bottomLocalY,
+            fullTopLocalY,
+            dry,
+            out FoundationFailedConcreteTarget failedTarget,
+            out GameObject[] crackVisuals,
+            out Transform failedPose,
+            out BoxCollider recoveryVolume,
+            out NavMeshObstacle pitObstacle,
+            out GameObject bakeProxy);
         Set(serialized, "concreteFillVisual", fill.transform); Set(serialized, "concreteRenderer", fill.GetComponent<Renderer>());
         Set(serialized, "driedConcreteCollider", collider); Set(serialized, "wetConcreteMaterial", wet); Set(serialized, "dryConcreteMaterial", dry);
         serialized.FindProperty("concreteFootprintSize").vector2Value = footprint;
@@ -414,7 +468,206 @@ public static class WheelbarrowSetup
         serialized.FindProperty("concreteFullTopLocalY").floatValue = fullTopLocalY;
         Set(serialized, "exitRampRenderer", exitRamp != null ? exitRamp.GetComponent<Renderer>() : null);
         Set(serialized, "exitRampCollider", exitRamp != null ? exitRamp.GetComponent<Collider>() : null);
+        Set(serialized, "failedConcreteTarget", failedTarget);
+        SetObjectArray(serialized, "failedConcreteCrackVisuals", crackVisuals);
+        Set(serialized, "failedWheelbarrowPose", failedPose);
+        Set(serialized, "recoveryVolume", recoveryVolume);
+        Set(serialized, "pitNavMeshObstacle", pitObstacle);
+        Set(serialized, "navMeshBakeProxy", bakeProxy);
         serialized.ApplyModifiedPropertiesWithoutUndo();
+
+        SerializedObject siteSerialized = new SerializedObject(site);
+        Set(siteSerialized, "concretePouringProfile", pouringProfile);
+        siteSerialized.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static void ConfigureCriticalFailureObjects(
+        FoundationExcavationVolume volume,
+        BridgeConstructionSite site,
+        Transform excavationRoot,
+        GameObject concreteFill,
+        Vector2 footprint,
+        float bottomLocalY,
+        float fullTopLocalY,
+        Material dry,
+        out FoundationFailedConcreteTarget failedTarget,
+        out GameObject[] crackVisuals,
+        out Transform failedPose,
+        out BoxCollider recoveryVolume,
+        out NavMeshObstacle pitObstacle,
+        out GameObject bakeProxy)
+    {
+        Transform old = excavationRoot.Find("CriticalConcreteFailure");
+        if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
+        GameObject root = new GameObject("CriticalConcreteFailure");
+        root.transform.SetParent(excavationRoot, false);
+
+        int notWalkableArea = NavMesh.GetAreaFromName("Not Walkable");
+        foreach (NavMeshModifierVolume legacyPitExclusion in excavationRoot.GetComponents<NavMeshModifierVolume>())
+        {
+            if (legacyPitExclusion.area == notWalkableArea)
+                legacyPitExclusion.enabled = false;
+        }
+
+        GameObject target = new GameObject("FailedConcreteTarget");
+        target.transform.SetParent(root.transform, false);
+        target.transform.localPosition = new Vector3(concreteFill.transform.localPosition.x, fullTopLocalY + 0.08f,
+            concreteFill.transform.localPosition.z);
+        BoxCollider targetCollider = target.AddComponent<BoxCollider>();
+        targetCollider.isTrigger = true;
+        targetCollider.size = new Vector3(footprint.x, 0.16f, footprint.y);
+        failedTarget = target.AddComponent<FoundationFailedConcreteTarget>();
+        failedTarget.ConfigureEditor(site, targetCollider);
+        targetCollider.enabled = false;
+        failedTarget.enabled = false;
+
+        Material crackMaterial = CreateMaterial(Root + "/FailedConcreteCrack.mat", new Color(0.12f, 0.13f, 0.13f));
+        crackVisuals = new GameObject[3];
+        for (int stage = 0; stage < crackVisuals.Length; stage++)
+        {
+            GameObject crackRoot = new GameObject($"FailedConcreteCracks_{stage + 1}");
+            crackRoot.transform.SetParent(root.transform, false);
+            crackRoot.transform.localPosition = new Vector3(concreteFill.transform.localPosition.x,
+                fullTopLocalY + 0.012f + stage * 0.002f, concreteFill.transform.localPosition.z);
+            CreateCrackSegments(crackRoot.transform, stage + 1, footprint, crackMaterial);
+            crackRoot.SetActive(false);
+            crackVisuals[stage] = crackRoot;
+        }
+
+        failedPose = Point(root.transform, "FailedWheelbarrowPose",
+            new Vector3(concreteFill.transform.localPosition.x, fullTopLocalY - 0.48f, concreteFill.transform.localPosition.z));
+        Vector3 rampDirection = ResolveRampDirection(excavationRoot, concreteFill.transform.position);
+        failedPose.rotation = Quaternion.LookRotation(-rampDirection, Vector3.up) * Quaternion.Euler(-8f, 0f, 18f);
+
+        GameObject recovery = new GameObject("WheelbarrowRecoveryVolume");
+        recovery.transform.SetParent(root.transform, false);
+        recovery.transform.localPosition = new Vector3(concreteFill.transform.localPosition.x,
+            (bottomLocalY + fullTopLocalY) * 0.5f, concreteFill.transform.localPosition.z);
+        recoveryVolume = recovery.AddComponent<BoxCollider>();
+        recoveryVolume.isTrigger = true;
+        recoveryVolume.size = new Vector3(footprint.x + 0.4f, Mathf.Max(3f, fullTopLocalY - bottomLocalY + 1.5f), footprint.y + 0.4f);
+
+        GameObject obstacleObject = new GameObject("PitNavMeshObstacle");
+        obstacleObject.transform.SetParent(root.transform, false);
+        obstacleObject.transform.localPosition = new Vector3(concreteFill.transform.localPosition.x,
+            fullTopLocalY, concreteFill.transform.localPosition.z);
+        pitObstacle = obstacleObject.AddComponent<NavMeshObstacle>();
+        pitObstacle.shape = NavMeshObstacleShape.Box;
+        pitObstacle.center = Vector3.zero;
+        pitObstacle.size = new Vector3(footprint.x, 1.2f, footprint.y);
+        pitObstacle.carving = true;
+        pitObstacle.carveOnlyStationary = false;
+
+        bakeProxy = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        bakeProxy.name = "FailedConcreteNavMeshBakeProxy";
+        bakeProxy.transform.SetParent(root.transform, false);
+        bakeProxy.transform.localPosition = new Vector3(concreteFill.transform.localPosition.x,
+            fullTopLocalY - 0.04f, concreteFill.transform.localPosition.z);
+        bakeProxy.transform.localScale = new Vector3(
+            footprint.x + FailedConcreteNavMeshBakeMargin * 2f,
+            0.08f,
+            footprint.y + FailedConcreteNavMeshBakeMargin * 2f);
+        NavMeshModifier modifier = bakeProxy.AddComponent<NavMeshModifier>();
+        modifier.overrideArea = true;
+        modifier.area = 0;
+        NavMeshSurface bakeSurface = bakeProxy.AddComponent<NavMeshSurface>();
+        bakeSurface.agentTypeID = 0;
+        bakeSurface.collectObjects = CollectObjects.Children;
+        bakeSurface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+        bakeSurface.layerMask = 1 << bakeProxy.layer;
+        bakeSurface.defaultArea = 0;
+    }
+
+    private static void CreateCrackSegments(Transform parent, int stage, Vector2 footprint, Material material)
+    {
+        int segments = stage * 4;
+        for (int i = 0; i < segments; i++)
+        {
+            float t = (i + 1f) / (segments + 1f);
+            float angle = (i * 47f + stage * 23f) * Mathf.Deg2Rad;
+            Vector3 position = new Vector3(
+                Mathf.Lerp(-footprint.x * 0.38f, footprint.x * 0.38f, t),
+                0f,
+                Mathf.Sin(i * 1.7f) * footprint.y * 0.28f);
+            CreatePrimitive(parent, PrimitiveType.Cube, $"Crack_{i + 1}", position,
+                new Vector3(0.55f + stage * 0.12f, 0.012f, 0.035f),
+                new Vector3(0f, angle * Mathf.Rad2Deg, 0f), material);
+        }
+    }
+
+    private static Vector3 ResolveRampDirection(Transform excavationRoot, Vector3 center)
+    {
+        Transform ramp = excavationRoot.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(item => item.name == "ExitRamp");
+        if (ramp != null)
+        {
+            Vector3 direction = Vector3.ProjectOnPlane(ramp.position - center, Vector3.up);
+            if (direction.sqrMagnitude > 0.001f) return direction.normalized;
+        }
+        return excavationRoot.forward;
+    }
+
+    private static void RebuildSceneNavMesh(Scene scene)
+    {
+        FoundationExcavationVolume[] volumes = scene.GetRootGameObjects()
+            .SelectMany(root => root.GetComponentsInChildren<FoundationExcavationVolume>(true))
+            .ToArray();
+        GameObject[] proxies = volumes.Select(volume =>
+            {
+                SerializedObject serialized = new SerializedObject(volume);
+                return serialized.FindProperty("navMeshBakeProxy")?.objectReferenceValue as GameObject;
+            })
+            .Where(proxy => proxy != null)
+            .ToArray();
+        NavMeshObstacle[] obstacles = volumes
+            .Select(volume => volume.PitNavMeshObstacle)
+            .Where(obstacle => obstacle != null)
+            .ToArray();
+        bool[] obstacleEnabled = obstacles.Select(obstacle => obstacle.enabled).ToArray();
+        bool[] obstacleCarving = obstacles.Select(obstacle => obstacle.carving).ToArray();
+
+        NavMeshSurface[] surfaces = scene.GetRootGameObjects()
+            .SelectMany(root => root.GetComponentsInChildren<NavMeshSurface>(true)).ToArray();
+        if (surfaces.Length == 0)
+        {
+            Debug.LogWarning("Wheelbarrow setup did not find a NavMeshSurface in Tutorial_scene; bake proxy was created but NavMesh was not rebuilt.");
+            return;
+        }
+
+        try
+        {
+            foreach (NavMeshObstacle obstacle in obstacles)
+                obstacle.enabled = false;
+            foreach (GameObject proxy in proxies)
+            {
+                Renderer renderer = proxy.GetComponent<Renderer>();
+                Collider collider = proxy.GetComponent<Collider>();
+                if (renderer != null) renderer.enabled = true;
+                if (collider != null) collider.enabled = true;
+            }
+            foreach (NavMeshSurface surface in surfaces)
+                surface.BuildNavMesh();
+        }
+        finally
+        {
+            DisableBakeProxies(proxies);
+            for (int i = 0; i < obstacles.Length; i++)
+            {
+                obstacles[i].carving = obstacleCarving[i];
+                obstacles[i].enabled = obstacleEnabled[i];
+            }
+        }
+    }
+
+    private static void DisableBakeProxies(IEnumerable<GameObject> proxies)
+    {
+        foreach (GameObject proxy in proxies)
+        {
+            Renderer renderer = proxy.GetComponent<Renderer>();
+            Collider collider = proxy.GetComponent<Collider>();
+            if (renderer != null) renderer.enabled = false;
+            if (collider != null) collider.enabled = false;
+        }
     }
 
     private static bool TryResolveFoundationDockPose(FoundationExcavationVolume volume, GameObject wheelbarrow,
@@ -536,6 +789,44 @@ public static class WheelbarrowSetup
         material.bounceCombine = PhysicsMaterialCombine.Minimum;
         EditorUtility.SetDirty(material);
         return material;
+    }
+
+    private static PhysicsMaterial CreateRopeTowContactMaterial()
+    {
+        PhysicsMaterial material = AssetDatabase.LoadAssetAtPath<PhysicsMaterial>(RopeTowContactMaterialPath);
+        if (material == null)
+        {
+            material = new PhysicsMaterial("RopeTowContact");
+            AssetDatabase.CreateAsset(material, RopeTowContactMaterialPath);
+        }
+        material.staticFriction = 0.05f;
+        material.dynamicFriction = 0.03f;
+        material.bounciness = 0f;
+        material.frictionCombine = PhysicsMaterialCombine.Minimum;
+        material.bounceCombine = PhysicsMaterialCombine.Minimum;
+        EditorUtility.SetDirty(material);
+        return material;
+    }
+
+    private static void ConfigureRopeTowProfile(WheelbarrowProfileSO wheelbarrowProfile,
+        PhysicsMaterial towMaterial)
+    {
+        SerializedObject serialized = new SerializedObject(wheelbarrowProfile);
+        serialized.FindProperty("ropeTowContactMaterial").objectReferenceValue = towMaterial;
+        serialized.FindProperty("ropeTowActivationTension").floatValue = 0.04f;
+        serialized.FindProperty("ropeTowReleaseDelay").floatValue = 0.2f;
+        serialized.FindProperty("maximumRopeTowVerticalRatio").floatValue = 0.3f;
+        serialized.FindProperty("ropeTowGroundProbeDistance").floatValue = 1.5f;
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(wheelbarrowProfile);
+    }
+
+    private static void ConfigureRopeToolTowProfile()
+    {
+        RopeToolProfileSO ropeProfile = AssetDatabase.LoadAssetAtPath<RopeToolProfileSO>(RopeToolProfilePath);
+        if (ropeProfile == null) throw new InvalidOperationException($"Missing rope profile at {RopeToolProfilePath}.");
+        ropeProfile.maximumWheelbarrowPullSpeed = 2.5f;
+        EditorUtility.SetDirty(ropeProfile);
     }
 
     private static void EnsureFolder(string path)

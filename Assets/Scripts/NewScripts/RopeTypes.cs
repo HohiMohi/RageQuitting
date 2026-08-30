@@ -18,7 +18,8 @@ public enum RopeTargetKind
 {
     None,
     Player,
-    Resource
+    Resource,
+    Wheelbarrow
 }
 
 public enum RopeEndMotionState

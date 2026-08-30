@@ -33,6 +33,12 @@ public sealed class RopeToolProfileSO : ScriptableObject
     [Min(0f)] public float resourceSpring = 35f;
     [Min(0f)] public float resourceDamping = 8f;
     [Min(0f)] public float maximumResourceAcceleration = 10f;
+    [Header("Wheelbarrow Target")]
+    [Min(0f)] public float wheelbarrowSpring = 20f;
+    [Min(0f)] public float wheelbarrowDamping = 6f;
+    [Min(0f)] public float maximumWheelbarrowAcceleration = 6f;
+    [Min(0f)] public float maximumWheelbarrowPullSpeed = 2.5f;
+    [Range(0f, 1f)] public float fullLoadWheelbarrowPullMultiplier = 0.45f;
     [Min(0f)] public float playerPullSpeed = 6f;
     [Range(0f, 1f)] public float playerTargetPullShare = 1f;
     [Range(0f, 1f)] public float playerHolderReactionShare = 0f;

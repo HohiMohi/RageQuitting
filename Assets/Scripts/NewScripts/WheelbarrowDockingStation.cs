@@ -50,7 +50,16 @@ public class WheelbarrowDockingStation : NetworkBehaviour, IConcreteBatchReceive
     public override void OnNetworkDespawn()
     {
         ForceReleaseCurrentWheelbarrow();
+        if (HasAuthority)
+            CleanupMissingTrackedWheelbarrow();
         base.OnNetworkDespawn();
+    }
+
+    private void Update()
+    {
+        if (!HasAuthority || DockedWheelbarrowNetworkObjectId == WheelbarrowController.NoClient) return;
+        if (DockedWheelbarrow == null)
+            CleanupMissingTrackedWheelbarrow();
     }
 
     private void Reset()
@@ -123,10 +132,18 @@ public class WheelbarrowDockingStation : NetworkBehaviour, IConcreteBatchReceive
 
     public void ForceReleaseWheelbarrow(WheelbarrowController wheelbarrow)
     {
-        if (!HasAuthority || wheelbarrow == null || docked != wheelbarrow) return;
+        if (!HasAuthority || wheelbarrow == null || DockedWheelbarrow != wheelbarrow) return;
+        foundationSite?.ForceCleanupConcreteFailure(wheelbarrow, this);
         pouringMinigame?.CancelAndRelease(false);
-        if (docked == wheelbarrow) SetDockedWheelbarrow(null);
+        if (DockedWheelbarrow == wheelbarrow) SetDockedWheelbarrow(null);
         wheelbarrow.ForceReleaseDock(this);
+    }
+
+    internal void CompleteFailedConcreteRecovery(WheelbarrowController wheelbarrow)
+    {
+        if (!HasAuthority || wheelbarrow == null || DockedWheelbarrow != wheelbarrow) return;
+        pouringMinigame?.ResetAfterFailedConcreteRecovery();
+        SetDockedWheelbarrow(null);
     }
 
     private bool IsPayloadCompatible(WheelbarrowController wheelbarrow)
@@ -134,7 +151,7 @@ public class WheelbarrowDockingStation : NetworkBehaviour, IConcreteBatchReceive
         if (dockType == WheelbarrowDockType.MixerLoading)
             return !wheelbarrow.HasConcrete && !wheelbarrow.HasResourceCargo;
         return dockType == WheelbarrowDockType.FoundationPouring && wheelbarrow.HasConcrete &&
-            foundationSite != null && foundationSite.CurrentStage == BridgeConstructionStage.ConcretePouring;
+            foundationSite != null && foundationSite.CanAcceptFoundationDock;
     }
 
     private bool IsOccupiedByOther(WheelbarrowController wheelbarrow)
@@ -175,7 +192,24 @@ public class WheelbarrowDockingStation : NetworkBehaviour, IConcreteBatchReceive
     private void ForceReleaseCurrentWheelbarrow()
     {
         if (!HasAuthority) return;
-        if (docked != null) ForceReleaseWheelbarrow(docked);
+        WheelbarrowController current = DockedWheelbarrow;
+        if (current != null)
+        {
+            ForceReleaseWheelbarrow(current);
+            return;
+        }
+        CleanupMissingTrackedWheelbarrow();
+    }
+
+    internal void CleanupMissingTrackedWheelbarrow()
+    {
+        if (!HasAuthority) return;
+        bool hasTrackedId = DockedWheelbarrowNetworkObjectId != WheelbarrowController.NoClient;
+        if (!hasTrackedId && (foundationSite == null || !foundationSite.HasActiveConcreteFailure)) return;
+
+        foundationSite?.ForceCleanupConcreteFailure(null, this);
+        pouringMinigame?.ResetAfterFailedConcreteRecovery();
+        SetDockedWheelbarrow(null);
     }
 
     private bool IsNetworkSessionActive() =>

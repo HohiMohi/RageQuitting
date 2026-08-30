@@ -97,6 +97,33 @@ public sealed class RopeToolController : NetworkBehaviour
         }
     }
 
+    internal bool IsAttachedTo(WheelbarrowController wheelbarrow)
+    {
+        return wheelbarrow != null && TargetKind == RopeTargetKind.Wheelbarrow &&
+            ResolveTarget() == wheelbarrow.NetworkObject;
+    }
+
+    internal static bool TryRetractAttachedTarget(NetworkObject attachedTarget)
+    {
+        if (attachedTarget == null) return false;
+
+        if (ReservedTargets.TryGetValue(attachedTarget.NetworkObjectId, out RopeToolController reserved) &&
+            reserved != null && reserved.HasSimulationAuthority && reserved.ResolveTarget() == attachedTarget)
+        {
+            reserved.ResetRope(false);
+            return true;
+        }
+
+        foreach (RopeToolController rope in ActiveRopeSet)
+        {
+            if (rope == null || !rope.HasSimulationAuthority || rope.TargetKind == RopeTargetKind.None ||
+                rope.ResolveTarget() != attachedTarget) continue;
+            rope.ResetRope(false);
+            return true;
+        }
+        return false;
+    }
+
     private void Awake()
     {
         input = GetComponent<PlayerInputNew>();
@@ -347,6 +374,14 @@ public sealed class RopeToolController : NetworkBehaviour
             return;
         }
 
+        if (TargetKind == RopeTargetKind.Wheelbarrow &&
+            (!TryGetAttachedWheelbarrow(out WheelbarrowController wheelbarrow) ||
+             !CanRemainAttachedToWheelbarrow(wheelbarrow)))
+        {
+            ResetRope(false);
+            return;
+        }
+
         if ((CurrentState == RopeState.Flying || CurrentState == RopeState.Loose ||
              CurrentState == RopeState.Reeling || CurrentState == RopeState.PayingOut) &&
             TargetKind == RopeTargetKind.None && endpoint == null)
@@ -426,6 +461,13 @@ public sealed class RopeToolController : NetworkBehaviour
         SetTension(Mathf.Clamp01(extension / Mathf.Max(0.01f, profile.maximumStretch)));
         bool atHardLimit = extension >= Mathf.Max(0.01f, profile.maximumStretch) - 0.01f;
         SetHardLimit(atHardLimit);
+        Vector3 direction = distance > 0.0001f ? delta / distance : Vector3.zero;
+
+        WheelbarrowController ropeWheelbarrow = null;
+        bool hasWheelbarrowTarget = TargetKind == RopeTargetKind.Wheelbarrow &&
+            TryGetAttachedWheelbarrow(out ropeWheelbarrow);
+        if (hasWheelbarrowTarget)
+            ApplyWheelbarrowPull(ropeWheelbarrow, direction, extension, blocked);
 
         if (TargetKind == RopeTargetKind.None && endpoint != null && CurrentState == RopeState.Reeling)
         {
@@ -442,7 +484,6 @@ public sealed class RopeToolController : NetworkBehaviour
 
         if (!blocked && extension > 0f)
         {
-            Vector3 direction = delta / Mathf.Max(distance, 0.0001f);
             if (TargetKind == RopeTargetKind.Resource && ResolveTarget() != null && target.TryGetComponent(out Rigidbody targetBody))
             {
                 Vector3 localPoint = IsNetworkActive ? targetLocalPointNetwork.Value : localTargetPoint;
@@ -471,13 +512,74 @@ public sealed class RopeToolController : NetworkBehaviour
             }
         }
 
-        if (profile.breakOnOverload && TargetKind != RopeTargetKind.None && extension > profile.maximumStretch)
+        bool wheelbarrowRighting = TargetKind == RopeTargetKind.Wheelbarrow &&
+            TryGetAttachedWheelbarrow(out WheelbarrowController attachedWheelbarrow) &&
+            attachedWheelbarrow.State == WheelbarrowState.Righting;
+        if (!wheelbarrowRighting && profile.breakOnOverload && TargetKind != RopeTargetKind.None && extension > profile.maximumStretch)
         {
             if (overloadStartedAt < 0f) overloadStartedAt = Time.time;
             else if (Time.time - overloadStartedAt >= profile.overloadDuration) DetachToLooseEnd();
         }
         else overloadStartedAt = -1f;
 
+    }
+
+    private void ApplyWheelbarrowPull(WheelbarrowController wheelbarrow, Vector3 direction, float extension,
+        bool blocked)
+    {
+        if (wheelbarrow == null) return;
+        Vector3 localPoint = IsNetworkActive ? targetLocalPointNetwork.Value : localTargetPoint;
+        wheelbarrow.ApplyRopeTow(localPoint, direction, NormalizedTension, extension, blocked, profile);
+    }
+
+    private bool TryGetAttachedWheelbarrow(out WheelbarrowController wheelbarrow)
+    {
+        NetworkObject attached = ResolveTarget();
+        wheelbarrow = attached != null ? attached.GetComponent<WheelbarrowController>() : null;
+        return wheelbarrow != null;
+    }
+
+    private static bool CanRemainAttachedToWheelbarrow(WheelbarrowController wheelbarrow)
+    {
+        return wheelbarrow != null && wheelbarrow.CanRemainRopeAttached;
+    }
+
+    private static float CalculateWheelbarrowPullAcceleration(RopeToolProfileSO sourceProfile, float extension,
+        float separatingSpeed, float loadRatio, float fixedDeltaTime)
+    {
+        if (sourceProfile == null || extension <= 0f) return 0f;
+        float acceleration = sourceProfile.wheelbarrowSpring * extension +
+            sourceProfile.wheelbarrowDamping * separatingSpeed;
+        float pullSpeed = -separatingSpeed;
+        if (sourceProfile.maximumWheelbarrowPullSpeed > 0f)
+        {
+            float speedLimitedAcceleration = Mathf.Max(0f,
+                (sourceProfile.maximumWheelbarrowPullSpeed - pullSpeed) / Mathf.Max(fixedDeltaTime, 0.0001f));
+            acceleration = Mathf.Min(acceleration, speedLimitedAcceleration);
+        }
+
+        float loadMultiplier = Mathf.Lerp(1f, sourceProfile.fullLoadWheelbarrowPullMultiplier,
+            Mathf.Clamp01(loadRatio));
+        return Mathf.Clamp(acceleration, 0f, sourceProfile.maximumWheelbarrowAcceleration) * loadMultiplier;
+    }
+
+#if UNITY_EDITOR
+    public static bool RunEditorWheelbarrowPullProfileProbe(RopeToolProfileSO sourceProfile, out string result)
+    {
+        float empty = CalculateWheelbarrowPullAcceleration(sourceProfile, 1f, 0f, 0f, 0.02f);
+        float loaded = CalculateWheelbarrowPullAcceleration(sourceProfile, 1f, 0f, 1f, 0.02f);
+        float speedLimited = CalculateWheelbarrowPullAcceleration(sourceProfile, 1f,
+            -(sourceProfile != null ? sourceProfile.maximumWheelbarrowPullSpeed : 0f), 0f, 0.02f);
+        bool passed = sourceProfile != null && empty > 0f && loaded > 0f && loaded < empty &&
+            speedLimited <= 0.0001f;
+        result = $"empty={empty:F3}, loaded={loaded:F3}, speedLimited={speedLimited:F3}, passed={passed}";
+        return passed;
+    }
+#endif
+
+    private static bool IsFinite(Vector3 value)
+    {
+        return float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
     }
 
     private void ApplyLandedEndpointPull(RopeEndProjectile ropeEndpoint, Rigidbody endpointBody,
@@ -766,6 +868,12 @@ public sealed class RopeToolController : NetworkBehaviour
 
     private void ClearTarget()
     {
+        if (TargetKind == RopeTargetKind.Wheelbarrow &&
+            TryGetAttachedWheelbarrow(out WheelbarrowController attachedWheelbarrow))
+        {
+            attachedWheelbarrow.NotifyRopeTowDetached();
+        }
+
         target = null;
         localTargetKind = RopeTargetKind.None;
         localTargetPoint = Vector3.zero;

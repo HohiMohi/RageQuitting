@@ -118,6 +118,13 @@ public class WheelbarrowProfileSO : ScriptableObject
     [SerializeField, Min(0f)] private float navObstacleLinearSpeedThreshold = 0.15f;
     [SerializeField, Min(0f)] private float navObstacleAngularSpeedThresholdDegrees = 10f;
 
+    [Header("Rope towing")]
+    [SerializeField] private PhysicsMaterial ropeTowContactMaterial;
+    [SerializeField, Range(0f, 1f)] private float ropeTowActivationTension = 0.04f;
+    [SerializeField, Min(0f)] private float ropeTowReleaseDelay = 0.2f;
+    [SerializeField, Range(0f, 1f)] private float maximumRopeTowVerticalRatio = 0.3f;
+    [SerializeField, Min(0.05f)] private float ropeTowGroundProbeDistance = 1.5f;
+
     [Header("Diagnostics")]
     [SerializeField] private bool enableDiagnostics;
 
@@ -262,6 +269,11 @@ public class WheelbarrowProfileSO : ScriptableObject
     public float NavObstacleSettleDuration => Mathf.Max(0f, navObstacleSettleDuration);
     public float NavObstacleLinearSpeedThreshold => Mathf.Max(0f, navObstacleLinearSpeedThreshold);
     public float NavObstacleAngularSpeedThresholdDegrees => Mathf.Max(0f, navObstacleAngularSpeedThresholdDegrees);
+    public PhysicsMaterial RopeTowContactMaterial => ropeTowContactMaterial;
+    public float RopeTowActivationTension => Mathf.Clamp01(ropeTowActivationTension);
+    public float RopeTowReleaseDelay => Mathf.Max(0f, ropeTowReleaseDelay);
+    public float MaximumRopeTowVerticalRatio => Mathf.Clamp01(maximumRopeTowVerticalRatio);
+    public float RopeTowGroundProbeDistance => Mathf.Max(0.05f, ropeTowGroundProbeDistance);
     public bool EnableDiagnostics => enableDiagnostics;
     public float DriverFollowSpeed => driverFollowSpeed;
     public float PassengerFollowSpeed => passengerFollowSpeed;

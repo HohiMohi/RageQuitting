@@ -3,9 +3,10 @@
 ## Scope
 
 `Rope` is a two-slot equippable item. V1 supports a charged throw, a loose
-physical end, attachment to players and free single-carry resources, length
-control, tension, obstruction checks, hard-limit enforcement, stamina cost and target
-escape.
+physical end, attachment to players, free single-carry resources and
+wheelbarrows, length control, tension, obstruction checks, hard-limit
+enforcement, stamina cost and target escape. `RopeTargetKind` includes
+`Player`, `Resource` and `Wheelbarrow`.
 
 V1 does not support NPC targets, static anchors, rope wrapping, climbing or
 cutting the rope.
@@ -19,10 +20,13 @@ cutting the rope.
 | `Loose` | Hold LMB to reel the endpoint back; hold RMB to pay out. |
 | `Attached` | Hold LMB to reel the target; hold RMB to pay out. |
 | Attached target | Holder presses E to detach. A living target holds E to escape. |
+| Attached wheelbarrow | E on an active righting point prioritizes `Righting`; E elsewhere detaches manually. |
 
 Rope input takes priority over normal tool actions while `Rope` is selected.
 Dropping the tool, downed, respawn, despawn, loss of control and modal UI cancel
-the active rope safely.
+the active rope safely. Existing cleanup also covers tool changes. Entering a
+wheelbarrow as driver retracts its attached rope fully to `Ready` before role
+assignment or physics ownership transfer, without spawning a loose endpoint.
 
 ## Physics
 
@@ -52,6 +56,41 @@ reeling and removes only player movement that would increase the distance.
 Movement toward the other end and tangential movement remain available. The
 current profile does not break on overload; the legacy timed detach remains an
 optional profile setting.
+
+A wheelbarrow accepts a new rope only while `Free` or `Tipped`, at the exact
+physical hit point. The server applies a custom spring with damping through
+`AddForceAtPosition`, so the force naturally translates and rotates the body;
+no `Joint` is created and no custom reaction force is applied to the holder.
+The response weakens with current load mass. Passenger, secured-resource and
+concrete mass continue to contribute through the wheelbarrow's existing
+authoritative mass calculation.
+
+The rope runtime delegates wheelbarrow towing to `WheelbarrowController`.
+Tow force is accepted only by the current physics authority while the state is
+`Free` or `Tipped`, the rope is not blocked, extension is positive and normalized
+tension exceeds `0.04`. A short ground probe projects the pull direction onto
+the support plane and limits its ground-normal contribution to `30%`. Force is
+still applied at the exact attachment point, preserving controlled torque while
+preventing a high attachment from turning the pull into lifting alone.
+
+Active towing temporarily assigns `RopeTowContact` to every non-trigger physical
+collider on the wheelbarrow. The material uses static friction `0.05`, dynamic
+friction `0.03`, `Minimum` friction combine and zero bounce. Each collider's
+original material is stored separately and restored once after `0.2 s` without
+a valid tow signal. Explicit detach, a disallowed state including `Righting`,
+despawn and loss of physics authority restore it immediately. While towing,
+the idle brake is suspended and NavMesh obstacle carving is disabled; normal
+settling and carving eligibility resume after towing ends.
+
+An existing attachment survives the transition to `Righting`. Force pauses
+and temporary friction is restored while the Rigidbody is kinematic; the rope
+visual and attachment remain and towing resumes when the wheelbarrow returns to
+`Free`. The rope does not itself change `Tipped` to `Free`. New attachment is
+rejected in every other wheelbarrow state, and transitions to forbidden states
+retract the rope fully to `Ready`. Docking, pouring and trapped states are
+therefore unavailable rope targets. Entering `Driven` retains the existing full
+retraction before ownership transfer. A passenger may still leave through the
+existing safe-exit flow.
 
 ### Suspended players
 
@@ -86,6 +125,10 @@ state and escape progress. Clients send input intent only. Target selection,
 ownership, active item and one-rope-per-target reservation are validated by the
 server.
 
+Wheelbarrows reuse the existing target network ID, target kind and local hit
+point state for synchronization and late join. The feature adds no cyclic RPC
+or new `NetworkVariable`; the one-rope-per-target rule remains unchanged.
+
 `RopeEndProjectile.prefab` is a server-authoritative Rigidbody with
 `ServerNetworkTransform`; remote clients keep a kinematic replica. Landing,
 ground support and endpoint pull forces are resolved only by the server.
@@ -110,6 +153,40 @@ NetworkVariables and the synchronized endpoint.
 Both rope prefabs must remain registered in `DefaultNetworkPrefabs.asset` and
 `NGO_Minimal_Setup/NetworkPrefabsList.asset`. `Rope.asset` must remain in the
 `PlayerInventory.equippableItemCatalog`.
+
+## Configuration
+
+`RopeToolProfileSO` exposes wheelbarrow spring, damping, acceleration,
+pull-speed and load-multiplier tuning. The current baseline is `20`, `6`,
+`6 m/s^2`, `2.5 m/s` and `0.45`, respectively.
+
+`WheelbarrowProfileSO` exposes the towing contact material, activation tension
+`0.04`, release delay `0.2 s`, maximum ground-normal contribution `0.3` and
+ground-probe distance. Runtime diagnostics expose whether towing is active,
+current tension, ground collider and normal, resolved direction and
+acceleration, and the number of colliders using the temporary material.
+
+## Validation
+
+Unity compilation and the Console completed without new errors. The physical
+probe passed for empty and loaded wheelbarrows in both `Free` and `Tipped`.
+Final scenarios translated about `2.15-2.74 m` in `2 s`, with maximum observed
+speed `2.375 m/s`. All `12` collider materials were restored in every covered
+scenario, including slack, explicit detach and a missing tow signal. `dotnet
+build` completed with `0` errors and `78` pre-existing warnings.
+
+The Unity Pipeline `StandaloneWindows64` player build also completed
+successfully. Temporary output was written to
+`Temp/CodexValidation/RageQuitting.exe`; the build took `30.6 s`, produced
+`206,542,412` bytes (about `206.5 MB`) and reported `0` errors with `76` project
+warnings. The warnings were existing project debt, including obsolete NGO
+`ServerRpc` APIs, hidden `NetworkBehaviour` members and missing scripts on the
+legacy `Assets/Prefabs/Player.prefab`; no towing compile or build failure was
+introduced.
+
+Manual multiplayer validation was not run and remains required before release,
+together with manual coverage of driver entry, late join, competing ropes and
+lifecycle cleanup under real network conditions.
 
 ## Tutorial Scene
 

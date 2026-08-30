@@ -109,6 +109,11 @@ MonoBehaviour:
   navObstacleSettleDuration: 0.5
   navObstacleLinearSpeedThreshold: 0.15
   navObstacleAngularSpeedThresholdDegrees: 10
+  ropeTowContactMaterial: {fileID: 13400000, guid: be1ccb659659cc94489051857b1dff7c, type: 2}
+  ropeTowActivationTension: 0.04
+  ropeTowReleaseDelay: 0.2
+  maximumRopeTowVerticalRatio: 0.3
+  ropeTowGroundProbeDistance: 1.5
   enableDiagnostics: 0
   driverFollowSpeed: 8
   passengerFollowSpeed: 12

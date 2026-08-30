@@ -8,12 +8,18 @@ public class WheelbarrowInteractionPoint : MonoBehaviour, IInteractableNew, IInt
     [SerializeField] private WheelbarrowController wheelbarrow;
     [SerializeField] private WheelbarrowInteractionKind interactionKind;
 
+    public WheelbarrowController Wheelbarrow => wheelbarrow;
+    public WheelbarrowInteractionKind InteractionKind => interactionKind;
+    public bool IsRightingInteraction => wheelbarrow != null && wheelbarrow.State == WheelbarrowState.Tipped &&
+        (interactionKind == WheelbarrowInteractionKind.Righting || interactionKind == WheelbarrowInteractionKind.Handles);
+
     public void LookedAt(Transform interactor) { }
     public void LookedAway(Transform interactor) { }
 
     public void Interact(Transform interactor)
     {
         if (wheelbarrow == null || interactor == null) return;
+        if (wheelbarrow.State == WheelbarrowState.TrappedInFailedConcrete) return;
         PlayerInteractionNew player = interactor.GetComponent<PlayerInteractionNew>();
         if (interactionKind == WheelbarrowInteractionKind.Righting)
         {
@@ -37,7 +43,7 @@ public class WheelbarrowInteractionPoint : MonoBehaviour, IInteractableNew, IInt
 
     public void GetInteractionPrompts(Transform interactor, List<InteractionPrompt> prompts)
     {
-        if (wheelbarrow == null) return;
+        if (wheelbarrow == null || wheelbarrow.State == WheelbarrowState.TrappedInFailedConcrete) return;
         string prompt;
         if (interactionKind == WheelbarrowInteractionKind.Righting)
             prompt = "Hold E - Right wheelbarrow";

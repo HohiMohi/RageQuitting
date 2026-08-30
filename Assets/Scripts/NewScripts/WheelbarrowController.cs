@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NetworkObject), typeof(Rigidbody), typeof(WheelbarrowPresentationController))]
-public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
+public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, IRopeAttachable
 {
     public const ulong NoClient = ulong.MaxValue;
     private const float WheelContactDistanceEpsilon = 0.0001f;
@@ -159,6 +159,9 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private Vector3 securedDockPosition;
     private Quaternion securedDockRotation = Quaternion.identity;
     private bool hasSecuredDockPose;
+    private Vector3 failedConcreteOriginalDockPosition;
+    private Quaternion failedConcreteOriginalDockRotation = Quaternion.identity;
+    private bool hasFailedConcreteOriginalDockPose;
     private int localSpillSequence;
     private float spillVisualUntil;
     private Quaternion wheelVisualPoseOffset = Quaternion.identity;
@@ -177,11 +180,22 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private readonly RaycastHit[] driverSupportGroundHits = new RaycastHit[12];
     private readonly RaycastHit[] wheelContactHits = new RaycastHit[12];
     private readonly RaycastHit[] wheelContactRayHits = new RaycastHit[12];
+    private readonly RaycastHit[] ropeTowGroundHits = new RaycastHit[12];
     private DrivenWheelContactSource drivenWheelContactSource;
     private DrivenWheelContactSource lastLoggedWheelContactSource;
     private DrivenWheelContactRejection lastLoggedWheelContactRejection;
     private Collider lastLoggedWheelContactCollider;
     private Collider[] physicalColliders = Array.Empty<Collider>();
+    private readonly Dictionary<Collider, PhysicsMaterial> ropeTowOriginalMaterials =
+        new Dictionary<Collider, PhysicsMaterial>();
+    private bool isRopeTowActive;
+    private float ropeTowTension;
+    private float lastRopeTowSignalTime = float.NegativeInfinity;
+    private float ropeTowSlackStartedAt = float.NegativeInfinity;
+    private Collider ropeTowGroundCollider;
+    private Vector3 ropeTowGroundNormal = Vector3.up;
+    private Vector3 ropeTowDirection;
+    private float ropeTowAcceleration;
     private float navObstacleSettledTime;
     private WheelbarrowPresentationController presentationController;
     private PendingPassengerBoarding pendingPassengerBoarding;
@@ -217,7 +231,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         ? physicsBody.linearVelocity.magnitude
         : hasAcceptedMotionSnapshot ? lastAcceptedMotionSnapshot.LinearVelocity.magnitude : 0f;
     public bool IsDocked => State == WheelbarrowState.Docked || State == WheelbarrowState.Pouring;
-    public bool IsDockSecured => IsDocked;
+    public bool IsDockSecured => IsDocked || State == WheelbarrowState.TrappedInFailedConcrete;
     public float CorneringRolloverRisk => corneringRolloverRisk;
     public float CorneringLoadRatio => corneringLoadRatio;
     public float EffectiveRolloverReferenceSpeed => effectiveRolloverReferenceSpeed;
@@ -253,6 +267,265 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     public uint AuthorityEpoch => IsSessionActive ? authorityEpochNetwork.Value : 0;
     public float CurrentSteeringAngle => currentSteeringAngle;
     public float CurrentWheelSpinDegrees => wheelVisualSpinDegrees;
+    public bool IsRopeTowActive => isRopeTowActive;
+    public float CurrentRopeTowTension => ropeTowTension;
+    public Collider RopeTowGroundCollider => ropeTowGroundCollider;
+    public Vector3 RopeTowGroundNormal => ropeTowGroundNormal;
+    public Vector3 ResolvedRopeTowDirection => ropeTowDirection;
+    public float CurrentRopeTowAcceleration => ropeTowAcceleration;
+    public int RopeTowSwappedColliderCount => ropeTowOriginalMaterials.Count;
+    internal bool CanRemainRopeAttached => CanKeepExistingRopeAttachment(State);
+    internal bool CanReceiveRopePull => (State == WheelbarrowState.Free || State == WheelbarrowState.Tipped) &&
+        HasLocalPhysicsAuthority && physicsBody != null && !physicsBody.isKinematic;
+
+    public bool TryCreateRopeAttachment(RopeToolController rope, Vector3 hitPoint, out RopeAttachment attachment)
+    {
+        attachment = default;
+        if (rope == null || !CanAcceptNewRopeAttachment(State) ||
+            !IsFinite(hitPoint)) return false;
+
+        attachment = new RopeAttachment(NetworkObject, RopeTargetKind.Wheelbarrow,
+            transform.InverseTransformPoint(hitPoint));
+        return true;
+    }
+
+    internal float GetRopePullLoadRatio()
+    {
+        if (physicsBody == null) return 0f;
+        float baseMass = profile != null ? profile.BaseMass : 22f;
+        float largestTypicalLoad = profile != null
+            ? Mathf.Max(profile.MaximumResourceCargoMass, profile.ConcreteBatchMass, profile.PassengerMass)
+            : 80f;
+        return Mathf.Clamp01((physicsBody.mass - baseMass) / Mathf.Max(1f, largestTypicalLoad));
+    }
+
+    internal void ApplyRopeTow(Vector3 localAttachmentPoint, Vector3 ropeDirection, float normalizedTension,
+        float extension, bool blocked, RopeToolProfileSO ropeProfile)
+    {
+        lastRopeTowSignalTime = Time.time;
+        ropeTowTension = Mathf.Clamp01(normalizedTension);
+        ropeTowAcceleration = 0f;
+
+        bool allowed = CanReceiveRopePull && !blocked && ropeProfile != null && extension > 0f &&
+            ropeTowTension > (profile != null ? profile.RopeTowActivationTension : 0.04f);
+        if (!allowed)
+        {
+            SetRopeTowInactive(false);
+            return;
+        }
+
+        Vector3 point = transform.TransformPoint(localAttachmentPoint);
+        Vector3 pullDirection = -ropeDirection;
+        if (!IsFinite(point) || !IsFinite(pullDirection) || pullDirection.sqrMagnitude <= 0.0001f)
+        {
+            SetRopeTowInactive(false);
+            return;
+        }
+
+        ResolveRopeTowGround(out ropeTowGroundCollider, out ropeTowGroundNormal);
+        ropeTowDirection = LimitRopeTowNormalComponent(
+            pullDirection.normalized,
+            ropeTowGroundNormal,
+            profile != null ? profile.MaximumRopeTowVerticalRatio : 0.3f);
+        if (ropeTowDirection.sqrMagnitude <= 0.0001f)
+        {
+            SetRopeTowInactive(false);
+            return;
+        }
+
+        SetRopeTowActive();
+        float pullSpeed = Vector3.Dot(physicsBody.GetPointVelocity(point), ropeTowDirection);
+        float acceleration = ropeProfile.wheelbarrowSpring * extension -
+            ropeProfile.wheelbarrowDamping * pullSpeed;
+        if (ropeProfile.maximumWheelbarrowPullSpeed > 0f)
+        {
+            float speedLimitedAcceleration = Mathf.Max(0f,
+                (ropeProfile.maximumWheelbarrowPullSpeed - pullSpeed) /
+                Mathf.Max(Time.fixedDeltaTime, 0.0001f));
+            acceleration = Mathf.Min(acceleration, speedLimitedAcceleration);
+        }
+
+        float loadMultiplier = Mathf.Lerp(1f, ropeProfile.fullLoadWheelbarrowPullMultiplier,
+            GetRopePullLoadRatio());
+        ropeTowAcceleration = Mathf.Clamp(acceleration, 0f, ropeProfile.maximumWheelbarrowAcceleration) *
+            loadMultiplier;
+        if (ropeTowAcceleration > 0f)
+            physicsBody.AddForceAtPosition(
+                ropeTowDirection * ropeTowAcceleration,
+                point,
+                ForceMode.Acceleration);
+    }
+
+    internal void NotifyRopeTowDetached()
+    {
+        SetRopeTowInactive(true);
+    }
+
+    private static Vector3 LimitRopeTowNormalComponent(Vector3 direction, Vector3 groundNormal,
+        float maximumNormalRatio)
+    {
+        Vector3 normal = groundNormal.sqrMagnitude > 0.0001f ? groundNormal.normalized : Vector3.up;
+        Vector3 tangent = Vector3.ProjectOnPlane(direction, normal);
+        float tangentMagnitude = tangent.magnitude;
+        if (tangentMagnitude <= 0.0001f) return Vector3.zero;
+
+        float normalComponent = Vector3.Dot(direction, normal);
+        float limitedNormal = Mathf.Clamp(
+            normalComponent,
+            -tangentMagnitude * Mathf.Clamp01(maximumNormalRatio),
+            tangentMagnitude * Mathf.Clamp01(maximumNormalRatio));
+        return (tangent + normal * limitedNormal).normalized;
+    }
+
+    private void ResolveRopeTowGround(out Collider groundCollider, out Vector3 groundNormal)
+    {
+        groundCollider = null;
+        groundNormal = Vector3.up;
+        if (physicsBody == null) return;
+
+        float probeDistance = profile != null ? profile.RopeTowGroundProbeDistance : 1.5f;
+        Vector3 origin = physicsBody.worldCenterOfMass + Vector3.up * 0.2f;
+        int count = Physics.RaycastNonAlloc(
+            origin,
+            Vector3.down,
+            ropeTowGroundHits,
+            probeDistance + 0.2f,
+            Physics.DefaultRaycastLayers,
+            QueryTriggerInteraction.Ignore);
+        ResolveWheelContactIgnoredRoots(out Transform driverRoot, out Transform passengerRoot);
+        float nearestDistance = float.PositiveInfinity;
+        float minimumNormalDot = profile != null ? profile.MinimumWheelGroundNormalDot : 0.25f;
+        for (int i = 0; i < count; i++)
+        {
+            RaycastHit hit = ropeTowGroundHits[i];
+            Collider candidate = hit.collider;
+            if (candidate == null || candidate.transform == transform || candidate.transform.IsChildOf(transform)) continue;
+            if (driverRoot != null &&
+                (candidate.transform == driverRoot || candidate.transform.IsChildOf(driverRoot))) continue;
+            if (passengerRoot != null &&
+                (candidate.transform == passengerRoot || candidate.transform.IsChildOf(passengerRoot))) continue;
+            if (hit.distance <= WheelContactDistanceEpsilon || hit.distance >= nearestDistance ||
+                !IsFinite(hit.point) || !IsFinite(hit.normal) || hit.normal.sqrMagnitude <= 0.0001f) continue;
+            Vector3 normal = hit.normal.normalized;
+            if (Vector3.Dot(normal, Vector3.up) < minimumNormalDot) continue;
+
+            nearestDistance = hit.distance;
+            groundCollider = candidate;
+            groundNormal = normal;
+        }
+    }
+
+    private void SetRopeTowActive()
+    {
+        isRopeTowActive = true;
+        ropeTowSlackStartedAt = float.NegativeInfinity;
+        navObstacleSettledTime = 0f;
+        if (navigationObstacle != null && navigationObstacle.carving)
+            navigationObstacle.carving = false;
+        ApplyRopeTowMaterial();
+    }
+
+    private void SetRopeTowInactive(bool restoreImmediately)
+    {
+        if (isRopeTowActive)
+            ropeTowSlackStartedAt = Time.time;
+        else if (float.IsNegativeInfinity(ropeTowSlackStartedAt))
+            ropeTowSlackStartedAt = Time.time;
+        isRopeTowActive = false;
+        ropeTowAcceleration = 0f;
+        if (restoreImmediately) RestoreRopeTowMaterials();
+    }
+
+    private void UpdateRopeTowLifecycle()
+    {
+        bool allowedState = State == WheelbarrowState.Free || State == WheelbarrowState.Tipped;
+        if (!HasLocalPhysicsAuthority || !allowedState || physicsBody == null || physicsBody.isKinematic)
+        {
+            SetRopeTowInactive(true);
+            return;
+        }
+
+        float releaseDelay = profile != null ? profile.RopeTowReleaseDelay : 0.2f;
+        if (isRopeTowActive && Time.time - lastRopeTowSignalTime > releaseDelay)
+        {
+            SetRopeTowInactive(true);
+            return;
+        }
+        if (!isRopeTowActive && ropeTowOriginalMaterials.Count > 0 &&
+            Time.time - ropeTowSlackStartedAt >= releaseDelay)
+            RestoreRopeTowMaterials();
+    }
+
+    private void ApplyRopeTowMaterial()
+    {
+        PhysicsMaterial towMaterial = profile != null ? profile.RopeTowContactMaterial : null;
+        if (towMaterial == null) return;
+        if (physicalColliders == null || physicalColliders.Length == 0)
+            physicalColliders = GetComponentsInChildren<Collider>(true)
+                .Where(item => item != null && !item.isTrigger)
+                .ToArray();
+
+        foreach (Collider item in physicalColliders)
+        {
+            if (item == null || item.isTrigger || item is WheelCollider ||
+                ropeTowOriginalMaterials.ContainsKey(item)) continue;
+            ropeTowOriginalMaterials.Add(item, item.sharedMaterial);
+            item.sharedMaterial = towMaterial;
+        }
+    }
+
+    private void RestoreRopeTowMaterials()
+    {
+        foreach (KeyValuePair<Collider, PhysicsMaterial> entry in ropeTowOriginalMaterials)
+        {
+            if (entry.Key != null) entry.Key.sharedMaterial = entry.Value;
+        }
+        ropeTowOriginalMaterials.Clear();
+        ropeTowSlackStartedAt = float.NegativeInfinity;
+        ropeTowGroundCollider = null;
+        ropeTowGroundNormal = Vector3.up;
+        ropeTowDirection = Vector3.zero;
+        ropeTowAcceleration = 0f;
+        ropeTowTension = 0f;
+    }
+
+    private static bool CanAcceptNewRopeAttachment(WheelbarrowState state)
+    {
+        return state == WheelbarrowState.Free || state == WheelbarrowState.Tipped;
+    }
+
+    private static bool CanKeepExistingRopeAttachment(WheelbarrowState state)
+    {
+        return state == WheelbarrowState.Free || state == WheelbarrowState.Tipped ||
+            state == WheelbarrowState.Righting;
+    }
+
+#if UNITY_EDITOR
+    public bool RunEditorRopeLifecycleProbe(out string result)
+    {
+        bool attachmentStates = CanAcceptNewRopeAttachment(WheelbarrowState.Free) &&
+            CanAcceptNewRopeAttachment(WheelbarrowState.Tipped) &&
+            !CanAcceptNewRopeAttachment(WheelbarrowState.Driven) &&
+            !CanAcceptNewRopeAttachment(WheelbarrowState.Docked) &&
+            !CanAcceptNewRopeAttachment(WheelbarrowState.Pouring) &&
+            !CanAcceptNewRopeAttachment(WheelbarrowState.Righting) &&
+            !CanAcceptNewRopeAttachment(WheelbarrowState.TrappedInFailedConcrete);
+        bool lifecycleStates = CanKeepExistingRopeAttachment(WheelbarrowState.Free) &&
+            CanKeepExistingRopeAttachment(WheelbarrowState.Tipped) &&
+            CanKeepExistingRopeAttachment(WheelbarrowState.Righting) &&
+            !CanKeepExistingRopeAttachment(WheelbarrowState.Driven) &&
+            !CanKeepExistingRopeAttachment(WheelbarrowState.Docked) &&
+            !CanKeepExistingRopeAttachment(WheelbarrowState.Pouring) &&
+            !CanKeepExistingRopeAttachment(WheelbarrowState.TrappedInFailedConcrete);
+        Vector3 samplePoint = transform.position + transform.right * 0.37f + transform.up * 0.22f;
+        Vector3 restoredPoint = transform.TransformPoint(transform.InverseTransformPoint(samplePoint));
+        bool exactPoint = Vector3.Distance(samplePoint, restoredPoint) <= 0.0001f;
+        bool passed = attachmentStates && lifecycleStates && exactPoint;
+        result = $"attachmentStates={attachmentStates}, lifecycleStates={lifecycleStates}, exactPoint={exactPoint}, " +
+            $"roundTripError={Vector3.Distance(samplePoint, restoredPoint):F6}, passed={passed}";
+        return passed;
+    }
+#endif
 
     private void Awake()
     {
@@ -361,6 +634,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private void OnDestroy()
     {
+        SetRopeTowInactive(true);
         RestoreAllPlayerCollisions(false);
         Instances.Remove(this);
     }
@@ -417,6 +691,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     public override void OnLostOwnership()
     {
         base.OnLostOwnership();
+        SetRopeTowInactive(true);
         pendingAuthorityPreparationAck = false;
         ConfigureBody();
         ResetDriveInput();
@@ -425,6 +700,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     public override void OnNetworkDespawn()
     {
+        SetRopeTowInactive(true);
         cargoNetwork.OnListChanged -= OnCargoChanged;
         spillSequenceNetwork.OnValueChanged -= OnSpillSequenceChanged;
         driverNetwork.OnValueChanged -= OnDriverChanged;
@@ -872,6 +1148,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         EnsureReplicatedOccupantCollisions();
         TryConfirmDriverAuthorityPrepared();
         if (physicsBody == null) return;
+        UpdateRopeTowLifecycle();
 
         if (HasAuthority)
         {
@@ -905,7 +1182,8 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         else if (State == WheelbarrowState.Righting) SimulateRighting();
         else if (State == WheelbarrowState.Driven) SimulateDrive();
         else if (State == WheelbarrowState.Tipped) ApplyTippedDamping();
-        else if (State != WheelbarrowState.Docked && State != WheelbarrowState.Pouring) ApplyIdleBrake();
+        else if (State != WheelbarrowState.Docked && State != WheelbarrowState.Pouring &&
+                 State != WheelbarrowState.TrappedInFailedConcrete && !IsRopeTowActive) ApplyIdleBrake();
         UpdateWheelVisual();
         if (HasAuthority) DetectTipping();
         UpdateNavigationObstacle();
@@ -1767,9 +2045,18 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
 
         WheelbarrowState state = State;
-        bool secured = state == WheelbarrowState.Docked || state == WheelbarrowState.Pouring;
+        bool secured = state == WheelbarrowState.Docked || state == WheelbarrowState.Pouring ||
+                       state == WheelbarrowState.TrappedInFailedConcrete;
         bool canBecomeStationaryObstacle = state == WheelbarrowState.Free || state == WheelbarrowState.Tipped;
         bool shouldEnable = secured || canBecomeStationaryObstacle;
+
+        if (isRopeTowActive)
+        {
+            navObstacleSettledTime = 0f;
+            if (force || navigationObstacle.carving) navigationObstacle.carving = false;
+            if (force || navigationObstacle.enabled != shouldEnable) navigationObstacle.enabled = shouldEnable;
+            return;
+        }
 
         bool isSettled = physicsBody != null &&
             physicsBody.linearVelocity.magnitude <= (profile != null ? profile.NavObstacleLinearSpeedThreshold : 0.15f) &&
@@ -2278,7 +2565,10 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
         if (role == WheelbarrowOccupantRole.Driver)
         {
-            if (DriverClientId != NoClient || State == WheelbarrowState.Pouring || State == WheelbarrowState.Righting || State == WheelbarrowState.Tipped) return false;
+            if (DriverClientId != NoClient || State == WheelbarrowState.Pouring ||
+                State == WheelbarrowState.Righting || State == WheelbarrowState.Tipped ||
+                State == WheelbarrowState.TrappedInFailedConcrete) return false;
+            RopeToolController.TryRetractAttachedTarget(NetworkObject);
             pendingSafeExits.Remove(clientId);
             SetOccupantCollisionIgnored(clientId, true);
             SetDriver(clientId);
@@ -2303,7 +2593,8 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
 
     private bool BeginPassengerBoarding(ulong clientId, bool automatic)
     {
-        if (!HasAuthority || clientId == DriverClientId || PassengerClientId != NoClient || pendingPassengerBoarding != null ||
+        if (!HasAuthority || State == WheelbarrowState.TrappedInFailedConcrete ||
+            clientId == DriverClientId || PassengerClientId != NoClient || pendingPassengerBoarding != null ||
             !TryGetPlayer(clientId, out NetworkObject player)) return false;
 
         if (!automatic && passengerAnchor != null &&
@@ -2656,6 +2947,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         securedDockPosition = targetPose.position;
         securedDockRotation = targetPose.rotation;
         hasSecuredDockPose = true;
+        hasFailedConcreteOriginalDockPose = false;
         SetDockSecured(true);
         SetState(WheelbarrowState.Docked);
         return true;
@@ -2688,6 +2980,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         activeDock = null;
         if (IsSessionActive) dockNetwork.Value = NoClient;
         hasSecuredDockPose = false;
+        hasFailedConcreteOriginalDockPose = false;
         SetDockSecured(false);
         return true;
     }
@@ -2698,8 +2991,10 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         activeDock = null;
         if (IsSessionActive) dockNetwork.Value = NoClient;
         hasSecuredDockPose = false;
+        hasFailedConcreteOriginalDockPose = false;
         SetDockSecured(false);
-        if (State == WheelbarrowState.Docked || State == WheelbarrowState.Pouring)
+        if (State == WheelbarrowState.Docked || State == WheelbarrowState.Pouring ||
+            State == WheelbarrowState.TrappedInFailedConcrete)
             SetState(WheelbarrowState.Free);
     }
 
@@ -2727,6 +3022,95 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         }
     }
 
+    internal bool BeginFailedConcreteTrap(WheelbarrowDockingStation station)
+    {
+        if (!HasAuthority || station == null || activeDock != station || physicsBody == null ||
+            station.DockedWheelbarrow != this || State != WheelbarrowState.Pouring || !HasConcrete ||
+            !hasSecuredDockPose)
+            return false;
+
+        failedConcreteOriginalDockPosition = securedDockPosition;
+        failedConcreteOriginalDockRotation = securedDockRotation;
+        hasFailedConcreteOriginalDockPose = true;
+        ReclaimPhysicsAuthority(false);
+        ResetDriveInput();
+        physicsBody.linearVelocity = Vector3.zero;
+        physicsBody.angularVelocity = Vector3.zero;
+        SetDockSecured(true);
+        SetState(WheelbarrowState.TrappedInFailedConcrete);
+        return true;
+    }
+
+    internal bool RollbackFailedConcreteTrap(WheelbarrowDockingStation station)
+    {
+        if (!HasAuthority || station == null || activeDock != station || physicsBody == null ||
+            !hasFailedConcreteOriginalDockPose)
+            return false;
+
+        ReclaimPhysicsAuthority(false);
+        securedDockPosition = failedConcreteOriginalDockPosition;
+        securedDockRotation = failedConcreteOriginalDockRotation;
+        hasSecuredDockPose = true;
+        SetState(WheelbarrowState.Docked);
+        SetDockSecured(true);
+        physicsBody.position = securedDockPosition;
+        physicsBody.rotation = securedDockRotation;
+        physicsBody.linearVelocity = Vector3.zero;
+        physicsBody.angularVelocity = Vector3.zero;
+        transform.SetPositionAndRotation(securedDockPosition, securedDockRotation);
+        hasFailedConcreteOriginalDockPose = false;
+        return true;
+    }
+
+    internal void MoveFailedConcreteTrap(Vector3 position, Quaternion rotation)
+    {
+        if (!HasAuthority || State != WheelbarrowState.TrappedInFailedConcrete || physicsBody == null) return;
+        physicsBody.MovePosition(position);
+        physicsBody.MoveRotation(rotation);
+        transform.SetPositionAndRotation(position, rotation);
+    }
+
+    internal void CompleteFailedConcreteTrap(Vector3 position, Quaternion rotation)
+    {
+        if (!HasAuthority || State != WheelbarrowState.TrappedInFailedConcrete || physicsBody == null) return;
+        securedDockPosition = position;
+        securedDockRotation = rotation;
+        hasSecuredDockPose = true;
+        physicsBody.position = position;
+        physicsBody.rotation = rotation;
+        transform.SetPositionAndRotation(position, rotation);
+    }
+
+    internal void ReleaseFromFailedConcrete(WheelbarrowDockingStation station)
+    {
+        if (!HasAuthority || State != WheelbarrowState.TrappedInFailedConcrete ||
+            activeDock != station || physicsBody == null) return;
+        activeDock = null;
+        if (IsSessionActive) dockNetwork.Value = NoClient;
+        hasSecuredDockPose = false;
+        hasFailedConcreteOriginalDockPose = false;
+        SetState(WheelbarrowState.Free);
+        SetDockSecured(false);
+        physicsBody.linearVelocity = Vector3.zero;
+        physicsBody.angularVelocity = Vector3.zero;
+        ConfigureBody();
+    }
+
+    internal bool ReleasePassengerForCriticalFailure()
+    {
+        if (!HasAuthority) return false;
+        if (PassengerClientId == NoClient) return true;
+        return ReleasePassenger(true);
+    }
+
+    internal void ForceCompletePassengerReleaseForCriticalFailure()
+    {
+        if (!HasAuthority || PassengerClientId == NoClient) return;
+        ulong passenger = PassengerClientId;
+        TechnicalReleaseOccupant(passenger, true);
+        SetPassenger(NoClient);
+    }
+
     public void SetPouringState(bool pouring)
     {
         if (!HasAuthority) return;
@@ -2738,6 +3122,12 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
         if (!HasAuthority || ConcreteLoads <= 0) return false;
         SetConcreteLoads(ConcreteLoads - 1);
         return true;
+    }
+
+    internal void RestoreConcreteLoadsAfterCriticalFailureRollback(int concreteLoads)
+    {
+        if (!HasAuthority) return;
+        SetConcreteLoads(concreteLoads);
     }
 
     public void SpillConcrete()
@@ -3646,6 +4036,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver
     private void SetState(WheelbarrowState value)
     {
         WheelbarrowState previous = State;
+        if (previous != value && value != WheelbarrowState.Free && value != WheelbarrowState.Tipped)
+            SetRopeTowInactive(true);
+        if (previous != value && value != WheelbarrowState.Free && value != WheelbarrowState.Tipped &&
+            value != WheelbarrowState.Righting)
+            RopeToolController.TryRetractAttachedTarget(NetworkObject);
         if (previous != value && (previous == WheelbarrowState.Driven || value == WheelbarrowState.Driven))
             ResetDriveInput();
         if (previous != value && value == WheelbarrowState.Driven && HasLocalPhysicsAuthority)

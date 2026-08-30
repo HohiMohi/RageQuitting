@@ -6,7 +6,8 @@ public enum WheelbarrowState : byte
     Docked,
     Pouring,
     Tipped,
-    Righting
+    Righting,
+    TrappedInFailedConcrete
 }
 
 public enum WheelbarrowOccupantRole : byte
@@ -31,4 +32,14 @@ public enum WheelbarrowPouringState : byte
     Active,
     Success,
     CriticalFailure
+}
+
+public enum FoundationConcreteFailureState : byte
+{
+    None,
+    Ready,
+    CriticalSequence,
+    HardenedFailure,
+    Collapsing,
+    AwaitingWheelbarrowExit
 }

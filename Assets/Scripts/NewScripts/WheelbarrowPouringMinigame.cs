@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -32,6 +33,10 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
     private ulong localLeftPlayer = NoPlayer;
     private ulong localRightPlayer = NoPlayer;
     private WheelbarrowPouringState localState;
+    private Coroutine criticalFailureSequenceCoroutine;
+    private bool criticalFailureSequenceCancelled;
+    private bool criticalFailureConcreteConsumed;
+    private int criticalFailureConcreteLoadsBefore;
 
     public WheelbarrowPouringState State => IsNetworkActive ? (WheelbarrowPouringState)stateNetwork.Value : localState;
     public ulong LeftPlayer => IsNetworkActive ? leftPlayerNetwork.Value : localLeftPlayer;
@@ -52,7 +57,24 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
         station = GetComponent<WheelbarrowDockingStation>();
         site = station != null ? station.FoundationSite : null;
     }
-    private void OnDestroy() => Instances.Remove(this);
+    public override void OnNetworkDespawn()
+    {
+        if (HasAuthority && (criticalFailureSequenceCoroutine != null || site != null && site.HasActiveConcreteFailure))
+            CancelAndRelease(false);
+        else
+            StopCriticalFailureSequence();
+        base.OnNetworkDespawn();
+    }
+
+    public override void OnDestroy()
+    {
+        if (HasAuthority && (criticalFailureSequenceCoroutine != null || site != null && site.HasActiveConcreteFailure))
+            CancelAndRelease(false);
+        else
+            StopCriticalFailureSequence();
+        Instances.Remove(this);
+        base.OnDestroy();
+    }
 
     public static WheelbarrowPouringMinigame FindForPlayer(ulong clientId)
     {
@@ -64,6 +86,9 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
     public void Bind(WheelbarrowDockingStation ownerStation, WheelbarrowController target, BridgeConstructionSite constructionSite)
     {
         if (!HasAuthority) return;
+        StopCriticalFailureSequence();
+        criticalFailureConcreteConsumed = false;
+        criticalFailureConcreteLoadsBefore = 0;
         station = ownerStation; wheelbarrow = target; site = constructionSite;
         transportRotation = target.transform.rotation;
         SetState(WheelbarrowPouringState.WaitingForPlayers);
@@ -332,16 +357,217 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
 
     private void Complete(bool success)
     {
-        if (!HasAuthority || wheelbarrow == null) return;
-        SetState(success ? WheelbarrowPouringState.Success : WheelbarrowPouringState.CriticalFailure);
-        wheelbarrow.RestoreSecuredDockPose();
+        if (!HasAuthority || wheelbarrow == null || criticalFailureSequenceCoroutine != null) return;
         if (success)
         {
+            SetState(WheelbarrowPouringState.Success);
+            wheelbarrow.RestoreSecuredDockPose();
             if (wheelbarrow.ConsumeConcreteLoad()) site?.TryAcceptConcreteLoad(1);
+            ReleasePlayers();
+            wheelbarrow.SetPouringState(false);
+            return;
         }
-        else wheelbarrow.SpillConcrete();
+
+        BeginCriticalFailureTransaction();
+    }
+
+    private void BeginCriticalFailureTransaction()
+    {
+        WheelbarrowController activeWheelbarrow = wheelbarrow;
+        bool siteStarted = false;
+        bool trapStarted = false;
+        bool concreteConsumed = false;
+        bool transactionPublished = false;
+        int concreteLoadsBefore = activeWheelbarrow != null ? activeWheelbarrow.ConcreteLoads : 0;
+
+        try
+        {
+            if (activeWheelbarrow == null || site == null || station == null ||
+                !site.CanBeginCriticalConcreteFailure(station, activeWheelbarrow))
+                throw new InvalidOperationException("Critical concrete failure preflight validation failed.");
+
+            ReleasePlayers();
+            if (!site.BeginCriticalConcreteFailure(station, activeWheelbarrow))
+                throw new InvalidOperationException("Foundation site rejected the critical failure transaction.");
+            siteStarted = true;
+
+            if (!activeWheelbarrow.BeginFailedConcreteTrap(station))
+                throw new InvalidOperationException("Wheelbarrow failed to enter the critical failure transaction.");
+            trapStarted = true;
+
+            if (!activeWheelbarrow.ConsumeConcreteLoad())
+                throw new InvalidOperationException("Concrete load disappeared before the critical failure committed.");
+            concreteConsumed = true;
+
+            if (!site.CommitCriticalConcreteFailure(station, activeWheelbarrow))
+                throw new InvalidOperationException("Foundation site failed to publish the critical failure transaction.");
+            transactionPublished = true;
+
+            SetState(WheelbarrowPouringState.CriticalFailure);
+            criticalDeadlineNetwork.Value = 0f;
+            activeWheelbarrow.ReleasePassengerForCriticalFailure();
+            criticalFailureConcreteConsumed = true;
+            criticalFailureConcreteLoadsBefore = concreteLoadsBefore;
+            criticalFailureSequenceCancelled = false;
+            criticalFailureSequenceCoroutine = StartCoroutine(WaitForPassengerThenAnimateCriticalFailure());
+            if (criticalFailureSequenceCoroutine == null)
+                throw new InvalidOperationException("Critical failure coroutine did not start.");
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception, this);
+            RollbackCriticalFailureTransaction(activeWheelbarrow, siteStarted, trapStarted,
+                concreteConsumed, concreteLoadsBefore, transactionPublished);
+        }
+    }
+
+    private IEnumerator WaitForPassengerThenAnimateCriticalFailure()
+    {
+        WheelbarrowController activeWheelbarrow = wheelbarrow;
+        float passengerTimeout = activeWheelbarrow != null && activeWheelbarrow.Profile != null
+            ? activeWheelbarrow.Profile.PassengerExitPreparationTimeout
+            : 0.5f;
+        float releaseDeadline = Time.time + passengerTimeout;
+        while (activeWheelbarrow != null &&
+               activeWheelbarrow.PassengerClientId != WheelbarrowController.NoClient &&
+               Time.time < releaseDeadline && !criticalFailureSequenceCancelled)
+            yield return null;
+
+        if (criticalFailureSequenceCancelled) yield break;
+        if (activeWheelbarrow != null &&
+            activeWheelbarrow.PassengerClientId != WheelbarrowController.NoClient)
+            activeWheelbarrow.ForceCompletePassengerReleaseForCriticalFailure();
+
+        yield return AnimateCriticalFailure();
+        criticalFailureSequenceCoroutine = null;
+    }
+
+    private IEnumerator AnimateCriticalFailure()
+    {
+        WheelbarrowController activeWheelbarrow = wheelbarrow;
+        Transform targetPose = site != null ? site.FailedWheelbarrowPose : null;
+        if (activeWheelbarrow == null || targetPose == null || site == null || station == null)
+        {
+            AbortCriticalFailureSequence("Critical failure target became unavailable before animation.");
+            yield break;
+        }
+
+        Vector3 startPosition = activeWheelbarrow.PhysicsBody != null
+            ? activeWheelbarrow.PhysicsBody.position
+            : activeWheelbarrow.transform.position;
+        Quaternion startRotation = activeWheelbarrow.PhysicsBody != null
+            ? activeWheelbarrow.PhysicsBody.rotation
+            : activeWheelbarrow.transform.rotation;
+        Vector3 targetPosition = targetPose.position;
+        Quaternion targetRotation = targetPose.rotation;
+        float duration = profile != null ? profile.CriticalFailureSequenceDuration : 0.8f;
+        float elapsed = 0f;
+        while (elapsed < duration && activeWheelbarrow != null &&
+               activeWheelbarrow.State == WheelbarrowState.TrappedInFailedConcrete &&
+               site.ConcreteFailureState == FoundationConcreteFailureState.CriticalSequence &&
+               !criticalFailureSequenceCancelled)
+        {
+            elapsed += Time.deltaTime;
+            float normalized = Mathf.Clamp01(elapsed / duration);
+            float eased = normalized * normalized * (3f - 2f * normalized);
+            Vector3 position = Vector3.Lerp(startPosition, targetPosition, eased);
+            position += Vector3.up * Mathf.Sin(normalized * Mathf.PI) * 1.15f;
+            Quaternion rotation = Quaternion.Slerp(startRotation, targetRotation, eased);
+            bool movementFailed = false;
+            try
+            {
+                activeWheelbarrow.MoveFailedConcreteTrap(position, rotation);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+                movementFailed = true;
+            }
+            if (movementFailed)
+            {
+                AbortCriticalFailureSequence("Critical failure movement raised an exception.");
+                yield break;
+            }
+            yield return null;
+        }
+
+        if (criticalFailureSequenceCancelled) yield break;
+        if (activeWheelbarrow == null ||
+            activeWheelbarrow.State != WheelbarrowState.TrappedInFailedConcrete ||
+            site.ConcreteFailureState != FoundationConcreteFailureState.CriticalSequence)
+        {
+            AbortCriticalFailureSequence("Critical failure state changed before animation completed.");
+            yield break;
+        }
+
+        bool completionSucceeded = false;
+        try
+        {
+            activeWheelbarrow.CompleteFailedConcreteTrap(targetPosition, targetRotation);
+            completionSucceeded = site.CompleteCriticalConcreteFailureSequence(station, activeWheelbarrow);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception, this);
+        }
+        if (!completionSucceeded)
+        {
+            AbortCriticalFailureSequence("Foundation site rejected completion of the critical failure sequence.");
+            yield break;
+        }
+
+        criticalFailureConcreteConsumed = false;
+        criticalFailureConcreteLoadsBefore = 0;
+    }
+
+    private void AbortCriticalFailureSequence(string reason)
+    {
+        Debug.LogError(reason, this);
+        criticalFailureSequenceCoroutine = null;
+        RollbackCriticalFailureTransaction(wheelbarrow,
+            site != null && site.HasActiveConcreteFailure,
+            wheelbarrow != null && wheelbarrow.State == WheelbarrowState.TrappedInFailedConcrete,
+            criticalFailureConcreteConsumed, criticalFailureConcreteLoadsBefore, true);
+    }
+
+    private void RollbackCriticalFailureTransaction(
+        WheelbarrowController activeWheelbarrow,
+        bool siteStarted,
+        bool trapStarted,
+        bool concreteConsumed,
+        int concreteLoadsBefore,
+        bool notifySite)
+    {
+        StopCriticalFailureSequence();
+        if (siteStarted)
+            site?.RollbackCriticalConcreteFailure(activeWheelbarrow, station, notifySite);
+
+        bool restoredDock = !trapStarted ||
+                            activeWheelbarrow != null && activeWheelbarrow.RollbackFailedConcreteTrap(station);
+        if (activeWheelbarrow != null)
+        {
+            if (concreteConsumed)
+                activeWheelbarrow.RestoreConcreteLoadsAfterCriticalFailureRollback(concreteLoadsBefore);
+            if (!trapStarted || !restoredDock)
+            {
+                activeWheelbarrow.SetPouringState(false);
+                activeWheelbarrow.RestoreSecuredDockPose();
+            }
+        }
+
+        criticalFailureConcreteConsumed = false;
+        criticalFailureConcreteLoadsBefore = 0;
+        criticalDeadlineNetwork.Value = 0f;
         ReleasePlayers();
-        wheelbarrow.SetPouringState(false);
+        SetState(WheelbarrowPouringState.WaitingForPlayers);
+    }
+
+    private void StopCriticalFailureSequence()
+    {
+        criticalFailureSequenceCancelled = true;
+        if (criticalFailureSequenceCoroutine == null) return;
+        StopCoroutine(criticalFailureSequenceCoroutine);
+        criticalFailureSequenceCoroutine = null;
     }
 
     public void RequestLeave(ulong clientId)
@@ -362,11 +588,43 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
 
     public void CancelAndRelease(bool loseConcrete)
     {
-        if (!HasAuthority || wheelbarrow == null) return;
-        if (loseConcrete) wheelbarrow.SpillConcrete();
+        if (!HasAuthority) return;
+        WheelbarrowController activeWheelbarrow = wheelbarrow;
+        bool restoreConcrete = criticalFailureSequenceCoroutine != null && criticalFailureConcreteConsumed;
+        int concreteLoadsBefore = criticalFailureConcreteLoadsBefore;
+        StopCriticalFailureSequence();
+
+        if (site != null && site.HasActiveConcreteFailure)
+            site.RollbackCriticalConcreteFailure(activeWheelbarrow, station, true);
+        if (activeWheelbarrow != null)
+        {
+            if (activeWheelbarrow.State == WheelbarrowState.TrappedInFailedConcrete)
+                activeWheelbarrow.RollbackFailedConcreteTrap(station);
+            if (restoreConcrete)
+                activeWheelbarrow.RestoreConcreteLoadsAfterCriticalFailureRollback(concreteLoadsBefore);
+            if (loseConcrete) activeWheelbarrow.SpillConcrete();
+            if (activeWheelbarrow.State == WheelbarrowState.Pouring)
+                activeWheelbarrow.SetPouringState(false);
+            activeWheelbarrow.RestoreSecuredDockPose();
+        }
+
+        criticalFailureConcreteConsumed = false;
+        criticalFailureConcreteLoadsBefore = 0;
+        criticalDeadlineNetwork.Value = 0f;
         ReleasePlayers();
-        wheelbarrow.RestoreSecuredDockPose();
         SetState(WheelbarrowPouringState.Inactive);
+    }
+
+    internal void ResetAfterFailedConcreteRecovery()
+    {
+        if (!HasAuthority) return;
+        StopCriticalFailureSequence();
+        criticalFailureConcreteConsumed = false;
+        criticalFailureConcreteLoadsBefore = 0;
+        ReleasePlayers();
+        wheelbarrow = null;
+        SetState(WheelbarrowPouringState.Inactive);
+        criticalDeadlineNetwork.Value = 0f;
     }
 
     private void ReleasePlayers() { SetLeftPlayer(NoPlayer); SetRightPlayer(NoPlayer); SetCursors(0f, 0f); }

@@ -136,7 +136,7 @@ powinien zniknąć po dostarczeniu fundamentu.
 flowchart LR
     C["Clearing"] --> D["Digging"]
     D --> P["ConcretePouring"]
-    P -. "future delivery" .-> M["ReadyForMount"]
+    P --> M["ReadyForMount"]
     M --> W["Dedykowana praca"]
     W --> X["Complete"]
 ```
@@ -145,9 +145,10 @@ flowchart LR
 
 `Clearing -> Digging -> ConcretePouring -> ReadyForMount -> Hammering -> Complete`
 
-W V1 flow zatrzymuje się w `ConcretePouring` po przygotowaniu pełnej partii w
-betoniarce. Transport taczką, wlanie do wykopu i przejście do `ReadyForMount`
-będą dodane w kolejnym kroku.
+Gotowa partia jest transportowana zadokowaną taczką i wylewana przez dwóch
+graczy. Poprawne wlanie uruchamia schnięcie, a po jego zakończeniu fundament
+przechodzi do `ReadyForMount`. Krytyczna porażka pozostaje logicznie w
+`ConcretePouring`; jej przebieg opisuje osobny `FoundationConcreteFailureState`.
 
 ### Cykliczne kopanie fundamentu
 
@@ -173,8 +174,9 @@ każdy kolejny pełny ładunek podnosi maksymalny progres o `20%`. Input na
 aktualnym limicie nadal obraca korbę i bęben, ale nie zwiększa progresu ani nie
 jest kolejkowany. Dokładny wsad daje `ConcreteReady`, pozostałe kombinacje
 kończą jako `RuinedMix`. Przełączenie dźwigni na `Pouring` zwalnia operatora,
-obraca bęben i bezpowrotnie opróżnia dowolną zawartość. W V1 gotowy beton nie
-jest jeszcze przypisany do konkretnego fundamentu.
+obraca bęben i bezpowrotnie opróżnia dowolną zawartość. Gotowy beton jest
+ładowany do zadokowanej taczki i może zostać przypisany do konkretnego
+fundamentu dopiero przez minigrę wylewania przy wykopie.
 
 `BridgeConstructionWorkflowSO`:
 
@@ -345,14 +347,49 @@ treść tutorialu. Pierwsza synchronizacja nie odtwarza historii.
 Po trzecim cyklu kopania fundament przechodzi do `ConcretePouring`. Jedna
 gotowa partia betonu musi zostać przewieziona zadokowaną taczką. Przy wykopie
 dwóch graczy zajmuje stanowiska przy rączkach i przesuwa kursory ku górze.
-Różnica do `0.15` pozwala przechylać taczkę; różnica ponad `0.35` utrzymana
-przez `0.6 s` niszczy ładunek. Przerwanie minigry zachowuje beton.
+Różnica do `0.15` pozwala przechylać taczkę. Przerwanie minigry zachowuje
+beton. Różnica ponad `0.35` utrzymana przez `0.6 s` uruchamia krytyczną
+sekwencję porażki, a nie tylko zniszczenie ładunku.
 
 Po poprawnym wylaniu `BridgeConstructionSite.TryAcceptConcreteLoad()` zapisuje
 ładunek w `constructionAnchor0` i przechodzi do `ConcreteDrying`. Deadline
 schnięcia jest zapisany w `constructionAux1`; tutorial używa `1` partii i
 `30 s`. Po wyschnięciu aktywowany jest collider powierzchni i etap
 `ReadyForMount`. Ziemia nie może już cofnąć wykopu po przyjęciu betonu.
+
+### Krytyczna porażka wylewania
+
+Krytyczna porażka nie zmienia `BridgeConstructionStage.ConcretePouring`.
+Serwer prowadzi jej przebieg w podstanie `FoundationConcreteFailureState`:
+`CriticalSequence -> HardenedFailure -> Collapsing ->
+AwaitingWheelbarrowExit`. Dzięki temu właściwy etap budowy pozostaje stabilny,
+a late join może odtworzyć dokładną fazę awarii.
+
+Wejście w `CriticalSequence` uwalnia obu uczestników minigry oraz ewentualnego
+pasażera taczki, zużywa cały beton i natychmiast pokazuje twardą, pełną taflę.
+Taczka wykonuje kontrolowany lot do pozycji `TrappedInFailedConcrete`, gdzie
+pozostaje zablokowana i nieużywalna.
+
+Twardą taflę można rozbić wyłącznie kilofem. Wszystkie trafienia składają się
+na jeden serwerowy progres `0–100`, a trzy progi progresu przełączają kolejne
+etapy wizualnych pęknięć. Po osiągnięciu `100` rozpoczyna się `Collapsing`.
+Taczka spada wtedy swobodnie, bez dodatkowego impulsu.
+
+Po rozpadzie fundament przechodzi do `AwaitingWheelbarrowExit` i nadal nie
+przyjmuje kolejnej partii. Oczekuje, aż ta sama uwięziona taczka opuści
+dedykowany recovery volume. Dopiero po jej wyprowadzeniu stan awarii jest
+czyszczony i można ponowić wylewanie.
+
+### NavMesh wokół wykopu i awarii
+
+Każdy fundament używa bake-only proxy oraz lokalnego `NavMeshSurface` dla
+wykopu. `NavMeshObstacle` z carvingiem zakrywa otwarty wykop i mokry beton.
+Jest wyłączany dla twardej tafli, aby NPC mogli po niej przejść, lecz wraca
+przed rozpoczęciem rozpadu, zanim powierzchnia przestanie być bezpieczna.
+
+Scenową konfigurację obu fundamentów tworzy `WheelbarrowSetup`.
+`FoundationConcreteFailureProbe` weryfikuje oba fundamenty, ich wiring i
+serializację, collider tafli, trzy crack visuals oraz elementy NavMesh.
 
 ## Ograniczenia
 

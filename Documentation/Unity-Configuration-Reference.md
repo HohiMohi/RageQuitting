@@ -581,3 +581,27 @@ Przy tworzeniu nowego akwenu nalezy przygotowac trigger `WaterBody`, osobny clea
 | `ConcreteMixerController` | `water/gravel/cement` | Referencje katalogowe receptury |
 | `ConcreteMixerController` | `drumPivot/drumSpinVisual` | Przechył trybu i wizualny obrót mieszania |
 | `ConcreteMixerModeLever` | `mixing/pouringLocalEuler` | Pozycje dźwigni dla obu trybów |
+
+# Krytyczna porażka wylewania fundamentu
+
+Krytyczna porażka pozostaje w `BridgeConstructionStage.ConcretePouring`.
+Jej serializowany podstan `FoundationConcreteFailureState` przechodzi kolejno
+przez `CriticalSequence`, `HardenedFailure`, `Collapsing` i
+`AwaitingWheelbarrowExit`.
+
+| Komponent / element | Konfiguracja |
+|---|---|
+| twarda tafla | Pełny visual i collider aktywowane natychmiast po porażce; trzy osobne crack visuals |
+| progres rozbijania | Wspólna wartość serwerowa `0–100`; pracę przyjmuje wyłącznie kilof |
+| uwięziona taczka | Kontrolowany lot do `TrappedInFailedConcrete`; interakcje zablokowane do rozpadu tafli |
+| collapse | Taczka spada bez dodatkowego impulsu; obstacle NavMesh musi wrócić przed rozpadem |
+| recovery volume | Musi wykryć wyjście tej samej taczki; dopiero wtedy odblokowuje kolejną próbę |
+| bake-only proxy | Źródło bake lokalnej powierzchni gruntu nad każdym wykopem; niewidoczne i niefizyczne w runtime |
+| lokalny `NavMeshSurface` | Osobny dla każdego fundamentu i zgodny z proxy wykopu |
+| `NavMeshObstacle` | Carving włączony dla otwartego wykopu i mokrego betonu, wyłączony dla twardej tafli |
+
+Wejście w krytyczną sekwencję musi zwolnić obu uczestników oraz pasażera,
+zużyć beton i zablokować taczkę. `WheelbarrowSetup` tworzy konfigurację obu
+fundamentów. Po setupie uruchom `FoundationConcreteFailureProbe`; probe ma
+potwierdzić oba fundamenty, wiring, serializację, collider tafli, komplet
+trzech crack visuals oraz konfigurację lokalnego NavMesha.

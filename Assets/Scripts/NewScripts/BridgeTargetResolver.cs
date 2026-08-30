@@ -61,6 +61,10 @@ public static class BridgeTargetResolver
 
         switch (target)
         {
+            case FoundationFailedConcreteTarget failedConcreteTarget:
+                site = failedConcreteTarget.ConstructionSite;
+                workPointId = FoundationFailedConcreteTarget.WorkPointId;
+                break;
             case BridgeAbutmentWorkPoint point:
                 workPointId = point.RequestId;
                 break;
@@ -116,7 +120,8 @@ public static class BridgeTargetResolver
             return null;
         }
 
-        MonoBehaviour workPoint = target.GetComponentInParent<BridgeDeckPanelWorkPoint>();
+        MonoBehaviour workPoint = target.GetComponentInParent<FoundationFailedConcreteTarget>();
+        workPoint ??= target.GetComponentInParent<BridgeDeckPanelWorkPoint>();
         workPoint ??= target.GetComponentInParent<BridgeDiagonalBracingWorkPoint>();
         workPoint ??= target.GetComponentInParent<BridgeCrossBeamWorkPoint>();
         workPoint ??= target.GetComponentInParent<BridgeGirderWorkPoint>();

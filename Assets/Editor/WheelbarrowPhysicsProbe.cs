@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 internal static class WheelbarrowPhysicsProbe
@@ -35,6 +36,41 @@ internal static class WheelbarrowPhysicsProbe
     private static string expectedContactSource;
     private static bool contactAssertionFailed;
     private static bool expectedContactObserved;
+
+    [MenuItem("Tools/Wheelbarrow Physics Probe/Rope Attachment And Pull Profile")]
+    private static void RunRopeAttachmentAndPullProfile()
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/New/Wheelbarrow.prefab");
+        RopeToolProfileSO ropeProfile = AssetDatabase.LoadAssetAtPath<RopeToolProfileSO>(
+            "Assets/ScriptableObjectAssets/New/RopeToolProfile.asset");
+        WheelbarrowController controller = prefab != null ? prefab.GetComponent<WheelbarrowController>() : null;
+        string lifecycleResult = "wheelbarrow prefab/controller missing";
+        bool lifecyclePassed = controller != null && controller.RunEditorRopeLifecycleProbe(out lifecycleResult);
+        bool pullPassed = RopeToolController.RunEditorWheelbarrowPullProfileProbe(ropeProfile, out string pullResult);
+        string result = $"lifecycle=({lifecycleResult}), pull=({pullResult})";
+        if (lifecyclePassed && pullPassed)
+            Debug.Log($"[WheelbarrowPhysicsProbe] Rope attachment/pull PASS: {result}");
+        else
+            Debug.LogError($"[WheelbarrowPhysicsProbe] Rope attachment/pull FAIL: {result}");
+    }
+
+    [MenuItem("Tools/Wheelbarrow Physics Probe/Rope Tow - Physical Scenarios")]
+    private static void RunRopeTowPhysicalScenarios()
+    {
+        if (!EditorApplication.isPlaying)
+        {
+            Debug.LogWarning("Wheelbarrow rope towing physical probe requires Play Mode.");
+            return;
+        }
+        if (Object.FindFirstObjectByType<WheelbarrowRopeTowPhysicalProbe>() != null)
+        {
+            Debug.LogWarning("Wheelbarrow rope towing physical probe is already running.");
+            return;
+        }
+
+        new GameObject("__WheelbarrowRopeTowPhysicalProbe")
+            .AddComponent<WheelbarrowRopeTowPhysicalProbe>();
+    }
 
     [MenuItem("Tools/Wheelbarrow Physics Probe/Loaded - Stationary")]
     private static void RunLoadedStationary() => Run("stationary", BuildFlat, 0f);
@@ -728,5 +764,218 @@ internal static class WheelbarrowPhysicsProbe
     {
         FieldInfo field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
         return field != null ? (T)field.GetValue(target) : default;
+    }
+}
+
+internal sealed class WheelbarrowRopeTowPhysicalProbe : MonoBehaviour
+{
+    private const float Height = 100f;
+    private const float PullDuration = 2f;
+    private readonly List<string> failures = new List<string>();
+    private GameObject prefab;
+    private RopeToolProfileSO ropeProfile;
+    private MethodInfo setConcreteLoads;
+    private MethodInfo setDriver;
+    private MethodInfo setState;
+    private MethodInfo applyRopeTow;
+    private MethodInfo notifyRopeTowDetached;
+
+    private IEnumerator Start()
+    {
+        prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/New/Wheelbarrow.prefab");
+        ropeProfile = AssetDatabase.LoadAssetAtPath<RopeToolProfileSO>(
+            "Assets/ScriptableObjectAssets/New/RopeToolProfile.asset");
+        if (prefab == null || ropeProfile == null)
+        {
+            Debug.LogError("[WheelbarrowPhysicsProbe] Rope tow physical FAIL: prefab or rope profile missing.");
+            Destroy(gameObject);
+            yield break;
+        }
+        BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        setConcreteLoads = typeof(WheelbarrowController).GetMethod("SetConcreteLoads", flags);
+        setDriver = typeof(WheelbarrowController).GetMethod("SetDriver", flags);
+        setState = typeof(WheelbarrowController).GetMethod("SetState", flags);
+        applyRopeTow = typeof(WheelbarrowController).GetMethod("ApplyRopeTow", flags);
+        notifyRopeTowDetached = typeof(WheelbarrowController).GetMethod("NotifyRopeTowDetached", flags);
+        if (setConcreteLoads == null || setDriver == null || setState == null || applyRopeTow == null ||
+            notifyRopeTowDetached == null)
+        {
+            Debug.LogError("[WheelbarrowPhysicsProbe] Rope tow physical FAIL: required controller methods missing.");
+            Destroy(gameObject);
+            yield break;
+        }
+
+        yield return RunScenario("free-empty-side", false, false, false);
+        yield return RunScenario("free-loaded-high", true, false, true);
+        yield return RunScenario("tipped-empty-side", false, true, false);
+        yield return RunScenario("tipped-loaded-high", true, true, true);
+
+        if (failures.Count == 0)
+            Debug.Log("[WheelbarrowPhysicsProbe] Rope tow physical PASS: Free/Tipped empty/loaded scenarios translated, " +
+                "respected speed/material/state constraints, and restored all materials.");
+        else
+            Debug.LogError("[WheelbarrowPhysicsProbe] Rope tow physical FAIL:\n- " + string.Join("\n- ", failures));
+        Destroy(gameObject);
+    }
+
+    private IEnumerator RunScenario(string name, bool loaded, bool tipped, bool highAttachment)
+    {
+        GameObject root = new GameObject("__RopeTow_" + name);
+        GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        ground.name = "Ground";
+        ground.transform.SetParent(root.transform, false);
+        ground.transform.SetPositionAndRotation(new Vector3(0f, Height - 0.5f, 0f), Quaternion.identity);
+        ground.transform.localScale = new Vector3(40f, 1f, 40f);
+
+        Quaternion rotation = tipped ? Quaternion.Euler(0f, 0f, 72f) : Quaternion.identity;
+        Vector3 spawn = new Vector3(0f, Height + (tipped ? 0.65f : 0f), -5f);
+        GameObject instance = Instantiate(prefab, spawn, rotation, root.transform);
+        instance.name = "Wheelbarrow";
+        WheelbarrowController controller = instance.GetComponent<WheelbarrowController>();
+        Rigidbody rigidbody = instance.GetComponent<Rigidbody>();
+        setConcreteLoads.Invoke(controller, new object[] { loaded ? 1 : 0 });
+        setDriver.Invoke(controller, new object[] { WheelbarrowController.NoClient });
+        setState.Invoke(controller, new object[] { tipped ? WheelbarrowState.Tipped : WheelbarrowState.Free });
+        rigidbody.position = spawn;
+        rigidbody.rotation = rotation;
+        rigidbody.linearVelocity = Vector3.zero;
+        rigidbody.angularVelocity = Vector3.zero;
+        Physics.SyncTransforms();
+
+        Dictionary<Collider, PhysicsMaterial> originals = new Dictionary<Collider, PhysicsMaterial>();
+        foreach (Collider collider in instance.GetComponentsInChildren<Collider>(true))
+            if (collider != null && !collider.isTrigger) originals[collider] = collider.sharedMaterial;
+
+        Vector3 localPoint = highAttachment
+            ? new Vector3(0.5f, 1.05f, 0.25f)
+            : new Vector3(0.62f, 0.55f, 0.15f);
+        ApplyTow(controller, localPoint, Vector3.forward, 1f, 0.5f, true);
+        yield return new WaitForFixedUpdate();
+        if (controller.IsRopeTowActive || controller.RopeTowSwappedColliderCount != 0)
+            failures.Add($"{name}: blocked rope activated towing or changed materials.");
+
+        yield return new WaitForSeconds(0.35f);
+        Vector3 start = rigidbody.position;
+        float maximumSpeed = 0f;
+        float maximumAngularSpeed = 0f;
+        float maximumVerticalDisplacement = 0f;
+        int expectedSwappedCount = -1;
+        bool activeObserved = false;
+        float elapsed = 0f;
+        while (elapsed < PullDuration)
+        {
+            ApplyTow(controller, localPoint, Vector3.forward, 1f, 0.5f, false);
+            yield return new WaitForFixedUpdate();
+            elapsed += Time.fixedDeltaTime;
+            activeObserved |= controller.IsRopeTowActive;
+            maximumSpeed = Mathf.Max(maximumSpeed, rigidbody.linearVelocity.magnitude);
+            maximumAngularSpeed = Mathf.Max(maximumAngularSpeed, rigidbody.angularVelocity.magnitude);
+            maximumVerticalDisplacement = Mathf.Max(maximumVerticalDisplacement,
+                Mathf.Abs(rigidbody.position.y - start.y));
+            if (controller.RopeTowSwappedColliderCount > 0)
+            {
+                if (expectedSwappedCount < 0) expectedSwappedCount = controller.RopeTowSwappedColliderCount;
+                else if (expectedSwappedCount != controller.RopeTowSwappedColliderCount)
+                    failures.Add($"{name}: swapped material cache changed from {expectedSwappedCount} to " +
+                        $"{controller.RopeTowSwappedColliderCount} while continuously towing.");
+            }
+        }
+
+        float planarDistance = Vector3.ProjectOnPlane(rigidbody.position - start, Vector3.up).magnitude;
+        if (!activeObserved) failures.Add($"{name}: towing never became active.");
+        if (planarDistance < 0.35f) failures.Add($"{name}: translated only {planarDistance:F3}m in {PullDuration:F1}s.");
+        if (maximumSpeed > 2.85f) failures.Add($"{name}: speed {maximumSpeed:F3}m/s exceeded safety margin.");
+        if (!highAttachment && maximumAngularSpeed < 0.01f)
+            failures.Add($"{name}: side attachment produced no measurable rotation.");
+        if (highAttachment && planarDistance <= maximumVerticalDisplacement)
+            failures.Add($"{name}: high attachment lifted more than it translated " +
+                $"(planar={planarDistance:F3}, vertical={maximumVerticalDisplacement:F3}).");
+        if (controller.State != (tipped ? WheelbarrowState.Tipped : WheelbarrowState.Free))
+            failures.Add($"{name}: towing changed state to {controller.State}.");
+
+        if (name == "free-empty-side")
+        {
+            yield return VerifySlackRelease(controller, localPoint, originals, expectedSwappedCount);
+            yield return VerifyExplicitDetach(controller, localPoint, originals);
+            yield return VerifyMissingSignalRelease(controller, localPoint, originals);
+        }
+        else
+        {
+            ApplyTow(controller, localPoint, Vector3.forward, 0f, 0f, false);
+            yield return new WaitForSeconds(0.3f);
+            if (controller.IsRopeTowActive || controller.RopeTowSwappedColliderCount != 0)
+                failures.Add($"{name}: towing/material cache did not release after slack.");
+            AssertMaterialsRestored(name, originals);
+        }
+
+        Debug.Log($"[WheelbarrowPhysicsProbe] Rope tow {name}: planar={planarDistance:F3}, " +
+            $"maxSpeed={maximumSpeed:F3}, maxAngular={maximumAngularSpeed:F3}, " +
+            $"maxVertical={maximumVerticalDisplacement:F3}, swapped={expectedSwappedCount}, state={controller.State}.");
+        Destroy(root);
+        yield return null;
+    }
+
+    private IEnumerator VerifySlackRelease(WheelbarrowController controller, Vector3 localPoint,
+        Dictionary<Collider, PhysicsMaterial> originals, int expectedSwappedCount)
+    {
+        ApplyTow(controller, localPoint, Vector3.forward, 0f, 0f, false);
+        yield return new WaitForSeconds(0.1f);
+        if (controller.IsRopeTowActive)
+            failures.Add("slack-grace: tow remained active after receiving a slack signal.");
+        if (expectedSwappedCount > 0 && controller.RopeTowSwappedColliderCount != expectedSwappedCount)
+            failures.Add("slack-grace: materials were restored before the 0.2s grace elapsed.");
+
+        yield return new WaitForSeconds(0.15f);
+        if (controller.IsRopeTowActive || controller.RopeTowSwappedColliderCount != 0)
+            failures.Add("slack-grace: materials were not restored after one 0.2s grace period.");
+        AssertMaterialsRestored("slack-grace", originals);
+    }
+
+    private IEnumerator VerifyExplicitDetach(WheelbarrowController controller, Vector3 localPoint,
+        Dictionary<Collider, PhysicsMaterial> originals)
+    {
+        ApplyTow(controller, localPoint, Vector3.forward, 1f, 0.5f, false);
+        yield return new WaitForFixedUpdate();
+        if (!controller.IsRopeTowActive || controller.RopeTowSwappedColliderCount == 0)
+            failures.Add("explicit-detach: failed to reactivate towing before detach.");
+
+        notifyRopeTowDetached.Invoke(controller, null);
+        if (controller.IsRopeTowActive || controller.RopeTowSwappedColliderCount != 0)
+            failures.Add("explicit-detach: tow/materials were not restored immediately.");
+        AssertMaterialsRestored("explicit-detach", originals);
+    }
+
+    private IEnumerator VerifyMissingSignalRelease(WheelbarrowController controller, Vector3 localPoint,
+        Dictionary<Collider, PhysicsMaterial> originals)
+    {
+        ApplyTow(controller, localPoint, Vector3.forward, 1f, 0.5f, false);
+        yield return new WaitForFixedUpdate();
+        if (!controller.IsRopeTowActive || controller.RopeTowSwappedColliderCount == 0)
+            failures.Add("missing-signal: failed to reactivate towing before timeout.");
+
+        yield return new WaitForSeconds(0.1f);
+        if (!controller.IsRopeTowActive || controller.RopeTowSwappedColliderCount == 0)
+            failures.Add("missing-signal: tow released before the configured grace elapsed.");
+
+        yield return new WaitForSeconds(0.15f);
+        if (controller.IsRopeTowActive || controller.RopeTowSwappedColliderCount != 0)
+            failures.Add("missing-signal: fallback required more than one 0.2s release delay.");
+        AssertMaterialsRestored("missing-signal", originals);
+    }
+
+    private void AssertMaterialsRestored(string context, Dictionary<Collider, PhysicsMaterial> originals)
+    {
+        foreach (KeyValuePair<Collider, PhysicsMaterial> original in originals)
+        {
+            if (original.Key != null && original.Key.sharedMaterial != original.Value)
+                failures.Add($"{context}: material was not restored on {original.Key.name}.");
+        }
+    }
+
+    private void ApplyTow(WheelbarrowController controller, Vector3 localPoint, Vector3 desiredDirection,
+        float tension, float extension, bool blocked)
+    {
+        applyRopeTow.Invoke(controller,
+            new object[] { localPoint, -desiredDirection, tension, extension, blocked, ropeProfile });
     }
 }

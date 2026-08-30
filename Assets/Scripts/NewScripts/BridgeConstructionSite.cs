@@ -17,6 +17,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     [SerializeField] private GameObject diggingVisual;
     [SerializeField] private GameObject completedDigVisual;
     [SerializeField] private FoundationExcavationVolume excavationVolume;
+    [SerializeField] private ConcretePouringProfileSO concretePouringProfile;
     [SerializeField] private bool hideMountedVisualsWhenComplete;
     [SerializeField] private bool disablePhysicalCollidersWhenComplete;
 
@@ -30,6 +31,11 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     private float soilHardeningDeadline;
     private int concreteLoadsPoured;
     private float concreteDryingDeadline;
+    private FoundationConcreteFailureState concreteFailureState;
+    private float failedConcreteBreakProgress;
+    private float failedConcreteCollapseDeadline;
+    private WheelbarrowDockingStation recoveryStation;
+    private WheelbarrowController recoveryWheelbarrow;
     private bool initialized;
 
     public virtual BridgeConstructionStage CurrentStage => currentStage;
@@ -59,6 +65,35 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     public float RemainingConcreteDryingTime => IsConcreteDrying
         ? Mathf.Max(0f, concreteDryingDeadline - GetSynchronizedTime())
         : 0f;
+    public FoundationConcreteFailureState ConcreteFailureState => concreteFailureState;
+    public float FailedConcreteBreakProgress => failedConcreteBreakProgress;
+    public float FailedConcreteWorkRequired => concretePouringProfile != null
+        ? concretePouringProfile.FailedConcreteWorkRequired
+        : 100f;
+    public bool HasActiveConcreteFailure =>
+        concreteFailureState != FoundationConcreteFailureState.None &&
+        concreteFailureState != FoundationConcreteFailureState.Ready;
+    public float FailedConcreteCollapseProgress
+    {
+        get
+        {
+            if (concreteFailureState != FoundationConcreteFailureState.Collapsing) return 0f;
+            float duration = concretePouringProfile != null
+                ? concretePouringProfile.FailedConcreteCollapseDuration
+                : 0.4f;
+            return 1f - Mathf.Clamp01((failedConcreteCollapseDeadline - GetSynchronizedTime()) /
+                                      Mathf.Max(0.05f, duration));
+        }
+    }
+    public bool CanBreakFailedConcrete =>
+        currentStage == BridgeConstructionStage.ConcretePouring &&
+        concreteFailureState == FoundationConcreteFailureState.HardenedFailure;
+    public bool CanAcceptFoundationDock =>
+        currentStage == BridgeConstructionStage.ConcretePouring &&
+        concreteFailureState is FoundationConcreteFailureState.None or FoundationConcreteFailureState.Ready;
+    public Transform FailedWheelbarrowPose => excavationVolume != null
+        ? excavationVolume.FailedWheelbarrowPose
+        : null;
 
     protected virtual void Awake()
     {
@@ -77,6 +112,9 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
             ? bridgeComponent.GetBridgeComponentSO().constructionWorkflow
             : null;
         currentStage = GetInitialStage();
+        concreteFailureState = currentStage == BridgeConstructionStage.ConcretePouring
+            ? FoundationConcreteFailureState.Ready
+            : FoundationConcreteFailureState.None;
         diggingCycleIndex = 0;
         diggingSubstage = FoundationDiggingSubstage.Loosening;
         ApplyClearingAreaSize();
@@ -101,6 +139,14 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
                 RemainingConcreteDryingTime, workflow != null ? workflow.ConcreteDryingDuration : 30f);
         }
 
+        if (concreteFailureState != FoundationConcreteFailureState.None &&
+            concreteFailureState != FoundationConcreteFailureState.Ready)
+        {
+            ResolveRecoveryReferences();
+            if (concreteFailureState == FoundationConcreteFailureState.Collapsing)
+                ApplyConcreteVisualState();
+        }
+
         if (!HasAuthority())
         {
             return;
@@ -121,6 +167,22 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         {
             CompleteConcreteDrying();
         }
+
+        if (HasActiveConcreteFailure && !HasValidRecoveryTracking())
+        {
+            CleanupMissingRecoveryWheelbarrow();
+            return;
+        }
+
+        if (concreteFailureState == FoundationConcreteFailureState.Collapsing &&
+            GetSynchronizedTime() >= failedConcreteCollapseDeadline)
+        {
+            CompleteFailedConcreteCollapse();
+        }
+        else if (concreteFailureState == FoundationConcreteFailureState.AwaitingWheelbarrowExit)
+        {
+            TryCompleteFailedConcreteRecovery();
+        }
     }
 
     public virtual bool TryApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
@@ -128,6 +190,20 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         if (workPower <= 0f)
         {
             return false;
+        }
+
+        if (CanBreakFailedConcrete && workPointId == FoundationFailedConcreteTarget.WorkPointId)
+        {
+            if (toolType != EquippableItemType.Pickaxe) return false;
+            failedConcreteBreakProgress = Mathf.Clamp(
+                failedConcreteBreakProgress + workPower,
+                0f,
+                FailedConcreteWorkRequired);
+            if (failedConcreteBreakProgress >= FailedConcreteWorkRequired)
+                BeginFailedConcreteCollapse();
+            ApplyVisualState();
+            bridgeComponent.RefreshVisualAndColliderState();
+            return true;
         }
 
         if (currentStage == BridgeConstructionStage.Digging)
@@ -237,6 +313,8 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     public virtual bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
     {
+        if (CanBreakFailedConcrete && workPointId == FoundationFailedConcreteTarget.WorkPointId)
+            return workPower > 0f && toolType == EquippableItemType.Pickaxe;
         return workPower > 0f &&
                currentStage == BridgeConstructionStage.Digging &&
                diggingSubstage == FoundationDiggingSubstage.Loosening &&
@@ -288,8 +366,20 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
                 bridgeComponent.AddReadyForMountPrompt(prompts, "Deliver Wooden Foundation");
                 break;
             case BridgeConstructionStage.ConcretePouring:
-                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
-                    $"Pour concrete - {concreteLoadsPoured} / {RequiredConcreteLoads}"));
+                if (concreteFailureState == FoundationConcreteFailureState.HardenedFailure)
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Action,
+                        $"Break hardened concrete: {Mathf.CeilToInt(failedConcreteBreakProgress)} / " +
+                        $"{Mathf.CeilToInt(FailedConcreteWorkRequired)}"));
+                else if (concreteFailureState == FoundationConcreteFailureState.AwaitingWheelbarrowExit)
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                        "Remove the wheelbarrow from the excavation"));
+                else if (concreteFailureState == FoundationConcreteFailureState.CriticalSequence ||
+                         concreteFailureState == FoundationConcreteFailureState.Collapsing)
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                        "Concrete failure recovery in progress"));
+                else
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                        $"Pour concrete - {concreteLoadsPoured} / {RequiredConcreteLoads}"));
                 break;
             case BridgeConstructionStage.ConcreteDrying:
                 prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
@@ -310,6 +400,15 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         diggingSubstage = (FoundationDiggingSubstage)Mathf.Clamp(state.constructionValueB, 0, 1);
         removedSoilUnits = Mathf.Max(0, Mathf.RoundToInt(state.constructionAux0));
         concreteLoadsPoured = Mathf.Max(0, Mathf.RoundToInt(state.constructionAnchor0));
+        concreteFailureState = (FoundationConcreteFailureState)Mathf.Clamp(
+            Mathf.RoundToInt(state.constructionAnchor1),
+            (int)FoundationConcreteFailureState.None,
+            (int)FoundationConcreteFailureState.AwaitingWheelbarrowExit);
+        if (currentStage == BridgeConstructionStage.ConcretePouring &&
+            concreteFailureState == FoundationConcreteFailureState.None)
+            concreteFailureState = FoundationConcreteFailureState.Ready;
+        failedConcreteBreakProgress = Mathf.Max(0f, state.constructionAnchor2);
+        failedConcreteCollapseDeadline = Mathf.Max(0f, state.constructionAnchor3);
         soilHardeningDeadline = currentStage == BridgeConstructionStage.Digging ? Mathf.Max(0f, state.constructionAux1) : 0f;
         concreteDryingDeadline = currentStage == BridgeConstructionStage.ConcreteDrying ? Mathf.Max(0f, state.constructionAux1) : 0f;
         if (currentStage != BridgeConstructionStage.Digging || diggingSubstage != FoundationDiggingSubstage.SoilRemoval)
@@ -332,6 +431,9 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         state.constructionValueB = (int)diggingSubstage;
         state.constructionAux0 = removedSoilUnits;
         state.constructionAnchor0 = concreteLoadsPoured;
+        state.constructionAnchor1 = (float)concreteFailureState;
+        state.constructionAnchor2 = failedConcreteBreakProgress;
+        state.constructionAnchor3 = failedConcreteCollapseDeadline;
         state.constructionAux1 = IsSoilHardeningActive
             ? soilHardeningDeadline
             : IsConcreteDrying ? concreteDryingDeadline : 0f;
@@ -367,6 +469,9 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
             ? workflow.DiggingCycleCount * workflow.SoilUnitsPerCycle
             : 0;
         concreteLoadsPoured = RequiredConcreteLoads;
+        concreteFailureState = FoundationConcreteFailureState.None;
+        failedConcreteBreakProgress = 0f;
+        failedConcreteCollapseDeadline = 0f;
         diggingSubstage = FoundationDiggingSubstage.SoilRemoval;
         ClearSoilHardeningDeadline();
         concreteDryingDeadline = 0f;
@@ -495,8 +600,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         }
 
         excavationVolume?.ApplyDiggingState(currentStage, diggingSubstage, currentWorkProgress, removedSoilUnits, workflow);
-        excavationVolume?.ApplyConcreteState(currentStage, concreteLoadsPoured, RequiredConcreteLoads, RemainingConcreteDryingTime,
-            workflow != null ? workflow.ConcreteDryingDuration : 30f);
+        ApplyConcreteVisualState();
 
         if (completedDigVisual != null)
         {
@@ -504,6 +608,20 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
                                          currentStage == BridgeConstructionStage.ConcreteDrying ||
                                          currentStage == BridgeConstructionStage.ReadyForMount);
         }
+    }
+
+    private void ApplyConcreteVisualState()
+    {
+        excavationVolume?.ApplyConcreteState(
+            currentStage,
+            concreteLoadsPoured,
+            RequiredConcreteLoads,
+            RemainingConcreteDryingTime,
+            workflow != null ? workflow.ConcreteDryingDuration : 30f,
+            concreteFailureState,
+            failedConcreteBreakProgress,
+            concretePouringProfile != null ? concretePouringProfile.FailedConcreteCrackThresholds : new Vector3(1f, 34f, 67f),
+            FailedConcreteCollapseProgress);
     }
 
     private void ApplyClearingAreaSize()
@@ -574,6 +692,9 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     public virtual MonoBehaviour GetWorkValidationTarget(int workPointId)
     {
+        if (workPointId == FoundationFailedConcreteTarget.WorkPointId &&
+            excavationVolume != null && excavationVolume.FailedConcreteTarget != null)
+            return excavationVolume.FailedConcreteTarget;
         return this;
     }
 
@@ -605,7 +726,8 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     public bool TryAcceptConcreteLoad(int loads = 1)
     {
-        if (!HasAuthority() || workflow == null || currentStage != BridgeConstructionStage.ConcretePouring || loads <= 0)
+        if (!HasAuthority() || workflow == null || currentStage != BridgeConstructionStage.ConcretePouring ||
+            !CanAcceptFoundationDock || loads <= 0)
         {
             return false;
         }
@@ -621,6 +743,176 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         bridgeComponent.RefreshVisualAndColliderState();
         GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
         return true;
+    }
+
+    public bool CanBeginCriticalConcreteFailure(
+        WheelbarrowDockingStation station,
+        WheelbarrowController wheelbarrow)
+    {
+        return HasAuthority() && currentStage == BridgeConstructionStage.ConcretePouring &&
+               CanAcceptFoundationDock && station != null && wheelbarrow != null &&
+               station.DockType == WheelbarrowDockType.FoundationPouring &&
+               station.FoundationSite == this && station.DockedWheelbarrow == wheelbarrow &&
+               FailedWheelbarrowPose != null && wheelbarrow.IsDockSecured &&
+               wheelbarrow.State == WheelbarrowState.Pouring && wheelbarrow.HasConcrete;
+    }
+
+    public bool BeginCriticalConcreteFailure(
+        WheelbarrowDockingStation station,
+        WheelbarrowController wheelbarrow)
+    {
+        if (!CanBeginCriticalConcreteFailure(station, wheelbarrow)) return false;
+
+        recoveryStation = station;
+        recoveryWheelbarrow = wheelbarrow;
+        concreteFailureState = FoundationConcreteFailureState.CriticalSequence;
+        failedConcreteBreakProgress = 0f;
+        failedConcreteCollapseDeadline = 0f;
+        concreteLoadsPoured = 0;
+        return true;
+    }
+
+    public bool CommitCriticalConcreteFailure(
+        WheelbarrowDockingStation station,
+        WheelbarrowController wheelbarrow)
+    {
+        if (!HasAuthority() || concreteFailureState != FoundationConcreteFailureState.CriticalSequence ||
+            recoveryStation != station || recoveryWheelbarrow != wheelbarrow ||
+            station == null || station.DockedWheelbarrow != wheelbarrow ||
+            wheelbarrow == null || wheelbarrow.State != WheelbarrowState.TrappedInFailedConcrete)
+            return false;
+
+        ApplyVisualState();
+        GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
+        return true;
+    }
+
+    public bool CompleteCriticalConcreteFailureSequence(
+        WheelbarrowDockingStation station,
+        WheelbarrowController wheelbarrow)
+    {
+        if (!HasAuthority() || concreteFailureState != FoundationConcreteFailureState.CriticalSequence ||
+            recoveryStation != station || recoveryWheelbarrow != wheelbarrow ||
+            wheelbarrow == null || wheelbarrow.State != WheelbarrowState.TrappedInFailedConcrete)
+            return false;
+        concreteFailureState = FoundationConcreteFailureState.HardenedFailure;
+        ApplyVisualState();
+        GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
+        return true;
+    }
+
+    public void RollbackCriticalConcreteFailure(
+        WheelbarrowController wheelbarrow,
+        WheelbarrowDockingStation station,
+        bool notify)
+    {
+        if (!HasAuthority() || !HasActiveConcreteFailure) return;
+        if (wheelbarrow != null && recoveryWheelbarrow != null && wheelbarrow != recoveryWheelbarrow) return;
+        if (station != null && recoveryStation != null && station != recoveryStation) return;
+        ResetConcreteFailureState(notify);
+    }
+
+    public void ForceCleanupConcreteFailure(
+        WheelbarrowController wheelbarrow,
+        WheelbarrowDockingStation station)
+    {
+        if (!HasAuthority() || concreteFailureState is FoundationConcreteFailureState.None or FoundationConcreteFailureState.Ready)
+            return;
+        if (wheelbarrow != null && recoveryWheelbarrow != null && wheelbarrow != recoveryWheelbarrow) return;
+        if (station != null && recoveryStation != null && station != recoveryStation) return;
+        ResetConcreteFailureState(true);
+    }
+
+    private void BeginFailedConcreteCollapse()
+    {
+        if (concreteFailureState != FoundationConcreteFailureState.HardenedFailure) return;
+        concreteFailureState = FoundationConcreteFailureState.Collapsing;
+        float duration = concretePouringProfile != null
+            ? concretePouringProfile.FailedConcreteCollapseDuration
+            : 0.4f;
+        failedConcreteCollapseDeadline = GetSynchronizedTime() + duration;
+        excavationVolume?.PrepareFailedConcreteCollapse();
+        ApplyVisualState();
+        GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
+    }
+
+    private void CompleteFailedConcreteCollapse()
+    {
+        ResolveRecoveryReferences();
+        failedConcreteCollapseDeadline = 0f;
+        concreteFailureState = FoundationConcreteFailureState.AwaitingWheelbarrowExit;
+        recoveryWheelbarrow?.ReleaseFromFailedConcrete(recoveryStation);
+        ApplyVisualState();
+        GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
+    }
+
+    private void TryCompleteFailedConcreteRecovery()
+    {
+        ResolveRecoveryReferences();
+        if (!HasValidRecoveryTracking())
+        {
+            CleanupMissingRecoveryWheelbarrow();
+            return;
+        }
+        if (excavationVolume == null ||
+            excavationVolume.ContainsRecoveryWheelbarrow(recoveryWheelbarrow.transform.position))
+            return;
+
+        recoveryStation?.CompleteFailedConcreteRecovery(recoveryWheelbarrow);
+        ResetConcreteFailureState(true);
+    }
+
+    private void ResetConcreteFailureState(bool notify)
+    {
+        concreteFailureState = currentStage == BridgeConstructionStage.ConcretePouring
+            ? FoundationConcreteFailureState.Ready
+            : FoundationConcreteFailureState.None;
+        failedConcreteBreakProgress = 0f;
+        failedConcreteCollapseDeadline = 0f;
+        recoveryStation = null;
+        recoveryWheelbarrow = null;
+        ApplyVisualState();
+        bridgeComponent?.RefreshVisualAndColliderState();
+        if (notify) GameplayManager.Instance?.NotifyConstructionSiteStateChanged(this);
+    }
+
+    private void ResolveRecoveryReferences()
+    {
+        if (recoveryStation == null)
+        {
+            foreach (WheelbarrowDockingStation station in
+                     FindObjectsByType<WheelbarrowDockingStation>(FindObjectsSortMode.None))
+            {
+                if (station != null && station.FoundationSite == this)
+                {
+                    recoveryStation = station;
+                    break;
+                }
+            }
+        }
+        if (recoveryWheelbarrow == null && recoveryStation != null)
+            recoveryWheelbarrow = recoveryStation.DockedWheelbarrow;
+    }
+
+    private bool HasValidRecoveryTracking()
+    {
+        if (recoveryStation == null) return false;
+        WheelbarrowController tracked = recoveryStation.DockedWheelbarrow;
+        if (tracked == null) return false;
+        if (recoveryWheelbarrow != null && recoveryWheelbarrow != tracked) return false;
+        recoveryWheelbarrow = tracked;
+        return true;
+    }
+
+    private void CleanupMissingRecoveryWheelbarrow()
+    {
+        WheelbarrowDockingStation station = recoveryStation;
+        if (station != null)
+        {
+            station.CleanupMissingTrackedWheelbarrow();
+            if (!HasActiveConcreteFailure) return;
+        }
+        ForceCleanupConcreteFailure(null, station);
     }
 
     private void CompleteConcreteDrying()
@@ -668,6 +960,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
             if (diggingCycleIndex >= workflow.DiggingCycleCount)
             {
                 currentStage = BridgeConstructionStage.ConcretePouring;
+                concreteFailureState = FoundationConcreteFailureState.Ready;
             }
             else
             {
