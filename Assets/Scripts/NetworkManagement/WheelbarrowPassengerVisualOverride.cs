@@ -13,6 +13,8 @@ public sealed class WheelbarrowPassengerVisualOverride : MonoBehaviour
     private bool hasOriginalPose;
     private bool isOverriding;
     private float nextDiagnosticsTime;
+    private Vector3 presentedPlayerPosition;
+    private Quaternion presentedPlayerRotation;
 
     public bool IsOverriding => isOverriding;
     public float AnchorError { get; private set; }
@@ -44,6 +46,8 @@ public sealed class WheelbarrowPassengerVisualOverride : MonoBehaviour
         Quaternion targetRotation = anchorRotation * originalLocalRotation;
         AnchorError = Vector3.Distance(playerBodyVisual.position, targetPosition);
         playerBodyVisual.SetPositionAndRotation(targetPosition, targetRotation);
+        presentedPlayerPosition = anchorPosition;
+        presentedPlayerRotation = anchorRotation;
         isOverriding = true;
 
         if (wheelbarrow.Profile != null && wheelbarrow.Profile.EnableDiagnostics &&
@@ -53,6 +57,13 @@ public sealed class WheelbarrowPassengerVisualOverride : MonoBehaviour
             Debug.Log($"[WheelbarrowPassengerPresentation] client={playerNetworkObject.OwnerClientId} " +
                 $"anchorError={AnchorError:F3}m buffer={wheelbarrow.GetComponent<WheelbarrowPresentationController>()?.SnapshotBufferDepth ?? 0}", this);
         }
+    }
+
+    public bool TryGetPresentedPlayerPose(out Vector3 position, out Quaternion rotation)
+    {
+        position = presentedPlayerPosition;
+        rotation = presentedPlayerRotation;
+        return isOverriding;
     }
 
     private bool ShouldOverride()

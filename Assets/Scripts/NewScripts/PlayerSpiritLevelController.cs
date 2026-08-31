@@ -13,6 +13,7 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
     private PlayerInventory inventory;
     private PlayerInteractionNew interaction;
     private PlayerHealth health;
+    private PlayerConcreteTrapController concreteTrap;
     private PlayerFirstPersonArms firstPersonArms;
     private PlayerEquippableItemVisuals thirdPersonVisuals;
     private int localMeasuredComponentId = -1;
@@ -36,6 +37,7 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
         inventory = GetComponent<PlayerInventory>();
         interaction = GetComponent<PlayerInteractionNew>();
         health = GetComponent<PlayerHealth>();
+        concreteTrap = GetComponent<PlayerConcreteTrapController>();
         firstPersonArms = GetComponent<PlayerFirstPersonArms>();
         thirdPersonVisuals = GetComponent<PlayerEquippableItemVisuals>();
     }
@@ -75,7 +77,7 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
     private void HandleActionStarted(object sender, EventArgs e)
     {
         if (!HasLocalControl() || !IsSpiritLevelSelected() || input.IsGameplayUiOpen ||
-            health != null && health.IsDowned ||
+            health != null && health.IsDowned || concreteTrap != null && concreteTrap.IsTrapped ||
             interaction.CurrentTarget is not SpiritLevelMeasurementPoint point || !point.IsAvailable)
         {
             return;
@@ -136,7 +138,7 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
         SpiritLevelProfileSO profile = selectedItem != null ? selectedItem.spiritLevelProfile : null;
         float range = profile != null ? profile.measurementRange : 2.5f;
         if (selectedItem == null || selectedItem.itemType != EquippableItemType.SpiritLevel ||
-            health != null && health.IsDowned ||
+            health != null && health.IsDowned || concreteTrap != null && concreteTrap.IsTrapped ||
             Vector3.Distance(transform.position, point.MeasurementPose.position) > range)
         {
             return;
@@ -170,6 +172,22 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
         }
     }
 
+    internal void CancelForConcreteTrap()
+    {
+        if (IsNetworkActive)
+        {
+            if (IsServer) ClearServerMeasurement();
+            else if (IsOwner) StopMeasurementServerRpc();
+        }
+        else
+        {
+            localMeasuredComponentId = -1;
+            localMeasuredPointId = -1;
+            localMeasuredViewSign = 1;
+        }
+        ClearVisualPresentation();
+    }
+
     private void ClearServerMeasurement()
     {
         measuredComponentIdNetwork.Value = -1;
@@ -180,6 +198,7 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
     private bool CanContinueLocalMeasurement()
     {
         if (!IsSpiritLevelSelected() || input.IsGameplayUiOpen || health != null && health.IsDowned ||
+            concreteTrap != null && concreteTrap.IsTrapped ||
             !TryResolvePoint(MeasuredComponentId, MeasuredPointIdValue, out SpiritLevelMeasurementPoint point) ||
             interaction.CurrentTarget != point || !point.IsAvailable)
         {
@@ -194,7 +213,7 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
     private bool CanContinueServerMeasurement()
     {
         if (!TryResolvePoint(MeasuredComponentId, MeasuredPointIdValue, out SpiritLevelMeasurementPoint point) ||
-            !point.IsAvailable || health != null && health.IsDowned)
+            !point.IsAvailable || health != null && health.IsDowned || concreteTrap != null && concreteTrap.IsTrapped)
         {
             return false;
         }

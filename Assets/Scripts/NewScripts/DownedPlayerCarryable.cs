@@ -23,6 +23,7 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     private PlayerHealth playerHealth;
     private CharacterController characterController;
+    private PlayerConcreteTrapController concreteTrapController;
     private bool isCarriedLocal;
     private ulong localCarrierNetworkObjectId = NoCarrierNetworkObjectId;
     private Transform localCarrierTransform;
@@ -34,14 +35,22 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     public bool IsLocalCarryFollowActive => localCarryFollowActive;
     public bool IsCarriedByNPC => IsCarried && TryResolveCarrierTransform(GetCarrierNetworkObjectId(), out Transform carrier)
         && carrier.TryGetComponent(out NPCCarrier _);
-    public bool CanBeCarried => playerHealth != null && playerHealth.IsDowned && !IsCarried;
-    public string HeldObjectDisplayName => "Downed player";
+    public bool CanBeCarried => CanBeCarriedByHuman;
+    public bool CanBeCarriedByHuman => !IsCarried && (concreteTrapController != null && concreteTrapController.IsTrapped
+        ? concreteTrapController.IsEjected
+        : playerHealth != null && playerHealth.IsDowned);
+    public bool CanBeCarriedByNpc => !IsCarried && playerHealth != null && playerHealth.IsDowned &&
+        (concreteTrapController == null || !concreteTrapController.IsTrapped);
+    public string HeldObjectDisplayName => concreteTrapController != null && concreteTrapController.IsEjected
+        ? "Concrete-trapped player"
+        : "Downed player";
     public Sprite HeldObjectIcon => null;
 
     private void Awake()
     {
         playerHealth = GetComponent<PlayerHealth>();
         characterController = GetComponent<CharacterController>();
+        concreteTrapController = GetComponent<PlayerConcreteTrapController>();
     }
 
     public override void OnNetworkSpawn()
@@ -154,7 +163,7 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
             || carrier.ActorType != CarryActorType.NPC
             || carrier.NetworkObject == null
             || !carrier.CanCarryObject
-            || !CanBeCarried)
+            || !CanBeCarriedByNpc)
         {
             return false;
         }
@@ -303,7 +312,7 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     private bool TryCompleteNpcNetworkPickup(ICarryActor carrier)
     {
-        if (!IsServer || carrier?.NetworkObject == null || !CanBeCarried || !carrier.CanCarryObject)
+        if (!IsServer || carrier?.NetworkObject == null || !CanBeCarriedByNpc || !carrier.CanCarryObject)
         {
             return false;
         }

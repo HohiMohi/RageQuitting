@@ -14,6 +14,7 @@ public class PlayerWheelbarrowController : MonoBehaviour
     private NetworkObject networkObject;
     private PlayerStaminaController stamina;
     private PlayerHealth health;
+    private PlayerConcreteTrapController concreteTrapController;
     private PlayerTransportCollisionController transportCollisions;
     private WheelbarrowController current;
     private WheelbarrowController presentationWheelbarrow;
@@ -70,6 +71,7 @@ public class PlayerWheelbarrowController : MonoBehaviour
         networkObject = GetComponent<NetworkObject>();
         stamina = GetComponent<PlayerStaminaController>();
         health = GetComponent<PlayerHealth>();
+        concreteTrapController = GetComponent<PlayerConcreteTrapController>();
         transportCollisions = GetComponent<PlayerTransportCollisionController>();
         if (transportCollisions == null)
             transportCollisions = gameObject.AddComponent<PlayerTransportCollisionController>();
@@ -396,6 +398,7 @@ public class PlayerWheelbarrowController : MonoBehaviour
     public bool TryHandleInteractPressed()
     {
         if (!IsLocalPlayer) return false;
+        if (concreteTrapController != null && concreteTrapController.IsInWheelbarrow) return true;
         if (pouringMinigame != null)
         {
             if (IsNetworkActive && !pouringMinigame.IsServer) pouringMinigame.RequestLeaveServerRpc();

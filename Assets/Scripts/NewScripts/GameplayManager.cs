@@ -931,8 +931,10 @@ public class GameplayManager : MonoBehaviour
 
         PlayerInventory inventory = client.PlayerObject.GetComponent<PlayerInventory>();
         PlayerHealth health = client.PlayerObject.GetComponent<PlayerHealth>();
+        PlayerConcreteTrapController concreteTrap = client.PlayerObject.GetComponent<PlayerConcreteTrapController>();
         selectedTool = inventory != null ? inventory.GetSelectedItemForServerValidation() : null;
-        if (selectedTool == null || selectedTool.itemType != requestedToolType || (health != null && health.IsDowned))
+        if (selectedTool == null || selectedTool.itemType != requestedToolType || (health != null && health.IsDowned) ||
+            concreteTrap != null && concreteTrap.IsTrapped)
         {
             return false;
         }

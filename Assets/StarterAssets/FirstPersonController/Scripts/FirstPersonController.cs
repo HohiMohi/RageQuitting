@@ -150,6 +150,7 @@ namespace StarterAssets
 		private PlayerStaminaController _staminaController;
 		private PlayerRopeConstraintController _ropeConstraintController;
 		private PlayerWheelbarrowController _wheelbarrowController;
+		private PlayerConcreteTrapController _concreteTrapController;
 		
 		private const float _threshold = 0.01f;
 
@@ -212,6 +213,7 @@ namespace StarterAssets
 			_staminaController = GetComponent<PlayerStaminaController>();
 			_ropeConstraintController = GetComponent<PlayerRopeConstraintController>();
 			_wheelbarrowController = GetComponent<PlayerWheelbarrowController>();
+			_concreteTrapController = GetComponent<PlayerConcreteTrapController>();
 			_staminaController?.Configure(MaxStamina, StaminaRegenerationTimeout);
 			_currentStamina = MaxStamina;
         }
@@ -530,6 +532,17 @@ namespace StarterAssets
 				return;
 			}
 
+			if (_concreteTrapController != null && _concreteTrapController.BlocksGameplayInput)
+			{
+				_isSprinting = false;
+				_isJumpPerformed = false;
+				_horizontalVelocity = Vector3.zero;
+				_verticalVelocity = 0f;
+				if (_concreteTrapController.IsInWheelbarrow)
+					_wheelbarrowController?.ApplyAnchoredMovement(Time.deltaTime);
+				return;
+			}
+
 			if (_wheelbarrowController != null && _wheelbarrowController.BlocksStandardMovement)
 			{
 				_isSprinting = false;
@@ -765,6 +778,12 @@ namespace StarterAssets
 
 		private void JumpAndGravity()
 		{
+			if (_concreteTrapController != null && _concreteTrapController.BlocksGameplayInput)
+			{
+				_isJumpPerformed = false;
+				_verticalVelocity = 0f;
+				return;
+			}
 			if (_wheelbarrowController != null && _wheelbarrowController.BlocksStandardMovement)
 			{
 				_isJumpPerformed = false;

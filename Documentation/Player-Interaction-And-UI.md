@@ -140,6 +140,20 @@ transportu, więc odliczanie kontynuuje się bez utraty lub dodania sekund.
 `IsRespawnTimerPausedByNpcCarry` udostępnia stan read-only. Carry przez innego
 gracza nie zatrzymuje timera.
 
+### Uwięzienie w betonie taczki
+
+`PlayerConcreteTrapController` blokuje uwięzionemu graczowi ruch, skok,
+narzędzia, interakcje i samodzielne wyjście; aktywne pozostaje wyłącznie
+rozglądanie. Gracz nadal przyjmuje obrażenia. Woda zachowuje normalne zasady
+utonięcia i przejścia w downed, bez awaryjnego uwolnienia z betonu.
+
+Jeżeli uwięziony gracz jest downed, nie może zostać ożywiony ani użyć respawnu,
+dopóki beton nie zostanie usunięty. Countdown respawnu pauzuje przez niezależny
+powód pauzy i po uwolnieniu kontynuuje od zachowanej wartości; nie koliduje to z
+pauzą podczas carry przez NPC. Uwolnienie nie wykonuje revive: gracz pozostaje
+downed. Po rozbiciu betonu w ustawionej taczce gracz pozostaje pasażerem i może
+wysiąść standardową akcją.
+
 ## Input
 
 `PlayerInputNew` opakowuje Unity Input System i publikuje eventy ruchu,

@@ -30,6 +30,7 @@ checklista podczas konfiguracji prefaba, SO lub sceny.
 | `SpiritLevelProfileSO` | zasięg pomiaru, czas przejścia, skok/wygładzanie pęcherzyka, centralne pozy FPP, kreski idealnego środka oraz kolory i pulsowanie markerów pomiaru |
 | `CarryPhysicsProfileSO` | Tryb `DirectYaw`/`PhysicalPointGrip`, Rigidbody, point grip, tether, limity udźwigu oraz fully-staffed load distribution i leveling |
 | `ExternalImpulseProfileSO` | initial velocity, decay, gravity, control, clamps i forced drop |
+| `HardenedConcreteBreakProfileSO` | wymagana praca, czas collapse oraz trzy progi pęknięć; wspólny dla pułapki gracza i porażki betonowania fundamentu |
 | `NPCDefinitionSO` | identity, faction, behavior, prefab/visual, stats i AI ranges |
 | `NPCSpawnGroupSO` | nazwa, waga, limit, ważone definicje, tryb `All/Any` i warunki |
 | `NPCSpawnUnlockConditionSO` | Always, timer, globalny etap, etap części, manual signal albo historyczny spawn count |
@@ -54,6 +55,7 @@ scenowej.
 | `PlayerActionController` | fallback action values, tolerancja zasięgu/czasu RPC i action holder; faza profilowana jest runtime-only |
 | `PlayerInventory` | dwa sloty, stany `Empty/Occupied/Reserved` i pełny catalog enum -> SO |
 | `PlayerHealth` | HP, regen, delays |
+| `PlayerConcreteTrapController` | wspólny `HardenedConcreteBreakProfile`, visual bloku, crack visuals i integracje player/wheelbarrow/carry |
 | `PlayerExternalImpulseController` | referencja controller/interaction/health, jeśli widoczna w Inspectorze |
 | `PlayerNetworkSetup` | camera target, local/remote visual, Canvas i owner-only components |
 | `PlayerFirstPersonArms` | references, render layer, pose, locomotion, legacy action, turn lag, tool visual, two-handed grip oraz opcjonalny composer/audio source |
@@ -600,8 +602,27 @@ przez `CriticalSequence`, `HardenedFailure`, `Collapsing` i
 | lokalny `NavMeshSurface` | Osobny dla każdego fundamentu i zgodny z proxy wykopu |
 | `NavMeshObstacle` | Carving włączony dla otwartego wykopu i mokrego betonu, wyłączony dla twardej tafli |
 
+`ConcretePouringProfile` referencjonuje ten sam asset
+`HardenedConcreteBreakProfile` co `PlayerConcreteTrapController` na prefabie
+`PlayerNew`. Obecna wspólna konfiguracja to `100` pracy, `0.4 s` collapse oraz
+progi pęknięć `1`, `34` i `67`. Nie duplikować tych wartości w osobnych
+profilach dla fundamentu i pułapki gracza.
+
 Wejście w krytyczną sekwencję musi zwolnić obu uczestników oraz pasażera,
 zużyć beton i zablokować taczkę. `WheelbarrowSetup` tworzy konfigurację obu
 fundamentów. Po setupie uruchom `FoundationConcreteFailureProbe`; probe ma
 potwierdzić oba fundamenty, wiring, serializację, collider tafli, komplet
 trzech crack visuals oraz konfigurację lokalnego NavMesha.
+
+# Pułapka gracza w betonie taczki
+
+Prefab `PlayerNew` wymaga `PlayerConcreteTrapController` z przypisanym assetem
+`HardenedConcreteBreakProfile` oraz referencjami visuala pełnego bloku i trzech
+etapów pęknięć. Ten sam asset musi być wskazany przez `ConcretePouringProfile`.
+Stan `None/InWheelbarrow/Ejected/Collapsing`, source wheelbarrow ID i progres są
+runtime'owymi danymi sieciowymi i nie powinny być ręcznie strojone na prefabie.
+
+Po konfiguracji uruchom `PlayerConcreteTrapProbe`; sprawdza wiring i podstawowe
+przejścia mechaniki. Nadal zalecany jest rzeczywisty wieloinstancyjny smoke test
+PlayMode obejmujący late join, rozbijanie przez drugiego gracza, tip/carry,
+downed/respawn oraz disconnect.

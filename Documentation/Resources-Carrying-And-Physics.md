@@ -374,6 +374,32 @@ NetworkObject, ale ma wyłączoną własną fizykę i collidery. Przechył ponad
 przez `0.25 s` wysypuje ładunek i zwalnia graczy. Pustą, zatrzymaną taczkę można
 postawić na koła po przytrzymaniu E przez `1.5 s`.
 
+### Pasażer uwięziony w stwardniałym betonie
+
+Pasażer i ładunek betonu umieszczeni w taczce w dowolnej kolejności natychmiast
+twardnieją i uruchamiają pułapkę; dotyczy to również powalonego pasażera. Taczka
+pozostaje sterowalna, ale betonu nie można wylać ani zastąpić kolejną partią z
+betoniarki. Mokry visual betonu jest wtedy ukryty.
+
+`PlayerConcreteTrapController` utrzymuje serwerowo autorytatywny, trwały
+`NetworkVariable` ze stanem `None`, `InWheelbarrow`, `Ejected` albo
+`Collapsing`, identyfikatorem źródłowej taczki i wspólnym progresem. Dane są
+odtwarzane dla late join. Zewnętrzny visual bloku podąża za prezentacją
+pasażera i respektuje override'y pozy oraz rotacji używane podczas carry.
+
+Inny gracz rozbija beton Pickaxem, dokładając pracę do wspólnego progresu
+`0-100`. Serwer sprawdza narzędzie, zasięg i stan: w taczce praca jest możliwa
+tylko bez kierowcy, a wyrzuconego bloku nie można rozbijać, gdy jest niesiony.
+Wspólny `HardenedConcreteBreakProfileSO` wymaga `100` pracy, ma `0.4 s`
+collapse i progi pęknięć `1/34/67`.
+
+Rozbicie w ustawionej taczce usuwa beton, ale pozostawia pasażera na miejscu;
+może on następnie wysiąść zwykłą procedurą. Przewrócenie taczki bezpiecznie
+wyrzuca pasażera wewnątrz betonowego bloku i zachowuje dotychczasowy progres.
+Wyrzucony blok może być niesiony jak powalony gracz przez jednego człowieka,
+lecz nigdy przez NPC. Rozłączenie uwięzionego gracza czyści pułapkę i zużywa
+beton w źródłowej taczce.
+
 Lina może zaczepić taczkę w dokładnym fizycznym punkcie trafienia tylko w
 stanach `Free` i `Tipped`. Serwerowy, konfigurowalny spring z dampingiem używa
 `AddForceAtPosition`, bez `Joint`, więc siła naturalnie przesuwa i obraca

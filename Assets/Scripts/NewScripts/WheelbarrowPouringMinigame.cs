@@ -220,7 +220,7 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
             State == WheelbarrowPouringState.Active;
         return validState && station != null && activeWheelbarrow != null &&
             station.DockedWheelbarrow == activeWheelbarrow && activeWheelbarrow.IsDockSecured &&
-            activeWheelbarrow.HasConcrete;
+            activeWheelbarrow.HasPourableConcrete;
     }
 
     public bool TryResolveAnchorPose(

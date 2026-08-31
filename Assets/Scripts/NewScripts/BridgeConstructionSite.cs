@@ -70,6 +70,9 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     public float FailedConcreteWorkRequired => concretePouringProfile != null
         ? concretePouringProfile.FailedConcreteWorkRequired
         : 100f;
+    public EquippableItemType FailedConcreteRequiredTool => concretePouringProfile != null
+        ? concretePouringProfile.FailedConcreteRequiredTool
+        : EquippableItemType.Pickaxe;
     public bool HasActiveConcreteFailure =>
         concreteFailureState != FoundationConcreteFailureState.None &&
         concreteFailureState != FoundationConcreteFailureState.Ready;
@@ -194,7 +197,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
         if (CanBreakFailedConcrete && workPointId == FoundationFailedConcreteTarget.WorkPointId)
         {
-            if (toolType != EquippableItemType.Pickaxe) return false;
+            if (toolType != FailedConcreteRequiredTool) return false;
             failedConcreteBreakProgress = Mathf.Clamp(
                 failedConcreteBreakProgress + workPower,
                 0f,
@@ -314,7 +317,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     public virtual bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
     {
         if (CanBreakFailedConcrete && workPointId == FoundationFailedConcreteTarget.WorkPointId)
-            return workPower > 0f && toolType == EquippableItemType.Pickaxe;
+            return workPower > 0f && toolType == FailedConcreteRequiredTool;
         return workPower > 0f &&
                currentStage == BridgeConstructionStage.Digging &&
                diggingSubstage == FoundationDiggingSubstage.Loosening &&
@@ -754,7 +757,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
                station.DockType == WheelbarrowDockType.FoundationPouring &&
                station.FoundationSite == this && station.DockedWheelbarrow == wheelbarrow &&
                FailedWheelbarrowPose != null && wheelbarrow.IsDockSecured &&
-               wheelbarrow.State == WheelbarrowState.Pouring && wheelbarrow.HasConcrete;
+               wheelbarrow.State == WheelbarrowState.Pouring && wheelbarrow.HasPourableConcrete;
     }
 
     public bool BeginCriticalConcreteFailure(

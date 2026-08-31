@@ -225,6 +225,9 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
     public ulong PassengerClientId => IsSessionActive ? passengerNetwork.Value : localPassenger;
     public int ConcreteLoads => IsSessionActive ? concreteLoadsNetwork.Value : localConcreteLoads;
     public bool HasConcrete => ConcreteLoads > 0;
+    public bool HasHardenedPassengerConcrete => TryGetPassengerConcreteTrap(out PlayerConcreteTrapController trap) &&
+        trap.IsAttachedToWheelbarrow && trap.IsSourcedBy(this);
+    public bool HasPourableConcrete => HasConcrete && !HasHardenedPassengerConcrete;
     public bool HasResourceCargo => CargoCount > 0;
     public int CargoCount => IsSessionActive ? cargoNetwork.Count : localCargo.Count;
     public float Speed => HasLocalPhysicsAuthority && physicsBody != null
@@ -1111,7 +1114,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
 
     private void Update()
     {
-        if (concreteCargoVisual != null) concreteCargoVisual.SetActive(HasConcrete);
+        if (concreteCargoVisual != null) concreteCargoVisual.SetActive(HasPourableConcrete);
         if (spillVisual != null && spillVisual.activeSelf && Time.time >= spillVisualUntil) spillVisual.SetActive(false);
     }
 
@@ -2220,9 +2223,10 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         tippedRestUp = ResolveTippedRestUp();
         SetState(WheelbarrowState.Tipped);
         if (previousDriver != NoClient) BeginSafeExit(previousDriver, false, true);
+        bool trappedPassenger = HasHardenedPassengerConcrete;
         ReleasePassenger(true);
         SpillAllCargo();
-        SpillConcrete();
+        if (!trappedPassenger) SpillConcrete();
         activeDock?.ForceReleaseWheelbarrow(this);
         activeDock = null;
     }
@@ -2450,6 +2454,9 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
             CancelPendingPassengerBoarding(false);
         if (PassengerClientId == clientId)
         {
+            if (TryGetPassengerConcreteTrap(out PlayerConcreteTrapController trap) ||
+                PlayerConcreteTrapController.TryFindForOwner(clientId, out trap))
+                trap.ClearForDisconnect(this);
             SetPassenger(NoClient);
             SetPassengerTransportCollisionState(clientId, false);
         }
@@ -2470,6 +2477,12 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
 #if UNITY_EDITOR
     private int editorProbeResourceCount = -1;
     private Transform editorProbePassengerRoot;
+    private PlayerConcreteTrapController editorProbePassengerTrap;
+
+    public void SetEditorConcreteTrapProbePassenger(PlayerConcreteTrapController trap)
+    {
+        editorProbePassengerTrap = trap;
+    }
 
     internal void BeginEditorPhysicsProbe(bool loaded)
     {
@@ -2788,6 +2801,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         if (DriverClientId == clientId) return RequestDriverExitAndDock(clientId);
         if (PassengerClientId == clientId)
         {
+            if (HasHardenedPassengerConcrete) return false;
             return ReleasePassenger(false);
         }
         return false;
@@ -3025,7 +3039,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
     internal bool BeginFailedConcreteTrap(WheelbarrowDockingStation station)
     {
         if (!HasAuthority || station == null || activeDock != station || physicsBody == null ||
-            station.DockedWheelbarrow != this || State != WheelbarrowState.Pouring || !HasConcrete ||
+            station.DockedWheelbarrow != this || State != WheelbarrowState.Pouring || !HasPourableConcrete ||
             !hasSecuredDockPose)
             return false;
 
@@ -3119,7 +3133,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
 
     public bool ConsumeConcreteLoad()
     {
-        if (!HasAuthority || ConcreteLoads <= 0) return false;
+        if (!HasAuthority || !HasPourableConcrete) return false;
         SetConcreteLoads(ConcreteLoads - 1);
         return true;
     }
@@ -3132,14 +3146,15 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
 
     public void SpillConcrete()
     {
-        if (!HasAuthority || ConcreteLoads <= 0) return;
+        if (!HasAuthority || ConcreteLoads <= 0 || HasHardenedPassengerConcrete) return;
         SetConcreteLoads(0);
         SetSpillSequence(localSpillSequence + 1);
     }
 
     public bool TryRemoveDownedPassenger(PlayerInteractionNew rescuer)
     {
-        if (!HasAuthority || rescuer == null || PassengerClientId == NoClient || Speed > (profile != null ? profile.MaximumExitSpeed : 0.8f) ||
+        if (!HasAuthority || rescuer == null || PassengerClientId == NoClient || HasHardenedPassengerConcrete ||
+            Speed > (profile != null ? profile.MaximumExitSpeed : 0.8f) ||
             !TryGetPlayer(PassengerClientId, out NetworkObject passenger)) return false;
         PlayerHealth health = passenger.GetComponent<PlayerHealth>();
         if (health == null || !health.IsDowned) return false;
@@ -3779,6 +3794,10 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
             pending.RequestedPosition);
         if (!pending.RoleCleared)
         {
+            if (pending.Passenger && PassengerClientId == clientId &&
+                player.TryGetComponent(out PlayerConcreteTrapController trap) &&
+                trap.IsAttachedToWheelbarrow && trap.IsSourcedBy(this))
+                trap.CompleteWheelbarrowEjection(this);
             if (pending.Passenger && PassengerClientId == clientId) SetPassenger(NoClient);
             else if (!pending.Passenger && DriverClientId == clientId) SetDriver(NoClient);
             pending.RoleCleared = true;
@@ -3905,7 +3924,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
     private void CompleteForcedExitAtSpawn(ulong clientId, PendingSafeExit pending)
     {
         pendingSafeExits.Remove(clientId);
-        if (pending.Passenger && PassengerClientId == clientId) SetPassenger(NoClient);
+        if (pending.Passenger && PassengerClientId == clientId)
+        {
+            if (TryGetPassengerConcreteTrap(out PlayerConcreteTrapController trap)) trap.CompleteWheelbarrowEjection(this);
+            SetPassenger(NoClient);
+        }
         else if (!pending.Passenger && DriverClientId == clientId) SetDriver(NoClient);
         TechnicalReleaseOccupant(clientId, pending.Passenger);
     }
@@ -4061,8 +4084,65 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         ConfigureWheelContactMode();
     }
     private void SetDriver(ulong value) { localDriver = value; if (IsSessionActive && IsServer) driverNetwork.Value = value; }
-    private void SetPassenger(ulong value) { localPassenger = value; InvalidateDrivenWheelPhysics(); if (IsSessionActive && IsServer) passengerNetwork.Value = value; }
-    private void SetConcreteLoads(int value) { localConcreteLoads = Mathf.Max(0, value); InvalidateDrivenWheelPhysics(); if (IsSessionActive && IsServer) concreteLoadsNetwork.Value = localConcreteLoads; }
+    private void SetPassenger(ulong value)
+    {
+        localPassenger = value;
+        InvalidateDrivenWheelPhysics();
+        if (IsSessionActive && IsServer) passengerNetwork.Value = value;
+        TryActivatePassengerConcreteTrap();
+    }
+
+    private void SetConcreteLoads(int value)
+    {
+        localConcreteLoads = Mathf.Max(0, value);
+        InvalidateDrivenWheelPhysics();
+        if (IsSessionActive && IsServer) concreteLoadsNetwork.Value = localConcreteLoads;
+        TryActivatePassengerConcreteTrap();
+    }
+
+    private void TryActivatePassengerConcreteTrap()
+    {
+        if (!HasAuthority || PassengerClientId == NoClient || ConcreteLoads <= 0 ||
+            !TryGetPassengerConcreteTrap(out PlayerConcreteTrapController trap)) return;
+        trap.ActivateInWheelbarrow(this);
+    }
+
+    private bool TryGetPassengerConcreteTrap(out PlayerConcreteTrapController trap)
+    {
+#if UNITY_EDITOR
+        if (!Application.isPlaying && editorProbePassengerTrap != null &&
+            PassengerClientId == editorProbePassengerTrap.OwnerClientId)
+        {
+            trap = editorProbePassengerTrap;
+            return true;
+        }
+#endif
+        trap = null;
+        return PassengerClientId != NoClient && TryGetPlayer(PassengerClientId, out NetworkObject player) &&
+            player.TryGetComponent(out trap);
+    }
+
+    internal void CompleteHardenedPassengerConcreteBreak(PlayerConcreteTrapController trap)
+    {
+        if (!HasAuthority || trap == null || !trap.IsSourcedBy(this)) return;
+        SetConcreteLoads(0);
+        RefreshMassAndCenterOfMass();
+    }
+
+    internal void ClearHardenedPassengerConcreteAfterEjection(PlayerConcreteTrapController trap)
+    {
+        if (!HasAuthority || trap == null) return;
+        SetConcreteLoads(0);
+        RefreshMassAndCenterOfMass();
+    }
+
+    internal void ClearHardenedPassengerConcreteForDisconnect(PlayerConcreteTrapController trap)
+    {
+        if (!HasAuthority || trap == null) return;
+        SetConcreteLoads(0);
+        if (PassengerClientId == trap.OwnerClientId) SetPassenger(NoClient);
+        RefreshMassAndCenterOfMass();
+    }
     private void SetSpillSequence(int value)
     {
         localSpillSequence = value;

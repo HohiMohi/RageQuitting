@@ -31,6 +31,7 @@ public sealed class RopeToolController : NetworkBehaviour
     private PlayerInventory inventory;
     private PlayerStaminaController stamina;
     private PlayerHealth health;
+    private PlayerConcreteTrapController concreteTrap;
     private LineRenderer line;
     private RopeToolProfileSO profile;
     private RopeEndProjectile endpoint;
@@ -130,6 +131,7 @@ public sealed class RopeToolController : NetworkBehaviour
         inventory = GetComponent<PlayerInventory>();
         stamina = GetComponent<PlayerStaminaController>();
         health = GetComponent<PlayerHealth>();
+        concreteTrap = GetComponent<PlayerConcreteTrapController>();
         EnsureHandAnchor();
         EnsureLineRenderer();
         EnsureTrajectoryPreview();
@@ -199,7 +201,8 @@ public sealed class RopeToolController : NetworkBehaviour
             }
 
             bool shouldDeactivate = CurrentState != RopeState.Inactive &&
-                (!IsRopeSelected() || health == null || health.IsDowned || input == null || input.IsGameplayUiOpen);
+                (!IsRopeSelected() || health == null || health.IsDowned || concreteTrap != null && concreteTrap.IsTrapped ||
+                 input == null || input.IsGameplayUiOpen);
             if (shouldDeactivate && !deactivationRequested)
             {
                 deactivationRequested = true;
@@ -211,7 +214,8 @@ public sealed class RopeToolController : NetworkBehaviour
             }
 
             bool shouldActivate = IsRopeSelected() && profile != null && health != null && !health.IsDowned &&
-                input != null && !input.IsGameplayUiOpen && CurrentState == RopeState.Inactive;
+                (concreteTrap == null || !concreteTrap.IsTrapped) && input != null && !input.IsGameplayUiOpen &&
+                CurrentState == RopeState.Inactive;
             if (shouldActivate && Time.unscaledTime >= nextActivationRequestAt)
             {
                 nextActivationRequestAt = Time.unscaledTime + 0.25f;
@@ -239,7 +243,7 @@ public sealed class RopeToolController : NetworkBehaviour
 
     public bool TryHandleInteractPressed()
     {
-        if (!IsOwnerOrSingleplayer())
+        if (!IsOwnerOrSingleplayer() || concreteTrap != null && concreteTrap.IsTrapped)
         {
             return false;
         }
@@ -293,6 +297,12 @@ public sealed class RopeToolController : NetworkBehaviour
 
     private void HandleActionCanceled(object sender, EventArgs e)
     {
+        if (concreteTrap != null && concreteTrap.IsTrapped)
+        {
+            chargeHeld = false;
+            reelHeld = false;
+            return;
+        }
         if (!IsRopeSelected()) return;
         if (chargeHeld)
         {
@@ -319,6 +329,11 @@ public sealed class RopeToolController : NetworkBehaviour
 
     private void HandleActionAltCanceled(object sender, EventArgs e)
     {
+        if (concreteTrap != null && concreteTrap.IsTrapped)
+        {
+            payOutHeld = false;
+            return;
+        }
         if (!IsRopeSelected() || !payOutHeld) return;
         payOutHeld = false;
         RequestAction(RopeInputAction.StopPayOut, 0f, Vector3.zero);
@@ -967,6 +982,7 @@ public sealed class RopeToolController : NetworkBehaviour
     private void ApplyAction(RopeInputAction action, float value, Vector3 direction, ulong senderClientId)
     {
         if (IsNetworkActive && senderClientId != OwnerClientId) return;
+        if (concreteTrap != null && concreteTrap.IsTrapped && action != RopeInputAction.Deactivate) return;
         if (action == RopeInputAction.Activate)
         {
             RefreshSelectedItem(false);
@@ -1021,11 +1037,13 @@ public sealed class RopeToolController : NetworkBehaviour
     public bool CanTargetEscape(RopeToolController targetPlayerRope)
     {
         return profile != null && profile.allowTargetEscape && targetPlayerRope != null && TargetKind == RopeTargetKind.Player
-            && ResolveTarget() == targetPlayerRope.NetworkObject && targetPlayerRope.health != null && !targetPlayerRope.health.IsDowned;
+            && ResolveTarget() == targetPlayerRope.NetworkObject && targetPlayerRope.health != null && !targetPlayerRope.health.IsDowned
+            && (targetPlayerRope.concreteTrap == null || !targetPlayerRope.concreteTrap.IsTrapped);
     }
 
     public void RequestTargetEscape(bool held)
     {
+        if (concreteTrap != null && concreteTrap.IsTrapped) return;
         if (!TryGetLocalClientId(out ulong localClientId)) return;
         if (IsNetworkActive && !IsServer) TargetEscapeServerRpc(held);
         else ApplyTargetEscape(localClientId, held);
@@ -1241,7 +1259,24 @@ public sealed class RopeToolController : NetworkBehaviour
 
     private bool CanUseLocally()
     {
-        return IsOwnerOrSingleplayer() && IsRopeSelected() && health != null && !health.IsDowned && !input.IsGameplayUiOpen;
+        return IsOwnerOrSingleplayer() && IsRopeSelected() && health != null && !health.IsDowned &&
+            (concreteTrap == null || !concreteTrap.IsTrapped) && !input.IsGameplayUiOpen;
+    }
+
+    internal void CancelForConcreteTrap()
+    {
+        chargeHeld = false;
+        reelHeld = false;
+        payOutHeld = false;
+        if (IsNetworkActive)
+        {
+            if (IsServer) ResetRope(true);
+            else if (IsOwner) RequestAction(RopeInputAction.Deactivate, 0f, Vector3.zero);
+        }
+        else
+        {
+            ResetRope(true);
+        }
     }
 
     public bool IsRopeSelected()

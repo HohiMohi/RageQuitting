@@ -17,6 +17,7 @@ public class ConcretePouringProfileSO : ScriptableObject
 
     [Header("Critical Failure Recovery")]
     [SerializeField, Min(0.05f)] private float criticalFailureSequenceDuration = 0.8f;
+    [SerializeField] private HardenedConcreteBreakProfileSO hardenedConcreteBreakProfile;
     [SerializeField, Min(1f)] private float failedConcreteWorkRequired = 100f;
     [SerializeField, Min(0.05f)] private float failedConcreteCollapseDuration = 0.4f;
     [SerializeField] private Vector3 failedConcreteCrackThresholds = new Vector3(1f, 34f, 67f);
@@ -50,12 +51,21 @@ public class ConcretePouringProfileSO : ScriptableObject
     public float AutomaticPartnerDelay => automaticPartnerDelay;
     public float AutomaticPartnerSpeed => automaticPartnerSpeed;
     public float CriticalFailureSequenceDuration => Mathf.Max(0.05f, criticalFailureSequenceDuration);
-    public float FailedConcreteWorkRequired => Mathf.Max(1f, failedConcreteWorkRequired);
-    public float FailedConcreteCollapseDuration => Mathf.Max(0.05f, failedConcreteCollapseDuration);
+    public HardenedConcreteBreakProfileSO HardenedConcreteBreakProfile => hardenedConcreteBreakProfile;
+    public EquippableItemType FailedConcreteRequiredTool => hardenedConcreteBreakProfile != null
+        ? hardenedConcreteBreakProfile.RequiredTool
+        : EquippableItemType.Pickaxe;
+    public float FailedConcreteWorkRequired => hardenedConcreteBreakProfile != null
+        ? hardenedConcreteBreakProfile.WorkRequired
+        : Mathf.Max(1f, failedConcreteWorkRequired);
+    public float FailedConcreteCollapseDuration => hardenedConcreteBreakProfile != null
+        ? hardenedConcreteBreakProfile.CollapseDuration
+        : Mathf.Max(0.05f, failedConcreteCollapseDuration);
     public Vector3 FailedConcreteCrackThresholds
     {
         get
         {
+            if (hardenedConcreteBreakProfile != null) return hardenedConcreteBreakProfile.CrackThresholds;
             float first = Mathf.Max(0f, failedConcreteCrackThresholds.x);
             float second = Mathf.Max(first, failedConcreteCrackThresholds.y);
             float third = Mathf.Max(second, failedConcreteCrackThresholds.z);

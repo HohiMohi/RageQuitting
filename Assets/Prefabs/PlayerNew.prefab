@@ -468,6 +468,7 @@ GameObject:
   - component: {fileID: 1759615207400898478}
   - component: {fileID: 8272239400986367473}
   - component: {fileID: 6339907342742729142}
+  - component: {fileID: 7651847357888764348}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -1359,6 +1360,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpiritLevelController
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &7651847357888764348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aab2e0b1ba851ea448fbc952896e658e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerConcreteTrapController
+  ShowTopMostFoldoutHeaderGroup: 1
+  breakProfile: {fileID: 11400000, guid: ed22a24b27d493849b04efc347a19159, type: 2}
+  hardenedConcreteMaterial: {fileID: 2100000, guid: d184f12351e30604c96f0ebc0defff5a, type: 2}
+  crackMaterial: {fileID: 2100000, guid: bda8475bcd45fdc47ae85233355b2883, type: 2}
+  blockLocalPosition: {x: 0, y: 0.62, z: 0}
+  blockLocalScale: {x: 1.05, y: 1.15, z: 0.78}
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0

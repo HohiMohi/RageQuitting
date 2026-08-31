@@ -17,6 +17,7 @@ public class PlayerInventory : NetworkBehaviour
     private const int EmptySlotItemTypeValue = -1;
 
     private PlayerInputNew playerInputNew;
+    private PlayerConcreteTrapController concreteTrapController;
     [Header("Inventory Settings")]
     [SerializeField] private EquippableItemSO[] inventoryItems;
     [SerializeField] private EquippableItemSO[] equippableItemCatalog;
@@ -58,6 +59,7 @@ public class PlayerInventory : NetworkBehaviour
     private void Awake()
     {
         playerInputNew = GetComponent<PlayerInputNew>();
+        concreteTrapController = GetComponent<PlayerConcreteTrapController>();
         EnsureInventoryStorage();
         _selectedItemIndex = 0;
     }
@@ -99,11 +101,13 @@ public class PlayerInventory : NetworkBehaviour
 
     private void PlayerInputNew_OnDropItem(object sender, EventArgs e)
     {
+        if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         RemoveItem();
     }
 
     private void PlayerInputNew_OnSwapItems(object sender, EventArgs e)
     {
+        if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         SwapItems();
     }
 

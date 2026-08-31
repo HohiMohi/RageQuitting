@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 {
+    [Flags]
+    public enum RespawnPauseReason : byte
+    {
+        None = 0,
+        NpcCarry = 1 << 0,
+        ConcreteTrap = 1 << 1
+    }
+
     [Header("Health")]
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float healthRegenerationPerSecond = 5f;
@@ -25,19 +33,27 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
-    private readonly NetworkVariable<float> npcCarryRespawnPauseStartedAtNetwork = new NetworkVariable<float>(
+    private readonly NetworkVariable<float> respawnPauseStartedAtNetwork = new NetworkVariable<float>(
         -1f,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<RespawnPauseReason> respawnPauseReasonsNetwork =
+        new NetworkVariable<RespawnPauseReason>(
+            RespawnPauseReason.None,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
     private float currentHealthLocal;
     private bool isDownedLocal;
     private float downedAtTimeLocal = -1f;
-    private float npcCarryRespawnPauseStartedAtLocal = -1f;
+    private float respawnPauseStartedAtLocal = -1f;
+    private RespawnPauseReason respawnPauseReasonsLocal;
     private float lastDamageTime = float.NegativeInfinity;
     private PlayerInteractionNew playerInteraction;
     private DownedPlayerCarryable downedPlayerCarryable;
     private PlayerWaterExposureController waterExposureController;
+    private PlayerConcreteTrapController concreteTrapController;
 
     public event EventHandler OnHealthChanged;
     public event EventHandler OnDownedStateChanged;
@@ -46,13 +62,20 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     public float MaxHealth => maxHealth;
     public bool IsDowned => IsNetworkStateActive ? isDownedNetwork.Value : isDownedLocal;
     public bool IsCarriedByNPC => downedPlayerCarryable != null && downedPlayerCarryable.IsCarriedByNPC;
-    public bool IsRespawnTimerPausedByNpcCarry => IsNetworkStateActive
-        ? npcCarryRespawnPauseStartedAtNetwork.Value >= 0f
-        : npcCarryRespawnPauseStartedAtLocal >= 0f;
+    public RespawnPauseReason ActiveRespawnPauseReasons => IsNetworkStateActive
+        ? respawnPauseReasonsNetwork.Value
+        : respawnPauseReasonsLocal;
+    public bool IsRespawnTimerPaused => ActiveRespawnPauseReasons != RespawnPauseReason.None;
+    public bool IsRespawnTimerPausedByNpcCarry =>
+        (ActiveRespawnPauseReasons & RespawnPauseReason.NpcCarry) != 0;
+    public bool IsRespawnTimerPausedByConcreteTrap =>
+        (ActiveRespawnPauseReasons & RespawnPauseReason.ConcreteTrap) != 0;
     public bool CanBeRevived => IsDowned
         && !IsCarriedByNPC
+        && (concreteTrapController == null || !concreteTrapController.IsTrapped)
         && (waterExposureController == null || !waterExposureController.IsInUnsafeWater);
-    public bool CanRespawn => IsDowned && !IsCarriedByNPC && GetRespawnTimeRemaining() <= 0f;
+    public bool CanRespawn => IsDowned && !IsCarriedByNPC &&
+        (concreteTrapController == null || !concreteTrapController.IsTrapped) && GetRespawnTimeRemaining() <= 0f;
 
     private bool IsNetworkStateActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
 
@@ -61,6 +84,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         playerInteraction = GetComponent<PlayerInteractionNew>();
         downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
         waterExposureController = GetComponent<PlayerWaterExposureController>();
+        concreteTrapController = GetComponent<PlayerConcreteTrapController>();
         currentHealthLocal = maxHealth;
     }
 
@@ -74,7 +98,8 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
             currentHealthNetwork.Value = maxHealth;
             isDownedNetwork.Value = false;
             downedAtTimeNetwork.Value = -1f;
-            npcCarryRespawnPauseStartedAtNetwork.Value = -1f;
+            respawnPauseStartedAtNetwork.Value = -1f;
+            respawnPauseReasonsNetwork.Value = RespawnPauseReason.None;
         }
     }
 
@@ -82,7 +107,8 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     {
         currentHealthNetwork.OnValueChanged -= CurrentHealthNetwork_OnValueChanged;
         isDownedNetwork.OnValueChanged -= IsDownedNetwork_OnValueChanged;
-        npcCarryRespawnPauseStartedAtLocal = -1f;
+        respawnPauseStartedAtLocal = -1f;
+        respawnPauseReasonsLocal = RespawnPauseReason.None;
     }
 
     private void Update()
@@ -164,71 +190,83 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         }
 
         float pauseStartedAt = IsNetworkStateActive
-            ? npcCarryRespawnPauseStartedAtNetwork.Value
-            : npcCarryRespawnPauseStartedAtLocal;
+            ? respawnPauseStartedAtNetwork.Value
+            : respawnPauseStartedAtLocal;
         float effectiveCurrentTime = pauseStartedAt >= 0f ? pauseStartedAt : GetCurrentStateTime();
         return Mathf.Max(0f, respawnAvailableDelay - (effectiveCurrentTime - downedAtTime));
     }
 
     internal void PauseRespawnTimerForNpcCarry()
     {
-        if (!IsDowned)
-        {
-            return;
-        }
-
-        if (IsNetworkStateActive)
-        {
-            if (!IsServer || npcCarryRespawnPauseStartedAtNetwork.Value >= 0f)
-            {
-                return;
-            }
-
-            npcCarryRespawnPauseStartedAtNetwork.Value = GetCurrentStateTime();
-            return;
-        }
-
-        if (npcCarryRespawnPauseStartedAtLocal < 0f)
-        {
-            npcCarryRespawnPauseStartedAtLocal = GetCurrentStateTime();
-        }
+        SetRespawnPauseReason(RespawnPauseReason.NpcCarry, true);
     }
 
     internal void ResumeRespawnTimerAfterNpcCarry()
     {
+        SetRespawnPauseReason(RespawnPauseReason.NpcCarry, false);
+    }
+
+    internal void PauseRespawnTimerForConcreteTrap()
+    {
+        SetRespawnPauseReason(RespawnPauseReason.ConcreteTrap, true);
+    }
+
+    internal void ResumeRespawnTimerAfterConcreteTrap()
+    {
+        SetRespawnPauseReason(RespawnPauseReason.ConcreteTrap, false);
+    }
+
+    private void SetRespawnPauseReason(RespawnPauseReason reason, bool active)
+    {
+        if (reason == RespawnPauseReason.None || active && !IsDowned) return;
+
         if (IsNetworkStateActive)
         {
-            if (!IsServer || npcCarryRespawnPauseStartedAtNetwork.Value < 0f)
-            {
-                return;
-            }
+            if (!IsServer) return;
+            RespawnPauseReason previous = respawnPauseReasonsNetwork.Value;
+            RespawnPauseReason next = active ? previous | reason : previous & ~reason;
+            if (next == previous) return;
+            UpdateNetworkRespawnPauseTransition(previous, next);
+            return;
+        }
 
-            float pauseDuration = Mathf.Max(
-                0f,
-                GetCurrentStateTime() - npcCarryRespawnPauseStartedAtNetwork.Value);
+        RespawnPauseReason localPrevious = respawnPauseReasonsLocal;
+        RespawnPauseReason localNext = active ? localPrevious | reason : localPrevious & ~reason;
+        if (localNext == localPrevious) return;
+        UpdateLocalRespawnPauseTransition(localPrevious, localNext);
+    }
+
+    private void UpdateNetworkRespawnPauseTransition(RespawnPauseReason previous, RespawnPauseReason next)
+    {
+        float now = GetCurrentStateTime();
+        if (previous == RespawnPauseReason.None && next != RespawnPauseReason.None)
+            respawnPauseStartedAtNetwork.Value = now;
+        else if (previous != RespawnPauseReason.None && next == RespawnPauseReason.None)
+        {
+            float pauseDuration = respawnPauseStartedAtNetwork.Value >= 0f
+                ? Mathf.Max(0f, now - respawnPauseStartedAtNetwork.Value)
+                : 0f;
             if (isDownedNetwork.Value && downedAtTimeNetwork.Value >= 0f)
-            {
                 downedAtTimeNetwork.Value += pauseDuration;
-            }
-
-            npcCarryRespawnPauseStartedAtNetwork.Value = -1f;
-            return;
+            respawnPauseStartedAtNetwork.Value = -1f;
         }
+        respawnPauseReasonsNetwork.Value = next;
+    }
 
-        if (npcCarryRespawnPauseStartedAtLocal < 0f)
+    private void UpdateLocalRespawnPauseTransition(RespawnPauseReason previous, RespawnPauseReason next)
+    {
+        float now = GetCurrentStateTime();
+        if (previous == RespawnPauseReason.None && next != RespawnPauseReason.None)
+            respawnPauseStartedAtLocal = now;
+        else if (previous != RespawnPauseReason.None && next == RespawnPauseReason.None)
         {
-            return;
+            float pauseDuration = respawnPauseStartedAtLocal >= 0f
+                ? Mathf.Max(0f, now - respawnPauseStartedAtLocal)
+                : 0f;
+            if (isDownedLocal && downedAtTimeLocal >= 0f) downedAtTimeLocal += pauseDuration;
+            respawnPauseStartedAtLocal = -1f;
         }
-
-        float localPauseDuration = Mathf.Max(
-            0f,
-            GetCurrentStateTime() - npcCarryRespawnPauseStartedAtLocal);
-        if (isDownedLocal && downedAtTimeLocal >= 0f)
-        {
-            downedAtTimeLocal += localPauseDuration;
-        }
-
-        npcCarryRespawnPauseStartedAtLocal = -1f;
+        respawnPauseReasonsLocal = next;
     }
 
     public void RequestRevive(NetworkObject reviver)
@@ -294,14 +332,16 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
             currentHealthNetwork.Value = maxHealth;
             isDownedNetwork.Value = false;
             downedAtTimeNetwork.Value = -1f;
-            npcCarryRespawnPauseStartedAtNetwork.Value = -1f;
+            respawnPauseStartedAtNetwork.Value = -1f;
+            respawnPauseReasonsNetwork.Value = RespawnPauseReason.None;
         }
         else
         {
             currentHealthLocal = maxHealth;
             isDownedLocal = false;
             downedAtTimeLocal = -1f;
-            npcCarryRespawnPauseStartedAtLocal = -1f;
+            respawnPauseStartedAtLocal = -1f;
+            respawnPauseReasonsLocal = RespawnPauseReason.None;
         }
 
         OnDownedStateChanged?.Invoke(this, EventArgs.Empty);
@@ -412,13 +452,15 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         {
             currentHealthNetwork.Value = 0f;
             downedAtTimeNetwork.Value = GetCurrentStateTime();
-            npcCarryRespawnPauseStartedAtNetwork.Value = -1f;
+            respawnPauseStartedAtNetwork.Value = -1f;
+            respawnPauseReasonsNetwork.Value = RespawnPauseReason.None;
         }
         else
         {
             ForceDropIfCarried();
             downedAtTimeNetwork.Value = -1f;
-            npcCarryRespawnPauseStartedAtNetwork.Value = -1f;
+            respawnPauseStartedAtNetwork.Value = -1f;
+            respawnPauseReasonsNetwork.Value = RespawnPauseReason.None;
         }
 
         OnDownedStateChanged?.Invoke(this, EventArgs.Empty);
@@ -437,14 +479,16 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         {
             currentHealthLocal = 0f;
             downedAtTimeLocal = GetCurrentStateTime();
-            npcCarryRespawnPauseStartedAtLocal = -1f;
+            respawnPauseStartedAtLocal = -1f;
+            respawnPauseReasonsLocal = RespawnPauseReason.None;
             DropHeldObjectBecauseDowned();
         }
         else
         {
             ForceDropIfCarried();
             downedAtTimeLocal = -1f;
-            npcCarryRespawnPauseStartedAtLocal = -1f;
+            respawnPauseStartedAtLocal = -1f;
+            respawnPauseReasonsLocal = RespawnPauseReason.None;
         }
 
         OnDownedStateChanged?.Invoke(this, EventArgs.Empty);

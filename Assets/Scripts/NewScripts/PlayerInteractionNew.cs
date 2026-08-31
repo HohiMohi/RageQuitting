@@ -48,6 +48,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private PlayerFlexibleSaplingUI flexibleSaplingUI;
     private PlayerGirderFasteningUI girderFasteningUI;
     private PlayerWheelbarrowController wheelbarrowController;
+    private PlayerConcreteTrapController concreteTrapController;
     private PortableSubstanceContainer activeBucketHold;
     private MonoBehaviour bucketHoldTarget;
     private float bucketHoldStartedAt;
@@ -110,6 +111,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         _playerHealth = GetComponent<PlayerHealth>();
         flexibleSaplingUI = GetComponent<PlayerFlexibleSaplingUI>();
         wheelbarrowController = GetComponent<PlayerWheelbarrowController>();
+        concreteTrapController = GetComponent<PlayerConcreteTrapController>();
         if (flexibleSaplingUI == null)
         {
             flexibleSaplingUI = gameObject.AddComponent<PlayerFlexibleSaplingUI>();
@@ -134,6 +136,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         if (_playerHealth != null && _playerHealth.IsDowned)
         {
             return;
@@ -243,6 +246,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleInteract(object sender, EventArgs e)
     {
+        if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         if (wheelbarrowController != null && wheelbarrowController.TryHandleInteractPressed())
         {
             OnInteractionPerformed?.Invoke(this, EventArgs.Empty);

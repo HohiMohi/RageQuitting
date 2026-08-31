@@ -203,14 +203,17 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private bool TryAddDownedPlayerPrompts(MonoBehaviour target)
     {
-        PlayerHealth targetHealth = target.GetComponent<PlayerHealth>();
-        DownedPlayerCarryable carryable = target.GetComponent<DownedPlayerCarryable>();
-        if (targetHealth == null || !targetHealth.IsDowned || target.transform.root == playerInteraction.transform.root)
+        PlayerHealth targetHealth = target.GetComponentInParent<PlayerHealth>();
+        DownedPlayerCarryable carryable = target.GetComponentInParent<DownedPlayerCarryable>();
+        PlayerConcreteTrapController concreteTrap = target.GetComponentInParent<PlayerConcreteTrapController>();
+        bool ejectedTrap = concreteTrap != null && concreteTrap.IsEjected;
+        if (targetHealth == null || (!targetHealth.IsDowned && !ejectedTrap) ||
+            target.transform.root == playerInteraction.transform.root)
         {
             return false;
         }
 
-        if (carryable != null && carryable.CanBeCarried)
+        if (carryable != null && carryable.CanBeCarriedByHuman)
         {
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Carry"));
         }

@@ -9,6 +9,8 @@ public class CarriedPlayerVisualOverride : MonoBehaviour
     private Vector3 originalLocalPosition;
     private Quaternion originalLocalRotation;
     private bool isOverriding;
+    private Vector3 presentedPlayerPosition;
+    private Quaternion presentedPlayerRotation;
 
     private void Awake()
     {
@@ -45,6 +47,13 @@ public class CarriedPlayerVisualOverride : MonoBehaviour
         isOverriding = false;
     }
 
+    public bool TryGetPresentedPlayerPose(out Vector3 position, out Quaternion rotation)
+    {
+        position = presentedPlayerPosition;
+        rotation = presentedPlayerRotation;
+        return isOverriding;
+    }
+
     private void LateUpdate()
     {
         if (!isOverriding || playerBodyVisual == null || carrierTransform == null)
@@ -68,6 +77,8 @@ public class CarriedPlayerVisualOverride : MonoBehaviour
             ? anchor.rotation * originalLocalRotation
             : yawRotation * originalLocalRotation;
         playerBodyVisual.SetPositionAndRotation(targetPosition, targetRotation);
+        presentedPlayerRotation = anchor != carrierTransform ? anchor.rotation : yawRotation;
+        presentedPlayerPosition = targetPosition - presentedPlayerRotation * originalLocalPosition;
     }
 
     private void CachePlayerBodyVisual()

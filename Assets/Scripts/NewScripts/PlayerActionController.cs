@@ -46,6 +46,7 @@ public class PlayerActionController : NetworkBehaviour
     private NetworkObject _networkObject;
     private PlayerHealth _playerHealth;
     private PlayerInteractionNew _playerInteraction;
+    private PlayerConcreteTrapController _concreteTrap;
     private ActionImpactEffectSpawner _impactEffectSpawner;
     [Header("Action Parameters")]
     #region Tooltip
@@ -100,6 +101,7 @@ public class PlayerActionController : NetworkBehaviour
         _networkObject = GetComponent<NetworkObject>();
         _playerHealth = GetComponent<PlayerHealth>();
         _playerInteraction = GetComponent<PlayerInteractionNew>();
+        _concreteTrap = GetComponent<PlayerConcreteTrapController>();
         _impactEffectSpawner = GetComponent<ActionImpactEffectSpawner>();
         _playerInputNew.OnAction += HandleAction;
         _playerInputNew.OnActionAlt += HandleActionAlt;
@@ -136,6 +138,7 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (_concreteTrap != null && _concreteTrap.BlocksGameplayInput) return;
         if (IsSpecialInputToolSelected())
         {
             return;
@@ -152,6 +155,12 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleAction(object sender, EventArgs e)
     {
+        if (_concreteTrap != null && _concreteTrap.BlocksGameplayInput)
+        {
+            performAction = false;
+            CancelCurrentAction();
+            return;
+        }
         if (IsSpecialInputToolSelected())
         {
             performAction = false;
@@ -277,7 +286,12 @@ public class PlayerActionController : NetworkBehaviour
         bool hasRequiredTool = TryGetRequiredTool(target, out EquippableItemType requiredTool);
         bool hasCorrectTool;
 
-        if (target is BaseResourceNew baseResource)
+        if (target is PlayerConcreteTrapTarget concreteTrapTarget)
+        {
+            hasCorrectTool = concreteTrapTarget.CanAcceptBreakInteraction && selectedItem != null &&
+                selectedItem.itemType == concreteTrapTarget.RequiredTool;
+        }
+        else if (target is BaseResourceNew baseResource)
         {
             hasCorrectTool = selectedItem != null && baseResource.CanBeDestroyedWith(selectedItem.itemType);
         }
@@ -322,6 +336,12 @@ public class PlayerActionController : NetworkBehaviour
 
     private static bool TryGetRequiredTool(MonoBehaviour target, out EquippableItemType requiredTool)
     {
+        if (target is PlayerConcreteTrapTarget concreteTrapTarget)
+        {
+            requiredTool = concreteTrapTarget.RequiredTool;
+            return true;
+        }
+
         if (target is FlexibleSaplingController sapling && sapling.CanApplyTool(EquippableItemType.Shovel))
         {
             requiredTool = EquippableItemType.Shovel;
@@ -556,7 +576,7 @@ public class PlayerActionController : NetworkBehaviour
     {
         if (targetNetworkObject == null ||
             targetNetworkObject == NetworkObject ||
-            _inventory == null)
+            _inventory == null || _concreteTrap != null && _concreteTrap.IsTrapped)
         {
             return false;
         }
@@ -718,6 +738,12 @@ public class PlayerActionController : NetworkBehaviour
 
     public void TryPerformAction()
     {
+        if (_concreteTrap != null && _concreteTrap.BlocksGameplayInput)
+        {
+            performAction = false;
+            CancelCurrentAction();
+            return;
+        }
         if (IsSpecialInputToolSelected())
         {
             performAction = false;
@@ -807,6 +833,12 @@ public class PlayerActionController : NetworkBehaviour
             EquippableActionPhase.None,
             false,
             ActionImpactSurfaceType.Default));
+    }
+
+    public void CancelActionForStateChange()
+    {
+        performAction = false;
+        CancelCurrentAction();
     }
 
     private void StartProfiledAction(EquippableItemSO selectedItem)

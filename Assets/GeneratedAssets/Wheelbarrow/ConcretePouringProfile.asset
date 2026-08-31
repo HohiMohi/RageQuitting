@@ -24,6 +24,7 @@ MonoBehaviour:
   automaticPartnerDelay: 0.12
   automaticPartnerSpeed: 0.8
   criticalFailureSequenceDuration: 0.8
+  hardenedConcreteBreakProfile: {fileID: 11400000, guid: ed22a24b27d493849b04efc347a19159, type: 2}
   failedConcreteWorkRequired: 100
   failedConcreteCollapseDuration: 0.4
   failedConcreteCrackThresholds: {x: 1, y: 34, z: 67}

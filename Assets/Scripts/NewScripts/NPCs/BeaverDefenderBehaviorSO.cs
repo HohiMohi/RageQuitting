@@ -435,7 +435,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
             }
 
             carryable = target.GetComponent<DownedPlayerCarryable>();
-            return carryable != null && (carryable.CanBeCarried || carryable.IsCarriedBy(Brain.Carrier.ActorId));
+            return carryable != null && (carryable.CanBeCarriedByNpc || carryable.IsCarriedBy(Brain.Carrier.ActorId));
         }
 
         private void BeginApproachingDownedPlayer(DownedPlayerCarryable carryable)

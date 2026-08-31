@@ -375,6 +375,11 @@ na jeden serwerowy progres `0–100`, a trzy progi progresu przełączają kolej
 etapy wizualnych pęknięć. Po osiągnięciu `100` rozpoczyna się `Collapsing`.
 Taczka spada wtedy swobodnie, bez dodatkowego impulsu.
 
+Rozbijanie korzysta z tego samego assetu `HardenedConcreteBreakProfileSO` co
+beton więżący pasażera w taczce: `100` wymaganej pracy, `0.4 s` collapse i
+progi pęknięć `1/34/67`. `ConcretePouringProfile` musi wskazywać ten wspólny
+asset, dzięki czemu obie mechaniki mają jedną konfigurację pracy i rozpadu.
+
 Po rozpadzie fundament przechodzi do `AwaitingWheelbarrowExit` i nadal nie
 przyjmuje kolejnej partii. Oczekuje, aż ta sama uwięziona taczka opuści
 dedykowany recovery volume. Dopiero po jej wyprowadzeniu stan awarii jest

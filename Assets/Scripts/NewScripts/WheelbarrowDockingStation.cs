@@ -150,7 +150,7 @@ public class WheelbarrowDockingStation : NetworkBehaviour, IConcreteBatchReceive
     {
         if (dockType == WheelbarrowDockType.MixerLoading)
             return !wheelbarrow.HasConcrete && !wheelbarrow.HasResourceCargo;
-        return dockType == WheelbarrowDockType.FoundationPouring && wheelbarrow.HasConcrete &&
+        return dockType == WheelbarrowDockType.FoundationPouring && wheelbarrow.HasPourableConcrete &&
             foundationSite != null && foundationSite.CanAcceptFoundationDock;
     }
 
