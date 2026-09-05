@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="RageQuitting Unity Analyzer Rules" Description="Project severity policy for Microsoft.Unity.Analyzers 1.27.0." ToolsVersion="16.0">
+  <Rules AnalyzerId="Microsoft.Unity.Analyzers" RuleNamespace="Microsoft.Unity.Analyzers">
+    <Rule Id="UNT0001" Action="Info" />
+    <Rule Id="UNT0002" Action="Info" />
+    <Rule Id="UNT0003" Action="Warning" />
+    <Rule Id="UNT0004" Action="Warning" />
+    <Rule Id="UNT0005" Action="Warning" />
+    <Rule Id="UNT0006" Action="Warning" />
+    <Rule Id="UNT0007" Action="Warning" />
+    <Rule Id="UNT0008" Action="Warning" />
+    <Rule Id="UNT0009" Action="Warning" />
+    <Rule Id="UNT0010" Action="Warning" />
+    <Rule Id="UNT0011" Action="Warning" />
+    <Rule Id="UNT0012" Action="Warning" />
+    <Rule Id="UNT0013" Action="Warning" />
+    <Rule Id="UNT0014" Action="Warning" />
+    <Rule Id="UNT0015" Action="Warning" />
+    <Rule Id="UNT0016" Action="Warning" />
+    <Rule Id="UNT0017" Action="Info" />
+    <Rule Id="UNT0018" Action="Info" />
+    <Rule Id="UNT0019" Action="Info" />
+    <Rule Id="UNT0020" Action="Warning" />
+    <Rule Id="UNT0021" Action="Warning" />
+    <Rule Id="UNT0022" Action="Info" />
+    <Rule Id="UNT0023" Action="Warning" />
+    <Rule Id="UNT0024" Action="Info" />
+    <Rule Id="UNT0025" Action="Warning" />
+    <Rule Id="UNT0026" Action="Info" />
+    <Rule Id="UNT0027" Action="Warning" />
+    <Rule Id="UNT0028" Action="Info" />
+    <Rule Id="UNT0029" Action="Warning" />
+    <Rule Id="UNT0030" Action="Warning" />
+    <Rule Id="UNT0031" Action="Warning" />
+    <Rule Id="UNT0032" Action="Info" />
+    <Rule Id="UNT0033" Action="Warning" />
+    <Rule Id="UNT0034" Action="Info" />
+    <Rule Id="UNT0035" Action="Info" />
+    <Rule Id="UNT0036" Action="Info" />
+    <Rule Id="UNT0037" Action="Info" />
+    <Rule Id="UNT0038" Action="Info" />
+    <Rule Id="UNT0039" Action="Warning" />
+    <Rule Id="UNT0040" Action="Warning" />
+    <Rule Id="UNT0041" Action="Info" />
+    <Rule Id="UNT0042" Action="Info" />
+    <Rule Id="UNT0043" Action="Warning" />
+  </Rules>
+</RuleSet>

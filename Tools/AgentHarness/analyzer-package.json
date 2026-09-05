@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "packageId": "Microsoft.Unity.Analyzers",
+  "version": "1.27.0",
+  "sourceUrl": "https://api.nuget.org/v3-flatcontainer/microsoft.unity.analyzers/1.27.0/microsoft.unity.analyzers.1.27.0.nupkg",
+  "packageDllPath": "analyzers/dotnet/cs/Microsoft.Unity.Analyzers.dll",
+  "projectDllPath": "Assets/Analyzers/Microsoft.Unity.Analyzers.dll",
+  "packageSha256": "ab385f8186caca478273132b686577e3a3a747008e95bb5b55dd4b1476cde7eb",
+  "assemblySha256": "da18985c3216a4859abea0049dbc8cc2f9e37b86d532c4812fde1c14eead9251",
+  "retrievedAtUtc": "2026-08-31T17:40:06.9375375Z"
+}

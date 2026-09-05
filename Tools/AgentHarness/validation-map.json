@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "defaultTier": "Fast",
+  "mappings": [
+    {
+      "name": "project-and-packages",
+      "tier": "Full",
+      "patterns": [
+        "Packages/*",
+        "ProjectSettings/*"
+      ],
+      "reason": "Project or package configuration changed."
+    },
+    {
+      "name": "scenes-prefabs-and-assets",
+      "tier": "Gameplay",
+      "patterns": [
+        "Assets/*.unity",
+        "Assets/**/*.unity",
+        "Assets/*.prefab",
+        "Assets/**/*.prefab",
+        "Assets/*.asset",
+        "Assets/**/*.asset"
+      ],
+      "reason": "Serialized Unity content changed."
+    },
+    {
+      "name": "runtime-gameplay-and-netcode",
+      "tier": "Gameplay",
+      "patterns": [
+        "Assets/Scripts/*",
+        "Assets/Scripts/**/*",
+        "Assets/StarterAssets/*",
+        "Assets/StarterAssets/**/*"
+      ],
+      "reason": "Runtime gameplay or networking code changed."
+    },
+    {
+      "name": "editor-and-tools",
+      "tier": "Fast",
+      "patterns": [
+        "Assets/Editor/*",
+        "Assets/Editor/**/*",
+        "Tools/*",
+        "Tools/**/*"
+      ],
+      "reason": "Editor code or local tooling changed."
+    },
+    {
+      "name": "documentation-only",
+      "tier": "Fast",
+      "patterns": [
+        "Documentation/*",
+        "Documentation/**/*",
+        "Assets/Plans/*",
+        "Assets/Plans/**/*",
+        "*.md"
+      ],
+      "reason": "Documentation or planning content changed."
+    },
+    {
+      "name": "other-unity-assets",
+      "tier": "Gameplay",
+      "patterns": [
+        "Assets/*",
+        "Assets/**/*"
+      ],
+      "reason": "Unity project content changed."
+    }
+  ]
+}

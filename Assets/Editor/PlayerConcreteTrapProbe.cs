@@ -15,6 +15,16 @@ public static class PlayerConcreteTrapProbe
     [MenuItem("Tools/RageQuitting/Validate Player Concrete Trap")]
     public static string ValidateFromMenu()
     {
+        string message = Validate();
+        Debug.Log(message);
+        return message;
+    }
+
+    public static string Validate()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling ||
+            EditorApplication.isUpdating)
+            throw new InvalidOperationException("BLOCKED: validation requires an idle EditMode Editor.");
         ValidateActivationOrder(false);
         ValidateActivationOrder(true);
         ValidatePauseReasonCoexistenceAndDrop();
@@ -25,7 +35,6 @@ public static class PlayerConcreteTrapProbe
 
         const string message = "Player concrete trap probe passed: activation orders, pause reasons, " +
             "collapse/tip, carry eligibility, required tool/fallback, pourable gates and prefab wiring.";
-        Debug.Log(message);
         return message;
     }
 
@@ -138,9 +147,9 @@ public static class PlayerConcreteTrapProbe
 
         GameObject playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
         Scene previewScene = EditorSceneManager.NewPreviewScene();
-        GameObject player = PrefabUtility.InstantiatePrefab(playerPrefab, previewScene) as GameObject;
         try
         {
+            GameObject player = PrefabUtility.InstantiatePrefab(playerPrefab, previewScene) as GameObject;
             InitializePlayerForEditModeProbe(player);
             PlayerHealth health = player.GetComponent<PlayerHealth>();
             DownedPlayerCarryable carryable = player.GetComponent<DownedPlayerCarryable>();
@@ -195,10 +204,10 @@ public static class PlayerConcreteTrapProbe
         GameObject wheelbarrowPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(WheelbarrowPrefabPath);
         Require(playerPrefab != null && wheelbarrowPrefab != null, "Player or wheelbarrow prefab is missing.");
         Scene previewScene = EditorSceneManager.NewPreviewScene();
-        GameObject player = PrefabUtility.InstantiatePrefab(playerPrefab, previewScene) as GameObject;
-        GameObject wheelbarrowObject = PrefabUtility.InstantiatePrefab(wheelbarrowPrefab, previewScene) as GameObject;
         try
         {
+            GameObject player = PrefabUtility.InstantiatePrefab(playerPrefab, previewScene) as GameObject;
+            GameObject wheelbarrowObject = PrefabUtility.InstantiatePrefab(wheelbarrowPrefab, previewScene) as GameObject;
             InitializePlayerForEditModeProbe(player);
             PlayerConcreteTrapController trap = player.GetComponent<PlayerConcreteTrapController>();
             WheelbarrowController wheelbarrow = wheelbarrowObject.GetComponent<WheelbarrowController>();

@@ -1,0 +1,2536 @@
+{
+    "schemaVersion":  1,
+    "packageId":  "Microsoft.Unity.Analyzers",
+    "version":  "1.27.0",
+    "generatedAtUtc":  "2026-08-31T18:26:36.6202874Z",
+    "diagnostics":  [
+                        {
+                            "fingerprint":  "5c13360b0b034725941e88c54ef34377fa172047f5c9a22e161b003d769b26df",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgeabutmentworkpoint.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "84b1f42d08002ae63e086ff21241886640f944d9653f0fb6dacbd4455c26c928",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerinventory.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "d175ab86baba366e539a6c2856775908d266ecd867134e010ec37e3fdb0c8c55",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_frameratecounter.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "8226875b00ee0daffdb63e184234ea02cdbc87f62698c8d075af9c581da1532f",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerturnfeedback.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "0679ee0b29be29af2dc781cc367d40c87fcbfa52f7cce8582f5d6f6e6c0ead03",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/npcs/npcanimationcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "3e7b56e45a5a0e9427f3584e31fa9b1bea59a1e62e12ca080175aefe8126798b",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/foundationexcavationvolume.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "a698e33b53fb5d28a80af0ef3b1a771673457dd598bd76888311b68bbfdbb66a",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playeractioncontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "0bee13cd36058cdc2b3c46a53efbfc78ec73595259cf178e323234a3748652ed",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/shaderpropanimator.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "951585e8598b31c751f563e8de9e41faaba6ae58ddf9ff9596bba0675ebc43fe",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgediagonalbracingconstructionsite.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "7279e6aafdb9b638fccc28bbfe81a1a0e172fa4b827ba6767d659dcc520a851e",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/substances/substanceextractionzone.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "2d8e314ba8aa2c317c46213bf127eb569d893b23f14167c435176c660ae6e253",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_examplescript_01.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "b3e163b6316a363732467d829ab5f7dddf0f522abc3ab5ac7015bd2f93d135c6",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/skewtextexample.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "8bcd852d2ec9270ba323191e17cbc42e3ad53c2563846ed8f27188eda4136349",
+                            "id":  "UNT0007",
+                            "path":  "assets/scripts/newscripts/bridgemountsocket.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "2d31c62a237a6b986082f30c03fd21429bfe9664c6566a3998fed80e34e2c0a1",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/wheelbarrowcontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  35
+                        },
+                        {
+                            "fingerprint":  "b79e074f5df900b2e58f490ac6fa18ffeb3c24fd323f71b3da49aa64fc93244c",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/concrete/concretemixercontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "b3c480281a1ec191f0a379556581f92f3ec79228d7c38db201a66fabe61d52e2",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playeractioncontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  7
+                        },
+                        {
+                            "fingerprint":  "8119f2f990c69c560ee4c1f2645a371d9960623b0803d4d18f61b13be2410dd5",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexshakeb.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "5106b21ec2500c9e458759c72b4433972fdf1d15e7807c1aa1d409a4089ef412",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/cameracontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "3b72f2be30f5cb46d6df2de831fb9ad221407f0b3f018743270fdc8b99748083",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/concrete/concretemixermodelever.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "853de5b954092077b60d6fcc22b942beeccc04e8acd7ff82e5ea3e8ab466c945",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerhealth.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "4dea6e44042df9d9b49e6dc2ff08d82780b0f7415f43b13fb3fdbb75638419c6",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/lookatcamera.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "d6b966daf9f2ce63d1bfab757bb3ffbdaad70bf2cab7d387606513815da1fee9",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgegirderworkpoint.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "b80eb191cf6ef98408f9de7f99151a723aa2fce6156197b01845d7bc9686a38e",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/wheelbarrowpourstationvisualizer.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "c5aed05d008a0b2c015487c40d92b6c0a085277116c6d53c23110a1bc4a42931",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/benchmark03.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "2c4a9924c95c798f6b3235988ceac405c00c89b043dcd944dc0ec0b67d073b3f",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/shaderpropanimator.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "6dc5e94a1982d5474a98368d3b5b4e7a7b98970210687164c337b8f36e19cdb9",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/ui/playerdamagefeedback.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "e1affb5ed5891e307007ff2c94b271cd56917624d16adaf8afcf481dd2a4651e",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/bridgecomponent.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "85acc18f7f08bfe4b8cbe2d82c6310329adb31943d263b25e0215cd78c64bbb2",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/playerrespawnpromptui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "9c38c7a49ea27f9f41c3f0b895616e28b1591969f7b0888001addc2f369586a5",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/npcs/goatchargecontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "beee8af366b6833d777351cacfe578a5fdefcf764403c17fc682d55dac3bc589",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/concretemixercrankui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "e8fe09cbc524dd1f3652ff624b030a4a88694b2c6faeb9f77b9f78fc5eaa5e37",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playersharedcarryanchorpreview.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "3728805c7ab7e7314c059cdb1e5c0c5a82be27aca3fa5c569fa987a26fc27650",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/textconsolesimulator.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "1e9aeac40800e6e026fb5dbd4be5025a941bd1ded6c0d89e6a6a8f8ba54f5c5a",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/wheelbarrowcontroller.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "efa14647e7cea5aa03c017efe7d02ea34d8ca7375626df5bba8d72285a3a7584",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/basefactory.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "fae84f7509fbb5d4bc89f94e3a4c1c9fcbb4ffc664a0f8d60d2d251ad0965422",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playerinteractionnew.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "7afe5540ef8b26505c95387d3aaa672550ab8f477c415db85660c41ec26ff5e0",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexshakeb.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "12d9f33d4899497dd2d8a2fb6514a507fd7e15e10554242ec14fc08d5725dda2",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/wheelbarrowcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "ea6935d58f9ab92e5d2f63e46d8bbd8a347225fd341fff471bf82816d970620a",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/bridgecomponentui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "745fa231f983ee503184ad95f0f94d37f34896d6762d59ab2a1c5161cbdab453",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/playersharedcarryanchorpreview.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "339920ad6c38684ff86e25773e750feeab741d71c4981f447dc48c427d7e7e1b",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerinteractionnew.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "af59309ad49b0bfaea947813fd22cd8fd346014604dae4111682af043ae981b7",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/downedplayercarryable.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "a0fd6c34e0974523749411ea106f8b1ecd6bdc8f9f9323d0bca5127c0df7ec52",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/blastfurnaceminigame.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "1e8fa134df3680641d86a271b4c1842ee44d9d42c7e66104eefcde29de99033f",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/equippableitemui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "0524060e2170327d3839842e06050da3df5eb2258004576cf5a532a6accaf959",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmpro_instructionoverlay.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "149af6b3b13b7b4013c0e8037e6486ac3185337613f739c8a9ed50123f91bcdd",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/ui/playerwheelbarrowpouringui.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "49bf6980c33e337be9e2da54717ff7f35d6942d39593d0cafb13d8eb27463937",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_texteventhandler.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "7253d6ae1438c1b46477f22a1a0aa17138a00bbe6549b5fbe359bb9385376068",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/networkmanagement/playerspawnmanager.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "ae0bad7e60ad0575792a06b975375ac95d1acbe83784986c3d40cdf9fc0e2e11",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/water/waterbody.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "b8fc294cbe4ff9e3a63105d1ffc55c87732fbd96247f329f413ecf851d35b126",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/npcs/beaverscoutbehaviorso.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  8
+                        },
+                        {
+                            "fingerprint":  "3b8c48c6dc147bc64f13c60c4f027bd6f90c280141213fd3a4afcfe781786b37",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerspiritlevelcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "d080ccd3c7914e5e3fa9ecdaa5ce43072731e26945c87c113172a57ec231409b",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/cameramotionsettings.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "a92c76175023b546fd67bac9a5fae77b2031d31592efc43ffe479d96031a51e4",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/networkmanagement/playernetworksetup.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "af7ca8de5a55039219408c60bc6db3044ed362c9b48e3637ec4c8e041ddcdf12",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/concrete/concretemixermodelever.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "88665e7cb9428d11f17d4cb84f53d33400c4689678cbd383c19f34261257da5c",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/ui/cameramotionsettingsui.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "34c25645d4f0e1fab224c7f31e27a20986a169dcf66fff3eb092b44b60365543",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgecomponent.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "82951e39b84e9a0bd41384a51c382b4b83252d77e31ccf3b09748414b0ccabc8",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/wheelbarrowdockingstation.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  7
+                        },
+                        {
+                            "fingerprint":  "d3fb858a46baf2bc1afba8b3e6f6075b9c371343a91b17b1b92cc7217db67e2e",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/wheelbarrowpouringminigame.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "57922abc27b28f5889fedbfadff429596c720560c2c076ddb0c93d81f4b472f3",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/flexiblesaplingcontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "11254b23d6214015ae9cbd3731e821639ca85e47210f04d50965836eb7e9b518",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playerconcretetrapcontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  10
+                        },
+                        {
+                            "fingerprint":  "c797e405b1d29b4e6e9f622f7f2e275fc3fa4f037c5802822b3f03cba30010ba",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerinteractionnew.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  8
+                        },
+                        {
+                            "fingerprint":  "541f7c12fa4538d5a79fb1d8b767140b650dc5af67518b319dafff92bb64574f",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/resourcesourcedurabilityui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "5fec4dfc318a4a58bbc51c4838bbef3eb4d931b5ffdf48fbc36b451c361aa0de",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/ropetoolcontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "8a4c86ff40683a69ead88cc34bf207aac1bf6902eab77c3d1788f3e89b5140e7",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/carpentertableminigame.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "246e2731dc307db7e016112765bbaa16315d801b5a8583fb9aa8c54b3c17698a",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgeabutmentconstructionsite.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "563aad2150e30e8a7caf90caba07be97897ca8053948f98b53e4d0ec5d7ed85f",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/benchmark02.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "746fc8fd5f6877ca800db90f489873e6a5d4d1532c0aa06799a794fb2a537ea7",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/playerheldobjectui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "a9a34e2d9540cfbc6180e26c1b737f0019510611215b58bf28b50753744e6c4e",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/bridgediagonalbracingworkpoint.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "d0e2f9bf5f80c644a709dfb5e61d37e16dd98fc7b22659e9e7c98fdb4dc64e35",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/carpenterdimensioncrank.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "f72279626bb0d57cd52e07d58e991bc829cbc9e9e78ce926aa72813b43c0bb22",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/playerinteractionnew.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "8cb0b0d301177982466381dad452378565598a662e766970856b659e87431ab5",
+                            "id":  "UNT0007",
+                            "path":  "assets/scripts/newscripts/playersharedcarryanchorpreview.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "1bdfe1f1b995a717fc837ff5bfd22bc80bf424310e394c13e2d1a2866c5933db",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexzoom.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "63a1a41836014d7e408ef68a3fbc9d946457a0ca5e30de44dc05abe3a5b14155",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/substances/portablesubstancecontainer.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "f55fddf8078d6b5c0af284a2e8788bf4e259ecd8373053ab71976f02f33f1c80",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/baseresourcenew.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "259a037a941f90f473dd974bc4d5c4f206a27158e84f0d052e7ef1a6228df08f",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/frameratesettings.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "7dfa23aa784e50e9dbcc553bbc6bac6701847771791600173bc3a1bc55edf293",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/baseresourceneededequippableitemui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "7f716838864df94ea6e9f7c5d27088530002a7d72e122d3e47b6982bcd8f23c0",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/bridgetargetresolver.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "17104135e258cc454ce7f6c18923e3376f19ed5591a580422afb1327b57d9687",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/equippableitem.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "4093dbc53c85f10c3cf882cc7d07d6c56b27729a6db43758d39c8673e4f539fc",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/npcs/goatbehaviorso.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "ba9a1fd25e869b1ebe37c64fff83c49004d89bbfde9df75564435cd66dc07fd8",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/objectspin.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "c009d10a994ba377cc9bf49b1ecc46d1f3d513fea864adda5cfdc56161c4ba4e",
+                            "id":  "UNT0008",
+                            "path":  "assets/starterassets/firstpersoncontroller/scripts/firstpersoncontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "474b2a805abe7cf2ed6d049ae2b99ca9e64ffc902f99dc1e063ed7dc115d428e",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerinventory.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "e95c26a550cec3c81e33d1c12f0f46fea9d7ad79440153011b998c3ff1124fbb",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/ui/carpenterdimensiondialdraghandle.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "af5fe77c0d09dbbed2b94db9ab7164ea46423d68d08028a752ffdd1f44beab51",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/networkmanagement/netcodeui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "d9d3b6588201a26e35ee64c4aab7ab4e43609ba28ea403a23fbaeb20ba23a83a",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/ui/npchealthui.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "d4aa81123c260d56433faefc7bdb3849c34de38020a7e45d6fd13589605debae",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgecrossbeamconstructionsite.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "dc4a04b25451bdc5eea9ec8079d5ad33baaf7d38d3d9000a279f362bac139bf0",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/networkmanagement/wheelbarrowpassengervisualoverride.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "8e20face649084eadef90be4a22d82f250070da00f370cf9b0a5784937587857",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/productionprogressui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "b533e59f03bf555cf304af80157ce92213e503d521629f56a56374b44eeccd3e",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/substances/bucketrespawnpoint.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "2c157a9cbfca5f7e9e6b9c4e6bd3b9bb240497082f37fcb9f4d3d286599d9628",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/npcs/goatchargecontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "1deb91fbb2fe1b2cc6f3a6d88655974dc3e5e06588f6731b92db56654e9b64ce",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/textmeshspawner.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "8ce8dd7907429df028c545c2c8d274df35ab0dba271865261da30ad5c1678c10",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/simplescript.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "3319a2f26ea5c5ef747dc8b981c3d165fa46ab448c576ef354675f9262336d70",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/goatpushzone.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "abbb9ea49b562c27557c5f46b6f076bbb555d4197d980244ed6a2cc03372a525",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/benchmark01_ugui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "82edbf744791b7ca543779a93e55d1e649aa5ae2e73d6ade40a495e636a8da25",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/wheelbarrowpresentationcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "1feb65a11f8138ef8cf2515d0f09302d54526a10e289c0c4848dcf28b8081827",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_examplescript_01.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "e6db08ed374c5aa323b12be88774e282c779ddcd2a22fc51d609e965e3158ead",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/npcs/npchealth.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "80343243dd702bbd5b12dedfe014c58c3aa14d821676a28d32bcf711ca6d9e3a",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/npcs/npcexternalimpulsecontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  7
+                        },
+                        {
+                            "fingerprint":  "fe0c7d5ff8458f03e17322c2a7fc87dbb009d63a03187cfeb7946ccabcd8216e",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/gameplaymanager.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "26f24522ec49f5b6202b6b192a99a0163d305e0ce43869584315aed2ce8285cd",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playeranimationcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  8
+                        },
+                        {
+                            "fingerprint":  "8af8cf097255a5b932f98f3c9a421d6d79e0939679d2c330b4467eb8ddc6d20a",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playerspiritlevelcontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "a08becf3661179bb6a7601db18123435cb485ade859ee36e3b27639e0baf6553",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerconcretetrapcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  7
+                        },
+                        {
+                            "fingerprint":  "b12076f561d9dc6f1a6710fb7768cafc1c4f04c3b0958a66b45bac40852340f7",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playersharedcarryanchorpreview.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "fe712088b621907a4edecc5a80a3206d073238ba7ea940c708bd49bd7651fc43",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/ui/playerdamagefeedback.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "693ff3c0658861c87496787cb9d2a6b4cc8c967e6497da87d02a83531bc50d01",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/restartlevelui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "74e7613cf3aa76b5d5e0c5ad79c4fd73c55972a8d0e2e78e47e4b45394691bb9",
+                            "id":  "UNT0008",
+                            "path":  "assets/editor/foundationconcretefailureprobe.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "efc3c3551a5d9f529eab04eb7d736c324d9fa80d78b1cd2a411f408a78403119",
+                            "id":  "UNT0023",
+                            "path":  "assets/editor/goatscaffoldingeditor.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "6e2e3327c0004c095f638de56b725bee3498a36f2c3d77b13faf139bc4035330",
+                            "id":  "UNT0007",
+                            "path":  "assets/editor/concretepreparationsetup.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "641d311284f8257cbb66e535936aae79d6c74b0c705ee7b61155966c6bd381ff",
+                            "id":  "UNT0007",
+                            "path":  "assets/editor/spiritlevelscalemigration.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "04eddee899b447d361b1fd7d9c813a70a333e6a88f3318527e5c0525d83c8aa2",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/factoryinteractionuisinglebutton.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "93cdb0c9f8a2e382b8e8615be37e33a9ddec1babb7a7443501387f7ad39449ca",
+                            "id":  "UNT0005",
+                            "path":  "assets/scripts/newscripts/ui/productionminigameui.cs",
+                            "message":  "fixedupdate should use time.fixeddeltatime. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0005.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "b691d15752bf23774ca68c13dc9341a49eb07f99757483bd2a8f259149a34d79",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerexternalimpulsecontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "49dda19b6a12471331783826ad6b40eec11d22279186e7afc26521d352c424ea",
+                            "id":  "UNT0021",
+                            "path":  "assets/starterassets/mobile/scripts/virtualinputs/uivirtualjoystick.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "420cae1c87ffe1094936ede68bf453501cd710375b3a8a1dea4acc0ab66ce402",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/water/playerwaterexposurecontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "c3ab726346ece6a240fd703427819ec0474a0ca4496787be06608412b00a0504",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/benchmark01.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "a756e3482f90d4b2dc4b82dcf328673c584d9d0d0017b8e01d70c9148505df2c",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/playercrosshairui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "ba08c092fa7346f9300fdcf3d34719cfe603a749e12bc8fc819cf4658cec1d60",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/goatchargecontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "9096f9cbcdfef76e4e4eb7b98f985d1442a6328314a33f3e6164cb274866db02",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgebuildingmanager.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "5ab98bd4b5f7109dff55597d8e8c725fa408422c47675611652ff100e2d198ac",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgecrossbeamworkpoint.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "09e10970da4bb599514b6a033729cecfab4060a0b733235d32c465fccd194ff7",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playergoblinvisualsetup.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "c6f7bec5b37b3c38f7d3b7ca29a3fb9dcd30f7d01ee368e75086160975b7db26",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/bridgerequirementsui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "009f532805ba76d08e5b03ff510335a1a21e14b3c5e0928cc245445fcd6e6563",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playerhealth.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "8b8cfdc58f58cf01f7f567a201699661a6571cd459b6e7be4b995466152e0a43",
+                            "id":  "UNT0039",
+                            "path":  "assets/starterassets/thirdpersoncontroller/scripts/thirdpersoncontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "22ce1c5e8085505ae571fbbf9714dd7316dac5d785c01f74028ebb974210fa2a",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/teletype.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "742729cc812ae0ccf0cf0a9801035f14a6659b8a4cefbdde2a16a5abf4a91c06",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/mountablebridgecomponent.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "30862e77aaddf1a617a42fb991fde025618e2d1e0704797eec9d05786beec205",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_textinfodebugtool.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "d5dc2d34d2193acce80e1f362430c4d8946cf00df8ab9b4e38670a14867db1fe",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerinputnew.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "c18ad10f70bf838178117b7d3cdd14477f57d0e509aaf9adb2c6861541f2c66e",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexcolorcycler.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "3bd68908265e3f39ed18bdb04bd44f2605da318b52308ebfc60be3c978c548da",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/frameratesettingsui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "4a0b7190da87446b07ecec4502e82433f1e5c4ff35dc84b68a4ce6398f3cb3f2",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexjitter.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "1439a1de5456ea258a1023f7c93222ac116f06d998a505207bd6ae5e2662d364",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/lookingatcomponentui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "f3b3c01db427dd1814197dbe68327376a2e0b103aec0647c2d1e7e35d57aa1c3",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/bridgediagonalbracingconstructionsite.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "08eadd1816c3400f52539254bdc8b3b0978561b79474426f08b9c39518eae149",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playermovementfeedback.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "f388962d1f6e6b52f4ee52da5a5c3f231c8cc06e66aa18c0705dd8ec433ed85c",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgedecksection.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "41ac47d17fd1f55bc099e608fbb9c8b8c70d4556bc25525b415421b7a4495659",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/npcs/beaverscoutbehaviorso.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "928960632e6e32d91e7bb2513896b3b8f26b04e1782d851cb3489de613804ff1",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/water/riverbedcleanupzone.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "de2e23d8bcaeca276be3c7ff10e219296de0fef01af5e637884ae5e3e523a4d7",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/foundationfailedconcretetarget.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "f384b6121d6992aa99bbaeca8e37617b7917d8b797612759df375f0442b5cb76",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/bridgecomponentneededequippableitemui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "3dd3aa5f4a62b4d1eda2da14fb87378b6f34c9268e67c366f1adeab70b1651fe",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playercamerafeedbackcomposer.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "a64239b98f08fd8b2d34eb984026e87272255fdf95e702924717d11ddc8f721e",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/concrete/concretemixercrank.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "7c0379d66fd36e95b58f117878cafd103e5d5f785797cfd465ed4af7d7142e0a",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerstaminacontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "373035ff07fbfd23e430ea4837d068cda2e43e6ddb5a97c1be0fc023540397c5",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/bridgeabutmentworkpoint.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "f2245155825ab6e71ca074110e0db07b1d543789955921d3995503b9b53baca1",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/playerhealthui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "7c8712b7dd055e2ec7f130aaf6051168970f710fe2b547746c85d340d0d2900c",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgedeckpanelconstructionsite.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "8ac1e7585357bf9c27705138854b5b87ff3a70048c18be20da7cd73746bddcaa",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgedeckpanelconstructionsite.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "7f96214259af2ad920898d58786280357b81526f2fe4f288e786b59de8476d80",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexshakea.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "5399a17d22dc2172760f0ce1f76936ec6bf91130226e44901b8dfcb416b69223",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/ui/cameramotionsettingsui.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "74d254324dc8a37a2befa8b6ec2987d486592570d47781e892467d854e5b491f",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npchealth.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "1475468c5a00e324fb26941a663f5c773ca007f125ad8e666333fa27c3d1d285",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/water/npcaquaticlocomotioncontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "12209fae660f33d2d4a63481de24b28e707713bcaf9f6a70542c89e9d6563903",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/npcs/goatchargecontroller.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "626713748c312bde4d701550f2248427af0ee6dd722dcf6d5dc8650ba0c341e2",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/envmapanimator.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "56d38a952199df55c223a918350a70c209ecf83952eccfdce5afdea1e20f63ad",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npcvisualcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "4c26579981fa969d9b77a8e1c7533ba88329346b8013a130fb4a8ad2f787b7ee",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/requiredresourcespanelui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "3b4307af71ba83c7693a2b0c046e71c88861ad0894790ebcb99ab9403b0bfd37",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/wheelbarrowpouringminigame.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "bc18438f634f7174df4efcf262c2f4847e2f084baa6540b8a1989968178e16f2",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/ui/restartlevelui.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "b8ffd73312196bb34df40339b4536aaf197377932ee853b2197ab3876b61a7a4",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npcspawner.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "1cfcbb764efb12685bb68a5b6de3f404d3e6e9b40097fbfc1ca6983eaa370bfc",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npcattackcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "0f16e0831b0d94015adf417b2ec2c85b91af1fe776659a56e08fb06a27016d83",
+                            "id":  "UNT0021",
+                            "path":  "assets/starterassets/thirdpersoncontroller/scripts/basicrigidbodypush.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "002fcf283f8c70b4b2a1d9c6ac784f27620e0562f1a12748e0de9606fcbd6fe9",
+                            "id":  "UNT0021",
+                            "path":  "assets/starterassets/thirdpersoncontroller/scripts/thirdpersoncontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "cef1f8525fa6d1da8d7945c7b8464eec39b00673a00b10acb440d54edae6952f",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/wheelbarrowdockingstation.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "0cadee759895b221b9d0ef21826bd399ba5d23b77fdd12fc3e54b6d0a0ce033e",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgestageinfomanager.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "5c8a551f2d916b59d8cdfba80e45e47e7a2bf023bc105b0f518cc138f0c3562a",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/playertargethighlightcontroller.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "b377e6527eff100cfbc754621f9f95336ac88f513a6fa3820f961da975432235",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexzoom.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "4d1a84033cfdc857baad8686e186103dd4f60e2e3425e2ec7a6e16647e45aa33",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_uiframeratecounter.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "32a2de172f9733dc8de588d3cd60ee82302ea91c1e46c67237f765acbd39fbcf",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playertargethighlightcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "8dc4d4d7362898c84e2ab829b4a9a8b1099df5a184360a232748ab7cc4fe1d8b",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgeconstructionsite.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "d2fb2bce04a7e1ca9534cc63a6066e5ba591b9a745a176b3b15747d4b9adc52a",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/chatcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "21c40b55de70c47c4b1250b4402f012ef220c8e76aa49188b1208ca55857a2a7",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/bridgedeckpanelworkpoint.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "55b5c2d0d81c48cf7ecf20e1acdb90cda68f0b2aee5270af9de9990fbea05c39",
+                            "id":  "UNT0039",
+                            "path":  "assets/starterassets/firstpersoncontroller/scripts/firstpersoncontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  12
+                        },
+                        {
+                            "fingerprint":  "7e884abf1d6024a7c24a79c9194b3afd6063d918383cc915dc991d317e4164b9",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgedecksection.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "7d86abe6879c2634bd9d30ee203bb47611e25c651fc0520a6ab1cbefd9318e45",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npcstorageinteractor.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "0cd4efa9afe5b04ddb6b437e520b046fe59c2a7915e171b7c70022be44412506",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/playerdamagefeedback.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "8c046bc7d0a16f77d52034a62dbc85f1d489c0574c594c078bb538356d587a0c",
+                            "id":  "UNT0007",
+                            "path":  "assets/scripts/newscripts/spiritlevelvial.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "845e27d1f8d47fad64fae3a4dfbe66b6f0fe57899cae6c5a2da58c83e416248e",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/substances/portablesubstancecontainer.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "e9dc37069f54728947c0b418d6f22463aee16d92bb146499ea6402672ab73ff8",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/networkmanagement/sharedcarryplayervisualoverride.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "035961a62c6b82c43a8227a0141ea7899e05ec26a97adbfe673d4f6224aaa532",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/playerstaminaui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "b402652c31d7ce23e31c268f29c20660b318386ee52fc3450e5f28259ef13657",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/ui/playergirderfasteningui.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "677c953885b8120194f46c7a41b289c04e817804bea57d2b997aad579abad1ef",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_textselector_a.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "e0be188b06044fde5bc02dddf6f9939a686cd12c2715406ce6618cffa7eb4e97",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/networkmanagement/wheelbarrownetworktransform.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "0a25b6f08aa7c49ef6e85e69135f055ab1efad91935828483afb60bc46e03faf",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playertransportcollisioncontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "7ca7a9764284db85f88742d12233fe848f6b316e9618f61cbfe04e452e2f3320",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/ropetoolcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "940694b2815994ed0b775808d40b779911beef9137ddf3316faaa4ba1be39534",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/wheelbarrowpourgripinteraction.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "09bb1596a16f319765ab7dab4c1c0d37bdd589f5a4b5c79a9134b3c582cec14b",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerhealth.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  8
+                        },
+                        {
+                            "fingerprint":  "747a47e6ef5c8567bad843de45fab4b5f135af57f335bd0f1cb5d3a0cd68eb0c",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/npchealthui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "bfe86e25f19791b3b197d19b11a6a57c6fb1ebe4b62882a6e1b447d113c1773f",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/substances/loosesubstancepile.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "d961aee213c9927e24e0be0e9097b72a6ef98e0a0659a8fd78e8234f3abed496",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/mountablebridgecomponent.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "13440c3722f49a5107e60be65a6ffc891ee3be0641c2cca8ae71d55a22b9adb8",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/spiritlevelmeasurementpoint.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "a08e46283086ae65948dd0d199b915b17f6abf83caf438dc40630ebadeb01567",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerropeconstraintcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "97b96aba4e6a11984bc9c50af2765aa6c549350552037b5430154f579ea08e4b",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/onbuttonselected.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "a5205866a4c711186731591560c3f94148ed08bc57c91802ed01f3b17575a37b",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/ui/cameramotionsettingsui.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "90af1f8d98a48797c94b27bd366123350fde35d98621cd9b7c502f26633fbcff",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/gametimerui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "0ea5f3dd58da82e31bc7ba51117b2e6bbe79a045425cc88192e927c6c1a07236",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/networkmanagement/playernetworksetup.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "b203a287a51d3e7784b1d0c25314ce8e367371f4a6b45b446bd09372191a5b79",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/wheelbarrowdockingvisualizer.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "a581ef32e9a03bfeffb4205af5d3cbb0f53910b6744ae3ea6227b043f23672dc",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playercamerafeedbackcomposer.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "09240f92534a8aec466308aa80a907e7c988626e64eb52dbaf37b004a382d14a",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerequippableitemvisuals.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  6
+                        },
+                        {
+                            "fingerprint":  "13e5982025dfa13d500cc8481e528d510884729b4fa79d3f6361e8c804931b5d",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/goatstandingmotiondriver.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "7398a72e3cb6a4cacaf7c9ae75d2a0737d3c56563c19b43c72e99ab001fc8c52",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/npcs/npccarrier.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "f3e3c25f9c238f6cbdb15095a5b36d4dde6270caf8fc5c34901ea06cf91b17ae",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/foundationfailedconcretetarget.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "b9b6beb867b14a953e20c31bab4926fc94f9114a29ac6a516dfa4f2e1e13efb3",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/npcs/resourcethiefbehaviorso.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "a7d62e8848ef11a735868038cfef10625082f28a180743273afcabec7b3c810b",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/npcs/beaverdefenderbehaviorso.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "10a9fa51bc2bb69da6a66063ccff54cf578c0eaa42e8181ae5c81ca2eaf6e7e6",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/npcs/npcexternalimpulsecontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "3bc954c583809b5387c2d108d86ca032063ae09e2f15447adac163a31b872acf",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/water/npcaquaticlocomotioncontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "587f23bd8b8800f02d304f956ac77d4dc3a7674d7f57ca1de6dc3823210941a7",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgediagonalbracingworkpoint.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "6beac6f5fbc754e557230918b8fc4fad7e5dab7e611e928c98b38614ab797830",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/playerwheelbarrowpouringui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "1d315bc3feaacf03e98bc08a0a4346198277e3574337ad8798a8cb432ae78570",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/ui/frameratesettingsui.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "4abae82a48be69e6547421737325aa3e6cc3f5af9dad8a10444c771d5a74036b",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/productionminigameui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "ebaa6d5334ecd19bc22201b22396dd77aa48df63aff6400cf79d1d9e4998d320",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/playerturnfeedback.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "22a0d2c01588d4ccf0b533fa4540f3cf15f0c2464a318bf8343e2d52bb22ccdc",
+                            "id":  "UNT0021",
+                            "path":  "assets/starterassets/firstpersoncontroller/scripts/firstpersoncontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  8
+                        },
+                        {
+                            "fingerprint":  "18fa1c8a3ee2bdf24d1f2c9c75796a4a1b330988117a5307d868449bb7cb1963",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_texteventcheck.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "333d6b46960c0d78de7474a0322ad16ca7e63569a16095b1fd238ab82397e41b",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/benchmark04.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "7e26a6ff7132e7b84cdd2dbbbc8ca9818d806f946080254bf56469325e5a8074",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/networkmanagement/playerspawnmanager.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "06af1fc22508c1af5c8753b757f7af4892cacf6141f4bb32133593cc8b8d5168",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgeabutmentworkpoint.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "812244cdd258016086a2641af005056bd9c50edd99524e428ce6fedc4ca90580",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/furnacestorage.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "aaf65da2a6fd781814bc8d135b183ad1bad79126ddc81efe3c25a53d3cad00b9",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/equippableworldphysics.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "afef3886d9b12299487dde4b7cdf3eae0aefb8cb30023377c3e3d93e49a19f00",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgeabutmentconstructionsite.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "0fdbf624c99aa5570f75470e3b71417245ba07fc1faa6f612275185c7dbef0a3",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/disturbernpc.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "d50e1fed36ba3069b764a607ad840d3527ad9e8c48592c6187802239055404c1",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/ui/playercrosshairui.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "a9a818c9197d2a648494be557ae117aa539b7bc1313fd6fc4ec3b6f23be7f892",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerfirstpersonarms.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  9
+                        },
+                        {
+                            "fingerprint":  "36af6106b0d7a4d4ed1c88c3bd7d8ddc1f14d2b75522a9dd3c1d2b78122695fe",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgediagonalbracingconstructionsite.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "7b793ab66ee2b51a11ab95f17ecc3b54667a44bd0c956d3df64c8f7ee538df1e",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/equippableiteminfoui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "44e7d668ad4140f694cc0f3f3808047b012424146d0cb8338cb441f352b0dd0d",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/equippabletoolvisualbuilder.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "8b4897ba919614319c60973d8977bfe634cafced8c5e72efb78a9ac6fb7dd14a",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/factoryinteractionui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "36a74f4ee9547498d1e26fd60f62fdb5ec743cf1a38f9ebfe10c5ded0f2e9188",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/sharedcarryphysicsbody.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "b8f27a517ec53646178736c6bc8098d7b4d39aaceb7103c74079336a75cd8a45",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/bridgelevelingadjustmentpointvisualizer.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "0eb7950f08c33471bcbee24dd67b5aa7d5ab1759400ad5d0ff30fdd8d86dd835",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/deprecated/baseresourcesource.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "3009d4e0d6e5143ad7da4858e668c28640c7331580ad3e0706816593a2a950e7",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/ui/carpenterdimensiondialui.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "95228165840d8c2c5f94a6d9394ceec8c2e51fad98afcf253c6c66a432e80aad",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_textinfodebugtool.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "867bb5af2f616ff4a13678afd994b6ed9cce97f4d24752b17576650b18898d55",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/wheelbarrowautoboardingtrigger.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "647573f1af36c633f727ffe447ed0c30234a06525a1f5ce40482213900e70564",
+                            "id":  "UNT0007",
+                            "path":  "assets/scripts/newscripts/substances/portablesubstancecontainer.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "f7da3ce9b2d5adec0e9a3b63e34531eb11469d7a5cbc599f66aace6e2becaaa1",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerequippableitemvisuals.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "0b7b70a5b71e7939b249a689e0de7da75fc70bf7918a7d498dcca17d938e848d",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/bridgediagonalbracingconstructionsite.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "b97ce36d898c20076c17eb283166320fa2445c37c6538672e2059081c3f4299b",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playermovementfeedback.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "381794a9357d71257c5ca085ecf48a9b6d2e0b0738e337bd9fe71d5e0548cdd9",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playeranimationcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "e3310ef32e2aa6120d40b7b619b9f4d7d6c11e0eaa192d974d2d616e0eb81bba",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/gameplaymanager.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "c911c8e2ee6b09e2d20d9259e8cb64a2003b5ae190d9cbc78b41b6de3ddc6284",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npccarrier.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "98fda2dcbb269de1072d75bc372d2bfce6525cbf0ce998dc77dabf57ae48e888",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/water/playerwaterexposurecontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "4bbe71c3de6754482c804f3a777e37fed8d2686ef428d221091242f9f34b0a7a",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/ui/playerflexiblesaplingui.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "0ef03726698ef1ed9dfaebec28574a1066d50b611bfdee0203f0bf4a5a4d7831",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/objectspin.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "9ef65659ef842b54fe03ab97e7e2eeea51330435a8fe901258f033cc2ca8fda9",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/npcs/npcattackcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "a9187027d668765572a9c38414c0ff786fc058bcbf7da6c5466238d808ca1018",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerinventoryui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "127ceb09a577e1cd5464aab57fb4c771f20d3f163679734f583ba4b90cbfdfc0",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridge.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "4cfd9a09709377c0f4c76b8a180092a3ee1ba66e4e6fb068ab6e4b1caadb5734",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/water/watershorelinesegment.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "bbbcb6e5677fc8df8d05e837963ac4ba9d03055b99dd2f603e2b59c8b3cc93a2",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgegirderworkpoint.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "ce4181e14a7e31be7af5c5dfdc47b0989b20249a7357f640476f85ce312ddf37",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/wheelbarrowcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  7
+                        },
+                        {
+                            "fingerprint":  "0e8b6c085ca2c2211c16afc9200c546659707ed01ccaefde9ff7cca65c55ec05",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/warptextexample.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "f683d60f234cba074b23df88aaab17e52368934d3ca83c45a1e1f61f378ba76e",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerturnfeedback.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "631f3e2d648b6547672b4397d5b24db2f3a333eb3a4c18af630f05a5d6e231b8",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/wheelbarrowpouringminigame.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "406a62acc6dd8d701a6e9e6d402d9c3380680d4462a997146e4648389e467c91",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/resourcepopulationzone.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "c0091407960075bc23615d48de833d7c9c336488335465cb9d28b5bb372203a4",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/textmeshprofloatingtext.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "d65f86e86e6a27ed1de4a79a81cc5937063f2ab50236d4c20ef1047cf189df5b",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgecomponent.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  10
+                        },
+                        {
+                            "fingerprint":  "2be29af8b4630f17b49aace56083ba4ba133092e4ce4a9bf359ee93e14c97fea",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/cameramotionsettingsui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "7523142d545c7a70ef6d26db3ba66d1943f8ff836bc078656caa80b39f31fe79",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgedeckpanelworkpoint.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "3f6e83e77b07bc8f489bb4a003e86f6ffdf27cb0312f80318bd296183ba63d34",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playerturnfeedback.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "11c343de5f0f8c870974993bb1ccecc0c6d2c129eaa741caa8c521c930d0059e",
+                            "id":  "UNT0021",
+                            "path":  "assets/starterassets/mobile/scripts/virtualinputs/uivirtualtouchzone.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "8eea9afbb28bad54da3643dd1cc6cf066d1121efab0c7ba777978333d04c6d1f",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/bridgemountsocket.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "076d87f3c062bcb568f5d37eb237f5a9b2eecf35dbd554c5d5ae962c8e9df7dc",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playerwheelbarrowcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  7
+                        },
+                        {
+                            "fingerprint":  "5805d224b4aa7fed3e556e0aa7b00007e9d4d997618445dc17e08c1e385454aa",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/npcs/goatbehaviorso.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "309c42f63f7754865d6f24613523ef17d3a576d64c5d6cf6992d3f3e3ee85e37",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgemountsocket.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "7bd52434cd9e1cfa6bc41d12571208e329dbc5d39592778f16ae88ef2d2b9c29",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/substances/portablesubstancecontainer.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "002826881fccf0c21d2a1ab9cd1899d9f75fdecb2fdbf9ac4c712cdf70bebf92",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/gametimermanager.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "aba4bdbbb835130d5523fba5c5dff655d1b8b28be10e2653226d448b9b64c1f2",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/bridgegirderworkpoint.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "c77d5ea0e1dbbd3e5e338e3564df020105371dfb48170a731d353efe57b8cff2",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/carpenterdimensiondialui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "47502fc07da43851594512fb923b99e6cb664722757051d7940ec622b87c0b50",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playerwheelbarrowcontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  28
+                        },
+                        {
+                            "fingerprint":  "7409e051745bd27baa3c266ebcd4d87b84b902af0e6421a628dfc6b8aaf38a45",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/ui/npchealthui.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "ae072895de5c0de149fb620b81fe6ca4b026d6f9d209062ae502901e45d8a88a",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/carpenterdimensioncrank.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "4828ba1ea0261736631bfc30862198dcf312dd43042c62eca5ddb17811e0a9b8",
+                            "id":  "UNT0021",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_textselector_b.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "383dfe33d93dd015de089be1a57b10a4ba19e663f103efe5ca403eab93171fd5",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/wheelbarrowinteractionpoint.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "547d630aff2916294c10626f96c9c063539f89382d13ea7597d41af5f3b780ad",
+                            "id":  "UNT0007",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/tmp_examplescript_01.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "80c70ef4214e103f25dca1fc12b4ed621e3fef5712c1030bd42dcb92e1a9662e",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/downedplayercarryable.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "068049efacc7dcf8fb058949967353f5c469c02942601dc6e08b293582804e9d",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/baseresourcenew.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "3f66e7e2ba9fa45188eaaa40c81bfb69898db7af064fa06a4775ced741346c20",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/factorystorageresourcespanelui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "bb7eecd62ab0970484e0aad4921d4472c957ab5d5b429def40ca62a556c63f62",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npcexternalimpulsecontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "47b39b07589ddf97da6b94d0626a8cfb38c1211f58e6cc77dff9934bf34be9c6",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/beaverspawnerstoragememory.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "7ee3e70cdad404cc05fcb9ce3c82c2971dd190b05548b26558664861ccb8b779",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/water/playerwaterexposurecontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "0cc03f9181b1cf8224dc5a553a6b74327609c35fb76d9eb5874e80a50283b33c",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgegirderconstructionsite.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "01907156254155425c644100b4be7d5f9c62edc754151dc28a5ff5a93d81c3c1",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playertargethighlightcontroller.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "0926643f31037de0603796390f2d04c480784dd5d9ca9bb4e4b919e75cbfbad3",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/npcs/npcattackcontroller.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "3bae98a63921a668d68275e500e6156b56f8364498ebfdae4befb34bbb6ac65a",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/playermovementfeedback.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "ce8ac697251c7b668d817d54b859a8cdbff254af88f31b5a08fdee332eecd408",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playerfirstpersonarms.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "59ad3581b00ec769086570bd97d558dbc98ad07933d32a28c07456912c522393",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/sharedcarrycollisioncontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "019adbdf1e229b9f17c787eb05e792bda6e9b0c8a1cf8909afbcbf48aadfd6fc",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgecrossbeamconstructionsite.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "d6413d2145dd00a259a5397ed321768323acac2120b3e2d95d3cebbd3967e0d0",
+                            "id":  "UNT0007",
+                            "path":  "assets/scripts/newscripts/spiritlevelmeasurementpointvisualizer.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "42c2c5530d3113f021bcd29cd5966d83cfb7f8d8beb8b6d58d210991e61d4cc8",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npcbrain.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  6
+                        },
+                        {
+                            "fingerprint":  "22fa42fdbdd4bdf2089ef00bf8cfdc671fcc0ad5f13583f10fdec4502a92fe4e",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/ui/frameratesettingsui.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "b81685a63fd40bc312815eb3c4af87b4cef4558827d3152da1206a1cea604805",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerfirstpersonarms.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  6
+                        },
+                        {
+                            "fingerprint":  "4c455b0db0ae84a0c9af3c3d0249f90ff5797aac276c29cee15ef86e86ff81a2",
+                            "id":  "UNT0007",
+                            "path":  "assets/scripts/newscripts/bridgelevelingadjustmentpointvisualizer.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "45733d8786d56549996b1037ea8a778da9c65d36317fe82b9d24ba8606801ecd",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexjitter.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "fd911b6c8ccea0fe450a87c76c1ad33d17dbd3e9776555f81feec8171c2eec0c",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgecrossbeamworkpoint.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "f26ae28b045d1558fed151d209f2123b31251face6913c83b9f2f45e93534756",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/baseresourcenew.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  13
+                        },
+                        {
+                            "fingerprint":  "52efe798c006368fd7efb6f40a4d467aeb923349deee40c5433368bb3055dc51",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgeconstructionsite.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  22
+                        },
+                        {
+                            "fingerprint":  "124b18b276b9ad021b2a4bb0bf9c778d7e039f7bda9c3bbbe5159c570d8e3f67",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/envmapanimator.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "113a42e92139e5a826ca2a524057a73f13b8aa6723eafccbaac8477944f55514",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/networkmanagement/carriedplayervisualoverride.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "016ebf0f4d264a0720bf161a7e1d32ff6d289b68f0a99b9bf0ec4dcf578008e8",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/playerbridgestageinfoui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "693dfc99062185ef831564b02ff88f411a127dbb632a421673e00f59e2e14947",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexshakea.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "12816ab38cab14c01094e2fb1a3b2e79e32660989c6d868e58aa21ce8aab2be7",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/poolmanager/poolmanager.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "e94a78658d2eee0ac7b62582b2e2666f680029a29f3b5cddf2292a7ff6d04a71",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/wheelbarrowpourgripinteraction.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "f71e4b3e6c0eda9932ab5499de7ea75df9decf343a5c231d86ef70b4104ac5c4",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/npcs/npcanimationcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "022cae3a1cb92b7a6dc36667f4b2863c249ce6aeddf6f34dd5dfd55ebab2fa17",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/networkmanagement/multiplayerroommanager.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "683b596fb6ffb765e6e5f74a0255649830adb90d0c992c1edeffe251b1196aab",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/networkmanagement/wheelbarrowpassengervisualoverride.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "ca17f7d8425d1707c9c06fc14b0fdd50233334936e0cf46dcebaa4ba6cdfd204",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/gameinput.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "11ba8a44d689465c14f59301f8e314bc6c3d0406ce33c463e387c59a0330898b",
+                            "id":  "UNT0007",
+                            "path":  "assets/scripts/newscripts/wheelbarrowdockingvisualizer.cs",
+                            "message":  "unity objects should not use null coalescing. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0007.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "8ce364b9d25d7996e7fa7645c87e191bd43c9afd72941f007de6e6b4b3bfc24f",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/playerwheelbarrowcontroller.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "198fcbc4b5c1e268cf8da473c9b1651045de2e95e3370388e2f214a7b64feea0",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgediagonalbracingworkpoint.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "152be59bbf64461aa637c00e003ad51b6f9d39132a50dbd7743891e4b71089c0",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ventilationgrille.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "a66c1680aa7b8f75c31af6a5e4e073d3ae7d55171069f136084692f1a1000006",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/mountablebridgecomponent.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  11
+                        },
+                        {
+                            "fingerprint":  "b5d90841d6f1d1ed79381e8e9b377df3bc5ba05a702f3debdd0b9a2c086ce2d2",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/playerexternalimpulsecontroller.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "f49cc4a91545b08d5285b90560cb6b779840ebc466c2cc8ad489454c3829d1f6",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/vertexcolorcycler.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "b4825f65dfd19eb2013cc32c527b706d5b2b795fec97bbf392c9950338600647",
+                            "id":  "UNT0039",
+                            "path":  "assets/textmesh pro/examples \u0026 extras/scripts/teletype.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  1
+                        },
+                        {
+                            "fingerprint":  "48d018db1bbb95bce058291a1c83c1f8c6a7f13fd655585dbce9204d61733bc0",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/furnacetemperatureworldui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "bd565f70289c2bb68726565395ff88df36d83a0d6ab5add8aaf2e2e316f0adc0",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/ui/baseresourcedurabilityui.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "a96b4ca7b565142bef9e3bc329eeb115f52ab5ed66b94a04ebc16cf1ef21fa94",
+                            "id":  "UNT0023",
+                            "path":  "assets/scripts/newscripts/foundationfailedconcretetarget.cs",
+                            "message":  "unity objects should not use coalescing assignment. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0023.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "056e9ff7781675591ebe9ca31eff108ae793d80109fb09da3148a806b1b6c905",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/bridgegirderconstructionsite.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        },
+                        {
+                            "fingerprint":  "827e13e79703095b11ae4a1e4d0d549e8f1d2a633fc491600f09fbb280552152",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/wheelbarrowdockingvisualizer.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  3
+                        },
+                        {
+                            "fingerprint":  "a663807b189e984d20879cfa59ec804d7634afbf4e1f8929672c983edd6f92f9",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bellows.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  2
+                        },
+                        {
+                            "fingerprint":  "10deb0709dc35b200b3cdef6a1159aaf6087c96ed9f64b03ae21cb5cdaa36d32",
+                            "id":  "UNT0008",
+                            "path":  "assets/scripts/newscripts/downedplayercarryable.cs",
+                            "message":  "unity objects should not use null propagation. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0008.md)",
+                            "category":  "Correctness",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "c07492209f0b4f4ccad17e2ce4a2798369fca21ef5b46be74248b28376dfe9f5",
+                            "id":  "UNT0039",
+                            "path":  "assets/scripts/newscripts/playermovementfeedback.cs",
+                            "message":  "use requirecomponent attribute when self-invoking getcomponent (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0039.md)",
+                            "category":  "Type Safety",
+                            "count":  5
+                        },
+                        {
+                            "fingerprint":  "a3557f40fb3c265029537b6fe0c3d0171088cc5d50d58c6ff29bc7191d192dc2",
+                            "id":  "UNT0021",
+                            "path":  "assets/scripts/newscripts/bridgedeckpanelworkpoint.cs",
+                            "message":  "unity message should be protected. (https://github.com/microsoft/microsoft.unity.analyzers/blob/main/doc/unt0021.md)",
+                            "category":  "Correctness",
+                            "count":  4
+                        }
+                    ]
+}

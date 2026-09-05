@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -9,16 +11,39 @@ using UnityEngine.SceneManagement;
 
 public static class FoundationConcreteFailureProbe
 {
+    private const string TutorialScenePath = "Assets/Scenes/Tutorial_scene.unity";
+
     [MenuItem("Tools/RageQuitting/Validate Foundation Concrete Failure")]
     public static string ValidateFromMenu()
     {
-        Scene scene = SceneManager.GetActiveScene();
-        bool wasDirty = scene.isDirty;
+        string message = Validate();
+        Debug.Log(message);
+        return message;
+    }
+
+    // Returns a success message only after cleanup. Invalid configuration throws;
+    // unsafe Editor states throw an explicit blocked result before opening the preview.
+    // This validates the saved Tutorial configuration, never the user's live objects.
+    public static string Validate()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling ||
+            EditorApplication.isUpdating)
+            throw new InvalidOperationException("BLOCKED: validation requires an idle EditMode Editor.");
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene open = SceneManager.GetSceneAt(i);
+            if (open.path == TutorialScenePath && open.isDirty)
+                throw new InvalidOperationException("BLOCKED: Tutorial_scene has unsaved changes; saved configuration would be stale.");
+        }
+
+        Scene scene = default;
+        FoundationExcavationVolume[] volumes = Array.Empty<FoundationExcavationVolume>();
         try
         {
+            scene = EditorSceneManager.OpenPreviewScene(TutorialScenePath);
             ValidateMalformedCrackThresholds();
 
-            FoundationExcavationVolume[] volumes = scene.GetRootGameObjects()
+            volumes = scene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<FoundationExcavationVolume>(true))
                 .ToArray();
             if (volumes.Length != 2)
@@ -35,15 +60,38 @@ public static class FoundationConcreteFailureProbe
             foreach (FoundationExcavationVolume volume in volumes)
                 ValidateVolume(volume, stations);
 
-            const string message = "Foundation concrete failure probe passed for both Tutorial_scene foundations.";
-            Debug.Log(message);
-            return message;
+            return "Foundation concrete failure probe passed for both Tutorial_scene foundations.";
         }
         finally
         {
-            if (!wasDirty && scene.IsValid() && scene.isDirty && !EditorSceneManager.SaveScene(scene))
-                Debug.LogError("Foundation concrete failure probe could not restore the scene's clean state.");
+            try
+            {
+                // These materials are allocated by ApplyDiggingState/ApplyConcreteState,
+                // and FoundationExcavationVolume has no OnDestroy to release them.
+                foreach (FoundationExcavationVolume volume in volumes)
+                {
+                    DestroyRuntimeMaterial(volume, "runtimeMaterial");
+                    DestroyRuntimeMaterial(volume, "runtimeConcreteMaterial");
+                }
+            }
+            finally
+            {
+                // Discard the entire transaction, including nonserialized caches and
+                // Initialize() side effects. Never attempt restoration through saving.
+                if (scene.IsValid())
+                    EditorSceneManager.ClosePreviewScene(scene);
+            }
         }
+    }
+
+    private static void DestroyRuntimeMaterial(FoundationExcavationVolume volume, string fieldName)
+    {
+        FieldInfo field = typeof(FoundationExcavationVolume).GetField(fieldName,
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field == null)
+            throw new MissingFieldException(typeof(FoundationExcavationVolume).Name, fieldName);
+        if (volume != null && field.GetValue(volume) is Material material && !EditorUtility.IsPersistent(material))
+            UnityEngine.Object.DestroyImmediate(material);
     }
 
     private static void ValidateMalformedCrackThresholds()
@@ -173,45 +221,38 @@ public static class FoundationConcreteFailureProbe
         if (surfaces.Length == 0)
             throw new InvalidOperationException("Tutorial_scene has no NavMeshSurface with baked data.");
 
-        NavMeshObstacle[] obstacles = volumes
-            .Select(volume => volume != null ? volume.PitNavMeshObstacle : null)
-            .Where(obstacle => obstacle != null)
-            .ToArray();
-        bool[] obstacleEnabled = obstacles.Select(obstacle => obstacle.enabled).ToArray();
-        bool[] obstacleCarving = obstacles.Select(obstacle => obstacle.carving).ToArray();
-
+        // Register read-only baked data in a remote region so the live scene's
+        // baked meshes/obstacles cannot satisfy or carve the probe's samples.
+        Vector3 offset = new Vector3(0f, 10000f, 0f);
+        var instances = new List<NavMeshDataInstance>();
         try
         {
-            foreach (NavMeshObstacle obstacle in obstacles)
-                obstacle.enabled = false;
-            RefreshSurfaceData(surfaces);
-
             foreach (FoundationExcavationVolume volume in volumes)
-                ValidateBakedSlabCenter(volume);
+            {
+                // Check for unrelated navigation data before registering ours.
+                Vector3 center = GetSlabCenter(volume) + offset;
+                if (NavMesh.SamplePosition(center, out _, 1f, NavMesh.AllAreas))
+                    throw new InvalidOperationException("BLOCKED: probe NavMesh sampling region is occupied.");
+            }
+            foreach (NavMeshSurface surface in surfaces)
+            {
+                NavMeshDataInstance instance = NavMesh.AddNavMeshData(surface.navMeshData,
+                    surface.transform.position + offset, surface.transform.rotation);
+                instances.Add(instance);
+                if (!instance.valid)
+                    throw new InvalidOperationException($"Could not register temporary NavMesh data for {surface.name}.");
+            }
+            foreach (FoundationExcavationVolume volume in volumes)
+                ValidateBakedSlabCenter(volume, offset);
         }
         finally
         {
-            foreach (NavMeshSurface surface in surfaces)
-                surface.RemoveData();
-            for (int i = 0; i < obstacles.Length; i++)
-            {
-                obstacles[i].carving = obstacleCarving[i];
-                obstacles[i].enabled = obstacleEnabled[i];
-            }
-            foreach (NavMeshSurface surface in surfaces)
-                surface.AddData();
+            foreach (NavMeshDataInstance instance in instances)
+                instance.Remove();
         }
     }
 
-    private static void RefreshSurfaceData(NavMeshSurface[] surfaces)
-    {
-        foreach (NavMeshSurface surface in surfaces)
-            surface.RemoveData();
-        foreach (NavMeshSurface surface in surfaces)
-            surface.AddData();
-    }
-
-    private static void ValidateBakedSlabCenter(FoundationExcavationVolume volume)
+    private static Vector3 GetSlabCenter(FoundationExcavationVolume volume)
     {
         GameObject proxy = volume != null ? volume.NavMeshBakeProxy : null;
         MeshFilter meshFilter = proxy != null ? proxy.GetComponent<MeshFilter>() : null;
@@ -219,10 +260,15 @@ public static class FoundationConcreteFailureProbe
             throw new InvalidOperationException($"{volume?.name ?? "Foundation"} bake proxy has no mesh.");
 
         Bounds meshBounds = meshFilter.sharedMesh.bounds;
-        Vector3 expectedTop = proxy.transform.TransformPoint(new Vector3(
+        return proxy.transform.TransformPoint(new Vector3(
             meshBounds.center.x,
             meshBounds.max.y,
             meshBounds.center.z));
+    }
+
+    private static void ValidateBakedSlabCenter(FoundationExcavationVolume volume, Vector3 offset)
+    {
+        Vector3 expectedTop = GetSlabCenter(volume) + offset;
         if (!NavMesh.SamplePosition(expectedTop + Vector3.up * 0.05f, out NavMeshHit hit, 0.5f, NavMesh.AllAreas))
             throw new InvalidOperationException($"{volume.name} has no baked NavMesh at the slab center.");
 
