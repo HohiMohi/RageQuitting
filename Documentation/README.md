@@ -45,6 +45,7 @@ flowchart LR
 | [Unity-Configuration-Reference](Unity-Configuration-Reference.md) | indeks komponentów, pól i procedury tworzenia contentu |
 | [Roadmap-And-Audit](Roadmap-And-Audit.md) | ograniczenia, roadmap oraz rekomendacje techniczne |
 | [Known-Issues](Known-Issues.md) | potwierdzone problemy o odłożonym, niskim priorytecie |
+| [Agent-Validation-Harness](Agent-Validation-Harness.md) | lokalny preflight, tiery walidacji, uruchamianie i interpretacja raportów |
 
 ## Statusy
 

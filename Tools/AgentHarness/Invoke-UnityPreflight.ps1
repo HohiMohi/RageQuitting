@@ -33,6 +33,8 @@ $selectionReasons = @()
 $gitBefore = $null
 $gitAfter = $null
 $resolvedTier = if ($Tier -eq 'Auto') { 'Fast' } else { $Tier }
+$requestedScenario = $Scenario
+$resolvedScenario = $null
 $backend = 'unknown'
 $finalStatus = 'failed'
 $exitCode = 2
@@ -62,6 +64,8 @@ function Write-Summary {
         resolvedTier = $resolvedTier
         editModeFilter = $EditModeFilter
         playModeFilter = $PlayModeFilter
+        requestedScenario = $requestedScenario
+        resolvedScenario = $resolvedScenario
         startedAtUtc = $startedAt.ToString('o')
         completedAtUtc = [DateTime]::UtcNow.ToString('o')
         status = $finalStatus
@@ -190,6 +194,9 @@ try {
 
     $tierResolution = Resolve-HarnessTier -RequestedTier $Tier -MapPath (Join-Path $scriptDirectory 'validation-map.json') -GitSnapshot $gitBefore
     $resolvedTier = $tierResolution.tier
+    if ($resolvedTier -in @('Gameplay', 'Full')) {
+        $resolvedScenario = if ([string]::IsNullOrWhiteSpace($Scenario)) { 'TutorialBoot' } else { $Scenario }
+    }
     $selectionReasons = @($tierResolution['reasons'] | ForEach-Object { [string]$_ })
 
     $analyzerScript = Join-Path $scriptDirectory 'Invoke-AnalyzerCheck.ps1'
@@ -585,10 +592,52 @@ try {
         }
     }
 
-    $placeholderNames = @()
     if ($resolvedTier -in @('Gameplay', 'Full')) {
-        $placeholderNames += @('gameplay-scenario', 'network-smoke', 'screenshots')
+        $scenarioDependencies = @($steps | Where-Object {
+            [string]$_['name'] -in @(
+                'editor-context', 'compile', 'console-baseline', 'editmode-tests',
+                'quick-validators', 'playmode-tests')
+        } | ForEach-Object { [string]$_['status'] })
+        if ($scenarioDependencies -contains 'failed') {
+            $steps += New-HarnessStep -Name 'gameplay-scenario' -Status 'failed' -Message 'Gameplay scenario was not run because a prerequisite failed.'
+        }
+        elseif ($scenarioDependencies -contains 'blocked') {
+            $steps += New-HarnessStep -Name 'gameplay-scenario' -Status 'blocked' -Message 'Gameplay scenario was not run because a prerequisite was blocked.'
+        }
+        elseif (-not $connected -or $scenarioDependencies.Count -ne 6 -or
+            $scenarioDependencies -contains 'not_available' -or $scenarioDependencies -contains 'skipped') {
+            $scenarioStatus = if ($AllowLowerTier) { 'skipped' } else { 'not_available' }
+            $steps += New-HarnessStep -Name 'gameplay-scenario' -Status $scenarioStatus -Message 'Gameplay scenario requires all existing validation prerequisites, including PlayMode tests.'
+        }
+        else {
+            $scenarioArguments = @('-Scenario', $resolvedScenario)
+            $steps += Invoke-PreflightUnityCheck -StepName 'gameplay-scenario' -ScriptPath (Join-Path $scriptDirectory 'Invoke-UnityGameplayScenario.ps1') -ChildArtifactDirectory (Join-Path $artifactDirectory 'gameplay-scenario') -ExtraArguments $scenarioArguments
+        }
     }
+
+    if ($resolvedTier -in @('Gameplay', 'Full')) {
+        $networkDependencies = @($steps | Where-Object {
+            [string]$_['name'] -in @(
+                'editor-context', 'compile', 'console-baseline', 'editmode-tests',
+                'quick-validators', 'playmode-tests', 'gameplay-scenario')
+        } | ForEach-Object { [string]$_['status'] })
+        if ($networkDependencies -contains 'failed') {
+            $steps += New-HarnessStep -Name 'network-smoke' -Status 'failed' -Message 'Network smoke was not run because a prerequisite failed.'
+        }
+        elseif ($networkDependencies -contains 'blocked') {
+            $steps += New-HarnessStep -Name 'network-smoke' -Status 'blocked' -Message 'Network smoke was not run because a prerequisite was blocked.'
+        }
+        elseif (-not $connected -or $networkDependencies.Count -ne 7 -or
+            $networkDependencies -contains 'not_available' -or $networkDependencies -contains 'skipped') {
+            $networkStatus = if ($AllowLowerTier) { 'skipped' } else { 'not_available' }
+            $steps += New-HarnessStep -Name 'network-smoke' -Status $networkStatus -Message 'Network smoke requires all existing Gameplay validation prerequisites.'
+        }
+        else {
+            $steps += Invoke-PreflightUnityCheck -StepName 'network-smoke' -ScriptPath (Join-Path $scriptDirectory 'Invoke-UnityNetworkSmoke.ps1') -ChildArtifactDirectory (Join-Path $artifactDirectory 'network-smoke')
+        }
+    }
+
+    $placeholderNames = @()
     if ($resolvedTier -eq 'Full') {
         $placeholderNames += @('all-tests', 'scene-prefab-validation', 'expanded-multiplayer', 'coverage', 'windows-build')
     }
@@ -597,7 +646,7 @@ try {
         $qualifier = @()
         if ($EditModeFilter) { $qualifier += "editModeFilter=$EditModeFilter" }
         if ($PlayModeFilter) { $qualifier += "playModeFilter=$PlayModeFilter" }
-        if ($Scenario) { $qualifier += "scenario=$Scenario" }
+        if ($resolvedScenario) { $qualifier += "scenario=$resolvedScenario" }
         $suffix = if ($qualifier.Count -gt 0) { ' (' + ($qualifier -join ', ') + ')' } else { '' }
         if ($AllowLowerTier) {
             $steps += New-HarnessStep -Name $placeholder -Status 'skipped' -Message "Batch 1 placeholder skipped by -AllowLowerTier$suffix."

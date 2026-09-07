@@ -35,6 +35,8 @@ namespace RageQuitting.Editor.AgentHarness
         private static string ConsoleBaselineScriptPath => Path.Combine(HarnessRoot, "Update-UnityConsoleBaseline.ps1");
         private static string EditModeTestsScriptPath => Path.Combine(HarnessRoot, "Invoke-UnityEditModeTests.ps1");
         private static string PlayModeTestsScriptPath => Path.Combine(HarnessRoot, "Invoke-UnityPlayModeTests.ps1");
+        private static string GameplayScenarioScriptPath => Path.Combine(HarnessRoot, "Invoke-UnityGameplayScenario.ps1");
+        private static string NetworkSmokeScriptPath => Path.Combine(HarnessRoot, "Invoke-UnityNetworkSmoke.ps1");
         private static string QuickValidatorsScriptPath => Path.Combine(HarnessRoot, "Invoke-UnityQuickValidators.ps1");
         private static string DocumentationScriptPath => Path.Combine(HarnessRoot, "Invoke-DocumentationCheck.ps1");
         private static string ArtifactRoot => Path.Combine(ProjectRoot, "Artifacts", "Validation");
@@ -142,6 +144,14 @@ namespace RageQuitting.Editor.AgentHarness
             {
                 if (GUILayout.Button("Quick Validators")) StartScript("Quick Validators", QuickValidatorsScriptPath, "-Json");
             }
+            using (new EditorGUI.DisabledScope(IsHarnessRunning || !File.Exists(GameplayScenarioScriptPath)))
+            {
+                if (GUILayout.Button("Tutorial Boot")) StartScript("Tutorial Boot", GameplayScenarioScriptPath, "-Scenario TutorialBoot -Json");
+            }
+            using (new EditorGUI.DisabledScope(IsHarnessRunning || !File.Exists(NetworkSmokeScriptPath)))
+            {
+                if (GUILayout.Button("Network Smoke")) StartScript("Network Smoke", NetworkSmokeScriptPath, "-Json");
+            }
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
@@ -198,6 +208,8 @@ namespace RageQuitting.Editor.AgentHarness
                 File.Exists(ConsoleBaselineScriptPath) ? null : "Update-UnityConsoleBaseline.ps1",
                 File.Exists(EditModeTestsScriptPath) ? null : "Invoke-UnityEditModeTests.ps1",
                 File.Exists(PlayModeTestsScriptPath) ? null : "Invoke-UnityPlayModeTests.ps1",
+                File.Exists(GameplayScenarioScriptPath) ? null : "Invoke-UnityGameplayScenario.ps1",
+                File.Exists(NetworkSmokeScriptPath) ? null : "Invoke-UnityNetworkSmoke.ps1",
                 File.Exists(QuickValidatorsScriptPath) ? null : "Invoke-UnityQuickValidators.ps1",
                 File.Exists(DocumentationScriptPath) ? null : "Invoke-DocumentationCheck.ps1"
             };
@@ -401,6 +413,8 @@ namespace RageQuitting.Editor.AgentHarness
                 "console-baseline-update.json",
                 "unity-editmode-tests-report.json",
                 "unity-playmode-tests-report.json",
+                "unity-gameplay-scenario-report.json",
+                "unity-network-smoke-report.json",
                 "unity-quick-validators-report.json"
             };
             return reportNames
