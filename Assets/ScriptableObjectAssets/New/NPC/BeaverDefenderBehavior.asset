@@ -19,10 +19,56 @@ MonoBehaviour:
   followDestinationRefreshInterval: 0.25
   maxDefendersPerScout: 1
   familyAlertRadius: 20
-  attackPrepareDuration: 0.35
-  attackRecoveryDuration: 0.8
-  attackApproachRefreshInterval: 0.2
   unreachableTargetTimeout: 5
+  attackPatterns:
+  - name: Heavy
+    weight: 1
+    prepareDuration: 0.15
+    strikes:
+    - damageMultiplier: 1.5
+      animationSpeed: 1
+      gapAfterImpact: 0
+    recoveryDuration: 0.65
+  - name: Double
+    weight: 1
+    prepareDuration: 0.15
+    strikes:
+    - damageMultiplier: 0.75
+      animationSpeed: 1.4
+      gapAfterImpact: 0.18
+    - damageMultiplier: 0.75
+      animationSpeed: 1.4
+      gapAfterImpact: 0
+    recoveryDuration: 0.55
+  - name: Triple 2+1
+    weight: 1
+    prepareDuration: 0.2
+    strikes:
+    - damageMultiplier: 0.5
+      animationSpeed: 1.6
+      gapAfterImpact: 0.08
+    - damageMultiplier: 0.5
+      animationSpeed: 1.6
+      gapAfterImpact: 0.3
+    - damageMultiplier: 0.5
+      animationSpeed: 1.6
+      gapAfterImpact: 0
+    recoveryDuration: 0.6
+  lungeAttack:
+    launchExtraRange: 1
+    telegraphDuration: 0.15
+    speed: 5
+    maxTravelDistance: 1.2
+    animationSpeed: 1.5
+    damageMultiplier: 1
+    recoveryDuration: 0.5
+    chaseRefreshInterval: 0.1
+    unreachableTargetTimeout: 5
+    collisionSkin: 0.02
+    obstacleLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    impulseProfile: {fileID: 11400000, guid: 2d56ecce32fa8dc46abccbc343d8fa4e, type: 2}
   pushZoneSearchRadius: 30
   downedPlayerApproachRefreshInterval: 0.2
   carryingMoveSpeedMultiplier: 0.7

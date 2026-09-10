@@ -20,18 +20,38 @@ MonoBehaviour:
   targetRefreshInterval: 1
   patrolArrivalDistance: 0.75
   deliveryDistance: 1.5
-  hitReactionLockDuration: 0.75
+  hitReactionLockDuration: 0.4
   playerFaction: {fileID: 11400000, guid: 4bae5ec511184baa8a3d2ff9e76710bd, type: 2}
   noticePlayerLockDuration: 1.25
   followDurationMin: 15
   followDurationMax: 30
   followRefreshInterval: 0.25
   followStoppingDistance: 1.5
-  attackPrepareDuration: 1.5
-  attackRecoveryDuration: 0.5
+  closeCombatAttack:
+    name: Scout Strike
+    weight: 1
+    prepareDuration: 0.15
+    strikes:
+    - damageMultiplier: 1
+      animationSpeed: 1.5
+      gapAfterImpact: 0
+    recoveryDuration: 0.5
+  lungeAttack:
+    launchExtraRange: 1
+    telegraphDuration: 0.15
+    speed: 5
+    maxTravelDistance: 1.2
+    animationSpeed: 1.5
+    damageMultiplier: 1
+    recoveryDuration: 0.5
+    chaseRefreshInterval: 0.1
+    unreachableTargetTimeout: 5
+    collisionSkin: 0.02
+    obstacleLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    impulseProfile: {fileID: 11400000, guid: 2d56ecce32fa8dc46abccbc343d8fa4e, type: 2}
   rageHealthThresholdNormalized: 0.5
-  rageApproachRefreshInterval: 0.25
-  rageApproachStoppingDistance: 1.3
   storageSweepPatrolThreshold: 5
   storageSweepArrivalDistance: 1.4
   resourceZoneSweepArrivalDistance: 1.4

@@ -5,12 +5,50 @@ using UnityEngine;
 
 public class NPCAttackController : NetworkBehaviour
 {
+    public readonly struct AttackExecutionOptions
+    {
+        public AttackExecutionOptions(
+            float animationSpeed,
+            float damageMultiplier,
+            Vector3 attackForward,
+            NetworkObject primaryTarget = null,
+            ExternalImpulseProfileSO impulseProfile = null)
+        {
+            AnimationSpeed = NPCActionTiming.ClampPlaybackSpeed(animationSpeed);
+            DamageMultiplier = Mathf.Max(0f, damageMultiplier);
+            AttackForward = Vector3.ProjectOnPlane(attackForward, Vector3.up).normalized;
+            PrimaryTarget = primaryTarget;
+            ImpulseProfile = impulseProfile;
+        }
+
+        public float AnimationSpeed { get; }
+        public float DamageMultiplier { get; }
+        public Vector3 AttackForward { get; }
+        public NetworkObject PrimaryTarget { get; }
+        public ExternalImpulseProfileSO ImpulseProfile { get; }
+    }
+
+    public readonly struct AttackExecutionResult
+    {
+        public AttackExecutionResult(bool cancelled, int hitCount, bool primaryTargetHit)
+        {
+            Cancelled = cancelled;
+            HitCount = hitCount;
+            PrimaryTargetHit = primaryTargetHit;
+        }
+
+        public bool Cancelled { get; }
+        public int HitCount { get; }
+        public bool PrimaryTargetHit { get; }
+    }
+
     private enum PendingAttackType
     {
         None,
         Combat,
         Resource,
-        TargetedCombat
+        TargetedCombat,
+        ConfiguredCombat
     }
 
     [SerializeField] private Transform attackOrigin;
@@ -32,8 +70,17 @@ public class NPCAttackController : NetworkBehaviour
     private NetworkObject pendingCombatTarget;
     private Func<NetworkObject, bool> pendingCombatValidation;
     private Action<NetworkObject, bool> pendingTargetedAttackCompleted;
+    private AttackExecutionOptions pendingConfiguredOptions;
+    private Action<AttackExecutionResult> pendingConfiguredAttackCompleted;
 
     public float AttackRange => Mathf.Max(0.1f, attackRange);
+    public float AttackDamage => Mathf.Max(0f, attackDamage);
+    public float AttackDamageDelay => Mathf.Max(0f, attackDamageDelay);
+
+    public static float CalculateEffectiveImpactDelay(float canonicalDelay, float animationSpeed)
+    {
+        return NPCActionTiming.CalculateEffectiveImpactDelay(canonicalDelay, animationSpeed);
+    }
 
     private void Awake()
     {
@@ -63,6 +110,12 @@ public class NPCAttackController : NetworkBehaviour
             return;
         }
 
+        if (attackType == PendingAttackType.ConfiguredCombat)
+        {
+            PerformConfiguredAttackImmediate();
+            return;
+        }
+
         PerformAttackImmediate();
     }
 
@@ -81,6 +134,21 @@ public class NPCAttackController : NetworkBehaviour
 
         pendingAttackType = PendingAttackType.Combat;
         pendingAttackTime = Time.time + Mathf.Max(0f, attackDamageDelay);
+    }
+
+    public bool StartAttack(AttackExecutionOptions options, Action<AttackExecutionResult> completed)
+    {
+        if (!CanRunServerAuthoritativeAttack())
+        {
+            return false;
+        }
+
+        CancelPendingAttack();
+        pendingConfiguredOptions = options;
+        pendingConfiguredAttackCompleted = completed;
+        pendingAttackType = PendingAttackType.ConfiguredCombat;
+        pendingAttackTime = Time.time + CalculateEffectiveImpactDelay(AttackDamageDelay, options.AnimationSpeed);
+        return true;
     }
 
     public bool StartResourceAttack(BaseResourceNew target, EquippableItemType toolType)
@@ -161,11 +229,45 @@ public class NPCAttackController : NetworkBehaviour
             return;
         }
 
+        PerformConeAttack(1f, transform.forward, null, null);
+    }
+
+    private void PerformConfiguredAttackImmediate()
+    {
+        AttackExecutionOptions options = pendingConfiguredOptions;
+        Action<AttackExecutionResult> completed = pendingConfiguredAttackCompleted;
+        pendingConfiguredAttackCompleted = null;
+
+        if (!CanRunServerAuthoritativeAttack()
+            || (options.PrimaryTarget != null && !IsValidTargetedCombatTarget(options.PrimaryTarget)))
+        {
+            completed?.Invoke(new AttackExecutionResult(true, 0, false));
+            return;
+        }
+
+        Vector3 forward = options.AttackForward.sqrMagnitude > 0.0001f
+            ? options.AttackForward
+            : transform.forward;
+        AttackExecutionResult result = PerformConeAttack(
+            options.DamageMultiplier,
+            forward,
+            options.PrimaryTarget,
+            options.ImpulseProfile);
+        completed?.Invoke(result);
+    }
+
+    private AttackExecutionResult PerformConeAttack(
+        float damageMultiplier,
+        Vector3 forward,
+        NetworkObject primaryTarget,
+        ExternalImpulseProfileSO impulseProfile)
+    {
         Vector3 origin = GetAttackOrigin();
-        Vector3 forward = transform.forward;
         float minimumDot = Mathf.Cos(Mathf.Deg2Rad * Mathf.Clamp(attackAngle, 1f, 360f) * 0.5f);
         Collider[] colliders = Physics.OverlapSphere(origin, Mathf.Max(0.1f, attackRange), attackTargetLayers, QueryTriggerInteraction.Ignore);
         HashSet<Component> damagedTargets = new HashSet<Component>();
+        int hitCount = 0;
+        bool primaryTargetHit = false;
 
         foreach (Collider collider in colliders)
         {
@@ -179,7 +281,7 @@ public class NPCAttackController : NetworkBehaviour
                 continue;
             }
 
-            if (!damagedTargets.Add(target))
+            if (damagedTargets.Contains(target))
             {
                 continue;
             }
@@ -196,8 +298,23 @@ public class NPCAttackController : NetworkBehaviour
                 continue;
             }
 
-            DamageTarget(target);
+            damagedTargets.Add(target);
+            DamageTarget(target, Mathf.Max(0f, damageMultiplier));
+            NetworkObject hitNetworkObject = target.GetComponent<NetworkObject>();
+            if (hitNetworkObject == null)
+            {
+                hitNetworkObject = target.GetComponentInParent<NetworkObject>();
+            }
+            primaryTargetHit |= primaryTarget != null && hitNetworkObject == primaryTarget;
+            hitCount++;
+
+            if (impulseProfile != null && hitNetworkObject != null)
+            {
+                ApplyImpulse(hitNetworkObject, impulseProfile, forward);
+            }
         }
+
+        return new AttackExecutionResult(false, hitCount, primaryTargetHit);
     }
 
     private void PerformResourceAttackImmediate()
@@ -291,9 +408,12 @@ public class NPCAttackController : NetworkBehaviour
 
     private void CancelPendingAttack()
     {
+        Action<AttackExecutionResult> configuredCompleted = pendingConfiguredAttackCompleted;
         pendingAttackType = PendingAttackType.None;
         pendingResourceTarget = null;
+        pendingConfiguredAttackCompleted = null;
         ClearPendingTargetedAttack();
+        configuredCompleted?.Invoke(new AttackExecutionResult(true, 0, false));
     }
 
     private void ClearPendingTargetedAttack()
@@ -476,17 +596,42 @@ public class NPCAttackController : NetworkBehaviour
         return true;
     }
 
-    private void DamageTarget(Component target)
+    private void DamageTarget(Component target, float damageMultiplier = 1f)
     {
+        float damage = attackDamage * Mathf.Max(0f, damageMultiplier);
         if (target is PlayerHealth playerHealth)
         {
-            playerHealth.DamageReceived(attackDamage, NetworkObject);
+            playerHealth.DamageReceived(damage, NetworkObject);
             return;
         }
 
         if (target is NPCHealth npcHealth)
         {
-            npcHealth.DamageReceived(attackDamage, NetworkObject);
+            npcHealth.DamageReceived(damage, NetworkObject);
         }
+    }
+
+    private void ApplyImpulse(NetworkObject target, ExternalImpulseProfileSO profile, Vector3 direction)
+    {
+        MonoBehaviour[] behaviours = target.GetComponents<MonoBehaviour>();
+        foreach (MonoBehaviour behaviour in behaviours)
+        {
+            if (behaviour is IExternalImpulseReceiver receiver)
+            {
+                receiver.TryApplyExternalImpulse(profile.CreateImpulse(direction), NetworkObject);
+                return;
+            }
+        }
+    }
+
+    protected virtual void OnDisable()
+    {
+        CancelPendingAttack();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        CancelPendingAttack();
+        base.OnNetworkDespawn();
     }
 }

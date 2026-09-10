@@ -27,11 +27,15 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private float followDurationMax = 30f;
     [SerializeField] private float followRefreshInterval = 0.25f;
     [SerializeField] private float followStoppingDistance = 1.5f;
-    [SerializeField] private float attackPrepareDuration = 1.5f;
-    [SerializeField] private float attackRecoveryDuration = 0.5f;
+    [SerializeField] private BeaverAttackPatternConfig closeCombatAttack = new BeaverAttackPatternConfig(
+        "Scout Strike",
+        1f,
+        0.15f,
+        new[] { new BeaverStrikeConfig(1f, 1.5f, 0f) },
+        0.5f);
+    [SerializeField] private BeaverLungeConfig lungeAttack = new BeaverLungeConfig(
+        1f, 0.15f, 5f, 1.2f, 1.5f, 1f, 0.5f);
     [SerializeField] private float rageHealthThresholdNormalized = 0.5f;
-    [SerializeField] private float rageApproachRefreshInterval = 0.25f;
-    [SerializeField] private float rageApproachStoppingDistance = 1.3f;
     [SerializeField] private int storageSweepPatrolThreshold = 5;
     [SerializeField] private float storageSweepArrivalDistance = 1.4f;
     [SerializeField] private float resourceZoneSweepArrivalDistance = 1.4f;
@@ -54,11 +58,9 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     public float FollowDurationMax => Mathf.Max(FollowDurationMin, followDurationMax);
     public float FollowRefreshInterval => Mathf.Max(0.05f, followRefreshInterval);
     public float FollowStoppingDistance => Mathf.Max(0.1f, followStoppingDistance);
-    public float AttackPrepareDuration => Mathf.Max(0f, attackPrepareDuration);
-    public float AttackRecoveryDuration => Mathf.Max(0f, attackRecoveryDuration);
+    public BeaverAttackPatternConfig CloseCombatAttack => closeCombatAttack;
+    public BeaverLungeConfig LungeAttack => lungeAttack;
     public float RageHealthThresholdNormalized => Mathf.Clamp01(rageHealthThresholdNormalized);
-    public float RageApproachRefreshInterval => Mathf.Max(0.05f, rageApproachRefreshInterval);
-    public float RageApproachStoppingDistance => Mathf.Max(0.1f, rageApproachStoppingDistance);
     public int StorageSweepPatrolThreshold => Mathf.Max(1, storageSweepPatrolThreshold);
     public float StorageSweepArrivalDistance => Mathf.Max(0.1f, storageSweepArrivalDistance);
     public float ResourceZoneSweepArrivalDistance => Mathf.Max(0.1f, resourceZoneSweepArrivalDistance);
@@ -88,11 +90,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         Delivering,
         PreparingAttack,
         Attacking,
-        AttackRecovery,
         RagePreparingAttack,
         RageAttacking,
-        RageAttackRecovery,
-        RageApproachingTarget,
         ReturningToBaseForStorageSweep,
         MovingToKnownSweepLocation,
         SearchingKnownResourceZone
@@ -138,14 +137,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private float previousStoppingDistance;
         private bool hasPreviousStoppingDistance;
         private float reactionLockEndTime;
-        private float attackPrepareEndTime;
-        private float attackRecoveryEndTime;
-        private float nextRageApproachRefreshTime;
         private float previousHealth;
         private NetworkObject lastAttacker;
         private NetworkObject rageTargetNetworkObject;
         private bool pendingRageAfterCommittedAttack;
         private NPCAnimationController animationController;
+        private BeaverAttackSequenceController attackSequenceController;
         private int consecutivePatrolIdleCount;
         private SweepLocationTarget currentSweepTarget;
         private Vector3 currentSweepDestination;
@@ -164,6 +161,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             currentPatrolRadius = Brain.PatrolRadius;
             previousHealth = Brain.Health != null ? Brain.Health.CurrentHealth : 0f;
             animationController = Brain.GetComponent<NPCAnimationController>();
+            attackSequenceController = Brain.GetComponent<BeaverAttackSequenceController>();
             if (Brain.Health != null)
             {
                 Brain.Health.OnDamaged += BrainHealth_OnDamaged;
@@ -184,6 +182,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             lastAttacker = null;
             rageTargetNetworkObject = null;
             pendingRageAfterCommittedAttack = false;
+            if (attackSequenceController != null)
+            {
+                attackSequenceController.CancelSequence();
+            }
+            Brain.AttackController?.CancelPendingAttacks();
             if (Brain.Agent != null && Brain.Agent.isOnNavMesh)
             {
                 Brain.Agent.ResetPath();
@@ -239,20 +242,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 case ScoutState.Attacking:
                     UpdateAttacking();
                     break;
-                case ScoutState.AttackRecovery:
-                    UpdateAttackRecovery();
-                    break;
                 case ScoutState.RagePreparingAttack:
                     UpdateRagePreparingAttack();
                     break;
                 case ScoutState.RageAttacking:
                     UpdateRageAttacking();
-                    break;
-                case ScoutState.RageAttackRecovery:
-                    UpdateRageAttackRecovery();
-                    break;
-                case ScoutState.RageApproachingTarget:
-                    UpdateRageApproachingTarget();
                     break;
                 case ScoutState.ReturningToBaseForStorageSweep:
                     UpdateReturningToBaseForStorageSweep();
@@ -342,7 +336,6 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             ResetConsecutivePatrolIdleCount();
             reactionLockEndTime = Time.time + config.HitReactionLockDuration;
             state = enterRage ? ScoutState.RagePreparingAttack : ScoutState.PreparingAttack;
-            attackPrepareEndTime = reactionLockEndTime + config.AttackPrepareDuration;
         }
 
         private void EnterIdleSearching()
@@ -376,7 +369,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         {
             StopAgent();
             FaceLastAttacker();
-            if (Time.time >= attackPrepareEndTime)
+            if (Time.time >= reactionLockEndTime)
             {
                 EnterAttacking();
             }
@@ -385,47 +378,53 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private void EnterAttacking()
         {
             state = ScoutState.Attacking;
-            StopAgent();
             FaceLastAttacker();
-
-            if (animationController == null)
+            if (attackSequenceController == null)
             {
-                animationController = Brain.GetComponent<NPCAnimationController>();
+                attackSequenceController = Brain.GetComponent<BeaverAttackSequenceController>();
             }
-
-            if (animationController != null)
+            if (attackSequenceController == null
+                || !attackSequenceController.StartSequence(
+                    lastAttacker,
+                    config.CloseCombatAttack,
+                    config.LungeAttack,
+                    HandleScoutAttackCompleted))
             {
-                animationController.PlayAction();
+                FinishScoutAttack();
             }
-
-            Brain.AttackController?.StartAttack();
-            attackRecoveryEndTime = Time.time + config.AttackRecoveryDuration;
         }
 
         private void UpdateAttacking()
         {
-            StopAgent();
-            if (Time.time >= attackRecoveryEndTime)
+            if (attackSequenceController == null || !attackSequenceController.IsRunning)
             {
-                state = ScoutState.AttackRecovery;
+                FinishScoutAttack();
             }
         }
 
-        private void UpdateAttackRecovery()
+        private void HandleScoutAttackCompleted(bool succeeded)
         {
-            StopAgent();
-            if (Time.time >= attackRecoveryEndTime)
+            if (state == ScoutState.Attacking)
             {
-                if (pendingRageAfterCommittedAttack && IsRageTargetAvailable())
-                {
-                    pendingRageAfterCommittedAttack = false;
-                    EnterRageApproachingOrPreparing();
-                    return;
-                }
-
-                ClearRageState();
-                EnterIdleSearching();
+                FinishScoutAttack();
             }
+            else if (state == ScoutState.RageAttacking)
+            {
+                FinishRageAttack();
+            }
+        }
+
+        private void FinishScoutAttack()
+        {
+            if (pendingRageAfterCommittedAttack && IsRageTargetAvailable())
+            {
+                pendingRageAfterCommittedAttack = false;
+                EnterRagePreparingAttack();
+                return;
+            }
+
+            ClearRageState();
+            EnterIdleSearching();
         }
 
         private void UpdateRagePreparingAttack()
@@ -438,7 +437,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             FaceRageTarget();
-            if (Time.time >= attackPrepareEndTime)
+            if (Time.time >= reactionLockEndTime)
             {
                 EnterRageAttacking();
             }
@@ -453,51 +452,31 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             state = ScoutState.RageAttacking;
-            StopAgent();
             FaceRageTarget();
-
-            if (animationController == null)
+            if (attackSequenceController == null)
             {
-                animationController = Brain.GetComponent<NPCAnimationController>();
+                attackSequenceController = Brain.GetComponent<BeaverAttackSequenceController>();
             }
-
-            if (animationController != null)
+            if (attackSequenceController == null
+                || !attackSequenceController.StartSequence(
+                    rageTargetNetworkObject,
+                    config.CloseCombatAttack,
+                    config.LungeAttack,
+                    HandleScoutAttackCompleted))
             {
-                animationController.PlayAction();
+                FinishRageAttack();
             }
-
-            Brain.AttackController?.StartAttack();
-            attackRecoveryEndTime = Time.time + config.AttackRecoveryDuration;
         }
 
         private void UpdateRageAttacking()
         {
-            StopAgent();
-            if (Time.time >= attackRecoveryEndTime)
+            if (attackSequenceController == null || !attackSequenceController.IsRunning)
             {
-                state = ScoutState.RageAttackRecovery;
+                FinishRageAttack();
             }
         }
 
-        private void UpdateRageAttackRecovery()
-        {
-            StopAgent();
-            if (!IsRageTargetAvailable())
-            {
-                ExitRageToIdle();
-                return;
-            }
-
-            FaceRageTarget();
-            if (Time.time < attackRecoveryEndTime)
-            {
-                return;
-            }
-
-            EnterRageApproachingOrPreparing();
-        }
-
-        private void EnterRageApproachingOrPreparing()
+        private void FinishRageAttack()
         {
             if (!IsRageTargetAvailable())
             {
@@ -505,13 +484,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 return;
             }
 
-            if (IsRageTargetInAttackRange())
-            {
-                EnterRagePreparingAttack();
-                return;
-            }
-
-            EnterRageApproachingTarget();
+            EnterRagePreparingAttack();
         }
 
         private void EnterRagePreparingAttack()
@@ -520,38 +493,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             RestoreAgentStoppingDistance();
             StopAgent();
             FaceRageTarget();
-            attackPrepareEndTime = Time.time + config.AttackPrepareDuration;
-        }
-
-        private void EnterRageApproachingTarget()
-        {
-            state = ScoutState.RageApproachingTarget;
-            nextRageApproachRefreshTime = 0f;
-            ResumeAgent();
-            SetRageApproachStoppingDistance();
-            UpdateRageApproachDestination();
-        }
-
-        private void UpdateRageApproachingTarget()
-        {
-            if (!IsRageTargetAvailable())
-            {
-                ExitRageToIdle();
-                return;
-            }
-
-            if (IsRageTargetInAttackRange())
-            {
-                EnterRagePreparingAttack();
-                return;
-            }
-
-            if (Time.time < nextRageApproachRefreshTime)
-            {
-                return;
-            }
-
-            UpdateRageApproachDestination();
+            reactionLockEndTime = Time.time;
         }
 
         private void UpdateIdleSearching()
@@ -1313,22 +1255,6 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             hasPreviousStoppingDistance = false;
         }
 
-        private void SetRageApproachStoppingDistance()
-        {
-            if (Brain.Agent == null)
-            {
-                return;
-            }
-
-            if (!hasPreviousStoppingDistance)
-            {
-                previousStoppingDistance = Brain.Agent.stoppingDistance;
-                hasPreviousStoppingDistance = true;
-            }
-
-            Brain.Agent.stoppingDistance = config.RageApproachStoppingDistance;
-        }
-
         private GameObject FindClosestStealableObject()
         {
             Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
@@ -1781,15 +1707,13 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         private bool IsAttackCommitted()
         {
-            return state == ScoutState.PreparingAttack || state == ScoutState.Attacking || state == ScoutState.AttackRecovery;
+            return state == ScoutState.PreparingAttack || state == ScoutState.Attacking;
         }
 
         private bool IsRageActive()
         {
             return state == ScoutState.RagePreparingAttack
-                || state == ScoutState.RageAttacking
-                || state == ScoutState.RageAttackRecovery
-                || state == ScoutState.RageApproachingTarget;
+                || state == ScoutState.RageAttacking;
         }
 
         private bool ShouldEnterRage(NPCHealth.DamageEventArgs damageEventArgs)
@@ -1842,30 +1766,6 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             return false;
-        }
-
-        private bool IsRageTargetInAttackRange()
-        {
-            if (rageTargetNetworkObject == null)
-            {
-                return false;
-            }
-
-            float attackRange = Brain.AttackController != null ? Brain.AttackController.AttackRange : Brain.InteractionDistance;
-            return Vector3.Distance(Brain.transform.position, rageTargetNetworkObject.transform.position) <= attackRange;
-        }
-
-        private void UpdateRageApproachDestination()
-        {
-            if (Brain.Agent == null || !Brain.Agent.isOnNavMesh || rageTargetNetworkObject == null)
-            {
-                return;
-            }
-
-            nextRageApproachRefreshTime = Time.time + config.RageApproachRefreshInterval;
-            ResumeAgent();
-            SetRageApproachStoppingDistance();
-            Brain.Agent.SetDestination(rageTargetNetworkObject.transform.position);
         }
 
         private void ExitRageToIdle()

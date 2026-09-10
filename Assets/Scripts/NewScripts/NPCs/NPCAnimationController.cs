@@ -18,8 +18,30 @@ public enum NPCAnimationTrigger
     HitReaction
 }
 
+public struct NPCAnimationTriggerEvent : INetworkSerializable, System.IEquatable<NPCAnimationTriggerEvent>
+{
+    public NPCAnimationTrigger Trigger;
+    public int Sequence;
+    public float PlaybackSpeed;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref Trigger);
+        serializer.SerializeValue(ref Sequence);
+        serializer.SerializeValue(ref PlaybackSpeed);
+    }
+
+    public bool Equals(NPCAnimationTriggerEvent other)
+    {
+        return Trigger == other.Trigger && Sequence == other.Sequence && PlaybackSpeed.Equals(other.PlaybackSpeed);
+    }
+}
+
 public class NPCAnimationController : NetworkBehaviour
 {
+    public const float MinimumOneShotBlendDuration = 0.01f;
+    public const float MaximumOneShotBlendDuration = 1f;
+
     [SerializeField] private Animator animator;
     [SerializeField] private Transform visualRoot;
     [SerializeField] private NPCVisualController visualController;
@@ -29,6 +51,10 @@ public class NPCAnimationController : NetworkBehaviour
     [SerializeField] private float walkSpeedReference = 3.5f;
     [SerializeField] private float idleSpeedThreshold = 0.05f;
     [SerializeField] private float speedDampTime = 0.12f;
+    [SerializeField, Range(MinimumOneShotBlendDuration, MaximumOneShotBlendDuration)]
+    private float oneShotBlendInDuration = 0.08f;
+    [SerializeField, Range(MinimumOneShotBlendDuration, MaximumOneShotBlendDuration)]
+    private float oneShotBlendOutDuration = 0.1f;
 
     private readonly NetworkVariable<float> speedNormalizedNetwork = new NetworkVariable<float>(
         0f,
@@ -40,13 +66,8 @@ public class NPCAnimationController : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
-    private readonly NetworkVariable<int> triggerSequenceNetwork = new NetworkVariable<int>(
-        0,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server);
-
-    private readonly NetworkVariable<NPCAnimationTrigger> triggerNetwork = new NetworkVariable<NPCAnimationTrigger>(
-        NPCAnimationTrigger.None,
+    private readonly NetworkVariable<NPCAnimationTriggerEvent> triggerEventNetwork = new NetworkVariable<NPCAnimationTriggerEvent>(
+        default,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
@@ -63,8 +84,10 @@ public class NPCAnimationController : NetworkBehaviour
     private AnimationClipPlayable oneShotPlayable;
     private AnimationClip idleClip;
     private AnimationClip walkClip;
-    private AnimationClip activeOneShotClip;
     private float oneShotTimer;
+    private float activeOneShotDuration;
+    private float oneShotElapsedTime;
+    private float oneShotStartWeight;
     private bool hasPlayableGraph;
 
     private bool IsNetworkSessionActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
@@ -79,9 +102,9 @@ public class NPCAnimationController : NetworkBehaviour
         PlayTrigger(NPCAnimationTrigger.Notice);
     }
 
-    public void PlayAction()
+    public void PlayAction(float playbackSpeed = 1f)
     {
-        PlayTrigger(NPCAnimationTrigger.Action);
+        PlayTrigger(NPCAnimationTrigger.Action, playbackSpeed);
     }
 
     public void PlayHitReaction()
@@ -108,7 +131,7 @@ public class NPCAnimationController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        triggerSequenceNetwork.OnValueChanged += TriggerSequenceNetwork_OnValueChanged;
+        triggerEventNetwork.OnValueChanged += TriggerEventNetwork_OnValueChanged;
 
         if (IsServer)
         {
@@ -120,7 +143,7 @@ public class NPCAnimationController : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
-        triggerSequenceNetwork.OnValueChanged -= TriggerSequenceNetwork_OnValueChanged;
+        triggerEventNetwork.OnValueChanged -= TriggerEventNetwork_OnValueChanged;
     }
 
     private void Update()
@@ -241,7 +264,7 @@ public class NPCAnimationController : NetworkBehaviour
         return Mathf.Clamp01(speed / speedReference);
     }
 
-    private void PlayTrigger(NPCAnimationTrigger trigger)
+    private void PlayTrigger(NPCAnimationTrigger trigger, float playbackSpeed = 1f)
     {
         if (trigger == NPCAnimationTrigger.None)
         {
@@ -252,43 +275,53 @@ public class NPCAnimationController : NetworkBehaviour
         {
             if (IsServer)
             {
-                SetNetworkTrigger(trigger);
+                SetNetworkTrigger(trigger, playbackSpeed);
             }
             else
             {
-                RequestPlayTriggerServerRpc(trigger);
+                RequestTriggerServerRpc(trigger, playbackSpeed);
             }
 
             return;
         }
 
-        ApplyTrigger(trigger);
+        ApplyTrigger(trigger, playbackSpeed);
+    }
+
+    private void SetNetworkTrigger(NPCAnimationTrigger trigger, float playbackSpeed)
+    {
+        NPCAnimationTriggerEvent current = triggerEventNetwork.Value;
+        triggerEventNetwork.Value = new NPCAnimationTriggerEvent
+        {
+            Trigger = trigger,
+            Sequence = current.Sequence + 1,
+            PlaybackSpeed = NPCActionTiming.ClampPlaybackSpeed(playbackSpeed)
+        };
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestPlayTriggerServerRpc(NPCAnimationTrigger trigger)
+    private void RequestTriggerServerRpc(NPCAnimationTrigger trigger, float playbackSpeed)
     {
-        SetNetworkTrigger(trigger);
-    }
-
-    private void SetNetworkTrigger(NPCAnimationTrigger trigger)
-    {
-        triggerNetwork.Value = trigger;
-        triggerSequenceNetwork.Value++;
-    }
-
-    private void TriggerSequenceNetwork_OnValueChanged(int previousValue, int newValue)
-    {
-        if (newValue == lastHandledTriggerSequence)
+        if (trigger == NPCAnimationTrigger.None || !System.Enum.IsDefined(typeof(NPCAnimationTrigger), trigger))
         {
             return;
         }
 
-        lastHandledTriggerSequence = newValue;
-        ApplyTrigger(triggerNetwork.Value);
+        SetNetworkTrigger(trigger, NPCActionTiming.ClampPlaybackSpeed(playbackSpeed));
     }
 
-    private void ApplyTrigger(NPCAnimationTrigger trigger)
+    private void TriggerEventNetwork_OnValueChanged(NPCAnimationTriggerEvent previousValue, NPCAnimationTriggerEvent newValue)
+    {
+        if (newValue.Sequence == lastHandledTriggerSequence)
+        {
+            return;
+        }
+
+        lastHandledTriggerSequence = newValue.Sequence;
+        ApplyTrigger(newValue.Trigger, newValue.PlaybackSpeed);
+    }
+
+    private void ApplyTrigger(NPCAnimationTrigger trigger, float playbackSpeed)
     {
         if (!EnsureAnimatorReady())
         {
@@ -298,7 +331,7 @@ public class NPCAnimationController : NetworkBehaviour
         AnimationClip clip = GetTriggerClip(trigger);
         if (clip != null)
         {
-            PlayOneShot(clip);
+            PlayOneShot(clip, playbackSpeed);
             return;
         }
     }
@@ -399,9 +432,14 @@ public class NPCAnimationController : NetworkBehaviour
 
         if (oneShotTimer > 0f)
         {
-            oneShotTimer -= Time.deltaTime;
-            float oneShotWeight = Mathf.Clamp01(oneShotTimer / Mathf.Max(0.01f, activeOneShotClip != null ? activeOneShotClip.length : 0.01f));
-            oneShotWeight = Mathf.Sin(oneShotWeight * Mathf.PI);
+            oneShotElapsedTime = Mathf.Min(activeOneShotDuration, oneShotElapsedTime + Time.deltaTime);
+            oneShotTimer = Mathf.Max(0f, activeOneShotDuration - oneShotElapsedTime);
+            float oneShotWeight = CalculateOneShotBlendWeight(
+                oneShotElapsedTime,
+                activeOneShotDuration,
+                oneShotBlendInDuration,
+                oneShotBlendOutDuration,
+                oneShotStartWeight);
             rootMixer.SetInputWeight(0, 1f - oneShotWeight);
             rootMixer.SetInputWeight(1, oneShotWeight);
             return;
@@ -409,6 +447,53 @@ public class NPCAnimationController : NetworkBehaviour
 
         rootMixer.SetInputWeight(0, 1f);
         rootMixer.SetInputWeight(1, 0f);
+    }
+
+    public static float CalculateOneShotBlendWeight(
+        float elapsedTime,
+        float duration,
+        float blendInDuration,
+        float blendOutDuration,
+        float startWeight)
+    {
+        float safeDuration = Mathf.Max(0f, duration);
+        if (safeDuration <= 0f)
+        {
+            return 0f;
+        }
+
+        float safeBlendIn = Mathf.Clamp(
+            blendInDuration,
+            MinimumOneShotBlendDuration,
+            MaximumOneShotBlendDuration);
+        float safeBlendOut = Mathf.Clamp(
+            blendOutDuration,
+            MinimumOneShotBlendDuration,
+            MaximumOneShotBlendDuration);
+        float combinedBlendDuration = safeBlendIn + safeBlendOut;
+        if (combinedBlendDuration > safeDuration && combinedBlendDuration > 0f)
+        {
+            float scale = safeDuration / combinedBlendDuration;
+            safeBlendIn *= scale;
+            safeBlendOut *= scale;
+        }
+
+        float elapsed = Mathf.Clamp(elapsedTime, 0f, safeDuration);
+        float initialWeight = Mathf.Clamp01(startWeight);
+        if (safeBlendIn > 0f && elapsed < safeBlendIn)
+        {
+            float progress = Mathf.SmoothStep(0f, 1f, elapsed / safeBlendIn);
+            return Mathf.Lerp(initialWeight, 1f, progress);
+        }
+
+        float fadeOutStart = safeDuration - safeBlendOut;
+        if (safeBlendOut > 0f && elapsed >= fadeOutStart)
+        {
+            float progress = Mathf.SmoothStep(0f, 1f, (elapsed - fadeOutStart) / safeBlendOut);
+            return 1f - progress;
+        }
+
+        return elapsed >= safeDuration ? 0f : 1f;
     }
 
     private void LoopPlayable(AnimationClipPlayable playable, AnimationClip clip)
@@ -427,7 +512,7 @@ public class NPCAnimationController : NetworkBehaviour
         playable.SetTime(time % clip.length);
     }
 
-    private void PlayOneShot(AnimationClip clip)
+    private void PlayOneShot(AnimationClip clip, float playbackSpeed)
     {
         EnsurePlayableGraph();
         if (!hasPlayableGraph || clip == null)
@@ -435,19 +520,27 @@ public class NPCAnimationController : NetworkBehaviour
             return;
         }
 
+        float currentWeight = oneShotPlayable.IsValid()
+            ? Mathf.Clamp01(rootMixer.GetInputWeight(1))
+            : 0f;
         if (oneShotPlayable.IsValid())
         {
             playableGraph.Disconnect(rootMixer, 1);
             oneShotPlayable.Destroy();
         }
 
-        activeOneShotClip = clip;
-        oneShotTimer = clip.length;
+        float speed = NPCActionTiming.ClampPlaybackSpeed(playbackSpeed);
+        activeOneShotDuration = clip.length / speed;
+        oneShotTimer = activeOneShotDuration;
+        oneShotElapsedTime = 0f;
+        oneShotStartWeight = currentWeight;
         oneShotPlayable = AnimationClipPlayable.Create(playableGraph, clip);
         oneShotPlayable.SetApplyFootIK(false);
+        oneShotPlayable.SetSpeed(speed);
         oneShotPlayable.SetTime(0d);
         playableGraph.Connect(oneShotPlayable, 0, rootMixer, 1);
-        rootMixer.SetInputWeight(1, 1f);
+        rootMixer.SetInputWeight(0, 1f - currentWeight);
+        rootMixer.SetInputWeight(1, currentWeight);
     }
 
     private void OnDisable()

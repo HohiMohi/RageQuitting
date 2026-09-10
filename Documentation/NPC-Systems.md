@@ -179,9 +179,12 @@ Istniejące spawnery scenowe nie zostały automatycznie zmigrowane. Dopóki
 | `requireLineOfSight` | Blokowanie trafienia przez przeszkody |
 | `attackOriginHeight` | Fallback wysokości originu |
 
-Targeted attack przechowuje jeden `PlayerHealth`, ponownie waliduje warunki w
-momencie hitu i wywołuje callback. Pending attacks trzeba anulować przy zmianie
-behavioru.
+Skonfigurowany atak stożkowy zadaje obrażenia per hit wszystkim unikalnym,
+poprawnym wrogim celom w stożku. Przy impact ponownie waliduje dystans, kąt,
+line-of-sight i frakcję; opcjonalnie aplikuje `ExternalImpulseProfileSO`.
+Kanoniczne `attackDamageDelay` wynosi `0.35 s` przy prędkości `1x`, a efektywny
+czas trafienia to `0.35 / animationSpeed`. Legacy API dla resource, targeted i
+basic attack pozostaje dostępne.
 
 ### `NPCAnimationController`
 
@@ -192,9 +195,17 @@ behavioru.
 | `walkSpeedReference` | Prędkość odpowiadająca normalized 1 |
 | `idleSpeedThreshold` | Granica idle |
 | `speedDampTime` | Wygładzenie parametru |
+| `oneShotBlendInDuration` | Płynne wejście one-shota, domyślnie `0.08 s`; zakres runtime/Inspector `0.01-1 s` |
+| `oneShotBlendOutDuration` | Płynne wyjście one-shota, domyślnie `0.10 s`; zakres runtime/Inspector `0.01-1 s` |
 
-Charge może ustawić external normalized speed, ponieważ agent jest wtedy
-wyłączony.
+Kontroler atomowo replikuje trigger, numer sekwencji i playback speed, a klient
+odtwarza `PlayAction(speed)`. Prędkość jest ograniczana do `0.1-4x`, a długość
+one-shot wynosi `clip.length / speed`. Charge nadal może ustawić external
+normalized speed, ponieważ agent jest wtedy wyłączony.
+
+Pierwszy trigger startuje z wagą `0`, retrigger zachowuje bieżącą wagę, a okna
+są skalowane dla krótszych klipów, co usuwa jednoramkowy skok `1 -> ~0` bez
+zmiany `clip.length / speed` ani `0.35 / animationSpeed`.
 
 ## Carry NPC
 
@@ -261,6 +272,47 @@ Priorytet idle: gracze, storage, carry targets, destruction targets, patrol.
 Patrol radius rośnie wtedy, gdy skaut nie znajduje interesującego celu, a nie
 przy każdym literalnym wejściu do Idle.
 
+### Ataki bobrów
+
+`BeaverAttackSequenceController` wykonuje na serwerze per-frame pościg,
+telegraph, bliskie combo, lunge, recovery i cancellation, współpracując z
+`NavMeshAgent`, `NPCAttackController` oraz `NPCAnimationController`. Gdy primary
+target jest poza `AttackRange` przy próbie ataku, bóbr podchodzi do
+`AttackRange + launchExtraRange`. Telegraph śledzi cel, lecz przy launch kierunek
+zostaje zablokowany. Lunge używa potem `NavMeshAgent.Move` bez homingu, z
+`NavMesh.Raycast` na `agent.areaMask` oraz capsule cast na `obstacleLayers` z
+`collisionSkin`.
+
+Domyślny Scout ma reaction `0.4 s`, prepare `0.15 s`, damage `1x`, animation
+speed `1.5x`, recovery `0.5 s` i bazową prędkość lunge `10`.
+
+Wspólne domyślne ustawienia lunge obu bobrów: extra range `1 m`, telegraph
+`0.15 s`, speed `5`, max duration `1.2 s`, animation speed `1.5x`, damage `1x`,
+recovery `0.5 s`, path refresh `0.1 s`, unreachable timeout `5 s`, skin `0.02`
+i wszystkie warstwy przeszkód. Lekki impuls ma horizontal `3.5`, vertical `0.5`,
+deceleration `10`, gravity `1`, duration `0.45 s`, control `0.7`, caps `6/2` i nie
+wymusza dropu.
+
+Wybór combo Defendera jest ważony i nie powtarza bezpośrednio poprzedniego;
+jeśli wszystkie wagi są zerowe, fallbackiem jest Heavy. Profile:
+
+- Heavy: damage `1.5x`, animation speed `1x`, prepare `0.15 s`, recovery `0.65 s`;
+- Double: dwa hity po `0.75x`, speed `1.4x`, gap `0.18 s`, prepare `0.15 s`, recovery `0.55 s`;
+- Triple: trzy hity po `0.5x`, speed `1.6x`, gaps `0.08/0.30 s`, prepare `0.20 s`, recovery `0.60 s`.
+
+Każda pełna sekwencja daje nominalnie `22.5` damage przy bazowym `15`. Jeśli
+primary target wyjdzie z zasięgu między hitami, pozostała część combo jest
+anulowana, po czym następuje chase i lunge.
+
+Wszystkie parametry konfiguruje Inspector w `BeaverScoutBehavior`,
+`BeaverDefenderBehavior` i `BeaverLungeImpulse`; komponenty znajdują się na
+prefabach `NPC_BeaverScout` i `NPC_BeaverDefender`.
+
+Serwer jest właścicielem wyboru, ruchu i damage. Klienci widzą replikowane
+animacje, transform i health. Sekwencja anuluje się przy niepoprawnym lub downed
+celu, external control, wyjściu z behavioru, disable, despawnie albo śmierci;
+u Defendera przejście do carry ma pierwszeństwo.
+
 ### Pamięć magazynów i stref odnawiania
 
 Podczas `IdleSearching` skaut rejestruje magazyny oraz aktywne
@@ -295,9 +347,6 @@ osobny prefab, ciemniejsze materiały oraz visual powiększony z `0.32` do `0.4`
 | `followDestinationRefreshInterval` | Częstotliwość aktualizacji ścieżki |
 | `maxDefendersPerScout` | Limit rezerwacji eskorty jednego skauta |
 | `familyAlertRadius` | Zasięg odbioru alarmu o zaatakowaniu bobra |
-| `attackPrepareDuration` | Przygotowanie przed uderzeniem |
-| `attackRecoveryDuration` | Przerwa po uderzeniu |
-| `attackApproachRefreshInterval` | Częstotliwość aktualizacji pościgu |
 | `unreachableTargetTimeout` | Czas bez pełnej ścieżki przed porzuceniem celu |
 | `pushZoneSearchRadius` | Zasięg szukania strefy wyrzutu przed pickupem |
 | `downedPlayerApproachRefreshInterval` | Odświeżanie ścieżki do gracza i destination |
@@ -316,9 +365,9 @@ ze znanym attackerem. Obrońca reaguje na alarm swojej frakcji bez sprawdzania
 line-of-sight. Cel może być graczem albo wrogim NPC. W aktywnym `AttackMode`
 nowe alarmy są ignorowane do pokonania, despawnu lub utraty bieżącego celu.
 
-`NPCAttackController.StartTargetedAttack(NetworkObject, ...)` wykonuje
-pojedynczy, walidowany atak na wskazanego gracza lub NPC. Istniejący overload
-`PlayerHealth` pozostaje używany przez kozę.
+Ataki Defendera korzystają ze wspólnego `BeaverAttackSequenceController` i
+profili opisanych w sekcji „Ataki bobrów”. Legacy overload `PlayerHealth`
+pozostaje używany przez kozę.
 
 ### Transport powalonego gracza
 
@@ -370,6 +419,9 @@ grupę obrońców; odblokowanie nie tworzy obrońcy natychmiast.
 - Podczas transportu `PlayerRespawnPromptUI` pokazuje `Carried by enemy`.
 - `CarrierThrowPoint` musi leżeć na NavMesh; brak pełnej ścieżki odrzuca strefę.
 - Obecne punkty tutorialowe leżą `1.5 m` bliżej krawędzi niż `ApproachPoint`.
+
+Implementację weryfikują `BeaverAttackFeatureProbe`/setup, 13 skupionych testów
+EditMode oraz strict Gameplay preflight.
 
 ## Goat
 

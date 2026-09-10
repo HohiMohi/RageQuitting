@@ -29,10 +29,27 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
     [SerializeField, Min(0.1f)] private float familyAlertRadius = 20f;
 
     [Header("Combat")]
-    [SerializeField, Min(0f)] private float attackPrepareDuration = 0.35f;
-    [SerializeField, Min(0f)] private float attackRecoveryDuration = 0.8f;
-    [SerializeField, Min(0.05f)] private float attackApproachRefreshInterval = 0.2f;
     [SerializeField, Min(0.1f)] private float unreachableTargetTimeout = 5f;
+    [SerializeField] private BeaverAttackPatternConfig[] attackPatterns =
+    {
+        new BeaverAttackPatternConfig("Heavy", 1f, 0.15f,
+            new[] { new BeaverStrikeConfig(1.5f, 1f, 0f) }, 0.65f),
+        new BeaverAttackPatternConfig("Double", 1f, 0.15f,
+            new[]
+            {
+                new BeaverStrikeConfig(0.75f, 1.4f, 0.18f),
+                new BeaverStrikeConfig(0.75f, 1.4f, 0f)
+            }, 0.55f),
+        new BeaverAttackPatternConfig("Triple 2+1", 1f, 0.2f,
+            new[]
+            {
+                new BeaverStrikeConfig(0.5f, 1.6f, 0.08f),
+                new BeaverStrikeConfig(0.5f, 1.6f, 0.3f),
+                new BeaverStrikeConfig(0.5f, 1.6f, 0f)
+            }, 0.6f)
+    };
+    [SerializeField] private BeaverLungeConfig lungeAttack = new BeaverLungeConfig(
+        1f, 0.15f, 5f, 1.2f, 1.5f, 1f, 0.5f);
 
     [Header("Downed Player Carry")]
     [SerializeField, Min(0.1f)] private float pushZoneSearchRadius = 30f;
@@ -50,10 +67,9 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
     public float FollowDestinationRefreshInterval => Mathf.Max(0.05f, followDestinationRefreshInterval);
     public int MaxDefendersPerScout => Mathf.Max(1, maxDefendersPerScout);
     public float FamilyAlertRadius => Mathf.Max(0.1f, familyAlertRadius);
-    public float AttackPrepareDuration => Mathf.Max(0f, attackPrepareDuration);
-    public float AttackRecoveryDuration => Mathf.Max(0f, attackRecoveryDuration);
-    public float AttackApproachRefreshInterval => Mathf.Max(0.05f, attackApproachRefreshInterval);
     public float UnreachableTargetTimeout => Mathf.Max(0.1f, unreachableTargetTimeout);
+    public BeaverAttackPatternConfig[] AttackPatterns => attackPatterns;
+    public BeaverLungeConfig LungeAttack => lungeAttack;
     public float PushZoneSearchRadius => Mathf.Max(0.1f, pushZoneSearchRadius);
     public float DownedPlayerApproachRefreshInterval => Mathf.Max(0.05f, downedPlayerApproachRefreshInterval);
     public float CarryingMoveSpeedMultiplier => Mathf.Clamp(carryingMoveSpeedMultiplier, 0.1f, 1f);
@@ -72,9 +88,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
         private enum CombatPhase
         {
             Approaching,
-            Preparing,
-            Attacking,
-            Recovery
+            Attacking
         }
 
         private readonly BeaverDefenderBehaviorSO config;
@@ -82,7 +96,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
         private CombatPhase combatPhase;
         private NPCBrain followedScout;
         private NetworkObject combatTarget;
-        private NPCAnimationController animationController;
+        private BeaverAttackSequenceController attackSequenceController;
         private NPCAquaticLocomotionController aquaticLocomotion;
         private DownedPlayerCarryable downedPlayerTarget;
         private GoatPushZone selectedPushZone;
@@ -109,7 +123,7 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
 
         public override void Enter()
         {
-            animationController = Brain.GetComponent<NPCAnimationController>();
+            attackSequenceController = Brain.GetComponent<BeaverAttackSequenceController>();
             aquaticLocomotion = Brain.GetComponent<NPCAquaticLocomotionController>();
             defaultAgentSpeed = Brain.Definition != null ? Brain.Definition.moveSpeed : Brain.Agent.speed;
             NPCFactionDamageAlertSystem.OnNpcFactionMemberDamaged += HandleFactionDamageAlert;
@@ -147,6 +161,10 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
             ClearDownedPlayerCarryState(dropCarriedPlayer: true);
             BeaverDefenderEscortRegistry.Release(Brain);
             Brain.AttackController?.CancelPendingAttacks();
+            if (attackSequenceController != null)
+            {
+                attackSequenceController.CancelSequence();
+            }
             followedScout = null;
             combatTarget = null;
             StopAgent();
@@ -179,6 +197,10 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
 
         private void EnterIdle()
         {
+            if (attackSequenceController != null)
+            {
+                attackSequenceController.CancelSequence();
+            }
             ClearDownedPlayerCarryState(dropCarriedPlayer: true);
             BeaverDefenderEscortRegistry.Release(Brain);
             followedScout = null;
@@ -302,6 +324,10 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
 
         private void EnterAttackMode(NetworkObject target)
         {
+            if (attackSequenceController != null)
+            {
+                attackSequenceController.CancelSequence();
+            }
             ClearDownedPlayerCarryState(dropCarriedPlayer: true);
             BeaverDefenderEscortRegistry.Release(Brain);
             followedScout = null;
@@ -332,92 +358,33 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
                 case CombatPhase.Approaching:
                     TickCombatApproach();
                     break;
-                case CombatPhase.Preparing:
-                    TickCombatPrepare();
-                    break;
                 case CombatPhase.Attacking:
-                    StopAgent();
-                    FaceCombatTarget();
-                    break;
-                case CombatPhase.Recovery:
-                    TickCombatRecovery();
+                    if (attackSequenceController == null || !attackSequenceController.IsRunning)
+                    {
+                        combatPhase = CombatPhase.Approaching;
+                    }
                     break;
             }
         }
 
         private void TickCombatApproach()
         {
-            if (IsCombatTargetInRange())
+            if (attackSequenceController == null)
             {
-                combatPhase = CombatPhase.Preparing;
-                stateEndTime = Time.time + config.AttackPrepareDuration;
-                StopAgent();
-                FaceCombatTarget();
-                return;
+                attackSequenceController = Brain.GetComponent<BeaverAttackSequenceController>();
             }
-
-            if (Time.time < nextDestinationRefreshTime)
-            {
-                return;
-            }
-
-            nextDestinationRefreshTime = Time.time + config.AttackApproachRefreshInterval;
-            float stoppingDistance = Brain.AttackController != null
-                ? Brain.AttackController.AttackRange * 0.85f
-                : Brain.InteractionDistance;
-            if (!TrySetDestination(combatTarget.transform.position, stoppingDistance))
-            {
-                TrackUnreachableTarget();
-                return;
-            }
-
-            unreachableSince = -1f;
+            bool started = attackSequenceController != null
+                && attackSequenceController.StartWeightedSequence(
+                    combatTarget,
+                    config.AttackPatterns,
+                    config.LungeAttack,
+                    HandleAttackSequenceCompleted);
+            combatPhase = started ? CombatPhase.Attacking : CombatPhase.Approaching;
         }
 
-        private void TickCombatPrepare()
+        private void HandleAttackSequenceCompleted(bool succeeded)
         {
-            StopAgent();
-            FaceCombatTarget();
-            if (Time.time < stateEndTime)
-            {
-                return;
-            }
-
-            if (!IsCombatTargetInRange())
-            {
-                combatPhase = CombatPhase.Approaching;
-                return;
-            }
-
-            animationController?.PlayAction();
-            bool started = Brain.AttackController != null
-                && Brain.AttackController.StartTargetedAttack(combatTarget, HandleTargetedAttackCompleted);
-            if (started)
-            {
-                combatPhase = CombatPhase.Attacking;
-            }
-            else
-            {
-                combatPhase = CombatPhase.Approaching;
-            }
-        }
-
-        private void HandleTargetedAttackCompleted(NetworkObject target, bool hit)
-        {
-            if (currentState != BeaverDefenderState.AttackMode)
-            {
-                return;
-            }
-
-            combatPhase = CombatPhase.Recovery;
-            stateEndTime = Time.time + config.AttackRecoveryDuration;
-        }
-
-        private void TickCombatRecovery()
-        {
-            StopAgent();
-            FaceCombatTarget();
-            if (Time.time >= stateEndTime)
+            if (currentState == BeaverDefenderState.AttackMode)
             {
                 combatPhase = CombatPhase.Approaching;
             }
@@ -440,6 +407,10 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
 
         private void BeginApproachingDownedPlayer(DownedPlayerCarryable carryable)
         {
+            if (attackSequenceController != null)
+            {
+                attackSequenceController.CancelSequence();
+            }
             if (carryable == null
                 || Brain.Carrier == null
                 || !Brain.Carrier.CanCarryObject
@@ -904,19 +875,6 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
             return false;
         }
 
-        private bool IsCombatTargetInRange()
-        {
-            if (combatTarget == null)
-            {
-                return false;
-            }
-
-            float attackRange = Brain.AttackController != null
-                ? Brain.AttackController.AttackRange
-                : Brain.InteractionDistance;
-            return Vector3.Distance(Brain.transform.position, combatTarget.transform.position) <= attackRange;
-        }
-
         private void TrackUnreachableTarget()
         {
             if (unreachableSince < 0f)
@@ -951,30 +909,6 @@ public class BeaverDefenderBehaviorSO : NPCBehaviorSO
             NavMeshPath path = new NavMeshPath();
             return Brain.Agent.CalculatePath(destination, path)
                 && path.status == NavMeshPathStatus.PathComplete;
-        }
-
-        private void FaceCombatTarget()
-        {
-            if (combatTarget == null)
-            {
-                return;
-            }
-
-            Vector3 direction = combatTarget.transform.position - Brain.transform.position;
-            direction.y = 0f;
-            if (direction.sqrMagnitude <= 0.0001f)
-            {
-                return;
-            }
-
-            float angularSpeed = Brain.Definition != null ? Brain.Definition.angularSpeed : 360f;
-            float stepDuration = Brain.Definition != null
-                ? Mathf.Max(Brain.Definition.decisionTickInterval, Time.deltaTime)
-                : Mathf.Max(0.2f, Time.deltaTime);
-            Brain.transform.rotation = Quaternion.RotateTowards(
-                Brain.transform.rotation,
-                Quaternion.LookRotation(direction.normalized, Vector3.up),
-                angularSpeed * stepDuration);
         }
 
         private void ResumeAgent(float stoppingDistance)
