@@ -46,6 +46,8 @@ flowchart LR
 | [Roadmap-And-Audit](Roadmap-And-Audit.md) | ograniczenia, roadmap oraz rekomendacje techniczne |
 | [Known-Issues](Known-Issues.md) | potwierdzone problemy o odłożonym, niskim priorytecie |
 | [Agent-Validation-Harness](Agent-Validation-Harness.md) | lokalny preflight, tiery walidacji, uruchamianie i interpretacja raportów |
+| [UnityProjectContext](UnityProjectContext.md) | zwięzły kontekst projektu i środowiska dla agentów |
+| [Lighting-And-Post-Processing-Research](Lighting-And-Post-Processing-Research.md) | stan renderingu, rekomendacje URP, lighting, probes i post-processing |
 
 ## Statusy
 

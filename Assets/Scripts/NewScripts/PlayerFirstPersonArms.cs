@@ -81,6 +81,10 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     private Camera baseCamera;
     private int originalBaseCameraCullingMask;
     private bool baseCameraMaskOverridden;
+    private bool originalBaseCameraPostProcessing;
+    private AntialiasingMode originalBaseCameraAntialiasing;
+    private AntialiasingQuality originalBaseCameraAntialiasingQuality;
+    private bool baseCameraRenderingOverridden;
     private float actionTimer;
     private float hitReactionTimer;
     private float actionCameraFeedbackTimer;
@@ -139,6 +143,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     {
         UnsubscribeEvents();
         cameraFeedbackComposer?.ClearActionFeedback();
+        DestroyFirstPersonCamera();
     }
 
     private void Update()
@@ -313,9 +318,22 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         firstPersonCamera.nearClipPlane = Mathf.Max(0.001f, firstPersonNearClipPlane);
 
         UniversalAdditionalCameraData baseCameraData = baseCamera.GetUniversalAdditionalCameraData();
+        originalBaseCameraPostProcessing = baseCameraData.renderPostProcessing;
+        originalBaseCameraAntialiasing = baseCameraData.antialiasing;
+        originalBaseCameraAntialiasingQuality = baseCameraData.antialiasingQuality;
+        baseCameraRenderingOverridden = true;
+        baseCameraData.renderPostProcessing = false;
+        baseCameraData.antialiasing = AntialiasingMode.None;
         UniversalAdditionalCameraData overlayCameraData = cameraObject.AddComponent<UniversalAdditionalCameraData>();
         overlayCameraData.renderType = CameraRenderType.Overlay;
-        overlayCameraData.renderPostProcessing = false;
+        overlayCameraData.renderPostProcessing = true;
+        overlayCameraData.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+        overlayCameraData.antialiasingQuality = AntialiasingQuality.High;
+        overlayCameraData.volumeTrigger = baseCameraData.volumeTrigger;
+        int postProcessingLayer = LayerMask.NameToLayer("PostProcessing");
+        overlayCameraData.volumeLayerMask = postProcessingLayer >= 0
+            ? baseCameraData.volumeLayerMask | (1 << postProcessingLayer)
+            : baseCameraData.volumeLayerMask;
         if (!baseCameraData.cameraStack.Contains(firstPersonCamera))
         {
             baseCameraData.cameraStack.Add(firstPersonCamera);
@@ -336,9 +354,17 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             {
                 baseCamera.cullingMask = originalBaseCameraCullingMask;
             }
+
+            if (baseCameraRenderingOverridden)
+            {
+                baseCameraData.renderPostProcessing = originalBaseCameraPostProcessing;
+                baseCameraData.antialiasing = originalBaseCameraAntialiasing;
+                baseCameraData.antialiasingQuality = originalBaseCameraAntialiasingQuality;
+            }
         }
 
         baseCameraMaskOverridden = false;
+        baseCameraRenderingOverridden = false;
         baseCamera = null;
         if (firstPersonCamera != null)
         {
