@@ -412,9 +412,32 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite, ILevelingMea
             {
                 if (point == null) continue;
                 int id = (int)point.WorkPointId;
-                bool active = (currentStage == BridgeConstructionStage.Leveling && point.IsLevelingPoint) ||
-                              (currentStage == BridgeConstructionStage.Fastening && id >= 10 && id <= 13);
-                point.gameObject.SetActive(active);
+                bool isFastener = id >= (int)BridgeGirderWorkPointId.Fastener0 &&
+                                  id <= (int)BridgeGirderWorkPointId.Fastener3;
+                if (!isFastener)
+                {
+                    point.gameObject.SetActive(currentStage == BridgeConstructionStage.Leveling && point.IsLevelingPoint);
+                    continue;
+                }
+
+                bool fastening = currentStage == BridgeConstructionStage.Fastening;
+                bool complete = currentStage == BridgeConstructionStage.Complete;
+                point.gameObject.SetActive(fastening || complete);
+                point.enabled = fastening;
+                foreach (Collider fastenerCollider in point.GetComponentsInChildren<Collider>(true))
+                {
+                    fastenerCollider.enabled = fastening;
+                }
+
+                BridgeGirderFastenerVisual fastenerVisual = point.GetComponent<BridgeGirderFastenerVisual>();
+                if (fastenerVisual != null)
+                {
+                    float required = GetWorkflow() != null ? GetWorkflow().FastenerProgressNeeded : 1f;
+                    float normalizedProgress = complete
+                        ? 1f
+                        : fastenerProgress[id - (int)BridgeGirderWorkPointId.Fastener0] / Mathf.Max(0.01f, required);
+                    fastenerVisual.ApplyState(fastening || complete, normalizedProgress);
+                }
             }
         }
 

@@ -1,0 +1,5408 @@
+fileFormatVersion: 2
+guid: 7af0e8d4d5a74a147b74272e850828dc
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5053069939134298271
+    second: Bridge_Abutment_MetallicSmoothness_0
+  - first:
+      213: -4457309164458804379
+    second: Bridge_Abutment_MetallicSmoothness_1
+  - first:
+      213: 6470353876558681202
+    second: Bridge_Abutment_MetallicSmoothness_2
+  - first:
+      213: 3479977680109384290
+    second: Bridge_Abutment_MetallicSmoothness_3
+  - first:
+      213: -3762448871848016307
+    second: Bridge_Abutment_MetallicSmoothness_4
+  - first:
+      213: 3831782378139704127
+    second: Bridge_Abutment_MetallicSmoothness_5
+  - first:
+      213: 5057774288491117032
+    second: Bridge_Abutment_MetallicSmoothness_6
+  - first:
+      213: 7027044019741112765
+    second: Bridge_Abutment_MetallicSmoothness_7
+  - first:
+      213: -2094762456492869504
+    second: Bridge_Abutment_MetallicSmoothness_8
+  - first:
+      213: 5181963204824872127
+    second: Bridge_Abutment_MetallicSmoothness_9
+  - first:
+      213: -8695016210308908320
+    second: Bridge_Abutment_MetallicSmoothness_10
+  - first:
+      213: -1413018560072803002
+    second: Bridge_Abutment_MetallicSmoothness_11
+  - first:
+      213: 2844054696025513698
+    second: Bridge_Abutment_MetallicSmoothness_12
+  - first:
+      213: -2772241897646699306
+    second: Bridge_Abutment_MetallicSmoothness_13
+  - first:
+      213: -100705041915191277
+    second: Bridge_Abutment_MetallicSmoothness_14
+  - first:
+      213: -707385423459204952
+    second: Bridge_Abutment_MetallicSmoothness_15
+  - first:
+      213: 1701137561024573613
+    second: Bridge_Abutment_MetallicSmoothness_16
+  - first:
+      213: 8030986571845883537
+    second: Bridge_Abutment_MetallicSmoothness_17
+  - first:
+      213: 6559430258225273357
+    second: Bridge_Abutment_MetallicSmoothness_18
+  - first:
+      213: -8514557808845501215
+    second: Bridge_Abutment_MetallicSmoothness_19
+  - first:
+      213: 3192075262241937537
+    second: Bridge_Abutment_MetallicSmoothness_20
+  - first:
+      213: 902566686527166253
+    second: Bridge_Abutment_MetallicSmoothness_21
+  - first:
+      213: 4494956326922582346
+    second: Bridge_Abutment_MetallicSmoothness_22
+  - first:
+      213: 3886465161033747677
+    second: Bridge_Abutment_MetallicSmoothness_23
+  - first:
+      213: 4672221903456343131
+    second: Bridge_Abutment_MetallicSmoothness_24
+  - first:
+      213: -8237770208279800980
+    second: Bridge_Abutment_MetallicSmoothness_25
+  - first:
+      213: 4954568636628205368
+    second: Bridge_Abutment_MetallicSmoothness_26
+  - first:
+      213: -8891389479275501095
+    second: Bridge_Abutment_MetallicSmoothness_27
+  - first:
+      213: -1348354317104900469
+    second: Bridge_Abutment_MetallicSmoothness_28
+  - first:
+      213: -65014386998644323
+    second: Bridge_Abutment_MetallicSmoothness_29
+  - first:
+      213: 6213533449318653314
+    second: Bridge_Abutment_MetallicSmoothness_30
+  - first:
+      213: -7162104578695269377
+    second: Bridge_Abutment_MetallicSmoothness_31
+  - first:
+      213: -9018436885154085064
+    second: Bridge_Abutment_MetallicSmoothness_32
+  - first:
+      213: -4120736986790431297
+    second: Bridge_Abutment_MetallicSmoothness_33
+  - first:
+      213: -719965279738680866
+    second: Bridge_Abutment_MetallicSmoothness_34
+  - first:
+      213: -7700123857530106760
+    second: Bridge_Abutment_MetallicSmoothness_35
+  - first:
+      213: -1950337202243283897
+    second: Bridge_Abutment_MetallicSmoothness_36
+  - first:
+      213: 2021304850149136308
+    second: Bridge_Abutment_MetallicSmoothness_37
+  - first:
+      213: -2666089513883971013
+    second: Bridge_Abutment_MetallicSmoothness_38
+  - first:
+      213: 817915293772908604
+    second: Bridge_Abutment_MetallicSmoothness_39
+  - first:
+      213: 4128021492445434231
+    second: Bridge_Abutment_MetallicSmoothness_40
+  - first:
+      213: -2126318850742324353
+    second: Bridge_Abutment_MetallicSmoothness_41
+  - first:
+      213: -5875572531433992414
+    second: Bridge_Abutment_MetallicSmoothness_42
+  - first:
+      213: -5546542234139611597
+    second: Bridge_Abutment_MetallicSmoothness_43
+  - first:
+      213: 3406142216781919156
+    second: Bridge_Abutment_MetallicSmoothness_44
+  - first:
+      213: 377587808975677419
+    second: Bridge_Abutment_MetallicSmoothness_45
+  - first:
+      213: -5493640398279387876
+    second: Bridge_Abutment_MetallicSmoothness_46
+  - first:
+      213: 1639599007955628321
+    second: Bridge_Abutment_MetallicSmoothness_47
+  - first:
+      213: 1025048226370269563
+    second: Bridge_Abutment_MetallicSmoothness_48
+  - first:
+      213: 3473618831268838022
+    second: Bridge_Abutment_MetallicSmoothness_49
+  - first:
+      213: -1922839724657630468
+    second: Bridge_Abutment_MetallicSmoothness_50
+  - first:
+      213: 2580145027907665907
+    second: Bridge_Abutment_MetallicSmoothness_51
+  - first:
+      213: 4819101572619270234
+    second: Bridge_Abutment_MetallicSmoothness_52
+  - first:
+      213: -6474500985721808278
+    second: Bridge_Abutment_MetallicSmoothness_53
+  - first:
+      213: 4184507033796616999
+    second: Bridge_Abutment_MetallicSmoothness_54
+  - first:
+      213: 3926003631166638243
+    second: Bridge_Abutment_MetallicSmoothness_55
+  - first:
+      213: 2869956093805612543
+    second: Bridge_Abutment_MetallicSmoothness_56
+  - first:
+      213: -906618926844898437
+    second: Bridge_Abutment_MetallicSmoothness_57
+  - first:
+      213: 6226615644660270414
+    second: Bridge_Abutment_MetallicSmoothness_58
+  - first:
+      213: 2763330555901084350
+    second: Bridge_Abutment_MetallicSmoothness_59
+  - first:
+      213: 1149629547954658958
+    second: Bridge_Abutment_MetallicSmoothness_60
+  - first:
+      213: -2596497664189978771
+    second: Bridge_Abutment_MetallicSmoothness_61
+  - first:
+      213: -4916437193992679874
+    second: Bridge_Abutment_MetallicSmoothness_62
+  - first:
+      213: -363380756440228901
+    second: Bridge_Abutment_MetallicSmoothness_63
+  - first:
+      213: 5421897876658342666
+    second: Bridge_Abutment_MetallicSmoothness_64
+  - first:
+      213: -6542951835056783499
+    second: Bridge_Abutment_MetallicSmoothness_65
+  - first:
+      213: -8810280826282409122
+    second: Bridge_Abutment_MetallicSmoothness_66
+  - first:
+      213: -1757251736787898261
+    second: Bridge_Abutment_MetallicSmoothness_67
+  - first:
+      213: 8788948822497657575
+    second: Bridge_Abutment_MetallicSmoothness_68
+  - first:
+      213: -4887926984777686345
+    second: Bridge_Abutment_MetallicSmoothness_69
+  - first:
+      213: -802942221969548877
+    second: Bridge_Abutment_MetallicSmoothness_70
+  - first:
+      213: -4184350970598414853
+    second: Bridge_Abutment_MetallicSmoothness_71
+  - first:
+      213: -8788220422108933098
+    second: Bridge_Abutment_MetallicSmoothness_72
+  - first:
+      213: 482737139480362319
+    second: Bridge_Abutment_MetallicSmoothness_73
+  - first:
+      213: 6370423910253497717
+    second: Bridge_Abutment_MetallicSmoothness_74
+  - first:
+      213: -5455919692218428986
+    second: Bridge_Abutment_MetallicSmoothness_75
+  - first:
+      213: -4641147305938702195
+    second: Bridge_Abutment_MetallicSmoothness_76
+  - first:
+      213: 1862353701748819507
+    second: Bridge_Abutment_MetallicSmoothness_77
+  - first:
+      213: -6242017127415983164
+    second: Bridge_Abutment_MetallicSmoothness_78
+  - first:
+      213: -8043923379390411379
+    second: Bridge_Abutment_MetallicSmoothness_79
+  - first:
+      213: 3347897808980923142
+    second: Bridge_Abutment_MetallicSmoothness_80
+  - first:
+      213: 1967961162806180329
+    second: Bridge_Abutment_MetallicSmoothness_81
+  - first:
+      213: -1974227980439339002
+    second: Bridge_Abutment_MetallicSmoothness_82
+  - first:
+      213: -2278294881741170820
+    second: Bridge_Abutment_MetallicSmoothness_83
+  - first:
+      213: -678772682180930491
+    second: Bridge_Abutment_MetallicSmoothness_84
+  - first:
+      213: 8045270402143153973
+    second: Bridge_Abutment_MetallicSmoothness_85
+  - first:
+      213: 7769220267585504237
+    second: Bridge_Abutment_MetallicSmoothness_86
+  - first:
+      213: 2382944001595239038
+    second: Bridge_Abutment_MetallicSmoothness_87
+  - first:
+      213: -10282778183126834
+    second: Bridge_Abutment_MetallicSmoothness_88
+  - first:
+      213: 2384509585148432935
+    second: Bridge_Abutment_MetallicSmoothness_89
+  - first:
+      213: -6981745819415268691
+    second: Bridge_Abutment_MetallicSmoothness_90
+  - first:
+      213: 5716488734709209988
+    second: Bridge_Abutment_MetallicSmoothness_91
+  - first:
+      213: -7640269667902570074
+    second: Bridge_Abutment_MetallicSmoothness_92
+  - first:
+      213: -2076595860125747167
+    second: Bridge_Abutment_MetallicSmoothness_93
+  - first:
+      213: 7388758270090851053
+    second: Bridge_Abutment_MetallicSmoothness_94
+  - first:
+      213: 7824602746046568532
+    second: Bridge_Abutment_MetallicSmoothness_95
+  - first:
+      213: 8865590690798860473
+    second: Bridge_Abutment_MetallicSmoothness_96
+  - first:
+      213: 1655076321205531231
+    second: Bridge_Abutment_MetallicSmoothness_97
+  - first:
+      213: 7409186405157863791
+    second: Bridge_Abutment_MetallicSmoothness_98
+  - first:
+      213: 1000144776935606981
+    second: Bridge_Abutment_MetallicSmoothness_99
+  - first:
+      213: 8818563140118236376
+    second: Bridge_Abutment_MetallicSmoothness_100
+  - first:
+      213: -5871122770776553879
+    second: Bridge_Abutment_MetallicSmoothness_101
+  - first:
+      213: -3254822040516666873
+    second: Bridge_Abutment_MetallicSmoothness_102
+  - first:
+      213: 1400053813305260206
+    second: Bridge_Abutment_MetallicSmoothness_103
+  - first:
+      213: 618679387074720856
+    second: Bridge_Abutment_MetallicSmoothness_104
+  - first:
+      213: 2169379280971929843
+    second: Bridge_Abutment_MetallicSmoothness_105
+  - first:
+      213: -475356694510662868
+    second: Bridge_Abutment_MetallicSmoothness_106
+  - first:
+      213: 7806940261611354754
+    second: Bridge_Abutment_MetallicSmoothness_107
+  - first:
+      213: -44672447417865566
+    second: Bridge_Abutment_MetallicSmoothness_108
+  - first:
+      213: 263382743197199115
+    second: Bridge_Abutment_MetallicSmoothness_109
+  - first:
+      213: 7645046849177933894
+    second: Bridge_Abutment_MetallicSmoothness_110
+  - first:
+      213: -1119156669896601131
+    second: Bridge_Abutment_MetallicSmoothness_111
+  - first:
+      213: 4598329811872139169
+    second: Bridge_Abutment_MetallicSmoothness_112
+  - first:
+      213: -535751320405188356
+    second: Bridge_Abutment_MetallicSmoothness_113
+  - first:
+      213: -1413767360195465415
+    second: Bridge_Abutment_MetallicSmoothness_114
+  - first:
+      213: -5763016702597834955
+    second: Bridge_Abutment_MetallicSmoothness_115
+  - first:
+      213: -839477273396768468
+    second: Bridge_Abutment_MetallicSmoothness_116
+  - first:
+      213: 5090214254808125963
+    second: Bridge_Abutment_MetallicSmoothness_117
+  - first:
+      213: -6457783530085636132
+    second: Bridge_Abutment_MetallicSmoothness_118
+  - first:
+      213: 4384088794716712292
+    second: Bridge_Abutment_MetallicSmoothness_119
+  - first:
+      213: -2823327733591438929
+    second: Bridge_Abutment_MetallicSmoothness_120
+  - first:
+      213: -5912088363075885650
+    second: Bridge_Abutment_MetallicSmoothness_121
+  - first:
+      213: -8720557708717277641
+    second: Bridge_Abutment_MetallicSmoothness_122
+  - first:
+      213: -571047427288471087
+    second: Bridge_Abutment_MetallicSmoothness_123
+  - first:
+      213: 8664393456938762010
+    second: Bridge_Abutment_MetallicSmoothness_124
+  - first:
+      213: 5962858435492495429
+    second: Bridge_Abutment_MetallicSmoothness_125
+  - first:
+      213: 3979965853807972845
+    second: Bridge_Abutment_MetallicSmoothness_126
+  - first:
+      213: -2379978355135262087
+    second: Bridge_Abutment_MetallicSmoothness_127
+  - first:
+      213: 6664329210938322986
+    second: Bridge_Abutment_MetallicSmoothness_128
+  - first:
+      213: -5988126354447261396
+    second: Bridge_Abutment_MetallicSmoothness_129
+  - first:
+      213: -8446907088409503334
+    second: Bridge_Abutment_MetallicSmoothness_130
+  - first:
+      213: -7609805257569639165
+    second: Bridge_Abutment_MetallicSmoothness_131
+  - first:
+      213: 5622495252883171340
+    second: Bridge_Abutment_MetallicSmoothness_132
+  - first:
+      213: 8319702862711439202
+    second: Bridge_Abutment_MetallicSmoothness_133
+  - first:
+      213: -2201418984083191686
+    second: Bridge_Abutment_MetallicSmoothness_134
+  - first:
+      213: 7749077098692111697
+    second: Bridge_Abutment_MetallicSmoothness_135
+  - first:
+      213: 7376817931025736261
+    second: Bridge_Abutment_MetallicSmoothness_136
+  - first:
+      213: 8269685768170428422
+    second: Bridge_Abutment_MetallicSmoothness_137
+  - first:
+      213: -1554166056615801712
+    second: Bridge_Abutment_MetallicSmoothness_138
+  - first:
+      213: -4286316221840862749
+    second: Bridge_Abutment_MetallicSmoothness_139
+  - first:
+      213: -6211663948313250179
+    second: Bridge_Abutment_MetallicSmoothness_140
+  - first:
+      213: -5924926021395428835
+    second: Bridge_Abutment_MetallicSmoothness_141
+  - first:
+      213: -3417443558975442257
+    second: Bridge_Abutment_MetallicSmoothness_142
+  - first:
+      213: 4061084636158761589
+    second: Bridge_Abutment_MetallicSmoothness_143
+  - first:
+      213: -4143089487245738511
+    second: Bridge_Abutment_MetallicSmoothness_144
+  - first:
+      213: 6952068666516458212
+    second: Bridge_Abutment_MetallicSmoothness_145
+  - first:
+      213: -4267701055597892972
+    second: Bridge_Abutment_MetallicSmoothness_146
+  - first:
+      213: 2771962598241044058
+    second: Bridge_Abutment_MetallicSmoothness_147
+  - first:
+      213: 5819533700477525917
+    second: Bridge_Abutment_MetallicSmoothness_148
+  - first:
+      213: -7222570424079422814
+    second: Bridge_Abutment_MetallicSmoothness_149
+  - first:
+      213: 5703737729090339341
+    second: Bridge_Abutment_MetallicSmoothness_150
+  - first:
+      213: 9010538039606811811
+    second: Bridge_Abutment_MetallicSmoothness_151
+  - first:
+      213: -2767619279420723516
+    second: Bridge_Abutment_MetallicSmoothness_152
+  - first:
+      213: -8463505661460868826
+    second: Bridge_Abutment_MetallicSmoothness_153
+  - first:
+      213: -630432948292570798
+    second: Bridge_Abutment_MetallicSmoothness_154
+  - first:
+      213: -6066798967332882529
+    second: Bridge_Abutment_MetallicSmoothness_155
+  - first:
+      213: -3992670245347558711
+    second: Bridge_Abutment_MetallicSmoothness_156
+  - first:
+      213: 1239364872824817352
+    second: Bridge_Abutment_MetallicSmoothness_157
+  - first:
+      213: 2451413908631120483
+    second: Bridge_Abutment_MetallicSmoothness_158
+  - first:
+      213: 3509229700180760342
+    second: Bridge_Abutment_MetallicSmoothness_159
+  - first:
+      213: -6392983607237621528
+    second: Bridge_Abutment_MetallicSmoothness_160
+  - first:
+      213: 3975911682898546552
+    second: Bridge_Abutment_MetallicSmoothness_161
+  - first:
+      213: -8344929290788302655
+    second: Bridge_Abutment_MetallicSmoothness_162
+  - first:
+      213: 5917891041116235108
+    second: Bridge_Abutment_MetallicSmoothness_163
+  - first:
+      213: -7478547895580293520
+    second: Bridge_Abutment_MetallicSmoothness_164
+  - first:
+      213: -5583497773638364815
+    second: Bridge_Abutment_MetallicSmoothness_165
+  - first:
+      213: -805632930015153696
+    second: Bridge_Abutment_MetallicSmoothness_166
+  - first:
+      213: 485674791118184463
+    second: Bridge_Abutment_MetallicSmoothness_167
+  - first:
+      213: -2640174705339979990
+    second: Bridge_Abutment_MetallicSmoothness_168
+  - first:
+      213: -4653841548477515880
+    second: Bridge_Abutment_MetallicSmoothness_169
+  - first:
+      213: -3430570399841826611
+    second: Bridge_Abutment_MetallicSmoothness_170
+  - first:
+      213: 8993745633768704034
+    second: Bridge_Abutment_MetallicSmoothness_171
+  - first:
+      213: 935742598360223633
+    second: Bridge_Abutment_MetallicSmoothness_172
+  - first:
+      213: 6091840136722135225
+    second: Bridge_Abutment_MetallicSmoothness_173
+  - first:
+      213: 3661082464083402049
+    second: Bridge_Abutment_MetallicSmoothness_174
+  - first:
+      213: 625107615787437873
+    second: Bridge_Abutment_MetallicSmoothness_175
+  - first:
+      213: -3565096907299182246
+    second: Bridge_Abutment_MetallicSmoothness_176
+  - first:
+      213: -2039972869497638906
+    second: Bridge_Abutment_MetallicSmoothness_177
+  - first:
+      213: 3311153401804483126
+    second: Bridge_Abutment_MetallicSmoothness_178
+  - first:
+      213: -5292740851749394197
+    second: Bridge_Abutment_MetallicSmoothness_179
+  - first:
+      213: -3349706262854094489
+    second: Bridge_Abutment_MetallicSmoothness_180
+  - first:
+      213: 7888447282252510138
+    second: Bridge_Abutment_MetallicSmoothness_181
+  - first:
+      213: -1224206289285047455
+    second: Bridge_Abutment_MetallicSmoothness_182
+  - first:
+      213: -4147445850692799667
+    second: Bridge_Abutment_MetallicSmoothness_183
+  - first:
+      213: 6185835696980822599
+    second: Bridge_Abutment_MetallicSmoothness_184
+  - first:
+      213: 7082075351741477532
+    second: Bridge_Abutment_MetallicSmoothness_185
+  - first:
+      213: -2546942681787811418
+    second: Bridge_Abutment_MetallicSmoothness_186
+  - first:
+      213: 7225040527505661625
+    second: Bridge_Abutment_MetallicSmoothness_187
+  - first:
+      213: 745833897471955349
+    second: Bridge_Abutment_MetallicSmoothness_188
+  - first:
+      213: -8401237023388577822
+    second: Bridge_Abutment_MetallicSmoothness_189
+  - first:
+      213: 4789820204947436804
+    second: Bridge_Abutment_MetallicSmoothness_190
+  - first:
+      213: 8237642247927406332
+    second: Bridge_Abutment_MetallicSmoothness_191
+  - first:
+      213: 1138962136241364070
+    second: Bridge_Abutment_MetallicSmoothness_192
+  - first:
+      213: -4117849499941587945
+    second: Bridge_Abutment_MetallicSmoothness_193
+  - first:
+      213: -3454530844216321308
+    second: Bridge_Abutment_MetallicSmoothness_194
+  - first:
+      213: -9077233355308897024
+    second: Bridge_Abutment_MetallicSmoothness_195
+  - first:
+      213: 6133427262687107395
+    second: Bridge_Abutment_MetallicSmoothness_196
+  - first:
+      213: -5311200276384112452
+    second: Bridge_Abutment_MetallicSmoothness_197
+  - first:
+      213: 2403396705199212216
+    second: Bridge_Abutment_MetallicSmoothness_198
+  - first:
+      213: 1989087986680653797
+    second: Bridge_Abutment_MetallicSmoothness_199
+  - first:
+      213: 8821165192149761068
+    second: Bridge_Abutment_MetallicSmoothness_200
+  - first:
+      213: -5154770298977867933
+    second: Bridge_Abutment_MetallicSmoothness_201
+  - first:
+      213: 3943769543346101915
+    second: Bridge_Abutment_MetallicSmoothness_202
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 0
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 0
+  spriteTessellationDetail: -1
+  textureType: 0
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_0
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 2005
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16702b4a9a3efd9b0800000000000000
+      internalID: -5053069939134298271
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_1
+      rect:
+        serializedVersion: 2
+        x: 53
+        y: 2023
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56bf6564ee47422c0800000000000000
+      internalID: -4457309164458804379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_2
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 2010
+        width: 29
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2741a5fb1905bc950800000000000000
+      internalID: 6470353876558681202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_3
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 2013
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2623539234d5b4030800000000000000
+      internalID: 3479977680109384290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_4
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 2007
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d460ee37fa819cbc0800000000000000
+      internalID: -3762448871848016307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_5
+      rect:
+        serializedVersion: 2
+        x: 218
+        y: 2011
+        width: 28
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3b5e9175c93d2530800000000000000
+      internalID: 3831782378139704127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_6
+      rect:
+        serializedVersion: 2
+        x: 283
+        y: 2013
+        width: 28
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e9fd9b0be2d03640800000000000000
+      internalID: 5057774288491117032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_7
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 2005
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db9b3b91e43158160800000000000000
+      internalID: 7027044019741112765
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_8
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 2022
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 088fae3f4a8ede2e0800000000000000
+      internalID: -2094762456492869504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_9
+      rect:
+        serializedVersion: 2
+        x: 440
+        y: 2022
+        width: 29
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb43bbe54180ae740800000000000000
+      internalID: 5181963204824872127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_10
+      rect:
+        serializedVersion: 2
+        x: 478
+        y: 2004
+        width: 32
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ea364c23d8155780800000000000000
+      internalID: -8695016210308908320
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_11
+      rect:
+        serializedVersion: 2
+        x: 541
+        y: 2028
+        width: 31
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64d93d92b13f36ce0800000000000000
+      internalID: -1413018560072803002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_12
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 2027
+        width: 29
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2eed1667dac187720800000000000000
+      internalID: 2844054696025513698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_13
+      rect:
+        serializedVersion: 2
+        x: 618
+        y: 2023
+        width: 28
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dc405b9ea40789d0800000000000000
+      internalID: -2772241897646699306
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_14
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 2010
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 310ed854c493a9ef0800000000000000
+      internalID: -100705041915191277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_15
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 2024
+        width: 28
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a0cc6b84bcde26f0800000000000000
+      internalID: -707385423459204952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_16
+      rect:
+        serializedVersion: 2
+        x: 756
+        y: 2022
+        width: 28
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da0b1f64997ab9710800000000000000
+      internalID: 1701137561024573613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_17
+      rect:
+        serializedVersion: 2
+        x: 810
+        y: 2032
+        width: 29
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1965ec2bcbbc37f60800000000000000
+      internalID: 8030986571845883537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_18
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 2027
+        width: 28
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0a57760117c70b50800000000000000
+      internalID: 6559430258225273357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_19
+      rect:
+        serializedVersion: 2
+        x: 915
+        y: 2017
+        width: 29
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ec4c30f8c636d980800000000000000
+      internalID: -8514557808845501215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_20
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 2012
+        width: 28
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1881e36e9878c4c20800000000000000
+      internalID: 3192075262241937537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_21
+      rect:
+        serializedVersion: 2
+        x: 1016
+        y: 2030
+        width: 29
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d279d809e9f868c00800000000000000
+      internalID: 902566686527166253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_22
+      rect:
+        serializedVersion: 2
+        x: 1072
+        y: 2005
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a497d1bc6fa416e30800000000000000
+      internalID: 4494956326922582346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_23
+      rect:
+        serializedVersion: 2
+        x: 1136
+        y: 2004
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddc095bf87f7fe530800000000000000
+      internalID: 3886465161033747677
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_24
+      rect:
+        serializedVersion: 2
+        x: 1188
+        y: 2023
+        width: 28
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b549053111117d040800000000000000
+      internalID: 4672221903456343131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_25
+      rect:
+        serializedVersion: 2
+        x: 1227
+        y: 2031
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c63df2224af8dad80800000000000000
+      internalID: -8237770208279800980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_26
+      rect:
+        serializedVersion: 2
+        x: 1298
+        y: 2026
+        width: 27
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83ff381bce922c440800000000000000
+      internalID: 4954568636628205368
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_27
+      rect:
+        serializedVersion: 2
+        x: 1358
+        y: 2029
+        width: 30
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d9632090607b9480800000000000000
+      internalID: -8891389479275501095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_28
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 2022
+        width: 29
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b86199974eea94de0800000000000000
+      internalID: -1348354317104900469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_29
+      rect:
+        serializedVersion: 2
+        x: 1457
+        y: 2013
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d91f7ad62c5091ff0800000000000000
+      internalID: -65014386998644323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_30
+      rect:
+        serializedVersion: 2
+        x: 1585
+        y: 2007
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28d55ae50c7ea3650800000000000000
+      internalID: 6213533449318653314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_31
+      rect:
+        serializedVersion: 2
+        x: 1641
+        y: 2012
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff37ba605d71b9c90800000000000000
+      internalID: -7162104578695269377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_32
+      rect:
+        serializedVersion: 2
+        x: 1688
+        y: 2012
+        width: 28
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8374c174f6318d280800000000000000
+      internalID: -9018436885154085064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_33
+      rect:
+        serializedVersion: 2
+        x: 1739
+        y: 2021
+        width: 27
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb5fa890b8330d6c0800000000000000
+      internalID: -4120736986790431297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_34
+      rect:
+        serializedVersion: 2
+        x: 1772
+        y: 2006
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed9af82846b2206f0800000000000000
+      internalID: -719965279738680866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_35
+      rect:
+        serializedVersion: 2
+        x: 1818
+        y: 2029
+        width: 33
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87c4869062aa32590800000000000000
+      internalID: -7700123857530106760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_36
+      rect:
+        serializedVersion: 2
+        x: 1850
+        y: 2029
+        width: 33
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7445f0cd5a20fe4e0800000000000000
+      internalID: -1950337202243283897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_37
+      rect:
+        serializedVersion: 2
+        x: 1911
+        y: 2027
+        width: 27
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b7d9e74d0e1d0c10800000000000000
+      internalID: 2021304850149136308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_38
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 2021
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b325d8176b5200bd0800000000000000
+      internalID: -2666089513883971013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_39
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 2019
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3881bd40a1d95b00800000000000000
+      internalID: 817915293772908604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_40
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 1970
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 771536a1dada94930800000000000000
+      internalID: 4128021492445434231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_41
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 1987
+        width: 29
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f73794e554ccd72e0800000000000000
+      internalID: -2126318850742324353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_42
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 1974
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22f85dba9e5c57ea0800000000000000
+      internalID: -5875572531433992414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_43
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 1977
+        width: 31
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33e28629939b603b0800000000000000
+      internalID: -5546542234139611597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_44
+      rect:
+        serializedVersion: 2
+        x: 161
+        y: 1971
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b37fb5bc4c054f20800000000000000
+      internalID: 3406142216781919156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_45
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 1976
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be763899c167d3500800000000000000
+      internalID: 377587808975677419
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_46
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 1977
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1552d01a2ba2c3b0800000000000000
+      internalID: -5493640398279387876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_47
+      rect:
+        serializedVersion: 2
+        x: 346
+        y: 1970
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 121374b5c9601c610800000000000000
+      internalID: 1639599007955628321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_48
+      rect:
+        serializedVersion: 2
+        x: 403
+        y: 1986
+        width: 33
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b71b1725ee3b93e00800000000000000
+      internalID: 1025048226370269563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_49
+      rect:
+        serializedVersion: 2
+        x: 437
+        y: 1986
+        width: 34
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68af2ea4ce5c43030800000000000000
+      internalID: 3473618831268838022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_50
+      rect:
+        serializedVersion: 2
+        x: 483
+        y: 1969
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf2a5c34573b055e0800000000000000
+      internalID: -1922839724657630468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_51
+      rect:
+        serializedVersion: 2
+        x: 541
+        y: 1991
+        width: 31
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ff3d619b348ec320800000000000000
+      internalID: 2580145027907665907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_52
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 1991
+        width: 29
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a587f7cf853e0e240800000000000000
+      internalID: 4819101572619270234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_53
+      rect:
+        serializedVersion: 2
+        x: 619
+        y: 1987
+        width: 29
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6a922828a3f526a0800000000000000
+      internalID: -6474500985721808278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_54
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 1972
+        width: 27
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 723229d0afa521a30800000000000000
+      internalID: 4184507033796616999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_55
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 1987
+        width: 29
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a8c49e6087fb7630800000000000000
+      internalID: 3926003631166638243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_56
+      rect:
+        serializedVersion: 2
+        x: 756
+        y: 1984
+        width: 29
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffd40449cd124d720800000000000000
+      internalID: 2869956093805612543
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_57
+      rect:
+        serializedVersion: 2
+        x: 811
+        y: 1995
+        width: 27
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7393c6b3ea0b63f0800000000000000
+      internalID: -906618926844898437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_58
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 1989
+        width: 29
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e458dd450f1696650800000000000000
+      internalID: 6226615644660270414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_59
+      rect:
+        serializedVersion: 2
+        x: 914
+        y: 1979
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb28775ff72595620800000000000000
+      internalID: 2763330555901084350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_60
+      rect:
+        serializedVersion: 2
+        x: 968
+        y: 1976
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8e512d9bfd44ff00800000000000000
+      internalID: 1149629547954658958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_61
+      rect:
+        serializedVersion: 2
+        x: 1017
+        y: 1994
+        width: 27
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6723d9912367fbd0800000000000000
+      internalID: -2596497664189978771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_62
+      rect:
+        serializedVersion: 2
+        x: 1074
+        y: 1969
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3e4c83ab6e45cbb0800000000000000
+      internalID: -4916437193992679874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_63
+      rect:
+        serializedVersion: 2
+        x: 1139
+        y: 1967
+        width: 29
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdbda26902305faf0800000000000000
+      internalID: -363380756440228901
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_64
+      rect:
+        serializedVersion: 2
+        x: 1188
+        y: 1985
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0b4aa274637e3b40800000000000000
+      internalID: 5421897876658342666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_65
+      rect:
+        serializedVersion: 2
+        x: 1228
+        y: 1995
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57f33f8d8f3c235a0800000000000000
+      internalID: -6542951835056783499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_66
+      rect:
+        serializedVersion: 2
+        x: 1297
+        y: 1987
+        width: 29
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e53800274489bb580800000000000000
+      internalID: -8810280826282409122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_67
+      rect:
+        serializedVersion: 2
+        x: 1360
+        y: 1993
+        width: 27
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b60b1df0bdcfc97e0800000000000000
+      internalID: -1757251736787898261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_68
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 1985
+        width: 29
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e28f02636e98f970800000000000000
+      internalID: 8788948822497657575
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_69
+      rect:
+        serializedVersion: 2
+        x: 1459
+        y: 1977
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b2a7400e489a2cb0800000000000000
+      internalID: -4887926984777686345
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_70
+      rect:
+        serializedVersion: 2
+        x: 1518
+        y: 1996
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b99754ad406bd4f0800000000000000
+      internalID: -802942221969548877
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_71
+      rect:
+        serializedVersion: 2
+        x: 1587
+        y: 1971
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf5abed36f23ee5c0800000000000000
+      internalID: -4184350970598414853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_72
+      rect:
+        serializedVersion: 2
+        x: 1643
+        y: 1977
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6141d5c8618f90680800000000000000
+      internalID: -8788220422108933098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_73
+      rect:
+        serializedVersion: 2
+        x: 1690
+        y: 1976
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4d7d96eed603b600800000000000000
+      internalID: 482737139480362319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_74
+      rect:
+        serializedVersion: 2
+        x: 1737
+        y: 1984
+        width: 31
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57d805f5bca486850800000000000000
+      internalID: 6370423910253497717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_75
+      rect:
+        serializedVersion: 2
+        x: 1777
+        y: 1970
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c1134652fda844b0800000000000000
+      internalID: -5455919692218428986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_76
+      rect:
+        serializedVersion: 2
+        x: 1820
+        y: 1995
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8033477d15579fb0800000000000000
+      internalID: -4641147305938702195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_77
+      rect:
+        serializedVersion: 2
+        x: 1853
+        y: 1994
+        width: 30
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3364fd613d868d910800000000000000
+      internalID: 1862353701748819507
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_78
+      rect:
+        serializedVersion: 2
+        x: 1911
+        y: 1989
+        width: 29
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c357768e76ef59a0800000000000000
+      internalID: -6242017127415983164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_79
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 1983
+        width: 33
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8d89f21e4e3e5090800000000000000
+      internalID: -8043923379390411379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_80
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 1985
+        width: 33
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 603dd90c15f167e20800000000000000
+      internalID: 3347897808980923142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_81
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1973
+        height: 1971
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e9b3d8304a9f4b10800000000000000
+      internalID: 1967961162806180329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_82
+      rect:
+        serializedVersion: 2
+        x: 53
+        y: 1949
+        width: 26
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 600c6489c122a94e0800000000000000
+      internalID: -1974227980439339002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_83
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 1940
+        width: 31
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c771a3040eed160e0800000000000000
+      internalID: -2278294881741170820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_84
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 1949
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 544dd5387d38496f0800000000000000
+      internalID: -678772682180930491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_85
+      rect:
+        serializedVersion: 2
+        x: 440
+        y: 1948
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53fe4b91eca86af60800000000000000
+      internalID: 8045270402143153973
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_86
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 1954
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de303379ba0d1db60800000000000000
+      internalID: 7769220267585504237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_87
+      rect:
+        serializedVersion: 2
+        x: 575
+        y: 1954
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7a6bbea1fae11120800000000000000
+      internalID: 2382944001595239038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_88
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 1950
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec037132ed77bdff0800000000000000
+      internalID: -10282778183126834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_89
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 1935
+        width: 28
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 722594285da771120800000000000000
+      internalID: 2384509585148432935
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_90
+      rect:
+        serializedVersion: 2
+        x: 712
+        y: 1949
+        width: 27
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da23fa90b2bdb1f90800000000000000
+      internalID: -6981745819415268691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_91
+      rect:
+        serializedVersion: 2
+        x: 757
+        y: 1949
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48b5dda873c055f40800000000000000
+      internalID: 5716488734709209988
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_92
+      rect:
+        serializedVersion: 2
+        x: 811
+        y: 1957
+        width: 25
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a1c978873f48f590800000000000000
+      internalID: -7640269667902570074
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_93
+      rect:
+        serializedVersion: 2
+        x: 858
+        y: 1953
+        width: 26
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 128782741137e23e0800000000000000
+      internalID: -2076595860125747167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_94
+      rect:
+        serializedVersion: 2
+        x: 914
+        y: 1943
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de2bef3df742a8660800000000000000
+      internalID: 7388758270090851053
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_95
+      rect:
+        serializedVersion: 2
+        x: 1017
+        y: 1957
+        width: 25
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 458d6a2bdb2969c60800000000000000
+      internalID: 7824602746046568532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_96
+      rect:
+        serializedVersion: 2
+        x: 1188
+        y: 1949
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b87319e2c7e80b70800000000000000
+      internalID: 8865590690798860473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_97
+      rect:
+        serializedVersion: 2
+        x: 1229
+        y: 1957
+        width: 27
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f52bd99252308f610800000000000000
+      internalID: 1655076321205531231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_98
+      rect:
+        serializedVersion: 2
+        x: 1261
+        y: 1958
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f61861aa7c7b2d660800000000000000
+      internalID: 7409186405157863791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_99
+      rect:
+        serializedVersion: 2
+        x: 1296
+        y: 1951
+        width: 28
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ca8539206a31ed00800000000000000
+      internalID: 1000144776935606981
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_100
+      rect:
+        serializedVersion: 2
+        x: 1360
+        y: 1956
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8dcc9140474d16a70800000000000000
+      internalID: 8818563140118236376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_101
+      rect:
+        serializedVersion: 2
+        x: 1409
+        y: 1949
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 966082f42f4958ea0800000000000000
+      internalID: -5871122770776553879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_102
+      rect:
+        serializedVersion: 2
+        x: 1458
+        y: 1940
+        width: 29
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70a54e3599c84d2d0800000000000000
+      internalID: -3254822040516666873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_103
+      rect:
+        serializedVersion: 2
+        x: 1519
+        y: 1959
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea8bd70868dfd6310800000000000000
+      internalID: 1400053813305260206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_104
+      rect:
+        serializedVersion: 2
+        x: 1741
+        y: 1947
+        width: 26
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 854f178ef9df59800800000000000000
+      internalID: 618679387074720856
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_105
+      rect:
+        serializedVersion: 2
+        x: 1821
+        y: 1955
+        width: 28
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f89c6156fe2b1e10800000000000000
+      internalID: 2169379280971929843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_106
+      rect:
+        serializedVersion: 2
+        x: 1853
+        y: 1956
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2b861ada913769f0800000000000000
+      internalID: -475356694510662868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_107
+      rect:
+        serializedVersion: 2
+        x: 1911
+        y: 1953
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28a3a041ec2d75c60800000000000000
+      internalID: 7806940261611354754
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_108
+      rect:
+        serializedVersion: 2
+        x: 1944
+        y: 1950
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2aa296055aa416ff0800000000000000
+      internalID: -44672447417865566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_109
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 1951
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0bac30a539b7a300800000000000000
+      internalID: 263382743197199115
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_110
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 1950
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6485878aa99a81a60800000000000000
+      internalID: 7645046849177933894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_111
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 1910
+        width: 31
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d1ddc230f4f770f0800000000000000
+      internalID: -1119156669896601131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_112
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 1911
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a74ab4d99c80df30800000000000000
+      internalID: 4598329811872139169
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_113
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1910
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf06d4b3301a098f0800000000000000
+      internalID: -535751320405188356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_114
+      rect:
+        serializedVersion: 2
+        x: 1945
+        y: 1867
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93fe18c831a416ce0800000000000000
+      internalID: -1413767360195465415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_115
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 1866
+        width: 36
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 537530fb7d6a500b0800000000000000
+      internalID: -5763016702597834955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_116
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1866
+        width: 34
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c211c2a1ed39954f0800000000000000
+      internalID: -839477273396768468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_117
+      rect:
+        serializedVersion: 2
+        x: 1945
+        y: 1816
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b02d77845e214a640800000000000000
+      internalID: 5090214254808125963
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_118
+      rect:
+        serializedVersion: 2
+        x: 1977
+        y: 1814
+        width: 35
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd7a0ec18185166a0800000000000000
+      internalID: -6457783530085636132
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_119
+      rect:
+        serializedVersion: 2
+        x: 2015
+        y: 1815
+        width: 33
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46d2cd8e78967dc30800000000000000
+      internalID: 4384088794716712292
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_120
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 1759
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa906ca826681d8d0800000000000000
+      internalID: -2823327733591438929
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_121
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 1757
+        width: 34
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea5242615fa04fda0800000000000000
+      internalID: -5912088363075885650
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_122
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 1758
+        width: 34
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73ebc98a7fa5af680800000000000000
+      internalID: -8720557708717277641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_123
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 1692
+        width: 31
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d9e192f36b3318f0800000000000000
+      internalID: -571047427288471087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_124
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 1691
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1fbd0371fb1e3870800000000000000
+      internalID: 8664393456938762010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_125
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1692
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 540c87d872450c250800000000000000
+      internalID: 5962858435492495429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_126
+      rect:
+        serializedVersion: 2
+        x: 1942
+        y: 1645
+        width: 32
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de198667bddab3730800000000000000
+      internalID: 3979965853807972845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_127
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 1646
+        width: 34
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9725b01bb4e98fed0800000000000000
+      internalID: -2379978355135262087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_128
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1647
+        width: 33
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a20fc34bb147c7c50800000000000000
+      internalID: 6664329210938322986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_129
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 1601
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c21240d9ec6e5eca0800000000000000
+      internalID: -5988126354447261396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_130
+      rect:
+        serializedVersion: 2
+        x: 1976
+        y: 1600
+        width: 36
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a995f98b1ce86ca80800000000000000
+      internalID: -8446907088409503334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_131
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1601
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30569accf6a846690800000000000000
+      internalID: -7609805257569639165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_132
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 1558
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c08eb6ba4ad170e40800000000000000
+      internalID: 5622495252883171340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_133
+      rect:
+        serializedVersion: 2
+        x: 2002
+        y: 1557
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26f37b88ca5857370800000000000000
+      internalID: 8319702862711439202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_134
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 1516
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a788bebf81df271e0800000000000000
+      internalID: -2201418984083191686
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_135
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 1515
+        width: 32
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15d68ac90904a8b60800000000000000
+      internalID: 7749077098692111697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_136
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 1471
+        width: 66
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 542658ff2d8bf5660800000000000000
+      internalID: 7376817931025736261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_137
+      rect:
+        serializedVersion: 2
+        x: 1944
+        y: 1413
+        width: 32
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 608d6e73463d3c270800000000000000
+      internalID: 8269685768170428422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_138
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 1411
+        width: 35
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09c0271b43e7e6ae0800000000000000
+      internalID: -1554166056615801712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_139
+      rect:
+        serializedVersion: 2
+        x: 2015
+        y: 1412
+        width: 33
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e15e2a2b12f384c0800000000000000
+      internalID: -4286316221840862749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_140
+      rect:
+        serializedVersion: 2
+        x: 1968
+        y: 1357
+        width: 32
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7630b0cc8cbbc9a0800000000000000
+      internalID: -6211663948313250179
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_141
+      rect:
+        serializedVersion: 2
+        x: 2003
+        y: 1358
+        width: 33
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1ac146dc2f66cda0800000000000000
+      internalID: -5924926021395428835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_142
+      rect:
+        serializedVersion: 2
+        x: 1969
+        y: 1317
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa27253803dc290d0800000000000000
+      internalID: -3417443558975442257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_143
+      rect:
+        serializedVersion: 2
+        x: 2002
+        y: 1315
+        width: 33
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57a1a05c5fedb5830800000000000000
+      internalID: 4061084636158761589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_144
+      rect:
+        serializedVersion: 2
+        x: 1968
+        y: 1262
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1fdff08ff0ac086c0800000000000000
+      internalID: -4143089487245738511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_145
+      rect:
+        serializedVersion: 2
+        x: 2005
+        y: 1259
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ea46d95e95ba7060800000000000000
+      internalID: 6952068666516458212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_146
+      rect:
+        serializedVersion: 2
+        x: 1969
+        y: 1222
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49a278d408416c4c0800000000000000
+      internalID: -4267701055597892972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_147
+      rect:
+        serializedVersion: 2
+        x: 1999
+        y: 1224
+        width: 37
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5683deeb4df77620800000000000000
+      internalID: 2771962598241044058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_148
+      rect:
+        serializedVersion: 2
+        x: 1972
+        y: 1167
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d9f906f311323c050800000000000000
+      internalID: 5819533700477525917
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_149
+      rect:
+        serializedVersion: 2
+        x: 2008
+        y: 1167
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2aae083577644cb90800000000000000
+      internalID: -7222570424079422814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_150
+      rect:
+        serializedVersion: 2
+        x: 1965
+        y: 1108
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d024c62be3fb72f40800000000000000
+      internalID: 5703737729090339341
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_151
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 1109
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ac98ed6b9cdb0d70800000000000000
+      internalID: 9010538039606811811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_152
+      rect:
+        serializedVersion: 2
+        x: 1976
+        y: 1071
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ceea98cde07799d0800000000000000
+      internalID: -2767619279420723516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_153
+      rect:
+        serializedVersion: 2
+        x: 2009
+        y: 1071
+        width: 30
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6211e1641769b8a80800000000000000
+      internalID: -8463505661460868826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_154
+      rect:
+        serializedVersion: 2
+        x: 1975
+        y: 1038
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 251b15ed2904047f0800000000000000
+      internalID: -630432948292570798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_155
+      rect:
+        serializedVersion: 2
+        x: 2010
+        y: 1036
+        width: 30
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f97ba648b766ecba0800000000000000
+      internalID: -6066798967332882529
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_156
+      rect:
+        serializedVersion: 2
+        x: 1974
+        y: 997
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ca79c0e09f2798c0800000000000000
+      internalID: -3992670245347558711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_157
+      rect:
+        serializedVersion: 2
+        x: 2009
+        y: 997
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c602df09cb133110800000000000000
+      internalID: 1239364872824817352
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_158
+      rect:
+        serializedVersion: 2
+        x: 1972
+        y: 957
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36ae86536fb250220800000000000000
+      internalID: 2451413908631120483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_159
+      rect:
+        serializedVersion: 2
+        x: 2006
+        y: 958
+        width: 31
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6175682d1d943b030800000000000000
+      internalID: 3509229700180760342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_160
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 894
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e8c4bbd74f8747a0800000000000000
+      internalID: -6392983607237621528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_161
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 895
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87f4e7d3c964d2730800000000000000
+      internalID: 3975911682898546552
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_162
+      rect:
+        serializedVersion: 2
+        x: 1965
+        y: 858
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c09fcaf50bd03c80800000000000000
+      internalID: -8344929290788302655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_163
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 860
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 465233d2c82902250800000000000000
+      internalID: 5917891041116235108
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_164
+      rect:
+        serializedVersion: 2
+        x: 1965
+        y: 814
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0760130ef4cd63890800000000000000
+      internalID: -7478547895580293520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_165
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 816
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 171d9168b5e6382b0800000000000000
+      internalID: -5583497773638364815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_166
+      rect:
+        serializedVersion: 2
+        x: 1964
+        y: 771
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e1f61b5e11d1d4f0800000000000000
+      internalID: -805632930015153696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_167
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 773
+        width: 31
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0026f836a67db600800000000000000
+      internalID: 485674791118184463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_168
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 713
+        width: 29
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a272d3ff7173c5bd0800000000000000
+      internalID: -2640174705339979990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_169
+      rect:
+        serializedVersion: 2
+        x: 2012
+        y: 713
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8973b0ec4cb3a6fb0800000000000000
+      internalID: -4653841548477515880
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_170
+      rect:
+        serializedVersion: 2
+        x: 1972
+        y: 665
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc84574b56a2460d0800000000000000
+      internalID: -3430570399841826611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_171
+      rect:
+        serializedVersion: 2
+        x: 2006
+        y: 667
+        width: 32
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2280105c00430dc70800000000000000
+      internalID: 8993745633768704034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_172
+      rect:
+        serializedVersion: 2
+        x: 1968
+        y: 608
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19f46787fec6cfc00800000000000000
+      internalID: 935742598360223633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_173
+      rect:
+        serializedVersion: 2
+        x: 2005
+        y: 610
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b83ac114509a8450800000000000000
+      internalID: 6091840136722135225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_174
+      rect:
+        serializedVersion: 2
+        x: 1960
+        y: 550
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14d5a159a17cec230800000000000000
+      internalID: 3661082464083402049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_175
+      rect:
+        serializedVersion: 2
+        x: 1993
+        y: 549
+        width: 33
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13fc6698014dca800800000000000000
+      internalID: 625107615787437873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_176
+      rect:
+        serializedVersion: 2
+        x: 2028
+        y: 548
+        width: 20
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a59a692604b368ec0800000000000000
+      internalID: -3565096907299182246
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_177
+      rect:
+        serializedVersion: 2
+        x: 1969
+        y: 505
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 600b822cb7f80b3e0800000000000000
+      internalID: -2039972869497638906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_178
+      rect:
+        serializedVersion: 2
+        x: 2004
+        y: 504
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63ae167c97493fd20800000000000000
+      internalID: 3311153401804483126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_179
+      rect:
+        serializedVersion: 2
+        x: 1968
+        y: 447
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be8674bcc386c86b0800000000000000
+      internalID: -5292740851749394197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_180
+      rect:
+        serializedVersion: 2
+        x: 1997
+        y: 446
+        width: 36
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7613ea4c6e37381d0800000000000000
+      internalID: -3349706262854094489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_181
+      rect:
+        serializedVersion: 2
+        x: 1942
+        y: 403
+        width: 32
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab37e082205697d60800000000000000
+      internalID: 7888447282252510138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_182
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 404
+        width: 31
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16b9d53bddeb20fe0800000000000000
+      internalID: -1224206289285047455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_183
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 403
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d43b94019ff4176c0800000000000000
+      internalID: -4147445850692799667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_184
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 355
+        width: 29
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74a097ddac088d550800000000000000
+      internalID: 6185835696980822599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_185
+      rect:
+        serializedVersion: 2
+        x: 2011
+        y: 354
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c92b91d8206984260800000000000000
+      internalID: 7082075351741477532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_186
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 289
+        width: 32
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a9b1cc002177acd0800000000000000
+      internalID: -2546942681787811418
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_187
+      rect:
+        serializedVersion: 2
+        x: 1976
+        y: 289
+        width: 36
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9be96c17410844460800000000000000
+      internalID: 7225040527505661625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_188
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 285
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 591d2486afbb95a00800000000000000
+      internalID: 745833897471955349
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_189
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 249
+        width: 70
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ef401b507fc86b80800000000000000
+      internalID: -8401237023388577822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_190
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 250
+        width: 34
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40571ed491cd87240800000000000000
+      internalID: 4789820204947436804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_191
+      rect:
+        serializedVersion: 2
+        x: 1959
+        y: 197
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfe9676cafbf15270800000000000000
+      internalID: 8237642247927406332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_192
+      rect:
+        serializedVersion: 2
+        x: 1993
+        y: 196
+        width: 34
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66c594747086ecf00800000000000000
+      internalID: 1138962136241364070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_193
+      rect:
+        serializedVersion: 2
+        x: 2028
+        y: 196
+        width: 20
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 714367572b57ad6c0800000000000000
+      internalID: -4117849499941587945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_194
+      rect:
+        serializedVersion: 2
+        x: 1973
+        y: 134
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ea1bd4008a0f00d0800000000000000
+      internalID: -3454530844216321308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_195
+      rect:
+        serializedVersion: 2
+        x: 2008
+        y: 134
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00d6c794b50370280800000000000000
+      internalID: -9077233355308897024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_196
+      rect:
+        serializedVersion: 2
+        x: 1972
+        y: 73
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3495920699f4e1550800000000000000
+      internalID: 6133427262687107395
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_197
+      rect:
+        serializedVersion: 2
+        x: 2007
+        y: 75
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb02b231d73da46b0800000000000000
+      internalID: -5311200276384112452
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_198
+      rect:
+        serializedVersion: 2
+        x: 1961
+        y: 24
+        width: 32
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b64eb3d1949a5120800000000000000
+      internalID: 2403396705199212216
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_199
+      rect:
+        serializedVersion: 2
+        x: 1998
+        y: 27
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e7e8193cf8aa9b10800000000000000
+      internalID: 1989087986680653797
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_200
+      rect:
+        serializedVersion: 2
+        x: 1960
+        y: 0
+        width: 32
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2c702771031b6a70800000000000000
+      internalID: 8821165192149761068
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_201
+      rect:
+        serializedVersion: 2
+        x: 1995
+        y: 0
+        width: 33
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 367a0b669b39678b0800000000000000
+      internalID: -5154770298977867933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_MetallicSmoothness_202
+      rect:
+        serializedVersion: 2
+        x: 2029
+        y: 0
+        width: 19
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9e162331851bb630800000000000000
+      internalID: 3943769543346101915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Bridge_Abutment_MetallicSmoothness_0: -5053069939134298271
+      Bridge_Abutment_MetallicSmoothness_1: -4457309164458804379
+      Bridge_Abutment_MetallicSmoothness_10: -8695016210308908320
+      Bridge_Abutment_MetallicSmoothness_100: 8818563140118236376
+      Bridge_Abutment_MetallicSmoothness_101: -5871122770776553879
+      Bridge_Abutment_MetallicSmoothness_102: -3254822040516666873
+      Bridge_Abutment_MetallicSmoothness_103: 1400053813305260206
+      Bridge_Abutment_MetallicSmoothness_104: 618679387074720856
+      Bridge_Abutment_MetallicSmoothness_105: 2169379280971929843
+      Bridge_Abutment_MetallicSmoothness_106: -475356694510662868
+      Bridge_Abutment_MetallicSmoothness_107: 7806940261611354754
+      Bridge_Abutment_MetallicSmoothness_108: -44672447417865566
+      Bridge_Abutment_MetallicSmoothness_109: 263382743197199115
+      Bridge_Abutment_MetallicSmoothness_11: -1413018560072803002
+      Bridge_Abutment_MetallicSmoothness_110: 7645046849177933894
+      Bridge_Abutment_MetallicSmoothness_111: -1119156669896601131
+      Bridge_Abutment_MetallicSmoothness_112: 4598329811872139169
+      Bridge_Abutment_MetallicSmoothness_113: -535751320405188356
+      Bridge_Abutment_MetallicSmoothness_114: -1413767360195465415
+      Bridge_Abutment_MetallicSmoothness_115: -5763016702597834955
+      Bridge_Abutment_MetallicSmoothness_116: -839477273396768468
+      Bridge_Abutment_MetallicSmoothness_117: 5090214254808125963
+      Bridge_Abutment_MetallicSmoothness_118: -6457783530085636132
+      Bridge_Abutment_MetallicSmoothness_119: 4384088794716712292
+      Bridge_Abutment_MetallicSmoothness_12: 2844054696025513698
+      Bridge_Abutment_MetallicSmoothness_120: -2823327733591438929
+      Bridge_Abutment_MetallicSmoothness_121: -5912088363075885650
+      Bridge_Abutment_MetallicSmoothness_122: -8720557708717277641
+      Bridge_Abutment_MetallicSmoothness_123: -571047427288471087
+      Bridge_Abutment_MetallicSmoothness_124: 8664393456938762010
+      Bridge_Abutment_MetallicSmoothness_125: 5962858435492495429
+      Bridge_Abutment_MetallicSmoothness_126: 3979965853807972845
+      Bridge_Abutment_MetallicSmoothness_127: -2379978355135262087
+      Bridge_Abutment_MetallicSmoothness_128: 6664329210938322986
+      Bridge_Abutment_MetallicSmoothness_129: -5988126354447261396
+      Bridge_Abutment_MetallicSmoothness_13: -2772241897646699306
+      Bridge_Abutment_MetallicSmoothness_130: -8446907088409503334
+      Bridge_Abutment_MetallicSmoothness_131: -7609805257569639165
+      Bridge_Abutment_MetallicSmoothness_132: 5622495252883171340
+      Bridge_Abutment_MetallicSmoothness_133: 8319702862711439202
+      Bridge_Abutment_MetallicSmoothness_134: -2201418984083191686
+      Bridge_Abutment_MetallicSmoothness_135: 7749077098692111697
+      Bridge_Abutment_MetallicSmoothness_136: 7376817931025736261
+      Bridge_Abutment_MetallicSmoothness_137: 8269685768170428422
+      Bridge_Abutment_MetallicSmoothness_138: -1554166056615801712
+      Bridge_Abutment_MetallicSmoothness_139: -4286316221840862749
+      Bridge_Abutment_MetallicSmoothness_14: -100705041915191277
+      Bridge_Abutment_MetallicSmoothness_140: -6211663948313250179
+      Bridge_Abutment_MetallicSmoothness_141: -5924926021395428835
+      Bridge_Abutment_MetallicSmoothness_142: -3417443558975442257
+      Bridge_Abutment_MetallicSmoothness_143: 4061084636158761589
+      Bridge_Abutment_MetallicSmoothness_144: -4143089487245738511
+      Bridge_Abutment_MetallicSmoothness_145: 6952068666516458212
+      Bridge_Abutment_MetallicSmoothness_146: -4267701055597892972
+      Bridge_Abutment_MetallicSmoothness_147: 2771962598241044058
+      Bridge_Abutment_MetallicSmoothness_148: 5819533700477525917
+      Bridge_Abutment_MetallicSmoothness_149: -7222570424079422814
+      Bridge_Abutment_MetallicSmoothness_15: -707385423459204952
+      Bridge_Abutment_MetallicSmoothness_150: 5703737729090339341
+      Bridge_Abutment_MetallicSmoothness_151: 9010538039606811811
+      Bridge_Abutment_MetallicSmoothness_152: -2767619279420723516
+      Bridge_Abutment_MetallicSmoothness_153: -8463505661460868826
+      Bridge_Abutment_MetallicSmoothness_154: -630432948292570798
+      Bridge_Abutment_MetallicSmoothness_155: -6066798967332882529
+      Bridge_Abutment_MetallicSmoothness_156: -3992670245347558711
+      Bridge_Abutment_MetallicSmoothness_157: 1239364872824817352
+      Bridge_Abutment_MetallicSmoothness_158: 2451413908631120483
+      Bridge_Abutment_MetallicSmoothness_159: 3509229700180760342
+      Bridge_Abutment_MetallicSmoothness_16: 1701137561024573613
+      Bridge_Abutment_MetallicSmoothness_160: -6392983607237621528
+      Bridge_Abutment_MetallicSmoothness_161: 3975911682898546552
+      Bridge_Abutment_MetallicSmoothness_162: -8344929290788302655
+      Bridge_Abutment_MetallicSmoothness_163: 5917891041116235108
+      Bridge_Abutment_MetallicSmoothness_164: -7478547895580293520
+      Bridge_Abutment_MetallicSmoothness_165: -5583497773638364815
+      Bridge_Abutment_MetallicSmoothness_166: -805632930015153696
+      Bridge_Abutment_MetallicSmoothness_167: 485674791118184463
+      Bridge_Abutment_MetallicSmoothness_168: -2640174705339979990
+      Bridge_Abutment_MetallicSmoothness_169: -4653841548477515880
+      Bridge_Abutment_MetallicSmoothness_17: 8030986571845883537
+      Bridge_Abutment_MetallicSmoothness_170: -3430570399841826611
+      Bridge_Abutment_MetallicSmoothness_171: 8993745633768704034
+      Bridge_Abutment_MetallicSmoothness_172: 935742598360223633
+      Bridge_Abutment_MetallicSmoothness_173: 6091840136722135225
+      Bridge_Abutment_MetallicSmoothness_174: 3661082464083402049
+      Bridge_Abutment_MetallicSmoothness_175: 625107615787437873
+      Bridge_Abutment_MetallicSmoothness_176: -3565096907299182246
+      Bridge_Abutment_MetallicSmoothness_177: -2039972869497638906
+      Bridge_Abutment_MetallicSmoothness_178: 3311153401804483126
+      Bridge_Abutment_MetallicSmoothness_179: -5292740851749394197
+      Bridge_Abutment_MetallicSmoothness_18: 6559430258225273357
+      Bridge_Abutment_MetallicSmoothness_180: -3349706262854094489
+      Bridge_Abutment_MetallicSmoothness_181: 7888447282252510138
+      Bridge_Abutment_MetallicSmoothness_182: -1224206289285047455
+      Bridge_Abutment_MetallicSmoothness_183: -4147445850692799667
+      Bridge_Abutment_MetallicSmoothness_184: 6185835696980822599
+      Bridge_Abutment_MetallicSmoothness_185: 7082075351741477532
+      Bridge_Abutment_MetallicSmoothness_186: -2546942681787811418
+      Bridge_Abutment_MetallicSmoothness_187: 7225040527505661625
+      Bridge_Abutment_MetallicSmoothness_188: 745833897471955349
+      Bridge_Abutment_MetallicSmoothness_189: -8401237023388577822
+      Bridge_Abutment_MetallicSmoothness_19: -8514557808845501215
+      Bridge_Abutment_MetallicSmoothness_190: 4789820204947436804
+      Bridge_Abutment_MetallicSmoothness_191: 8237642247927406332
+      Bridge_Abutment_MetallicSmoothness_192: 1138962136241364070
+      Bridge_Abutment_MetallicSmoothness_193: -4117849499941587945
+      Bridge_Abutment_MetallicSmoothness_194: -3454530844216321308
+      Bridge_Abutment_MetallicSmoothness_195: -9077233355308897024
+      Bridge_Abutment_MetallicSmoothness_196: 6133427262687107395
+      Bridge_Abutment_MetallicSmoothness_197: -5311200276384112452
+      Bridge_Abutment_MetallicSmoothness_198: 2403396705199212216
+      Bridge_Abutment_MetallicSmoothness_199: 1989087986680653797
+      Bridge_Abutment_MetallicSmoothness_2: 6470353876558681202
+      Bridge_Abutment_MetallicSmoothness_20: 3192075262241937537
+      Bridge_Abutment_MetallicSmoothness_200: 8821165192149761068
+      Bridge_Abutment_MetallicSmoothness_201: -5154770298977867933
+      Bridge_Abutment_MetallicSmoothness_202: 3943769543346101915
+      Bridge_Abutment_MetallicSmoothness_21: 902566686527166253
+      Bridge_Abutment_MetallicSmoothness_22: 4494956326922582346
+      Bridge_Abutment_MetallicSmoothness_23: 3886465161033747677
+      Bridge_Abutment_MetallicSmoothness_24: 4672221903456343131
+      Bridge_Abutment_MetallicSmoothness_25: -8237770208279800980
+      Bridge_Abutment_MetallicSmoothness_26: 4954568636628205368
+      Bridge_Abutment_MetallicSmoothness_27: -8891389479275501095
+      Bridge_Abutment_MetallicSmoothness_28: -1348354317104900469
+      Bridge_Abutment_MetallicSmoothness_29: -65014386998644323
+      Bridge_Abutment_MetallicSmoothness_3: 3479977680109384290
+      Bridge_Abutment_MetallicSmoothness_30: 6213533449318653314
+      Bridge_Abutment_MetallicSmoothness_31: -7162104578695269377
+      Bridge_Abutment_MetallicSmoothness_32: -9018436885154085064
+      Bridge_Abutment_MetallicSmoothness_33: -4120736986790431297
+      Bridge_Abutment_MetallicSmoothness_34: -719965279738680866
+      Bridge_Abutment_MetallicSmoothness_35: -7700123857530106760
+      Bridge_Abutment_MetallicSmoothness_36: -1950337202243283897
+      Bridge_Abutment_MetallicSmoothness_37: 2021304850149136308
+      Bridge_Abutment_MetallicSmoothness_38: -2666089513883971013
+      Bridge_Abutment_MetallicSmoothness_39: 817915293772908604
+      Bridge_Abutment_MetallicSmoothness_4: -3762448871848016307
+      Bridge_Abutment_MetallicSmoothness_40: 4128021492445434231
+      Bridge_Abutment_MetallicSmoothness_41: -2126318850742324353
+      Bridge_Abutment_MetallicSmoothness_42: -5875572531433992414
+      Bridge_Abutment_MetallicSmoothness_43: -5546542234139611597
+      Bridge_Abutment_MetallicSmoothness_44: 3406142216781919156
+      Bridge_Abutment_MetallicSmoothness_45: 377587808975677419
+      Bridge_Abutment_MetallicSmoothness_46: -5493640398279387876
+      Bridge_Abutment_MetallicSmoothness_47: 1639599007955628321
+      Bridge_Abutment_MetallicSmoothness_48: 1025048226370269563
+      Bridge_Abutment_MetallicSmoothness_49: 3473618831268838022
+      Bridge_Abutment_MetallicSmoothness_5: 3831782378139704127
+      Bridge_Abutment_MetallicSmoothness_50: -1922839724657630468
+      Bridge_Abutment_MetallicSmoothness_51: 2580145027907665907
+      Bridge_Abutment_MetallicSmoothness_52: 4819101572619270234
+      Bridge_Abutment_MetallicSmoothness_53: -6474500985721808278
+      Bridge_Abutment_MetallicSmoothness_54: 4184507033796616999
+      Bridge_Abutment_MetallicSmoothness_55: 3926003631166638243
+      Bridge_Abutment_MetallicSmoothness_56: 2869956093805612543
+      Bridge_Abutment_MetallicSmoothness_57: -906618926844898437
+      Bridge_Abutment_MetallicSmoothness_58: 6226615644660270414
+      Bridge_Abutment_MetallicSmoothness_59: 2763330555901084350
+      Bridge_Abutment_MetallicSmoothness_6: 5057774288491117032
+      Bridge_Abutment_MetallicSmoothness_60: 1149629547954658958
+      Bridge_Abutment_MetallicSmoothness_61: -2596497664189978771
+      Bridge_Abutment_MetallicSmoothness_62: -4916437193992679874
+      Bridge_Abutment_MetallicSmoothness_63: -363380756440228901
+      Bridge_Abutment_MetallicSmoothness_64: 5421897876658342666
+      Bridge_Abutment_MetallicSmoothness_65: -6542951835056783499
+      Bridge_Abutment_MetallicSmoothness_66: -8810280826282409122
+      Bridge_Abutment_MetallicSmoothness_67: -1757251736787898261
+      Bridge_Abutment_MetallicSmoothness_68: 8788948822497657575
+      Bridge_Abutment_MetallicSmoothness_69: -4887926984777686345
+      Bridge_Abutment_MetallicSmoothness_7: 7027044019741112765
+      Bridge_Abutment_MetallicSmoothness_70: -802942221969548877
+      Bridge_Abutment_MetallicSmoothness_71: -4184350970598414853
+      Bridge_Abutment_MetallicSmoothness_72: -8788220422108933098
+      Bridge_Abutment_MetallicSmoothness_73: 482737139480362319
+      Bridge_Abutment_MetallicSmoothness_74: 6370423910253497717
+      Bridge_Abutment_MetallicSmoothness_75: -5455919692218428986
+      Bridge_Abutment_MetallicSmoothness_76: -4641147305938702195
+      Bridge_Abutment_MetallicSmoothness_77: 1862353701748819507
+      Bridge_Abutment_MetallicSmoothness_78: -6242017127415983164
+      Bridge_Abutment_MetallicSmoothness_79: -8043923379390411379
+      Bridge_Abutment_MetallicSmoothness_8: -2094762456492869504
+      Bridge_Abutment_MetallicSmoothness_80: 3347897808980923142
+      Bridge_Abutment_MetallicSmoothness_81: 1967961162806180329
+      Bridge_Abutment_MetallicSmoothness_82: -1974227980439339002
+      Bridge_Abutment_MetallicSmoothness_83: -2278294881741170820
+      Bridge_Abutment_MetallicSmoothness_84: -678772682180930491
+      Bridge_Abutment_MetallicSmoothness_85: 8045270402143153973
+      Bridge_Abutment_MetallicSmoothness_86: 7769220267585504237
+      Bridge_Abutment_MetallicSmoothness_87: 2382944001595239038
+      Bridge_Abutment_MetallicSmoothness_88: -10282778183126834
+      Bridge_Abutment_MetallicSmoothness_89: 2384509585148432935
+      Bridge_Abutment_MetallicSmoothness_9: 5181963204824872127
+      Bridge_Abutment_MetallicSmoothness_90: -6981745819415268691
+      Bridge_Abutment_MetallicSmoothness_91: 5716488734709209988
+      Bridge_Abutment_MetallicSmoothness_92: -7640269667902570074
+      Bridge_Abutment_MetallicSmoothness_93: -2076595860125747167
+      Bridge_Abutment_MetallicSmoothness_94: 7388758270090851053
+      Bridge_Abutment_MetallicSmoothness_95: 7824602746046568532
+      Bridge_Abutment_MetallicSmoothness_96: 8865590690798860473
+      Bridge_Abutment_MetallicSmoothness_97: 1655076321205531231
+      Bridge_Abutment_MetallicSmoothness_98: 7409186405157863791
+      Bridge_Abutment_MetallicSmoothness_99: 1000144776935606981
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

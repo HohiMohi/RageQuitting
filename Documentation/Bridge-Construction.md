@@ -239,6 +239,19 @@ Start/End regulują długość, a Left/Right szerokość. Zakres `-4...4` wyglą
 prosto, dlatego wiarygodne ustawienie wymaga pomiaru poziomicą i osobnego
 zatwierdzenia E. Dopiero poprawne zatwierdzenie przechodzi do `Fastening`.
 
+Cztery wizuale gwoździ są ukryte na luźnym, niesionym i upuszczonym
+`WoodenMainGirderMountable`; wszystkie pojawiają się jednocześnie po wejściu
+zamontowanego dźwigara w `Fastening`. Głębokość wbicia wynika z istniejącego,
+synchronizowanego postępu poszczególnych mocowań, przy czym pary `0`↔`3` oraz
+`1`↔`2` zachowują wspólną progresję. Zaakceptowane zmiany postępu animują się
+wizualnie przez około `0,12 s` z cubic ease-out, natomiast stan początkowy po
+pierwszym pokazaniu, wczytaniu zapisu lub dołączeniu spóźnionego klienta jest
+ustawiany natychmiast; zduplikowany stan sieciowy nie uruchamia ruchu ponownie.
+W `Complete` gwoździe są wymuszane jako całkowicie wbite i pozostają widoczne,
+a interakcja oraz collidery `BridgeGirderWorkPoint` zostają wyłączone. Jest to
+wyłącznie warstwa prezentacyjna oparta na istniejącym stanie sieciowym
+`constructionAnchor0-3`; nie dodano nowego schematu sieciowego.
+
 ### Belka poprzeczna
 
 `WaitingForGirders -> ReadyForMount -> Aligning -> Clamping -> Fastening ->

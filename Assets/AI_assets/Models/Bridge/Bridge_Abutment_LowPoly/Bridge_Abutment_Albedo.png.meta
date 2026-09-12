@@ -1,0 +1,5408 @@
+fileFormatVersion: 2
+guid: d2ea9c6b772ecd94c8990f72d7616045
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7867365036025769989
+    second: Bridge_Abutment_Albedo_0
+  - first:
+      213: -4272669680103091876
+    second: Bridge_Abutment_Albedo_1
+  - first:
+      213: 4317844485446756421
+    second: Bridge_Abutment_Albedo_2
+  - first:
+      213: 1349031055877836388
+    second: Bridge_Abutment_Albedo_3
+  - first:
+      213: -2683144317493041111
+    second: Bridge_Abutment_Albedo_4
+  - first:
+      213: 8400171578987624005
+    second: Bridge_Abutment_Albedo_5
+  - first:
+      213: 4369609629883634606
+    second: Bridge_Abutment_Albedo_6
+  - first:
+      213: 6908357104411699088
+    second: Bridge_Abutment_Albedo_7
+  - first:
+      213: -6754536016342209257
+    second: Bridge_Abutment_Albedo_8
+  - first:
+      213: -6892684294764882818
+    second: Bridge_Abutment_Albedo_9
+  - first:
+      213: 2280849475521525452
+    second: Bridge_Abutment_Albedo_10
+  - first:
+      213: 6936904055988658010
+    second: Bridge_Abutment_Albedo_11
+  - first:
+      213: -8252687297310124496
+    second: Bridge_Abutment_Albedo_12
+  - first:
+      213: -1204417488188625289
+    second: Bridge_Abutment_Albedo_13
+  - first:
+      213: -457224340882209376
+    second: Bridge_Abutment_Albedo_14
+  - first:
+      213: 8979106466768130576
+    second: Bridge_Abutment_Albedo_15
+  - first:
+      213: -8169144442450813384
+    second: Bridge_Abutment_Albedo_16
+  - first:
+      213: -6913643155436679960
+    second: Bridge_Abutment_Albedo_17
+  - first:
+      213: 4468170984139870499
+    second: Bridge_Abutment_Albedo_18
+  - first:
+      213: -3656211483612910961
+    second: Bridge_Abutment_Albedo_19
+  - first:
+      213: -8736614134480960190
+    second: Bridge_Abutment_Albedo_20
+  - first:
+      213: -4613764804935459576
+    second: Bridge_Abutment_Albedo_21
+  - first:
+      213: -5374418328991561600
+    second: Bridge_Abutment_Albedo_22
+  - first:
+      213: -8936279881353058328
+    second: Bridge_Abutment_Albedo_23
+  - first:
+      213: 483437689501610780
+    second: Bridge_Abutment_Albedo_24
+  - first:
+      213: -6228410613828305095
+    second: Bridge_Abutment_Albedo_25
+  - first:
+      213: 812765658764279308
+    second: Bridge_Abutment_Albedo_26
+  - first:
+      213: -4097998533244998816
+    second: Bridge_Abutment_Albedo_27
+  - first:
+      213: 7642425700265093689
+    second: Bridge_Abutment_Albedo_28
+  - first:
+      213: 3837462881952953346
+    second: Bridge_Abutment_Albedo_29
+  - first:
+      213: -8674452268254479307
+    second: Bridge_Abutment_Albedo_30
+  - first:
+      213: -8095658312371612894
+    second: Bridge_Abutment_Albedo_31
+  - first:
+      213: -2021185427895838500
+    second: Bridge_Abutment_Albedo_32
+  - first:
+      213: 3569559046407469995
+    second: Bridge_Abutment_Albedo_33
+  - first:
+      213: -4373298484483542779
+    second: Bridge_Abutment_Albedo_34
+  - first:
+      213: 3497345461332317978
+    second: Bridge_Abutment_Albedo_35
+  - first:
+      213: -8200961184942653940
+    second: Bridge_Abutment_Albedo_36
+  - first:
+      213: 3239406525430261500
+    second: Bridge_Abutment_Albedo_37
+  - first:
+      213: 2093846211504645415
+    second: Bridge_Abutment_Albedo_38
+  - first:
+      213: 5858489400464726946
+    second: Bridge_Abutment_Albedo_39
+  - first:
+      213: -3556131661021409818
+    second: Bridge_Abutment_Albedo_40
+  - first:
+      213: -3035130400457472720
+    second: Bridge_Abutment_Albedo_41
+  - first:
+      213: -6152740903544887052
+    second: Bridge_Abutment_Albedo_42
+  - first:
+      213: 7151767336142641576
+    second: Bridge_Abutment_Albedo_43
+  - first:
+      213: -6767807507907055735
+    second: Bridge_Abutment_Albedo_44
+  - first:
+      213: 3801361530158377546
+    second: Bridge_Abutment_Albedo_45
+  - first:
+      213: -3239541457134472569
+    second: Bridge_Abutment_Albedo_46
+  - first:
+      213: -294418339546902414
+    second: Bridge_Abutment_Albedo_47
+  - first:
+      213: 5936863308603160327
+    second: Bridge_Abutment_Albedo_48
+  - first:
+      213: 3518683928183229701
+    second: Bridge_Abutment_Albedo_49
+  - first:
+      213: 647874255899008985
+    second: Bridge_Abutment_Albedo_50
+  - first:
+      213: -5904570058364252650
+    second: Bridge_Abutment_Albedo_51
+  - first:
+      213: 5520560304861543864
+    second: Bridge_Abutment_Albedo_52
+  - first:
+      213: -491451499272694268
+    second: Bridge_Abutment_Albedo_53
+  - first:
+      213: 3734733571079421031
+    second: Bridge_Abutment_Albedo_54
+  - first:
+      213: 697232005416352403
+    second: Bridge_Abutment_Albedo_55
+  - first:
+      213: -4951448370129618506
+    second: Bridge_Abutment_Albedo_56
+  - first:
+      213: 7675491903377301225
+    second: Bridge_Abutment_Albedo_57
+  - first:
+      213: 5655392678033221143
+    second: Bridge_Abutment_Albedo_58
+  - first:
+      213: 720561429940175560
+    second: Bridge_Abutment_Albedo_59
+  - first:
+      213: -1851022457746662315
+    second: Bridge_Abutment_Albedo_60
+  - first:
+      213: 2764467761353392133
+    second: Bridge_Abutment_Albedo_61
+  - first:
+      213: -3683023047452590361
+    second: Bridge_Abutment_Albedo_62
+  - first:
+      213: 2242423762385879500
+    second: Bridge_Abutment_Albedo_63
+  - first:
+      213: -7594216938107017453
+    second: Bridge_Abutment_Albedo_64
+  - first:
+      213: -5460737646112951541
+    second: Bridge_Abutment_Albedo_65
+  - first:
+      213: 6022682316930762296
+    second: Bridge_Abutment_Albedo_66
+  - first:
+      213: 2706816818787223684
+    second: Bridge_Abutment_Albedo_67
+  - first:
+      213: -2498159795582944303
+    second: Bridge_Abutment_Albedo_68
+  - first:
+      213: -544103637853219268
+    second: Bridge_Abutment_Albedo_69
+  - first:
+      213: -2353212024878706543
+    second: Bridge_Abutment_Albedo_70
+  - first:
+      213: -4527170250544136489
+    second: Bridge_Abutment_Albedo_71
+  - first:
+      213: 5477656024270347564
+    second: Bridge_Abutment_Albedo_72
+  - first:
+      213: -5094199778352846192
+    second: Bridge_Abutment_Albedo_73
+  - first:
+      213: 4026075307376742544
+    second: Bridge_Abutment_Albedo_74
+  - first:
+      213: 1089149473889363308
+    second: Bridge_Abutment_Albedo_75
+  - first:
+      213: -3515020533741379845
+    second: Bridge_Abutment_Albedo_76
+  - first:
+      213: 442347367255479846
+    second: Bridge_Abutment_Albedo_77
+  - first:
+      213: 3534215087411727835
+    second: Bridge_Abutment_Albedo_78
+  - first:
+      213: 4143663223999121107
+    second: Bridge_Abutment_Albedo_79
+  - first:
+      213: 1085187092007407558
+    second: Bridge_Abutment_Albedo_80
+  - first:
+      213: 5648501364302333433
+    second: Bridge_Abutment_Albedo_81
+  - first:
+      213: -93199459229369688
+    second: Bridge_Abutment_Albedo_82
+  - first:
+      213: 2957994099870553561
+    second: Bridge_Abutment_Albedo_83
+  - first:
+      213: 1355202695782317043
+    second: Bridge_Abutment_Albedo_84
+  - first:
+      213: 1147548924985578267
+    second: Bridge_Abutment_Albedo_85
+  - first:
+      213: -6075739165664885458
+    second: Bridge_Abutment_Albedo_86
+  - first:
+      213: -1425108995201436525
+    second: Bridge_Abutment_Albedo_87
+  - first:
+      213: -3206996938814714812
+    second: Bridge_Abutment_Albedo_88
+  - first:
+      213: 5526081457203440523
+    second: Bridge_Abutment_Albedo_89
+  - first:
+      213: 1038079855382638689
+    second: Bridge_Abutment_Albedo_90
+  - first:
+      213: -2563559862136079413
+    second: Bridge_Abutment_Albedo_91
+  - first:
+      213: 9077648045495594756
+    second: Bridge_Abutment_Albedo_92
+  - first:
+      213: -3101114497826501549
+    second: Bridge_Abutment_Albedo_93
+  - first:
+      213: 5473174238546173441
+    second: Bridge_Abutment_Albedo_94
+  - first:
+      213: -1381880447077061937
+    second: Bridge_Abutment_Albedo_95
+  - first:
+      213: -5307767831649888950
+    second: Bridge_Abutment_Albedo_96
+  - first:
+      213: -1539240988926118769
+    second: Bridge_Abutment_Albedo_97
+  - first:
+      213: 7720225164667701629
+    second: Bridge_Abutment_Albedo_98
+  - first:
+      213: -7358493099738792992
+    second: Bridge_Abutment_Albedo_99
+  - first:
+      213: -5153129601645513688
+    second: Bridge_Abutment_Albedo_100
+  - first:
+      213: 290644048549270365
+    second: Bridge_Abutment_Albedo_101
+  - first:
+      213: 6675256829005826584
+    second: Bridge_Abutment_Albedo_102
+  - first:
+      213: -3121559518027414790
+    second: Bridge_Abutment_Albedo_103
+  - first:
+      213: 4574840397131502853
+    second: Bridge_Abutment_Albedo_104
+  - first:
+      213: -7502731405026404180
+    second: Bridge_Abutment_Albedo_105
+  - first:
+      213: -5733916326935843784
+    second: Bridge_Abutment_Albedo_106
+  - first:
+      213: -3198652835360613710
+    second: Bridge_Abutment_Albedo_107
+  - first:
+      213: 6348339385757311637
+    second: Bridge_Abutment_Albedo_108
+  - first:
+      213: -6237223657170308102
+    second: Bridge_Abutment_Albedo_109
+  - first:
+      213: -7591552546445435538
+    second: Bridge_Abutment_Albedo_110
+  - first:
+      213: 2234984270524965418
+    second: Bridge_Abutment_Albedo_111
+  - first:
+      213: -4379482454376198557
+    second: Bridge_Abutment_Albedo_112
+  - first:
+      213: 5515317533700175619
+    second: Bridge_Abutment_Albedo_113
+  - first:
+      213: -2058970749029251964
+    second: Bridge_Abutment_Albedo_114
+  - first:
+      213: 4298203560717469039
+    second: Bridge_Abutment_Albedo_115
+  - first:
+      213: 967533413652052616
+    second: Bridge_Abutment_Albedo_116
+  - first:
+      213: -3168173920577887893
+    second: Bridge_Abutment_Albedo_117
+  - first:
+      213: 6796414555809453353
+    second: Bridge_Abutment_Albedo_118
+  - first:
+      213: -3202569925443705201
+    second: Bridge_Abutment_Albedo_119
+  - first:
+      213: -179032867863563126
+    second: Bridge_Abutment_Albedo_120
+  - first:
+      213: 9021736436465991445
+    second: Bridge_Abutment_Albedo_121
+  - first:
+      213: -2525912964512669562
+    second: Bridge_Abutment_Albedo_122
+  - first:
+      213: 3225962962298283659
+    second: Bridge_Abutment_Albedo_123
+  - first:
+      213: 5338102476626823695
+    second: Bridge_Abutment_Albedo_124
+  - first:
+      213: -2302209369945055870
+    second: Bridge_Abutment_Albedo_125
+  - first:
+      213: -7520775444153339055
+    second: Bridge_Abutment_Albedo_126
+  - first:
+      213: 3168034658434601426
+    second: Bridge_Abutment_Albedo_127
+  - first:
+      213: -3856999716025237890
+    second: Bridge_Abutment_Albedo_128
+  - first:
+      213: -8714903655708048660
+    second: Bridge_Abutment_Albedo_129
+  - first:
+      213: -4869527396091848468
+    second: Bridge_Abutment_Albedo_130
+  - first:
+      213: -8003299842732802532
+    second: Bridge_Abutment_Albedo_131
+  - first:
+      213: -2873473236398722212
+    second: Bridge_Abutment_Albedo_132
+  - first:
+      213: -5211369860731843563
+    second: Bridge_Abutment_Albedo_133
+  - first:
+      213: -1804614318692969718
+    second: Bridge_Abutment_Albedo_134
+  - first:
+      213: 1428918698362430171
+    second: Bridge_Abutment_Albedo_135
+  - first:
+      213: -6198856625914035281
+    second: Bridge_Abutment_Albedo_136
+  - first:
+      213: -8406279628253005080
+    second: Bridge_Abutment_Albedo_137
+  - first:
+      213: 1586933680281014134
+    second: Bridge_Abutment_Albedo_138
+  - first:
+      213: -7892270723556816833
+    second: Bridge_Abutment_Albedo_139
+  - first:
+      213: -3692790113505828163
+    second: Bridge_Abutment_Albedo_140
+  - first:
+      213: 7363107173218045372
+    second: Bridge_Abutment_Albedo_141
+  - first:
+      213: 5927248262227118559
+    second: Bridge_Abutment_Albedo_142
+  - first:
+      213: -1172586758854041400
+    second: Bridge_Abutment_Albedo_143
+  - first:
+      213: 1931954815358979071
+    second: Bridge_Abutment_Albedo_144
+  - first:
+      213: 5323273749626973060
+    second: Bridge_Abutment_Albedo_145
+  - first:
+      213: 6502993632992903236
+    second: Bridge_Abutment_Albedo_146
+  - first:
+      213: 7899497458681968524
+    second: Bridge_Abutment_Albedo_147
+  - first:
+      213: 6009286791263367252
+    second: Bridge_Abutment_Albedo_148
+  - first:
+      213: -5680534586393762824
+    second: Bridge_Abutment_Albedo_149
+  - first:
+      213: -1102440293166500545
+    second: Bridge_Abutment_Albedo_150
+  - first:
+      213: 2628589505690329230
+    second: Bridge_Abutment_Albedo_151
+  - first:
+      213: -733724108492847000
+    second: Bridge_Abutment_Albedo_152
+  - first:
+      213: 175061437985809182
+    second: Bridge_Abutment_Albedo_153
+  - first:
+      213: 6260177180220675069
+    second: Bridge_Abutment_Albedo_154
+  - first:
+      213: 3103337208915958752
+    second: Bridge_Abutment_Albedo_155
+  - first:
+      213: -8969557671620559070
+    second: Bridge_Abutment_Albedo_156
+  - first:
+      213: 5327073437076021394
+    second: Bridge_Abutment_Albedo_157
+  - first:
+      213: 4657950720066264955
+    second: Bridge_Abutment_Albedo_158
+  - first:
+      213: -4608705660568124849
+    second: Bridge_Abutment_Albedo_159
+  - first:
+      213: -796221004674083044
+    second: Bridge_Abutment_Albedo_160
+  - first:
+      213: -7302247516593886107
+    second: Bridge_Abutment_Albedo_161
+  - first:
+      213: 9023640505540722126
+    second: Bridge_Abutment_Albedo_162
+  - first:
+      213: -7603462949190184305
+    second: Bridge_Abutment_Albedo_163
+  - first:
+      213: -7661945007080702608
+    second: Bridge_Abutment_Albedo_164
+  - first:
+      213: -7109584046474170196
+    second: Bridge_Abutment_Albedo_165
+  - first:
+      213: -5764262506249561308
+    second: Bridge_Abutment_Albedo_166
+  - first:
+      213: 4532423420510984534
+    second: Bridge_Abutment_Albedo_167
+  - first:
+      213: 7022146735005232850
+    second: Bridge_Abutment_Albedo_168
+  - first:
+      213: 1485112488023079724
+    second: Bridge_Abutment_Albedo_169
+  - first:
+      213: -3100383682604403773
+    second: Bridge_Abutment_Albedo_170
+  - first:
+      213: -7069272522241765056
+    second: Bridge_Abutment_Albedo_171
+  - first:
+      213: -5286263156571626984
+    second: Bridge_Abutment_Albedo_172
+  - first:
+      213: 1703654918343633109
+    second: Bridge_Abutment_Albedo_173
+  - first:
+      213: 8647369930827248854
+    second: Bridge_Abutment_Albedo_174
+  - first:
+      213: -2983627668717340808
+    second: Bridge_Abutment_Albedo_175
+  - first:
+      213: 5298649902010110422
+    second: Bridge_Abutment_Albedo_176
+  - first:
+      213: 4282630036582563385
+    second: Bridge_Abutment_Albedo_177
+  - first:
+      213: 6561104797574623743
+    second: Bridge_Abutment_Albedo_178
+  - first:
+      213: 1298110362451042195
+    second: Bridge_Abutment_Albedo_179
+  - first:
+      213: 2608857811390805019
+    second: Bridge_Abutment_Albedo_180
+  - first:
+      213: 2111240786158833100
+    second: Bridge_Abutment_Albedo_181
+  - first:
+      213: 101207489735622108
+    second: Bridge_Abutment_Albedo_182
+  - first:
+      213: -2037693551067956962
+    second: Bridge_Abutment_Albedo_183
+  - first:
+      213: -6316394681960117969
+    second: Bridge_Abutment_Albedo_184
+  - first:
+      213: 4639185551646074428
+    second: Bridge_Abutment_Albedo_185
+  - first:
+      213: 9076402490117102449
+    second: Bridge_Abutment_Albedo_186
+  - first:
+      213: 8952071504595849967
+    second: Bridge_Abutment_Albedo_187
+  - first:
+      213: -7420405463787093491
+    second: Bridge_Abutment_Albedo_188
+  - first:
+      213: 3022660747266595151
+    second: Bridge_Abutment_Albedo_189
+  - first:
+      213: 6931658671616032001
+    second: Bridge_Abutment_Albedo_190
+  - first:
+      213: -7377271941775642297
+    second: Bridge_Abutment_Albedo_191
+  - first:
+      213: -8193365061496642229
+    second: Bridge_Abutment_Albedo_192
+  - first:
+      213: 8103326603169572072
+    second: Bridge_Abutment_Albedo_193
+  - first:
+      213: -2898243136224821265
+    second: Bridge_Abutment_Albedo_194
+  - first:
+      213: -7702952010541463601
+    second: Bridge_Abutment_Albedo_195
+  - first:
+      213: -6043652493735197947
+    second: Bridge_Abutment_Albedo_196
+  - first:
+      213: -6535850317950390919
+    second: Bridge_Abutment_Albedo_197
+  - first:
+      213: -5937463783774495631
+    second: Bridge_Abutment_Albedo_198
+  - first:
+      213: -5742588463256402166
+    second: Bridge_Abutment_Albedo_199
+  - first:
+      213: -4340915451834554194
+    second: Bridge_Abutment_Albedo_200
+  - first:
+      213: -4168081287463116725
+    second: Bridge_Abutment_Albedo_201
+  - first:
+      213: -5870990119636086377
+    second: Bridge_Abutment_Albedo_202
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 0
+  spriteTessellationDetail: -1
+  textureType: 0
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_0
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 2005
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 500f4a231de7e2d60800000000000000
+      internalID: 7867365036025769989
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_1
+      rect:
+        serializedVersion: 2
+        x: 53
+        y: 2023
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c519fd2409d64b4c0800000000000000
+      internalID: -4272669680103091876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_2
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 2010
+        width: 29
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 548ee6ebea01ceb30800000000000000
+      internalID: 4317844485446756421
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_3
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 2013
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46e819c0998b8b210800000000000000
+      internalID: 1349031055877836388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_4
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 2007
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92828ba857e83cad0800000000000000
+      internalID: -2683144317493041111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_5
+      rect:
+        serializedVersion: 2
+        x: 218
+        y: 2011
+        width: 28
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 546b3e98b87639470800000000000000
+      internalID: 8400171578987624005
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_6
+      rect:
+        serializedVersion: 2
+        x: 283
+        y: 2013
+        width: 28
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea31754aec8f3ac30800000000000000
+      internalID: 4369609629883634606
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_7
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 2005
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09761063f2a6fdf50800000000000000
+      internalID: 6908357104411699088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_8
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 2022
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71d275bb7411342a0800000000000000
+      internalID: -6754536016342209257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_9
+      rect:
+        serializedVersion: 2
+        x: 440
+        y: 2022
+        width: 29
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7410a527244850a0800000000000000
+      internalID: -6892684294764882818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_10
+      rect:
+        serializedVersion: 2
+        x: 478
+        y: 2004
+        width: 32
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc6b896738437af10800000000000000
+      internalID: 2280849475521525452
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_11
+      rect:
+        serializedVersion: 2
+        x: 541
+        y: 2028
+        width: 31
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5f9b225c75d44060800000000000000
+      internalID: 6936904055988658010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_12
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 2027
+        width: 29
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0369371b0a0987d80800000000000000
+      internalID: -8252687297310124496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_13
+      rect:
+        serializedVersion: 2
+        x: 618
+        y: 2023
+        width: 28
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77eaf3ffcac094fe0800000000000000
+      internalID: -1204417488188625289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_14
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 2010
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a5cd0b62ec97a9f0800000000000000
+      internalID: -457224340882209376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_15
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 2024
+        width: 28
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 012902812c13c9c70800000000000000
+      internalID: 8979106466768130576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_16
+      rect:
+        serializedVersion: 2
+        x: 756
+        y: 2022
+        width: 28
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83edcdc596e51ae80800000000000000
+      internalID: -8169144442450813384
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_17
+      rect:
+        serializedVersion: 2
+        x: 810
+        y: 2032
+        width: 29
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ecc2602e2ecd00a0800000000000000
+      internalID: -6913643155436679960
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_18
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 2027
+        width: 28
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3215d5136d1220e30800000000000000
+      internalID: 4468170984139870499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_19
+      rect:
+        serializedVersion: 2
+        x: 915
+        y: 2017
+        width: 29
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8a6c8fe607824dc0800000000000000
+      internalID: -3656211483612910961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_20
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 2012
+        width: 28
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2450b96bbbf41c680800000000000000
+      internalID: -8736614134480960190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_21
+      rect:
+        serializedVersion: 2
+        x: 1016
+        y: 2030
+        width: 29
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80d5f9cca5d98ffb0800000000000000
+      internalID: -4613764804935459576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_22
+      rect:
+        serializedVersion: 2
+        x: 1072
+        y: 2005
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0880c12310b3a65b0800000000000000
+      internalID: -5374418328991561600
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_23
+      rect:
+        serializedVersion: 2
+        x: 1136
+        y: 2004
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e72b7a5bc4fbf380800000000000000
+      internalID: -8936279881353058328
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_24
+      rect:
+        serializedVersion: 2
+        x: 1188
+        y: 2023
+        width: 28
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1377c9640485b600800000000000000
+      internalID: 483437689501610780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_25
+      rect:
+        serializedVersion: 2
+        x: 1227
+        y: 2031
+        width: 29
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93fbd77db8d3099a0800000000000000
+      internalID: -6228410613828305095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_26
+      rect:
+        serializedVersion: 2
+        x: 1298
+        y: 2026
+        width: 27
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0ef7487f06874b00800000000000000
+      internalID: 812765658764279308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_27
+      rect:
+        serializedVersion: 2
+        x: 1358
+        y: 2029
+        width: 30
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06b2cdfcb0cf027c0800000000000000
+      internalID: -4097998533244998816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_28
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 2022
+        width: 29
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93aed9edea95f0a60800000000000000
+      internalID: 7642425700265093689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_29
+      rect:
+        serializedVersion: 2
+        x: 1457
+        y: 2013
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2047d8dc828614530800000000000000
+      internalID: 3837462881952953346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_30
+      rect:
+        serializedVersion: 2
+        x: 1585
+        y: 2007
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53c3c990f972e9780800000000000000
+      internalID: -8674452268254479307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_31
+      rect:
+        serializedVersion: 2
+        x: 1641
+        y: 2012
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 223d62458a176af80800000000000000
+      internalID: -8095658312371612894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_32
+      rect:
+        serializedVersion: 2
+        x: 1688
+        y: 2012
+        width: 28
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd89211ef8e43f3e0800000000000000
+      internalID: -2021185427895838500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_33
+      rect:
+        serializedVersion: 2
+        x: 1739
+        y: 2021
+        width: 27
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bab36e55a0f998130800000000000000
+      internalID: 3569559046407469995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_34
+      rect:
+        serializedVersion: 2
+        x: 1772
+        y: 2006
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 501ba97f23cee43c0800000000000000
+      internalID: -4373298484483542779
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_35
+      rect:
+        serializedVersion: 2
+        x: 1818
+        y: 2029
+        width: 33
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a179987da21198030800000000000000
+      internalID: 3497345461332317978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_36
+      rect:
+        serializedVersion: 2
+        x: 1850
+        y: 2029
+        width: 33
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0ef9bab045503e80800000000000000
+      internalID: -8200961184942653940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_37
+      rect:
+        serializedVersion: 2
+        x: 1911
+        y: 2027
+        width: 27
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf66a5f521fa4fc20800000000000000
+      internalID: 3239406525430261500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_38
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 2021
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72528032906de0d10800000000000000
+      internalID: 2093846211504645415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_39
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 2019
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ab5713f1198d4150800000000000000
+      internalID: 5858489400464726946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_40
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 1970
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ed8c42781516aec0800000000000000
+      internalID: -3556131661021409818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_41
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 1987
+        width: 29
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0354eb94bfc01e5d0800000000000000
+      internalID: -3035130400457472720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_42
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 1974
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f8e0313fb21d9aa0800000000000000
+      internalID: -6152740903544887052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_43
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 1977
+        width: 31
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a91603208e204360800000000000000
+      internalID: 7151767336142641576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_44
+      rect:
+        serializedVersion: 2
+        x: 161
+        y: 1971
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98f6afecdeae312a0800000000000000
+      internalID: -6767807507907055735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_45
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 1976
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4aece3db2621c430800000000000000
+      internalID: 3801361530158377546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_46
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 1977
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78239546536da03d0800000000000000
+      internalID: -3239541457134472569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_47
+      rect:
+        serializedVersion: 2
+        x: 346
+        y: 1970
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27052ff74140aebf0800000000000000
+      internalID: -294418339546902414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_48
+      rect:
+        serializedVersion: 2
+        x: 403
+        y: 1986
+        width: 33
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 707775d69b9f36250800000000000000
+      internalID: 5936863308603160327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_49
+      rect:
+        serializedVersion: 2
+        x: 437
+        y: 1986
+        width: 34
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50dcc30d360e4d030800000000000000
+      internalID: 3518683928183229701
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_50
+      rect:
+        serializedVersion: 2
+        x: 483
+        y: 1969
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9df1bf10436bdf800800000000000000
+      internalID: 647874255899008985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_51
+      rect:
+        serializedVersion: 2
+        x: 541
+        y: 1991
+        width: 31
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61e8acfc0d0ce0ea0800000000000000
+      internalID: -5904570058364252650
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_52
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 1991
+        width: 29
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8bdf46c1958fc9c40800000000000000
+      internalID: 5520560304861543864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_53
+      rect:
+        serializedVersion: 2
+        x: 619
+        y: 1987
+        width: 29
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 406948917730e29f0800000000000000
+      internalID: -491451499272694268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_54
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 1972
+        width: 27
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76c3aea356074d330800000000000000
+      internalID: 3734733571079421031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_55
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 1987
+        width: 29
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39affd890d01da900800000000000000
+      internalID: 697232005416352403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_56
+      rect:
+        serializedVersion: 2
+        x: 756
+        y: 1984
+        width: 29
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b9bcb6f0fbe84bb0800000000000000
+      internalID: -4951448370129618506
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_57
+      rect:
+        serializedVersion: 2
+        x: 811
+        y: 1995
+        width: 27
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9eed0393833d48a60800000000000000
+      internalID: 7675491903377301225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_58
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 1989
+        width: 29
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 716e3875dadfb7e40800000000000000
+      internalID: 5655392678033221143
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_59
+      rect:
+        serializedVersion: 2
+        x: 914
+        y: 1979
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c28e668dc2fff900800000000000000
+      internalID: 720561429940175560
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_60
+      rect:
+        serializedVersion: 2
+        x: 968
+        y: 1976
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55c5dbeb1e8df46e0800000000000000
+      internalID: -1851022457746662315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_61
+      rect:
+        serializedVersion: 2
+        x: 1017
+        y: 1994
+        width: 27
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5000d7c38cc5d5620800000000000000
+      internalID: 2764467761353392133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_62
+      rect:
+        serializedVersion: 2
+        x: 1074
+        y: 1969
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7eef2054d0643ecc0800000000000000
+      internalID: -3683023047452590361
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_63
+      rect:
+        serializedVersion: 2
+        x: 1139
+        y: 1967
+        width: 29
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc1c7e0f780be1f10800000000000000
+      internalID: 2242423762385879500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_64
+      rect:
+        serializedVersion: 2
+        x: 1188
+        y: 1985
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31760e04eebeb9690800000000000000
+      internalID: -7594216938107017453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_65
+      rect:
+        serializedVersion: 2
+        x: 1228
+        y: 1995
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b03b5d70b009734b0800000000000000
+      internalID: -5460737646112951541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_66
+      rect:
+        serializedVersion: 2
+        x: 1297
+        y: 1987
+        width: 29
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8364faf58add49350800000000000000
+      internalID: 6022682316930762296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_67
+      rect:
+        serializedVersion: 2
+        x: 1360
+        y: 1993
+        width: 27
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4888ddb2e8b809520800000000000000
+      internalID: 2706816818787223684
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_68
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 1985
+        width: 29
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1dbbd18d6e0c45dd0800000000000000
+      internalID: -2498159795582944303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_69
+      rect:
+        serializedVersion: 2
+        x: 1459
+        y: 1977
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c36d2c8cf94f278f0800000000000000
+      internalID: -544103637853219268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_70
+      rect:
+        serializedVersion: 2
+        x: 1518
+        y: 1996
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1905de79126b75fd0800000000000000
+      internalID: -2353212024878706543
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_71
+      rect:
+        serializedVersion: 2
+        x: 1587
+        y: 1971
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7deb992a4a24c21c0800000000000000
+      internalID: -4527170250544136489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_72
+      rect:
+        serializedVersion: 2
+        x: 1643
+        y: 1977
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2d9968d12b840c40800000000000000
+      internalID: 5477656024270347564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_73
+      rect:
+        serializedVersion: 2
+        x: 1690
+        y: 1976
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09aa764ba44cd49b0800000000000000
+      internalID: -5094199778352846192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_74
+      rect:
+        serializedVersion: 2
+        x: 1737
+        y: 1984
+        width: 31
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0909927392e7fd730800000000000000
+      internalID: 4026075307376742544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_75
+      rect:
+        serializedVersion: 2
+        x: 1777
+        y: 1970
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c65aa7a0daf6d1f00800000000000000
+      internalID: 1089149473889363308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_76
+      rect:
+        serializedVersion: 2
+        x: 1820
+        y: 1995
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfe142ca273283fc0800000000000000
+      internalID: -3515020533741379845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_77
+      rect:
+        serializedVersion: 2
+        x: 1853
+        y: 1994
+        width: 30
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 626979c3698832600800000000000000
+      internalID: 442347367255479846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_78
+      rect:
+        serializedVersion: 2
+        x: 1911
+        y: 1989
+        width: 29
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdd800d95ed0c0130800000000000000
+      internalID: 3534215087411727835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_79
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 1983
+        width: 33
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d641578fbf318930800000000000000
+      internalID: 4143663223999121107
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_80
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 1985
+        width: 33
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cfc0fd19eb5f0f00800000000000000
+      internalID: 1085187092007407558
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_81
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1973
+        height: 1971
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f5cc845012836e40800000000000000
+      internalID: 5648501364302333433
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_82
+      rect:
+        serializedVersion: 2
+        x: 53
+        y: 1949
+        width: 26
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8aaff5be593e4bef0800000000000000
+      internalID: -93199459229369688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_83
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 1940
+        width: 31
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d55c7236f7ec0920800000000000000
+      internalID: 2957994099870553561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_84
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 1949
+        width: 28
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3fbb1c0fba5aec210800000000000000
+      internalID: 1355202695782317043
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_85
+      rect:
+        serializedVersion: 2
+        x: 440
+        y: 1948
+        width: 27
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b139524daa9ecef00800000000000000
+      internalID: 1147548924985578267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_86
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 1954
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e25cd926b63aeaba0800000000000000
+      internalID: -6075739165664885458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_87
+      rect:
+        serializedVersion: 2
+        x: 575
+        y: 1954
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 394fdce5beef83ce0800000000000000
+      internalID: -1425108995201436525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_88
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 1950
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44c0f2a86457e73d0800000000000000
+      internalID: -3206996938814714812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_89
+      rect:
+        serializedVersion: 2
+        x: 666
+        y: 1935
+        width: 28
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8beb709ec590bc40800000000000000
+      internalID: 5526081457203440523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_90
+      rect:
+        serializedVersion: 2
+        x: 712
+        y: 1949
+        width: 27
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1603294e020086e00800000000000000
+      internalID: 1038079855382638689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_91
+      rect:
+        serializedVersion: 2
+        x: 757
+        y: 1949
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcbfde043e76c6cd0800000000000000
+      internalID: -2563559862136079413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_92
+      rect:
+        serializedVersion: 2
+        x: 811
+        y: 1957
+        width: 25
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40fa8cb4dc84afd70800000000000000
+      internalID: 9077648045495594756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_93
+      rect:
+        serializedVersion: 2
+        x: 858
+        y: 1953
+        width: 26
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35ccc3d6bc0a6f4d0800000000000000
+      internalID: -3101114497826501549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_94
+      rect:
+        serializedVersion: 2
+        x: 914
+        y: 1943
+        width: 30
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10e1d5ac8fe94fb40800000000000000
+      internalID: 5473174238546173441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_95
+      rect:
+        serializedVersion: 2
+        x: 1017
+        y: 1957
+        width: 25
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fcae9ed0e0392dce0800000000000000
+      internalID: -1381880447077061937
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_96
+      rect:
+        serializedVersion: 2
+        x: 1188
+        y: 1949
+        width: 26
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a45534467450756b0800000000000000
+      internalID: -5307767831649888950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_97
+      rect:
+        serializedVersion: 2
+        x: 1229
+        y: 1957
+        width: 27
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f84765fc97483aae0800000000000000
+      internalID: -1539240988926118769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_98
+      rect:
+        serializedVersion: 2
+        x: 1261
+        y: 1958
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d79cc0e32efb32b60800000000000000
+      internalID: 7720225164667701629
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_99
+      rect:
+        serializedVersion: 2
+        x: 1296
+        y: 1951
+        width: 28
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ebf7e3438161e990800000000000000
+      internalID: -7358493099738792992
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_100
+      rect:
+        serializedVersion: 2
+        x: 1360
+        y: 1956
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8247e540ee76c78b0800000000000000
+      internalID: -5153129601645513688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_101
+      rect:
+        serializedVersion: 2
+        x: 1409
+        y: 1949
+        width: 26
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d535cd5e833980400800000000000000
+      internalID: 290644048549270365
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_102
+      rect:
+        serializedVersion: 2
+        x: 1458
+        y: 1940
+        width: 29
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 81a846d08b643ac50800000000000000
+      internalID: 6675256829005826584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_103
+      rect:
+        serializedVersion: 2
+        x: 1519
+        y: 1959
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af28cb6382efda4d0800000000000000
+      internalID: -3121559518027414790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_104
+      rect:
+        serializedVersion: 2
+        x: 1741
+        y: 1947
+        width: 26
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50551274a191d7f30800000000000000
+      internalID: 4574840397131502853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_105
+      rect:
+        serializedVersion: 2
+        x: 1821
+        y: 1955
+        width: 28
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca8db3ec981f0e790800000000000000
+      internalID: -7502731405026404180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_106
+      rect:
+        serializedVersion: 2
+        x: 1853
+        y: 1956
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83c2d21fa790d60b0800000000000000
+      internalID: -5733916326935843784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_107
+      rect:
+        serializedVersion: 2
+        x: 1911
+        y: 1953
+        width: 28
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2bad884813a1c93d0800000000000000
+      internalID: -3198652835360613710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_108
+      rect:
+        serializedVersion: 2
+        x: 1944
+        y: 1950
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 592afa15905d91850800000000000000
+      internalID: 6348339385757311637
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_109
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 1951
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af373b9412ee079a0800000000000000
+      internalID: -6237223657170308102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_110
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 1950
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6d58674e2365a690800000000000000
+      internalID: -7591552546445435538
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_111
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 1910
+        width: 31
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a22e9334a52440f10800000000000000
+      internalID: 2234984270524965418
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_112
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 1911
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36ec9d649e3f833c0800000000000000
+      internalID: -4379482454376198557
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_113
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1910
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 307bea353185a8c40800000000000000
+      internalID: 5515317533700175619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_114
+      rect:
+        serializedVersion: 2
+        x: 1945
+        y: 1867
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 484013d33011d63e0800000000000000
+      internalID: -2058970749029251964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_115
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 1866
+        width: 36
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f6542e89d5946ab30800000000000000
+      internalID: 4298203560717469039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_116
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1866
+        width: 34
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 88a3d05738e5d6d00800000000000000
+      internalID: 967533413652052616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_117
+      rect:
+        serializedVersion: 2
+        x: 1945
+        y: 1816
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b616c4dda926804d0800000000000000
+      internalID: -3168173920577887893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_118
+      rect:
+        serializedVersion: 2
+        x: 1977
+        y: 1814
+        width: 35
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92511519707b15e50800000000000000
+      internalID: 6796414555809453353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_119
+      rect:
+        serializedVersion: 2
+        x: 2015
+        y: 1815
+        width: 33
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f862499ee9f2e83d0800000000000000
+      internalID: -3202569925443705201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_120
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 1759
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a847fd32e82f38df0800000000000000
+      internalID: -179032867863563126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_121
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 1757
+        width: 34
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51ff0c06d75a33d70800000000000000
+      internalID: 9021736436465991445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_122
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 1758
+        width: 34
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6802ba8aa8722fcd0800000000000000
+      internalID: -2525912964512669562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_123
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 1692
+        width: 31
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b862b5ae83ce4cc20800000000000000
+      internalID: 3225962962298283659
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_124
+      rect:
+        serializedVersion: 2
+        x: 1979
+        y: 1691
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0a89f58befb41a40800000000000000
+      internalID: 5338102476626823695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_125
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1692
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28d59d196c8ec00e0800000000000000
+      internalID: -2302209369945055870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_126
+      rect:
+        serializedVersion: 2
+        x: 1942
+        y: 1645
+        width: 32
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15372cf8496d0a790800000000000000
+      internalID: -7520775444153339055
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_127
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 1646
+        width: 34
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d1de14acbe17fb20800000000000000
+      internalID: 3168034658434601426
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_128
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1647
+        width: 33
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7e788b813f297ac0800000000000000
+      internalID: -3856999716025237890
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_129
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 1601
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce2c4c57c417e0780800000000000000
+      internalID: -8714903655708048660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_130
+      rect:
+        serializedVersion: 2
+        x: 1976
+        y: 1600
+        width: 36
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce899e312a6fb6cb0800000000000000
+      internalID: -4869527396091848468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_131
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 1601
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1eb8f242319ee090800000000000000
+      internalID: -8003299842732802532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_132
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 1558
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c53bcd8d05f5f18d0800000000000000
+      internalID: -2873473236398722212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_133
+      rect:
+        serializedVersion: 2
+        x: 2002
+        y: 1557
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51cc6e109be7da7b0800000000000000
+      internalID: -5211369860731843563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_134
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 1516
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a03d8b1a6d8b4f6e0800000000000000
+      internalID: -1804614318692969718
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_135
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 1515
+        width: 32
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd26ec44cf984d310800000000000000
+      internalID: 1428918698362430171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_136
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 1471
+        width: 66
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa341deddbc39f9a0800000000000000
+      internalID: -6198856625914035281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_137
+      rect:
+        serializedVersion: 2
+        x: 1944
+        y: 1413
+        width: 32
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ea706b6735e65b80800000000000000
+      internalID: -8406279628253005080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_138
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 1411
+        width: 35
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67fc04736cbe50610800000000000000
+      internalID: 1586933680281014134
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_139
+      rect:
+        serializedVersion: 2
+        x: 2015
+        y: 1412
+        width: 33
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f384e2b8795097290800000000000000
+      internalID: -7892270723556816833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_140
+      rect:
+        serializedVersion: 2
+        x: 1968
+        y: 1357
+        width: 32
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db2296ef4f290ccc0800000000000000
+      internalID: -3692790113505828163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_141
+      rect:
+        serializedVersion: 2
+        x: 2003
+        y: 1358
+        width: 33
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbdcace66f20f2660800000000000000
+      internalID: 7363107173218045372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_142
+      rect:
+        serializedVersion: 2
+        x: 1969
+        y: 1317
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd9499df3e0d14250800000000000000
+      internalID: 5927248262227118559
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_143
+      rect:
+        serializedVersion: 2
+        x: 2002
+        y: 1315
+        width: 33
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c0ad223e822abfe0800000000000000
+      internalID: -1172586758854041400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_144
+      rect:
+        serializedVersion: 2
+        x: 1968
+        y: 1262
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffbc39b2baeafca10800000000000000
+      internalID: 1931954815358979071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_145
+      rect:
+        serializedVersion: 2
+        x: 2005
+        y: 1259
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48b6da8754110e940800000000000000
+      internalID: 5323273749626973060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_146
+      rect:
+        serializedVersion: 2
+        x: 1969
+        y: 1222
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4404b2f31464f3a50800000000000000
+      internalID: 6502993632992903236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_147
+      rect:
+        serializedVersion: 2
+        x: 1999
+        y: 1224
+        width: 37
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c87f6d8d517a0ad60800000000000000
+      internalID: 7899497458681968524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_148
+      rect:
+        serializedVersion: 2
+        x: 1972
+        y: 1167
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45033b28f76456350800000000000000
+      internalID: 6009286791263367252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_149
+      rect:
+        serializedVersion: 2
+        x: 2008
+        y: 1167
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f3eda3f3efaa21b0800000000000000
+      internalID: -5680534586393762824
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_150
+      rect:
+        serializedVersion: 2
+        x: 1965
+        y: 1108
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f35bbb3f46853b0f0800000000000000
+      internalID: -1102440293166500545
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_151
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 1109
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e80edf28a30aa7420800000000000000
+      internalID: 2628589505690329230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_152
+      rect:
+        serializedVersion: 2
+        x: 1976
+        y: 1071
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 868c42e8fc941d5f0800000000000000
+      internalID: -733724108492847000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_153
+      rect:
+        serializedVersion: 2
+        x: 2009
+        y: 1071
+        width: 30
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e1363094371fd6200800000000000000
+      internalID: 175061437985809182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_154
+      rect:
+        serializedVersion: 2
+        x: 1975
+        y: 1038
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df35f024afd90e650800000000000000
+      internalID: 6260177180220675069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_155
+      rect:
+        serializedVersion: 2
+        x: 2010
+        y: 1036
+        width: 30
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0eb10b3dfb4411b20800000000000000
+      internalID: 3103337208915958752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_156
+      rect:
+        serializedVersion: 2
+        x: 1974
+        y: 997
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22f3da602dab58380800000000000000
+      internalID: -8969557671620559070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_157
+      rect:
+        serializedVersion: 2
+        x: 2009
+        y: 997
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 290e55521119de940800000000000000
+      internalID: 5327073437076021394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_158
+      rect:
+        serializedVersion: 2
+        x: 1972
+        y: 957
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7f13d2408d54a040800000000000000
+      internalID: 4657950720066264955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_159
+      rect:
+        serializedVersion: 2
+        x: 2006
+        y: 958
+        width: 31
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f424183ae969a00c0800000000000000
+      internalID: -4608705660568124849
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_160
+      rect:
+        serializedVersion: 2
+        x: 1967
+        y: 894
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1752bdf63143f4f0800000000000000
+      internalID: -796221004674083044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_161
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 895
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56c6177929439aa90800000000000000
+      internalID: -7302247516593886107
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_162
+      rect:
+        serializedVersion: 2
+        x: 1965
+        y: 858
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ecdb4910b396a3d70800000000000000
+      internalID: 9023640505540722126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_163
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 860
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f82dcaa8bb21b7690800000000000000
+      internalID: -7603462949190184305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_164
+      rect:
+        serializedVersion: 2
+        x: 1965
+        y: 814
+        width: 32
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07d706c5c9d4ba590800000000000000
+      internalID: -7661945007080702608
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_165
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 816
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca07f195afea55d90800000000000000
+      internalID: -7109584046474170196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_166
+      rect:
+        serializedVersion: 2
+        x: 1964
+        y: 771
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42b54ea7ac93100b0800000000000000
+      internalID: -5764262506249561308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_167
+      rect:
+        serializedVersion: 2
+        x: 2001
+        y: 773
+        width: 31
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 659d73f461766ee30800000000000000
+      internalID: 4532423420510984534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_168
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 713
+        width: 29
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2dee7a4204da37160800000000000000
+      internalID: 7022146735005232850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_169
+      rect:
+        serializedVersion: 2
+        x: 2012
+        y: 713
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2bbc1c70fd2c9410800000000000000
+      internalID: 1485112488023079724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_170
+      rect:
+        serializedVersion: 2
+        x: 1972
+        y: 665
+        width: 31
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c372fa977939f4d0800000000000000
+      internalID: -3100383682604403773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_171
+      rect:
+        serializedVersion: 2
+        x: 2006
+        y: 667
+        width: 32
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 041995b7816e4ed90800000000000000
+      internalID: -7069272522241765056
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_172
+      rect:
+        serializedVersion: 2
+        x: 1968
+        y: 608
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 812205bbaab63a6b0800000000000000
+      internalID: -5286263156571626984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_173
+      rect:
+        serializedVersion: 2
+        x: 2005
+        y: 610
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d828b33f1994a710800000000000000
+      internalID: 1703654918343633109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_174
+      rect:
+        serializedVersion: 2
+        x: 1960
+        y: 550
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d43a58e221a10870800000000000000
+      internalID: 8647369930827248854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_175
+      rect:
+        serializedVersion: 2
+        x: 1993
+        y: 549
+        width: 33
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 877731871760896d0800000000000000
+      internalID: -2983627668717340808
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_176
+      rect:
+        serializedVersion: 2
+        x: 2028
+        y: 548
+        width: 20
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d1987e2306988940800000000000000
+      internalID: 5298649902010110422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_177
+      rect:
+        serializedVersion: 2
+        x: 1969
+        y: 505
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93efbe2f355fe6b30800000000000000
+      internalID: 4282630036582563385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_178
+      rect:
+        serializedVersion: 2
+        x: 2004
+        y: 504
+        width: 30
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff1fb891d0abd0b50800000000000000
+      internalID: 6561104797574623743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_179
+      rect:
+        serializedVersion: 2
+        x: 1968
+        y: 447
+        width: 30
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39fd5293f70d30210800000000000000
+      internalID: 1298110362451042195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_180
+      rect:
+        serializedVersion: 2
+        x: 1997
+        y: 446
+        width: 36
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b14b37d6b56843420800000000000000
+      internalID: 2608857811390805019
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_181
+      rect:
+        serializedVersion: 2
+        x: 1942
+        y: 403
+        width: 32
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ccd40562f42ac4d10800000000000000
+      internalID: 2111240786158833100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_182
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 404
+        width: 31
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cddfc4afcaf876100800000000000000
+      internalID: 101207489735622108
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_183
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 403
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e197d7fe288a8b3e0800000000000000
+      internalID: -2037693551067956962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_184
+      rect:
+        serializedVersion: 2
+        x: 1978
+        y: 355
+        width: 29
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f29c990a088a758a0800000000000000
+      internalID: -6316394681960117969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_185
+      rect:
+        serializedVersion: 2
+        x: 2011
+        y: 354
+        width: 32
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c362df40ea2b16040800000000000000
+      internalID: 4639185551646074428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_186
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 289
+        width: 32
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17b96e5d9fbd5fd70800000000000000
+      internalID: 9076402490117102449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_187
+      rect:
+        serializedVersion: 2
+        x: 1976
+        y: 289
+        width: 36
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe215537a952c3c70800000000000000
+      internalID: 8952071504595849967
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_188
+      rect:
+        serializedVersion: 2
+        x: 2014
+        y: 285
+        width: 33
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d024a91bb8c650990800000000000000
+      internalID: -7420405463787093491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_189
+      rect:
+        serializedVersion: 2
+        x: 1943
+        y: 249
+        width: 70
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4997555fe5a2f920800000000000000
+      internalID: 3022660747266595151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_190
+      rect:
+        serializedVersion: 2
+        x: 2013
+        y: 250
+        width: 34
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10dfde916d2323060800000000000000
+      internalID: 6931658671616032001
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_191
+      rect:
+        serializedVersion: 2
+        x: 1959
+        y: 197
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 741b103614aae9990800000000000000
+      internalID: -7377271941775642297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_192
+      rect:
+        serializedVersion: 2
+        x: 1993
+        y: 196
+        width: 34
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b45656a03e15b4e80800000000000000
+      internalID: -8193365061496642229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_193
+      rect:
+        serializedVersion: 2
+        x: 2028
+        y: 196
+        width: 20
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e425e0cc9cc47070800000000000000
+      internalID: 8103326603169572072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_194
+      rect:
+        serializedVersion: 2
+        x: 1973
+        y: 134
+        width: 30
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: feffa90293f57c7d0800000000000000
+      internalID: -2898243136224821265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_195
+      rect:
+        serializedVersion: 2
+        x: 2008
+        y: 134
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc78bc955fd991590800000000000000
+      internalID: -7702952010541463601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_196
+      rect:
+        serializedVersion: 2
+        x: 1972
+        y: 73
+        width: 31
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 503820dd312a02ca0800000000000000
+      internalID: -6043652493735197947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_197
+      rect:
+        serializedVersion: 2
+        x: 2007
+        y: 75
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97d6175a3cefb45a0800000000000000
+      internalID: -6535850317950390919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_198
+      rect:
+        serializedVersion: 2
+        x: 1961
+        y: 24
+        width: 32
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17cdf5d8524e99da0800000000000000
+      internalID: -5937463783774495631
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_199
+      rect:
+        serializedVersion: 2
+        x: 1998
+        y: 27
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a07885cd73a3e40b0800000000000000
+      internalID: -5742588463256402166
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_200
+      rect:
+        serializedVersion: 2
+        x: 1960
+        y: 0
+        width: 32
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea8a56d4568f1c3c0800000000000000
+      internalID: -4340915451834554194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_201
+      rect:
+        serializedVersion: 2
+        x: 1995
+        y: 0
+        width: 33
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b40eec907200826c0800000000000000
+      internalID: -4168081287463116725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Bridge_Abutment_Albedo_202
+      rect:
+        serializedVersion: 2
+        x: 2029
+        y: 0
+        width: 19
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 791534f879d068ea0800000000000000
+      internalID: -5870990119636086377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Bridge_Abutment_Albedo_0: 7867365036025769989
+      Bridge_Abutment_Albedo_1: -4272669680103091876
+      Bridge_Abutment_Albedo_10: 2280849475521525452
+      Bridge_Abutment_Albedo_100: -5153129601645513688
+      Bridge_Abutment_Albedo_101: 290644048549270365
+      Bridge_Abutment_Albedo_102: 6675256829005826584
+      Bridge_Abutment_Albedo_103: -3121559518027414790
+      Bridge_Abutment_Albedo_104: 4574840397131502853
+      Bridge_Abutment_Albedo_105: -7502731405026404180
+      Bridge_Abutment_Albedo_106: -5733916326935843784
+      Bridge_Abutment_Albedo_107: -3198652835360613710
+      Bridge_Abutment_Albedo_108: 6348339385757311637
+      Bridge_Abutment_Albedo_109: -6237223657170308102
+      Bridge_Abutment_Albedo_11: 6936904055988658010
+      Bridge_Abutment_Albedo_110: -7591552546445435538
+      Bridge_Abutment_Albedo_111: 2234984270524965418
+      Bridge_Abutment_Albedo_112: -4379482454376198557
+      Bridge_Abutment_Albedo_113: 5515317533700175619
+      Bridge_Abutment_Albedo_114: -2058970749029251964
+      Bridge_Abutment_Albedo_115: 4298203560717469039
+      Bridge_Abutment_Albedo_116: 967533413652052616
+      Bridge_Abutment_Albedo_117: -3168173920577887893
+      Bridge_Abutment_Albedo_118: 6796414555809453353
+      Bridge_Abutment_Albedo_119: -3202569925443705201
+      Bridge_Abutment_Albedo_12: -8252687297310124496
+      Bridge_Abutment_Albedo_120: -179032867863563126
+      Bridge_Abutment_Albedo_121: 9021736436465991445
+      Bridge_Abutment_Albedo_122: -2525912964512669562
+      Bridge_Abutment_Albedo_123: 3225962962298283659
+      Bridge_Abutment_Albedo_124: 5338102476626823695
+      Bridge_Abutment_Albedo_125: -2302209369945055870
+      Bridge_Abutment_Albedo_126: -7520775444153339055
+      Bridge_Abutment_Albedo_127: 3168034658434601426
+      Bridge_Abutment_Albedo_128: -3856999716025237890
+      Bridge_Abutment_Albedo_129: -8714903655708048660
+      Bridge_Abutment_Albedo_13: -1204417488188625289
+      Bridge_Abutment_Albedo_130: -4869527396091848468
+      Bridge_Abutment_Albedo_131: -8003299842732802532
+      Bridge_Abutment_Albedo_132: -2873473236398722212
+      Bridge_Abutment_Albedo_133: -5211369860731843563
+      Bridge_Abutment_Albedo_134: -1804614318692969718
+      Bridge_Abutment_Albedo_135: 1428918698362430171
+      Bridge_Abutment_Albedo_136: -6198856625914035281
+      Bridge_Abutment_Albedo_137: -8406279628253005080
+      Bridge_Abutment_Albedo_138: 1586933680281014134
+      Bridge_Abutment_Albedo_139: -7892270723556816833
+      Bridge_Abutment_Albedo_14: -457224340882209376
+      Bridge_Abutment_Albedo_140: -3692790113505828163
+      Bridge_Abutment_Albedo_141: 7363107173218045372
+      Bridge_Abutment_Albedo_142: 5927248262227118559
+      Bridge_Abutment_Albedo_143: -1172586758854041400
+      Bridge_Abutment_Albedo_144: 1931954815358979071
+      Bridge_Abutment_Albedo_145: 5323273749626973060
+      Bridge_Abutment_Albedo_146: 6502993632992903236
+      Bridge_Abutment_Albedo_147: 7899497458681968524
+      Bridge_Abutment_Albedo_148: 6009286791263367252
+      Bridge_Abutment_Albedo_149: -5680534586393762824
+      Bridge_Abutment_Albedo_15: 8979106466768130576
+      Bridge_Abutment_Albedo_150: -1102440293166500545
+      Bridge_Abutment_Albedo_151: 2628589505690329230
+      Bridge_Abutment_Albedo_152: -733724108492847000
+      Bridge_Abutment_Albedo_153: 175061437985809182
+      Bridge_Abutment_Albedo_154: 6260177180220675069
+      Bridge_Abutment_Albedo_155: 3103337208915958752
+      Bridge_Abutment_Albedo_156: -8969557671620559070
+      Bridge_Abutment_Albedo_157: 5327073437076021394
+      Bridge_Abutment_Albedo_158: 4657950720066264955
+      Bridge_Abutment_Albedo_159: -4608705660568124849
+      Bridge_Abutment_Albedo_16: -8169144442450813384
+      Bridge_Abutment_Albedo_160: -796221004674083044
+      Bridge_Abutment_Albedo_161: -7302247516593886107
+      Bridge_Abutment_Albedo_162: 9023640505540722126
+      Bridge_Abutment_Albedo_163: -7603462949190184305
+      Bridge_Abutment_Albedo_164: -7661945007080702608
+      Bridge_Abutment_Albedo_165: -7109584046474170196
+      Bridge_Abutment_Albedo_166: -5764262506249561308
+      Bridge_Abutment_Albedo_167: 4532423420510984534
+      Bridge_Abutment_Albedo_168: 7022146735005232850
+      Bridge_Abutment_Albedo_169: 1485112488023079724
+      Bridge_Abutment_Albedo_17: -6913643155436679960
+      Bridge_Abutment_Albedo_170: -3100383682604403773
+      Bridge_Abutment_Albedo_171: -7069272522241765056
+      Bridge_Abutment_Albedo_172: -5286263156571626984
+      Bridge_Abutment_Albedo_173: 1703654918343633109
+      Bridge_Abutment_Albedo_174: 8647369930827248854
+      Bridge_Abutment_Albedo_175: -2983627668717340808
+      Bridge_Abutment_Albedo_176: 5298649902010110422
+      Bridge_Abutment_Albedo_177: 4282630036582563385
+      Bridge_Abutment_Albedo_178: 6561104797574623743
+      Bridge_Abutment_Albedo_179: 1298110362451042195
+      Bridge_Abutment_Albedo_18: 4468170984139870499
+      Bridge_Abutment_Albedo_180: 2608857811390805019
+      Bridge_Abutment_Albedo_181: 2111240786158833100
+      Bridge_Abutment_Albedo_182: 101207489735622108
+      Bridge_Abutment_Albedo_183: -2037693551067956962
+      Bridge_Abutment_Albedo_184: -6316394681960117969
+      Bridge_Abutment_Albedo_185: 4639185551646074428
+      Bridge_Abutment_Albedo_186: 9076402490117102449
+      Bridge_Abutment_Albedo_187: 8952071504595849967
+      Bridge_Abutment_Albedo_188: -7420405463787093491
+      Bridge_Abutment_Albedo_189: 3022660747266595151
+      Bridge_Abutment_Albedo_19: -3656211483612910961
+      Bridge_Abutment_Albedo_190: 6931658671616032001
+      Bridge_Abutment_Albedo_191: -7377271941775642297
+      Bridge_Abutment_Albedo_192: -8193365061496642229
+      Bridge_Abutment_Albedo_193: 8103326603169572072
+      Bridge_Abutment_Albedo_194: -2898243136224821265
+      Bridge_Abutment_Albedo_195: -7702952010541463601
+      Bridge_Abutment_Albedo_196: -6043652493735197947
+      Bridge_Abutment_Albedo_197: -6535850317950390919
+      Bridge_Abutment_Albedo_198: -5937463783774495631
+      Bridge_Abutment_Albedo_199: -5742588463256402166
+      Bridge_Abutment_Albedo_2: 4317844485446756421
+      Bridge_Abutment_Albedo_20: -8736614134480960190
+      Bridge_Abutment_Albedo_200: -4340915451834554194
+      Bridge_Abutment_Albedo_201: -4168081287463116725
+      Bridge_Abutment_Albedo_202: -5870990119636086377
+      Bridge_Abutment_Albedo_21: -4613764804935459576
+      Bridge_Abutment_Albedo_22: -5374418328991561600
+      Bridge_Abutment_Albedo_23: -8936279881353058328
+      Bridge_Abutment_Albedo_24: 483437689501610780
+      Bridge_Abutment_Albedo_25: -6228410613828305095
+      Bridge_Abutment_Albedo_26: 812765658764279308
+      Bridge_Abutment_Albedo_27: -4097998533244998816
+      Bridge_Abutment_Albedo_28: 7642425700265093689
+      Bridge_Abutment_Albedo_29: 3837462881952953346
+      Bridge_Abutment_Albedo_3: 1349031055877836388
+      Bridge_Abutment_Albedo_30: -8674452268254479307
+      Bridge_Abutment_Albedo_31: -8095658312371612894
+      Bridge_Abutment_Albedo_32: -2021185427895838500
+      Bridge_Abutment_Albedo_33: 3569559046407469995
+      Bridge_Abutment_Albedo_34: -4373298484483542779
+      Bridge_Abutment_Albedo_35: 3497345461332317978
+      Bridge_Abutment_Albedo_36: -8200961184942653940
+      Bridge_Abutment_Albedo_37: 3239406525430261500
+      Bridge_Abutment_Albedo_38: 2093846211504645415
+      Bridge_Abutment_Albedo_39: 5858489400464726946
+      Bridge_Abutment_Albedo_4: -2683144317493041111
+      Bridge_Abutment_Albedo_40: -3556131661021409818
+      Bridge_Abutment_Albedo_41: -3035130400457472720
+      Bridge_Abutment_Albedo_42: -6152740903544887052
+      Bridge_Abutment_Albedo_43: 7151767336142641576
+      Bridge_Abutment_Albedo_44: -6767807507907055735
+      Bridge_Abutment_Albedo_45: 3801361530158377546
+      Bridge_Abutment_Albedo_46: -3239541457134472569
+      Bridge_Abutment_Albedo_47: -294418339546902414
+      Bridge_Abutment_Albedo_48: 5936863308603160327
+      Bridge_Abutment_Albedo_49: 3518683928183229701
+      Bridge_Abutment_Albedo_5: 8400171578987624005
+      Bridge_Abutment_Albedo_50: 647874255899008985
+      Bridge_Abutment_Albedo_51: -5904570058364252650
+      Bridge_Abutment_Albedo_52: 5520560304861543864
+      Bridge_Abutment_Albedo_53: -491451499272694268
+      Bridge_Abutment_Albedo_54: 3734733571079421031
+      Bridge_Abutment_Albedo_55: 697232005416352403
+      Bridge_Abutment_Albedo_56: -4951448370129618506
+      Bridge_Abutment_Albedo_57: 7675491903377301225
+      Bridge_Abutment_Albedo_58: 5655392678033221143
+      Bridge_Abutment_Albedo_59: 720561429940175560
+      Bridge_Abutment_Albedo_6: 4369609629883634606
+      Bridge_Abutment_Albedo_60: -1851022457746662315
+      Bridge_Abutment_Albedo_61: 2764467761353392133
+      Bridge_Abutment_Albedo_62: -3683023047452590361
+      Bridge_Abutment_Albedo_63: 2242423762385879500
+      Bridge_Abutment_Albedo_64: -7594216938107017453
+      Bridge_Abutment_Albedo_65: -5460737646112951541
+      Bridge_Abutment_Albedo_66: 6022682316930762296
+      Bridge_Abutment_Albedo_67: 2706816818787223684
+      Bridge_Abutment_Albedo_68: -2498159795582944303
+      Bridge_Abutment_Albedo_69: -544103637853219268
+      Bridge_Abutment_Albedo_7: 6908357104411699088
+      Bridge_Abutment_Albedo_70: -2353212024878706543
+      Bridge_Abutment_Albedo_71: -4527170250544136489
+      Bridge_Abutment_Albedo_72: 5477656024270347564
+      Bridge_Abutment_Albedo_73: -5094199778352846192
+      Bridge_Abutment_Albedo_74: 4026075307376742544
+      Bridge_Abutment_Albedo_75: 1089149473889363308
+      Bridge_Abutment_Albedo_76: -3515020533741379845
+      Bridge_Abutment_Albedo_77: 442347367255479846
+      Bridge_Abutment_Albedo_78: 3534215087411727835
+      Bridge_Abutment_Albedo_79: 4143663223999121107
+      Bridge_Abutment_Albedo_8: -6754536016342209257
+      Bridge_Abutment_Albedo_80: 1085187092007407558
+      Bridge_Abutment_Albedo_81: 5648501364302333433
+      Bridge_Abutment_Albedo_82: -93199459229369688
+      Bridge_Abutment_Albedo_83: 2957994099870553561
+      Bridge_Abutment_Albedo_84: 1355202695782317043
+      Bridge_Abutment_Albedo_85: 1147548924985578267
+      Bridge_Abutment_Albedo_86: -6075739165664885458
+      Bridge_Abutment_Albedo_87: -1425108995201436525
+      Bridge_Abutment_Albedo_88: -3206996938814714812
+      Bridge_Abutment_Albedo_89: 5526081457203440523
+      Bridge_Abutment_Albedo_9: -6892684294764882818
+      Bridge_Abutment_Albedo_90: 1038079855382638689
+      Bridge_Abutment_Albedo_91: -2563559862136079413
+      Bridge_Abutment_Albedo_92: 9077648045495594756
+      Bridge_Abutment_Albedo_93: -3101114497826501549
+      Bridge_Abutment_Albedo_94: 5473174238546173441
+      Bridge_Abutment_Albedo_95: -1381880447077061937
+      Bridge_Abutment_Albedo_96: -5307767831649888950
+      Bridge_Abutment_Albedo_97: -1539240988926118769
+      Bridge_Abutment_Albedo_98: 7720225164667701629
+      Bridge_Abutment_Albedo_99: -7358493099738792992
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
