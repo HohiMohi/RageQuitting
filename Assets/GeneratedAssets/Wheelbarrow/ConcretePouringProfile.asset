@@ -20,7 +20,7 @@ MonoBehaviour:
   inputSendRate: 20
   maximumPourAngle: 55
   returnDuration: 0.5
-  allowSinglePlayerTesting: 1
+  allowSinglePlayerTesting: 0
   automaticPartnerDelay: 0.12
   automaticPartnerSpeed: 0.8
   criticalFailureSequenceDuration: 0.8
