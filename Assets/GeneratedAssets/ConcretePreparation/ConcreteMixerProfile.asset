@@ -24,4 +24,4 @@ MonoBehaviour:
   crankInputRate: 20
   interactionDistance: 3.5
   pouringDelay: 0.75
-  alwaysReadyConcreteForTesting: 0
+  alwaysReadyConcreteForTesting: 1
