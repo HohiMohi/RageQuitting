@@ -108,6 +108,18 @@ public readonly struct BridgeRequirementLine
     }
 }
 
+public readonly struct OrderedBridgeComponentRequirement
+{
+    public readonly BridgeComponentSO Component;
+    public readonly int RequiredCount;
+
+    public OrderedBridgeComponentRequirement(BridgeComponentSO component, int requiredCount)
+    {
+        Component = component;
+        RequiredCount = requiredCount;
+    }
+}
+
 public readonly struct BridgeRequirementsSnapshot
 {
     public readonly int CurrentStageIndex;
@@ -201,6 +213,54 @@ public class GameplayManager : MonoBehaviour
     public event EventHandler OnBridgeRequirementsChanged;
     public event EventHandler<BridgeConstructionStageChangedEventArgs> OnConstructionStageChanged;
     public event Action<int, int, double> OnLocalGirderFasteningWindowStarted;
+
+    public IReadOnlyList<OrderedBridgeComponentRequirement> GetOrderedBridgeComponentRequirements()
+    {
+        List<OrderedBridgeComponentRequirement> result = new List<OrderedBridgeComponentRequirement>();
+        if (bridgeComponentDataArray == null)
+        {
+            return result;
+        }
+
+        Dictionary<BridgeComponentSO, int> counts = new Dictionary<BridgeComponentSO, int>();
+        for (int i = 0; i < bridgeComponentDataArray.Length; i++)
+        {
+            BridgeComponentSO component = bridgeComponentDataArray[i].bridgeComponentSO;
+            if (component != null)
+            {
+                counts[component] = counts.TryGetValue(component, out int count) ? count + 1 : 1;
+            }
+        }
+
+        HashSet<BridgeComponentSO> emitted = new HashSet<BridgeComponentSO>();
+        if (bridgeBuildingStages != null)
+        {
+            foreach (BridgeBuildingStage stage in bridgeBuildingStages)
+            {
+                if (stage.bridgeComponentDataIndexes == null) continue;
+                foreach (int index in stage.bridgeComponentDataIndexes)
+                {
+                    if (index < 0 || index >= bridgeComponentDataArray.Length) continue;
+                    BridgeComponentSO component = bridgeComponentDataArray[index].bridgeComponentSO;
+                    if (component != null && emitted.Add(component))
+                    {
+                        result.Add(new OrderedBridgeComponentRequirement(component, counts[component]));
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < bridgeComponentDataArray.Length; i++)
+        {
+            BridgeComponentSO component = bridgeComponentDataArray[i].bridgeComponentSO;
+            if (component != null && emitted.Add(component))
+            {
+                result.Add(new OrderedBridgeComponentRequirement(component, counts[component]));
+            }
+        }
+
+        return result;
+    }
 
     private void Awake()
     {

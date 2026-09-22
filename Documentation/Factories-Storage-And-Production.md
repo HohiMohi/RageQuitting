@@ -227,6 +227,26 @@ produkcji.
 betonu. Jeśli nie ma odbiornika, wsad jest błędny albo taczka jest zajęta,
 dźwignia zachowuje dotychczasowy flow rozlania i resetu bębna.
 
+## Receptury w księdze konstrukcyjnej
+
+Księga konstrukcyjna traktuje `ProductionRecipeSO` jako jedyne źródło
+bezpośrednich materiałów części. Dla `BridgeComponentSO` wyszukuje dokładnie
+jedną recepturę Carpenter typu `MountableBridgeComponent`, której
+`MountableBridgeComponentSO.bridgeComponentSO` wskazuje tę część. Każdy
+`RequiredResource.amount` jest ilością na sztukę (`each`), a suma dla poziomu
+(`total`) wynosi `amount * requiredCount` z
+`GameplayManager.GetOrderedBridgeComponentRequirements()`.
+
+Ta integracja jest tylko odczytem: nie zmienia assetów receptur, procesu
+produkcji, magazynów ani zapisu gry. Brak pasującej receptury i więcej niż jedno
+bezpośrednie dopasowanie są błędem danych; księga zachowuje stronę, wyświetla
+`Data unavailable` i emituje jednorazowe ostrzeżenie zamiast wybierać
+arbitralną recepturę. Receptura innego typu produktu nie jest dopasowaniem.
+
+Testy EditMode sprawdzają ilości na sztukę i sumy, brak, duplikat i recepturę
+niebezpośrednią oraz komplet oczekiwanych materiałów dla sześciu części tutoriala.
+Końcową czytelność wartości w UI sprawdza się ręcznie.
+
 ## Ograniczenia
 
 - Pola receptury i parametrów pieca w `MountableBridgeComponentSO` pozostają

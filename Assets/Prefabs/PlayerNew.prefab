@@ -469,6 +469,7 @@ GameObject:
   - component: {fileID: 8272239400986367473}
   - component: {fileID: 6339907342742729142}
   - component: {fileID: 7651847357888764348}
+  - component: {fileID: 8320973776022288631}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -1378,6 +1379,18 @@ MonoBehaviour:
   crackMaterial: {fileID: 2100000, guid: bda8475bcd45fdc47ae85233355b2883, type: 2}
   blockLocalPosition: {x: 0, y: 0.62, z: 0}
   blockLocalScale: {x: 1.05, y: 1.15, z: 0.78}
+--- !u!114 &8320973776022288631
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b99d6b0f2727eb54d9305c3817cb96bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerConstructionBookUI
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0

@@ -409,6 +409,75 @@ Scenową konfigurację obu fundamentów tworzy `WheelbarrowSetup`.
 `FoundationConcreteFailureProbe` weryfikuje oba fundamenty, ich wiring i
 serializację, collider tafli, trzy crack visuals oraz elementy NavMesh.
 
+## Księga konstrukcyjna
+
+`ConstructionBookCatalogSO` wiąże ręcznie zredagowaną instrukcję z konkretnym
+`BridgeComponentSO`. Katalog tutoriala ma sześć wpisów: fundament, przyczółek,
+dźwigar główny, belkę poprzeczną, stężenie ukośne i panel pomostu. Każdy wpis
+zawiera tytuł, ilustrację części oraz autorskie kroki z wymaganiami i ikonami;
+nie są one generowane z workflow części.
+
+Kolejność rozkładówek i liczba wymaganych egzemplarzy pochodzą z
+`GameplayManager.GetOrderedBridgeComponentRequirements()`. Metoda grupuje
+`BridgeComponentSO` według pierwszego wystąpienia w etapach budowy, a księga
+pokazuje jedną rozkładówkę na typ. Bezpośrednie materiały są dopasowywane przez
+łańcuch `ProductionRecipeSO -> MountableBridgeComponentSO -> BridgeComponentSO`.
+Wymagana jest dokładnie jedna receptura Carpenter z wyjściem typu
+`MountableBridgeComponent`; wartości `each` pochodzą z `RequiredResources`, a
+`total` jest iloczynem wartości na sztukę i liczby części dla poziomu.
+
+Brak lub duplikat receptury, brak wpisu/kroków oraz pusty zestaw danych nie
+usuwa rozkładówki. Widok pokazuje `Data unavailable`, a kontroler zapisuje
+jednorazowe ostrzeżenie. `ConstructionBookCatalogSO.ValidateCatalog()` wykrywa
+m.in. brak komponentu, ilustracji, kroków, tekstu i ikon wymagań oraz
+zduplikowany komponent.
+
+Prefab księgi jest sieciowym obiektem świata z colliderem i world-space
+widokiem. W tutorialu korzeń scenowy pozostaje bez zmian; stojak ma słupek
+`StandPost` wysokości `0.55 m` na lokalnym `Y = 0.415`, strony są na
+`Y = 0.70` i pochylone o `35°` wokół osi X, a collider ma środek
+`(0, 0.46, 0)` i rozmiar `(1.35, 0.92, 0.75)`. `PageSurfaceAnchor` znajduje
+się `0.024 m` nad fizycznymi stronami; jego osie forward/up odpowiadają
+normalnej stron i kierunkowi ich górnej krawędzi. `WorldPages` ma zerową
+lokalną pozycję i rotację, rozdzielczość `2048x1400` oraz skalę
+`(0.00048, -0.00048, 0.00048)`. Ujemne jest wyłącznie Y, co usuwa pionowe
+odbicie bez zamiany fizycznej lewej i prawej strony.
+
+`ConstructionBookController` oraz ekran gracza korzystają z tego samego
+presentera `ConstructionBookView`. Oba widoki używają zwartego układu:
+`Steps` 28, instrukcja 22, ikona narzędzia `22x22`, nazwa narzędzia 18,
+checkbox `18x18`, etykieta 12, komórka `64x40`, jeden wyśrodkowany wiersz
+wysokości 42 oraz karta z paddingiem 6, spacingiem 3 i gapem 6. Toggle jest
+pusty i nieinteraktywny, ma jawne target/check graphic oraz outline; lokalny
+gracz jest wyróżniony. Bieżący indeks jest serwerowym
+`NetworkVariable<int>` widocznym dla wszystkich, dlatego late join od razu
+snapuje do aktualnej strony. Żądania przewracania trafiają do ograniczonej
+kolejki FIFO; serwer ponownie sprawdza gracza, dystans i granice strony, a
+odłączony klient traci oczekujące żądania. Strony nie zawijają się na końcach.
+
+Serwer utrzymuje autorytatywny replikowany `NetworkList` graczy, zasilany
+identyfikatorami połączeń, a nie obecnością `PlayerObject`. Snapshot w
+`OnNetworkSpawn` oraz connect/disconnect aktualizują listę natychmiast;
+lokalny snapshot omija reentrantne czyszczenie w `OnListChanged`. Roster jest
+sortowany i opisany jako `Host`, a następnie `Player N`. `PlayerObject` jest
+nadal wymagany wyłącznie do walidacji zasięgu żądania przewrócenia strony.
+Zmiana rosteru odświeża oba widoki bez animacji strony. Pod każdym krokiem
+widnieje nieaktywny checkbox dla każdej osoby; checkboxy nie zapisują postępu.
+
+Testy EditMode obejmują obliczenia materiałów, brak/duplikat/niedopasowaną
+recepturę, walidację katalogu, roster, FIFO i kolejność wymagań poziomu, a testy
+PlayMode granice stron, synchronizację, world/screen presenter oraz
+lifecycle UI. Automaty sprawdzają dokładną geometrię i orientację prefabu,
+sześć kroków, czterech graczy, 24 checkboxy wraz z rzeczywistymi rozmiarami i
+granicami rectów, pojedyncze przewrócenie strony klawiszami A/D bez kolizji
+handlerów oraz host smoke ze zespawnowaną księgą i rosterem `Host`. Ostatni
+ścisły preflight Gameplay zakończył się kodem 0; raport:
+`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\20260922T140337Z-9e46c866\summary.json`.
+Dowód wizualny:
+`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\construction-book-world-opposite-side-corrected-1920x1080.png`.
+Ocena w prawdziwej sesji wieloprocesowej z klientem zdalnym, late join i
+disconnect pozostaje kontrolą ręczną.
+
 ## Ograniczenia
 
 - `BridgeComponent` nadal ma niezaimplementowaną ścieżkę oznaczoną

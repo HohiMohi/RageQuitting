@@ -138,6 +138,12 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (_playerInteraction != null && _playerInteraction.HasContextActionConsumer)
+        {
+            performAction = false;
+            CancelCurrentAction();
+            return;
+        }
         if (_concreteTrap != null && _concreteTrap.BlocksGameplayInput) return;
         if (IsSpecialInputToolSelected())
         {
@@ -155,6 +161,12 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleAction(object sender, EventArgs e)
     {
+        if (_playerInteraction != null && _playerInteraction.TryConsumeContextAction(ContextActionKind.Primary))
+        {
+            performAction = false;
+            CancelCurrentAction();
+            return;
+        }
         if (_concreteTrap != null && _concreteTrap.BlocksGameplayInput)
         {
             performAction = false;

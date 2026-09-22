@@ -387,6 +387,48 @@ Referencje `Image`, TMP, panel roots i CanvasGroup są techniczne. Muszą
 wskazywać elementy tej samej lokalnej hierarchii Canvas. `raycastTarget`
 crosshaira i elementów dekoracyjnych powinien być wyłączony.
 
+## UI księgi konstrukcyjnej
+
+Przy celowaniu w księgę kontekst przejmuje `IContextActionConsumer`: LPM cofa,
+a PPM przechodzi do następnej strony, zamiast uruchamiać akcję narzędzia.
+`E` wywołuje zwykłą interakcję i otwiera lokalny ekran księgi. W otwartym UI
+`A`/`D` oraz strzałki lewo/prawo nawigują przez akcje UI Input System, natomiast
+`Escape` i `X` zamykają ekran wyłącznie lokalnie. Przyciski ekranowe realizują
+te same operacje. Callbacki są nazwane `HandleUiLeft`, `HandleUiRight` i
+`HandleUiBack`, aby nie kolidowały z dispatchingiem `PlayerInput` w trybie
+`SendMessages`.
+
+`PlayerConstructionBookUI` ustawia `PlayerInputNew.IsGameplayUiOpen`, dzięki
+czemu blokuje gameplay input i zwalnia kursor; zamknięcie przywraca poprzedni
+tryb sterowania. Zmiana strony używa krótkiego slide/fade w ekranowym UI oraz
+obrotu kartki w obiekcie świata. Próba wyjścia poza pierwszą lub ostatnią
+stronę daje tylko małe wychylenie krawędzi — indeks nie zawija się.
+
+Ekran jest owner-only: powstaje i reaguje wyłącznie dla lokalnie posiadanego
+gracza. Nie otwiera się w stanie downed, zamyka się po wejściu w downed oraz w
+`OnDisable`/`OnDestroy`, odpinając eventy i resetując niedokończoną animację.
+World-space i screen-space korzystają ze wspólnego `ConstructionBookView`,
+więc pokazują ten sam tytuł, materiały, kroki, roster i stan strony. Oba widoki
+używają układu: `Steps` 28, instrukcja 22, ikona narzędzia `22x22`, nazwa 18,
+checkbox `18x18`, etykieta 12, komórka `64x40`, wyśrodkowany wiersz wysokości
+42 oraz karta z paddingiem 6, spacingiem 3 i gapem 6. Pusty, nieinteraktywny
+toggle ma jawne target/check graphic i outline, a lokalny gracz jest
+wyróżniony. Zmiany autorytatywnego, sortowanego rosteru `Host`/`Player N`
+odświeżają oba widoki bez uruchamiania animacji strony.
+
+Testy PlayMode pokrywają wspólny presenter, blokadę wejścia i kursora,
+zamykanie podczas animacji, granice oraz kolejkę zmian stron i
+lifecycle owner-only. Automaty potwierdzają sześć kroków, czterech graczy i 24
+checkboxy wraz z rzeczywistymi rozmiarami i granicami rectów, pojedyncze
+przewrócenie strony klawiszami A/D bez kolizji handlerów oraz host smoke ze
+zespawnowaną księgą i rosterem `Host`. Ostatni ścisły preflight Gameplay
+zakończył się kodem 0; raport:
+`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\20260922T140337Z-9e46c866\summary.json`.
+Dowód wizualny:
+`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\construction-book-world-opposite-side-corrected-1920x1080.png`.
+Akceptacja wizualna w prawdziwej sesji wieloprocesowej z klientem zdalnym,
+late join i disconnect pozostaje kontrolą ręczną.
+
 ## Ograniczenia
 
 - `PlayerInteractionNew.temp` jest pozostałością roboczą.

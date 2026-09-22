@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e20dbbfc419a44249814586c51beaf74, type: 3}
+  m_Name: ConstructionBookCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::ConstructionBookCatalogSO
+  entries:
+  - component: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
+    title: Wooden Foundation
+    partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    steps:
+    - instruction: Clear the marked site
+      requirements:
+      - displayName: Axe
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Loosen all three soil layers
+      requirements:
+      - displayName: Shovel
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Remove 6 soil portions from each layer
+      requirements:
+      - displayName: Bucket
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Deliver and pour one prepared concrete batch
+      requirements:
+      - displayName: Loaded Concrete Wheelbarrow
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Deliver and mount the foundation
+      requirements:
+      - displayName: Wooden Foundation
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Hammer it into place
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  - component: {fileID: 11400000, guid: 43e6a23a14d975d46927ef4c7c4a9df7, type: 2}
+    title: Wooden Abutment
+    partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    steps:
+    - instruction: Deliver and mount the abutment
+      requirements: []
+    - instruction: Measure and level both axes
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+      - displayName: Spirit Level
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Secure all four anchors
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Backfill the site
+      requirements:
+      - displayName: Shovel
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  - component: {fileID: 11400000, guid: b6cea61cfba2f6f459f9fd222f215d86, type: 2}
+    title: Wooden Main Girder
+    partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    steps:
+    - instruction: Deliver and mount the girder
+      requirements: []
+    - instruction: Measure and level both axes
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+      - displayName: Spirit Level
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Fasten all four points in paired order
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  - component: {fileID: 11400000, guid: 12d9e4ecb93ef464eb2cbcbbcf3b917b, type: 2}
+    title: Wooden Cross Beam
+    partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    steps:
+    - instruction: Deliver and mount the beam
+      requirements: []
+    - instruction: Align its position
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Tighten both clamps alternately
+      requirements:
+      - displayName: Wrench
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Secure all four fasteners
+      requirements:
+      - displayName: Wrench
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  - component: {fileID: 11400000, guid: 083c5fc6ecd62ba49b822393208b4834, type: 2}
+    title: Wooden Diagonal Bracing
+    partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    steps:
+    - instruction: Deliver and mount the brace
+      requirements: []
+    - instruction: Align its angle
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Temporarily secure both ends
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Fasten the marked points in order
+      requirements:
+      - displayName: Wrench
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  - component: {fileID: 11400000, guid: ccf15358972f0704385ec5d608ff91f4, type: 2}
+    title: Wooden Deck Panel
+    partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    steps:
+    - instruction: Deliver and mount the next panel
+      requirements: []
+    - instruction: Align the panel
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Set an even gap
+      requirements:
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - instruction: Secure all marked fasteners
+      requirements:
+      - displayName: Wrench
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}

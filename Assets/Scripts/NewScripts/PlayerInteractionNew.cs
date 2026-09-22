@@ -85,6 +85,20 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     public event EventHandler OnCurrentTargetChanged;
     public event Action<SharedCarryPickupRejectedEventArgs> OnSharedCarryPickupRejected;
     public MonoBehaviour CurrentTarget => _currentTarget;
+    public bool TryConsumeContextAction(ContextActionKind action)
+    {
+        IContextActionConsumer consumer = _currentTarget as IContextActionConsumer;
+        consumer ??= _currentTarget != null ? _currentTarget.GetComponentInParent<IContextActionConsumer>() : null;
+        return consumer != null && consumer.TryConsumeContextAction(action, transform);
+    }
+    public bool HasContextActionConsumer
+    {
+        get
+        {
+            if (_currentTarget is IContextActionConsumer) return true;
+            return _currentTarget != null && _currentTarget.GetComponentInParent<IContextActionConsumer>() != null;
+        }
+    }
     public Transform AimCameraTransform
     {
         get
@@ -136,6 +150,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (TryConsumeContextAction(ContextActionKind.Secondary)) return;
         if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         if (_playerHealth != null && _playerHealth.IsDowned)
         {

@@ -190,6 +190,13 @@ namespace RageQuitting.Tests.PlayMode
                 AssertHostState(networkManager);
                 yield return WaitForLocalPlayer(networkManager, "Tutorial scene load");
                 AssertLocalPlayer(networkManager);
+                yield return WaitForCondition(
+                    () =>
+                    {
+                        MonoBehaviour book = FindBehaviourInScene(tutorialScene, "ConstructionBookController");
+                        return book != null && IsNetworkBehaviourSpawned(book) && HasText(book.gameObject, "Host");
+                    },
+                    "The spawned Tutorial construction book did not show the host roster entry.");
 
                 networkManager.SceneManager.OnLoadEventCompleted -= networkSceneLoaded;
                 networkSceneCallbackSubscribed = false;
@@ -442,6 +449,29 @@ namespace RageQuitting.Tests.PlayMode
                                     string.Equals(behaviour.GetType().Name, typeName,
                                         StringComparison.Ordinal))
                 .ToArray();
+        }
+
+        private static bool HasText(GameObject root, string expected)
+        {
+            foreach (MonoBehaviour component in root.GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                if (component == null || component.GetType().Name != "TextMeshProUGUI")
+                    continue;
+                if (string.Equals((string)component.GetType().GetProperty("text")?.GetValue(component), expected,
+                        StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
+        }
+
+        private static MonoBehaviour FindBehaviourInScene(Scene scene, string typeName)
+        {
+            return FindBehavioursInScene(scene, typeName).FirstOrDefault();
+        }
+
+        private static bool IsNetworkBehaviourSpawned(MonoBehaviour behaviour)
+        {
+            return behaviour != null && (bool)behaviour.GetType().GetProperty("IsSpawned")!.GetValue(behaviour);
         }
     }
 }
