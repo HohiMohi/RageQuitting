@@ -44,7 +44,6 @@ public class EnvironmentLightingController : MonoBehaviour
     private ColorAdjustments colorAdjustments;
     private WhiteBalance whiteBalance;
     private Bloom bloom;
-    private Tonemapping tonemapping;
 
     private Material previousSkybox;
     private Light previousSun;
@@ -262,8 +261,6 @@ public class EnvironmentLightingController : MonoBehaviour
         colorAdjustments = GetOrAdd<ColorAdjustments>(runtimeVolumeProfile);
         whiteBalance = GetOrAdd<WhiteBalance>(runtimeVolumeProfile);
         bloom = GetOrAdd<Bloom>(runtimeVolumeProfile);
-        tonemapping = GetOrAdd<Tonemapping>(runtimeVolumeProfile);
-        tonemapping.mode.Override(TonemappingMode.Neutral);
     }
 
     private void ApplyCurrentTime(bool refreshGiImmediately)
@@ -429,7 +426,6 @@ public class EnvironmentLightingController : MonoBehaviour
         colorAdjustments = null;
         whiteBalance = null;
         bloom = null;
-        tonemapping = null;
         previousInternalVolumeProfile = null;
         previousSharedVolumeProfile = null;
         previousLocalLightIntensities = null;

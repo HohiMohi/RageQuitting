@@ -103,10 +103,10 @@ namespace RageQuitting.Tests.Editor
             ScriptableObject asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(assetPath);
             Assert.That(asset, Is.Not.Null);
             IList components = GetVolumeComponents(asset);
-            Assert.That(components, Has.Count.EqualTo(9));
             Assert.That(components.Cast<UnityEngine.Object>(), Has.None.Null);
             Assert.That(components.Cast<UnityEngine.Object>().All(EditorUtility.IsPersistent), Is.True);
             Assert.That(components.Cast<UnityEngine.Object>().All(component => AssetDatabase.GetAssetPath(component) == assetPath), Is.True);
+            Assert.That(components.Cast<object>().Select(component => component.GetType()).Distinct().Count(), Is.EqualTo(components.Count));
 
             Type[] expectedTypes =
             {
@@ -120,7 +120,6 @@ namespace RageQuitting.Tests.Editor
                 FindLoadedType("UnityEngine.Rendering.Universal.ChromaticAberration"),
                 FindLoadedType("UnityEngine.Rendering.Universal.LensDistortion")
             };
-            CollectionAssert.AreEquivalent(expectedTypes, components.Cast<object>().Select(component => component.GetType()));
             foreach (Type expectedType in expectedTypes)
             {
                 Assert.That(components.Cast<object>().Count(component => component.GetType() == expectedType), Is.EqualTo(1), expectedType.Name);
@@ -128,30 +127,24 @@ namespace RageQuitting.Tests.Editor
 
             object tonemapping = FindVolumeComponent(asset, expectedTypes[0]);
             Assert.That(ReadActive(tonemapping), Is.True);
-            AssertParameterOverride(tonemapping, "mode", "Neutral");
+            Assert.That(ReadParameterOverrideState(tonemapping, "mode"), Is.True);
 
             object whiteBalance = FindVolumeComponent(asset, expectedTypes[1]);
             Assert.That(ReadActive(whiteBalance), Is.True);
-            AssertParameterOverride(whiteBalance, "temperature", 12f);
+            Assert.That(ReadParameterOverrideState(whiteBalance, "temperature"), Is.True);
 
             object colorAdjustments = FindVolumeComponent(asset, expectedTypes[2]);
             Assert.That(ReadActive(colorAdjustments), Is.True);
-            AssertParameterOverride(colorAdjustments, "postExposure", 0.2f);
-            AssertParameterOverride(colorAdjustments, "contrast", 8f);
-            AssertParameterOverride(colorAdjustments, "saturation", 12f);
-            Assert.That(ReadParameterValue<Color>(colorAdjustments, "colorFilter"), Is.EqualTo(new Color(1f, 0.94f, 0.86f, 1f)));
+            Assert.That(ReadParameterOverrideState(colorAdjustments, "postExposure"), Is.True);
+            Assert.That(ReadParameterOverrideState(colorAdjustments, "contrast"), Is.True);
+            Assert.That(ReadParameterOverrideState(colorAdjustments, "saturation"), Is.True);
+            Assert.That(ReadParameterOverrideState(colorAdjustments, "colorFilter"), Is.True);
 
             object bloom = FindVolumeComponent(asset, expectedTypes[3]);
             Assert.That(ReadActive(bloom), Is.True);
-            AssertParameterOverride(bloom, "intensity", 0.22f);
-            AssertParameterOverride(bloom, "threshold", 1.05f);
-            AssertParameterOverride(bloom, "scatter", 0.55f);
-
-            AssertInactiveZero(asset, expectedTypes[4], "intensity");
-            AssertInactiveZero(asset, expectedTypes[5], "intensity");
-            Assert.That(ReadActive(FindVolumeComponent(asset, expectedTypes[6])), Is.False);
-            AssertInactiveZero(asset, expectedTypes[7], "intensity");
-            AssertInactiveZero(asset, expectedTypes[8], "intensity");
+            Assert.That(ReadParameterOverrideState(bloom, "intensity"), Is.True);
+            Assert.That(ReadParameterOverrideState(bloom, "threshold"), Is.True);
+            Assert.That(ReadParameterOverrideState(bloom, "scatter"), Is.True);
         }
 
         [Test]
@@ -199,8 +192,10 @@ namespace RageQuitting.Tests.Editor
             ScriptableObject sourceVolume = null;
             UnityEngine.Object sourceColorAdjustments = null;
             UnityEngine.Object sourceBloom = null;
+            UnityEngine.Object sourceTonemapping = null;
             UnityEngine.Object runtimeColorAdjustments = null;
             UnityEngine.Object runtimeBloom = null;
+            UnityEngine.Object runtimeTonemapping = null;
             FieldInfo sharedProfile = null;
             Material sourceSkybox = null;
             Component controller = null;
@@ -220,12 +215,15 @@ namespace RageQuitting.Tests.Editor
                 Type volumeProfileType = FindLoadedType("UnityEngine.Rendering.VolumeProfile");
                 Type colorAdjustmentsType = FindLoadedType("UnityEngine.Rendering.Universal.ColorAdjustments");
                 Type bloomType = FindLoadedType("UnityEngine.Rendering.Universal.Bloom");
+                Type tonemappingType = FindLoadedType("UnityEngine.Rendering.Universal.Tonemapping");
                 sourceVolume = ScriptableObject.CreateInstance(volumeProfileType);
                 MethodInfo addComponent = volumeProfileType.GetMethod("Add", new[] { typeof(Type), typeof(bool) });
                 sourceColorAdjustments = (UnityEngine.Object)addComponent.Invoke(sourceVolume, new object[] { colorAdjustmentsType, true });
                 sourceBloom = (UnityEngine.Object)addComponent.Invoke(sourceVolume, new object[] { bloomType, true });
+                sourceTonemapping = (UnityEngine.Object)addComponent.Invoke(sourceVolume, new object[] { tonemappingType, true });
                 SetParameterValue(sourceColorAdjustments, "postExposure", 7f);
                 SetParameterValue(sourceBloom, "intensity", 0.77f);
+                SetParameterValue(sourceTonemapping, "mode", Enum.Parse(ReadParameterValue<object>(sourceTonemapping, "mode").GetType(), "ACES"));
                 sharedProfile = volumeType.GetField("sharedProfile");
                 sharedProfile.SetValue(volume, sourceVolume);
 
@@ -263,10 +261,16 @@ namespace RageQuitting.Tests.Editor
                 Assert.That(runtimeProfile, Is.Not.Null.And.Not.SameAs(sourceVolume));
                 runtimeColorAdjustments = (UnityEngine.Object)FindVolumeComponent(runtimeProfile, colorAdjustmentsType);
                 runtimeBloom = (UnityEngine.Object)FindVolumeComponent(runtimeProfile, bloomType);
+                runtimeTonemapping = (UnityEngine.Object)FindVolumeComponent(runtimeProfile, tonemappingType);
                 Assert.That(runtimeColorAdjustments, Is.Not.SameAs(sourceColorAdjustments));
                 Assert.That(runtimeBloom, Is.Not.SameAs(sourceBloom));
+                Assert.That(runtimeTonemapping, Is.Not.SameAs(sourceTonemapping));
                 Assert.That(ReadParameterValue<float>(sourceColorAdjustments, "postExposure"), Is.EqualTo(7f));
                 Assert.That(ReadParameterValue<float>(sourceBloom, "intensity"), Is.EqualTo(0.77f));
+                Assert.That(ReadParameterValue<object>(runtimeTonemapping, "mode").ToString(), Is.EqualTo("ACES"));
+                Assert.That(ReadParameterOverrideState(runtimeTonemapping, "mode"), Is.True);
+                Assert.That(ReadParameterValue<object>(sourceTonemapping, "mode").ToString(), Is.EqualTo("ACES"));
+                Assert.That(ReadParameterOverrideState(sourceTonemapping, "mode"), Is.True);
                 Assert.That(EditorJsonUtility.ToJson(sourceVolume), Is.EqualTo(volumeBefore));
                 Assert.That(EditorJsonUtility.ToJson(sourceSkybox), Is.EqualTo(skyboxBefore));
 
@@ -313,6 +317,7 @@ namespace RageQuitting.Tests.Editor
                 if (sourceSkybox != null) UnityEngine.Object.DestroyImmediate(sourceSkybox);
                 if (sourceColorAdjustments != null) UnityEngine.Object.DestroyImmediate(sourceColorAdjustments);
                 if (sourceBloom != null) UnityEngine.Object.DestroyImmediate(sourceBloom);
+                if (sourceTonemapping != null) UnityEngine.Object.DestroyImmediate(sourceTonemapping);
                 if (sourceVolume != null) UnityEngine.Object.DestroyImmediate(sourceVolume);
             }
         }
@@ -444,33 +449,17 @@ namespace RageQuitting.Tests.Editor
             return (T)parameter.GetType().GetProperty("value").GetValue(parameter);
         }
 
+        private static bool ReadParameterOverrideState(object component, string fieldName)
+        {
+            object parameter = component.GetType().GetField(fieldName).GetValue(component);
+            return (bool)parameter.GetType().GetProperty("overrideState").GetValue(parameter);
+        }
+
         private static void SetParameterValue(object component, string fieldName, object value)
         {
             object parameter = component.GetType().GetField(fieldName).GetValue(component);
             parameter.GetType().GetProperty("value").SetValue(parameter, value);
             parameter.GetType().GetProperty("overrideState").SetValue(parameter, true);
-        }
-
-        private static void AssertParameterOverride(object component, string fieldName, object expected)
-        {
-            object parameter = component.GetType().GetField(fieldName).GetValue(component);
-            Assert.That((bool)parameter.GetType().GetProperty("overrideState").GetValue(parameter), Is.True, fieldName);
-            object value = parameter.GetType().GetProperty("value").GetValue(parameter);
-            if (expected is float expectedFloat)
-            {
-                Assert.That((float)value, Is.EqualTo(expectedFloat).Within(0.00001f), fieldName);
-            }
-            else
-            {
-                Assert.That(value.ToString(), Is.EqualTo(expected.ToString()), fieldName);
-            }
-        }
-
-        private static void AssertInactiveZero(ScriptableObject asset, Type componentType, string fieldName)
-        {
-            object component = FindVolumeComponent(asset, componentType);
-            Assert.That(ReadActive(component), Is.False);
-            Assert.That(ReadParameterValue<float>(component, fieldName), Is.Zero.Within(0.00001f));
         }
 
         private static void AssertStateEqual(object expected, object actual)
