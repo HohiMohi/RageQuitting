@@ -11,6 +11,36 @@
 /[Uu]ser[Ss]ettings/
 /Artifacts/Validation/
 
+# Local workstation credentials and generated Blender backups/previews.
+/.cursor/mcp.json
+*.blend1
+*.blend2
+*.blend1.meta
+*.blend2.meta
+/ArtSource/**/Preview_*.png
+/ArtSource/**/*montage*.png
+/ArtSource/**/validation_report.json
+
+# Unused generated asset export alternatives from the terrain lookdev sessions.
+/GeneratedAssets/98cd99bdf02563e49abe14f750b25160/
+/GeneratedAssets/daf4b634a8137da45af43c591d68dc7a/
+/GeneratedAssets/db534c67502d44b479138a3d8fbe9e2f/
+
+# Unreferenced terrain experiments retained locally.
+/Assets/New Terrain 2.asset
+/Assets/New Terrain 2.asset.meta
+/Assets/TerrainData_5b64d327-83a7-46e2-9ccc-8a439851a681.asset
+/Assets/TerrainData_5b64d327-83a7-46e2-9ccc-8a439851a681.asset.meta
+
+# Local QA outputs; preserve inputs and generator source used by retained tools.
+/Artifacts/*
+!/Artifacts/TerrainRoadReliefV2/
+!/Artifacts/PainterlyRoadLookdev/
+/Artifacts/TerrainRoadReliefV2/*
+!/Artifacts/TerrainRoadReliefV2/batch3b_baseline.bin
+/Artifacts/PainterlyRoadLookdev/*
+!/Artifacts/PainterlyRoadLookdev/process_texture.py
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
@@ -71,3 +101,4 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+

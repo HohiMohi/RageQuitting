@@ -1,0 +1,15 @@
+{
+  "name": "TerrainRoadV3.PlayModeTests",
+  "rootNamespace": "RageQuitting.Tests.PlayMode.TerrainRoadV3",
+  "references": ["TerrainRoadV3.Runtime", "Unity.InputSystem", "Unity.InputSystem.TestFramework"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": ["TestAssemblies"]
+}

@@ -1,0 +1,8 @@
+((System.Action)(() => {
+var p=UnityEngine.GameObject.Find("PlayerNew");var pi=p?p.GetComponent<PlayerInputNew>():null;var fc=p?p.GetComponent<StarterAssets.FirstPersonController>():null;var cam=UnityEngine.Camera.main;var net=Unity.Netcode.NetworkManager.Singleton;
+var f=typeof(PlayerInputNew).GetField("inputInitialized",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);bool initialized=pi!=null&&(bool)f.GetValue(pi);
+var af=typeof(PlayerInputNew).GetField("playerGameInputActions",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);var actions=pi?(PlayerGameInputActions)af.GetValue(pi):null;string action=actions==null?"null":"enabled="+actions.Game.Move.enabled+"|bindings="+actions.Game.Move.bindings.Count+"|value="+actions.Game.Move.ReadValue<UnityEngine.Vector2>().ToString("F2");
+string devices=string.Join(",",UnityEngine.InputSystem.InputSystem.devices.Select(d=>d.name+":"+d.layout));
+string report="playing="+UnityEditor.EditorApplication.isPlaying+"|inputInitialized="+initialized+"|inputGate="+(pi?pi.GetMoveVectorValue().ToString("F2"):"null")+"|uiOpen="+(pi?pi.IsGameplayUiOpen.ToString():"null")+"|moveAction="+action+"|netManager="+(net?net.name:"null")+"|netListening="+(net?net.IsListening.ToString():"null")+"|controllerEnabled="+(fc?fc.enabled.ToString():"null")+"|controllerSpeed="+(fc?fc.HorizontalSpeed.ToString("F3"):"null")+"|playerPos="+(p?p.transform.position.ToString("F3"):"null")+"|cameraPos="+(cam?cam.transform.position.ToString("F3"):"null")+"|devices="+devices;
+System.IO.File.WriteAllText("Artifacts/TerrainRoadReliefV2/batch4a_input_gate_diagnostic.txt",report+"\n",new System.Text.UTF8Encoding(false));Debug.Log("Batch4A input gate diagnostic: "+report);
+}))();

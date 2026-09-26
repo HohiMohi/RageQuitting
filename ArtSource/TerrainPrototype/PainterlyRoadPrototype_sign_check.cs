@@ -1,0 +1,1 @@
+var p="Assets/Art/Terrain/Prototype/Terrain_DirtPath_Warm_Painterly_Normal.png";var i=UnityEditor.AssetImporter.GetAtPath(p) as UnityEditor.TextureImporter;return "flipGreenChannel="+i.flipGreenChannel+"; type="+i.textureType+"; sRGB="+i.sRGBTexture;
