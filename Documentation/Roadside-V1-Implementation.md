@@ -16,6 +16,8 @@ Nowa darń jest globalną warstwą terenu: tekstury 2048² albedo, normalnej i m
 
 Droga V3 i jej trzy warstwy zostały zachowane bez zmian. Domyślnie aktywny pozostaje wariant B; przełączanie F6/F7 należy do istniejącego systemu V3. Pięć nakładających się starych obiektów wyłączono. Pozostała scena i współdzielone zasoby nie zostały zmienione.
 
+Późniejszy wariant drogi V4, a następnie V4.1, używają przełączania F8 w tej samej scenie lookdev. Opis bieżącego materiału, odtwarzania i walidacji: [Terrain Road V4.1](TerrainRoad-V4_1-Implementation.md); historia starszego wariantu: [Terrain Road V4](TerrainRoad-V4-Implementation.md). Teren pobocza i jego warstwy pozostają bez zmian.
+
 ## Zasoby i źródła
 
 Nowe zasoby Unity są pod `Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/`: `Models/` (sześć FBX), `Prefabs/`, `Materials/`, `TerrainData/TD_TerrainRoad_RoadsideV1.asset`, `TerrainData/TL_RoadsideV1_Grass.terrainlayer` oraz sześć PNG. Źródłowy model Blender, generator i skrypty integracyjne znajdują się w `ArtSource/RoadsideV1/`: `RoadsideV1.blend`, `generate_roadside_v1.py`, `BuildRoadsideAssets.cs`, `ApplyRoadsideTerrain.cs`, `IntegrateRoadsideScene.cs`.

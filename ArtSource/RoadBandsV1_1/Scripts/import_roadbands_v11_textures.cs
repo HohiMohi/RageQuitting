@@ -1,0 +1,37 @@
+var root="Assets/Art/Environment/TerrainRoadLookdev/SurfaceRoadBandsV1_1/";
+var files=new[]{"RoadBandsV1_1_Albedo.png","RoadBandsV1_1_Normal.png"};
+foreach(var file in files) {
+ var path=root+file;
+ UnityEditor.AssetDatabase.ImportAsset(path,UnityEditor.ImportAssetOptions.ForceUpdate|UnityEditor.ImportAssetOptions.ForceSynchronousImport);
+ var importer=UnityEditor.AssetImporter.GetAtPath(path) as UnityEditor.TextureImporter;
+ if(importer==null) throw new System.Exception("TextureImporter was not created: "+path);
+ var isNormal=file.EndsWith("Normal.png",System.StringComparison.Ordinal);
+ importer.textureType=isNormal?UnityEditor.TextureImporterType.NormalMap:UnityEditor.TextureImporterType.Default;
+ importer.convertToNormalmap=false;
+ importer.sRGBTexture=!isNormal;
+ importer.flipGreenChannel=false;
+ importer.wrapMode=UnityEngine.TextureWrapMode.Repeat;
+ importer.mipmapEnabled=true;
+ importer.filterMode=UnityEngine.FilterMode.Trilinear;
+ importer.anisoLevel=8;
+ importer.textureCompression=UnityEditor.TextureImporterCompression.Uncompressed;
+ importer.maxTextureSize=2048;
+ importer.SaveAndReimport();
+ var texture=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Texture2D>(path);
+ if(texture==null||texture.width!=2048||texture.height!=2048) throw new System.Exception("Unexpected imported texture dimensions: "+path);
+}
+var maskPath=root+"RoadBandsV1_1_Mask.png";
+var maskTexture=new UnityEngine.Texture2D(4,4,UnityEngine.TextureFormat.RGBA32,true,true);
+var pixels=new UnityEngine.Color32[16];
+for(var i=0;i<pixels.Length;i++) pixels[i]=new UnityEngine.Color32(0,255,128,0);
+maskTexture.SetPixels32(pixels); maskTexture.Apply(true,false);
+System.IO.File.WriteAllBytes(System.IO.Path.Combine(UnityEngine.Application.dataPath,"..",maskPath),maskTexture.EncodeToPNG());
+UnityEngine.Object.DestroyImmediate(maskTexture);
+UnityEditor.AssetDatabase.ImportAsset(maskPath,UnityEditor.ImportAssetOptions.ForceUpdate|UnityEditor.ImportAssetOptions.ForceSynchronousImport);
+var maskImporter=UnityEditor.AssetImporter.GetAtPath(maskPath) as UnityEditor.TextureImporter;
+maskImporter.textureType=UnityEditor.TextureImporterType.Default; maskImporter.sRGBTexture=false;
+maskImporter.wrapMode=UnityEngine.TextureWrapMode.Repeat; maskImporter.mipmapEnabled=true;
+maskImporter.filterMode=UnityEngine.FilterMode.Trilinear; maskImporter.anisoLevel=8;
+maskImporter.textureCompression=UnityEditor.TextureImporterCompression.Uncompressed;
+maskImporter.SaveAndReimport();
+return "Imported albedo, normal and constant linear mask: "+maskPath;

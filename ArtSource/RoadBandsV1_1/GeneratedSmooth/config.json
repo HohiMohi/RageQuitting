@@ -1,0 +1,15 @@
+{
+  "version": "RoadBandsV1.1-field-0.1",
+  "seed": 20260916,
+  "size": 2048,
+  "tile_m": 4.0,
+  "band_count": 12,
+  "cluster_length_m": 0.4000000059604645,
+  "boundary_fade_fraction": 0.24124513566493988,
+  "waviness_m": 0.014999999664723873,
+  "contour_distortion_m": 0.029999999329447746,
+  "transition_width_m": 0.029999999329447746,
+  "relief_m": 0.05999999865889549,
+  "gray_fraction": 0.30000001192092896,
+  "boundary_irregularity_m": 0.02
+}

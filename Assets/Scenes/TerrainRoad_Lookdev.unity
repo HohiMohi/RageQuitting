@@ -3954,6 +3954,11 @@ MonoBehaviour:
   normalB: {fileID: 2800000, guid: f7efc9cc721cf1d4aa2bedf30d9a15ce, type: 3}
   keyA: 99
   keyB: 100
+  v4TemplateLayers:
+  - {fileID: 8574412962073106934, guid: 7fc0b8e33ef2ad146a24202b338da411, type: 2}
+  - {fileID: 8574412962073106934, guid: 9cd46253d094f5342a197e35ff7bddaa, type: 2}
+  - {fileID: 8574412962073106934, guid: fa5ab7cd75dd4b141bfb647d8d49fcbd, type: 2}
+  keyV4: 101
 --- !u!1001 &1372342773
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -21,6 +21,7 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     private readonly NetworkVariable<int> currentIndex = new NetworkVariable<int>(0,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     private readonly NetworkList<ulong> connectedPlayerIds = new NetworkList<ulong>();
+    private NetworkList<ConstructionBookAssignment> assignments;
     private readonly ConstructionBookTurnQueue serverTurnQueue = new ConstructionBookTurnQueue(16, 2);
     private readonly Queue<int> pendingAnimatedIndices = new Queue<int>();
     private readonly HashSet<string> loggedIssues = new HashSet<string>();
@@ -39,20 +40,54 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     private int displayedIndex = -1;
     private Coroutine turnRoutine;
     private Coroutine nudgeRoutine;
+    private bool unavailableNotified;
     public event Action<int, bool> PageChanged;
+    public event Action AssignmentsChanged;
+    public event Action PresentationChanged;
+    public event Action Despawned;
     public int CurrentIndex => IsSpawned ? currentIndex.Value : Mathf.Max(0, displayedIndex);
     public int PageCount => spreads.Count;
     public bool CanGoPrevious => CurrentIndex > 0;
     public bool CanGoNext => CurrentIndex + 1 < spreads.Count;
 
-    private void Awake() { EnsureWorldUi(); }
+    private void Awake()
+    {
+        assignments = new NetworkList<ConstructionBookAssignment>(null,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        EnsureWorldUi();
+        TryRegisterWithGameplayManager();
+    }
+
+    private void OnEnable()
+    {
+        unavailableNotified = false;
+        TryRegisterWithGameplayManager();
+    }
+
+    private void OnDisable()
+    {
+        NotifyUnavailable();
+        UnregisterFromGameplayManager();
+    }
+
+    public override void OnDestroy()
+    {
+        NotifyUnavailable();
+        UnregisterFromGameplayManager();
+        assignments?.Dispose();
+        base.OnDestroy();
+    }
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+        unavailableNotified = false;
         InitializeData();
+        if (IsServer) ClearAssignments();
         currentIndex.OnValueChanged += OnIndexChanged;
         connectedPlayerIds.OnListChanged += OnRosterListChanged;
+        assignments.OnListChanged += OnAssignmentsListChanged;
+        TryRegisterWithGameplayManager();
         NetworkManager manager = Unity.Netcode.NetworkManager.Singleton;
         if (manager != null)
         {
@@ -70,8 +105,12 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
 
     public override void OnNetworkDespawn()
     {
+        NotifyUnavailable();
+        UnregisterFromGameplayManager();
+        if (IsServer) ClearAssignments();
         currentIndex.OnValueChanged -= OnIndexChanged;
         connectedPlayerIds.OnListChanged -= OnRosterListChanged;
+        assignments.OnListChanged -= OnAssignmentsListChanged;
         NetworkManager manager = Unity.Netcode.NetworkManager.Singleton;
         if (manager != null)
         {
@@ -85,7 +124,6 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
         turnRoutine = null;
         if (nudgeRoutine != null) StopCoroutine(nudgeRoutine);
         nudgeRoutine = null;
-        PageChanged = null;
         base.OnNetworkDespawn();
     }
 
@@ -107,11 +145,37 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     private void InitializeData()
     {
         if (initialized) return;
+        GameplayManager manager = GameplayManager.Instance;
+        if (manager == null) return;
         initialized = true;
         spreads.Clear();
-        IReadOnlyList<OrderedBridgeComponentRequirement> ordered = GameplayManager.Instance != null
-            ? GameplayManager.Instance.GetOrderedBridgeComponentRequirements() : Array.Empty<OrderedBridgeComponentRequirement>();
+        IReadOnlyList<OrderedBridgeComponentRequirement> ordered = manager.GetOrderedBridgeComponentRequirements();
         spreads.AddRange(ordered);
+    }
+
+    private void TryRegisterWithGameplayManager()
+    {
+        if (GameplayManager.Instance != null) GameplayManager.Instance.RegisterConstructionBook(this);
+        InitializeData();
+    }
+
+    public void NotifyGameplayManagerAvailable()
+    {
+        InitializeData();
+        RefreshRoster();
+        if (initialized) SnapTo(IsSpawned ? currentIndex.Value : 0);
+    }
+
+    private void UnregisterFromGameplayManager()
+    {
+        if (GameplayManager.Instance != null) GameplayManager.Instance.UnregisterConstructionBook(this);
+    }
+
+    private void NotifyUnavailable()
+    {
+        if (unavailableNotified) return;
+        unavailableNotified = true;
+        Despawned?.Invoke();
     }
 
     public void Interact(Transform interactor)
@@ -247,7 +311,7 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
         if (turningPagePivot != null) turningPagePivot.localRotation = Quaternion.identity;
     }
 
-    private void Render(int index, bool snap = false)
+    private void Render(int index, bool snap = false, bool notifyPageChanged = true)
     {
         displayedIndex = Mathf.Clamp(index, 0, Mathf.Max(0, spreads.Count - 1));
         if (spreads.Count == 0) { leftPageCache = "CONSTRUCTION BOOK\n\nData unavailable"; rightPageCache = "Data unavailable"; currentEntry = null; currentMaterials.Clear(); currentMaterialsAvailable = false; }
@@ -282,7 +346,8 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
                     {
                         NetworkManager manager = Unity.Netcode.NetworkManager.Singleton;
                         bool local = manager != null && member.ClientId == manager.LocalClientId;
-                        right.Append(local ? "  <b>☐ " : "  ☐ ").Append(member.Label).Append(local ? "</b>" : string.Empty);
+                        bool assigned = IsAssigned(displayedIndex, i, member.ClientId);
+                        right.Append(local ? "  <b>" : "  ").Append(assigned ? "☑ " : "☐ ").Append(member.Label).Append(local ? "</b>" : string.Empty);
                     }
                     right.Append("\n\n");
                 }
@@ -290,18 +355,180 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
             rightPageCache = right.ToString();
         }
         PopulateView(worldView);
-        PageChanged?.Invoke(displayedIndex, snap);
+        if (notifyPageChanged) PageChanged?.Invoke(displayedIndex, snap);
     }
 
     public string GetLeftPageText() => leftPageCache;
     public string GetRightPageText() => rightPageCache;
     public void PopulateView(ConstructionBookView view)
     {
+        PopulateView(view, null);
+    }
+
+    public void PopulateView(ConstructionBookView view, Func<bool> additionalInteractionBlock)
+    {
         if (view == null) return;
         int count = spreads.Count > 0 ? spreads[Mathf.Clamp(displayedIndex, 0, spreads.Count - 1)].RequiredCount : 0;
         NetworkManager manager = Unity.Netcode.NetworkManager.Singleton;
         ulong localId = manager != null && manager.IsListening ? manager.LocalClientId : 0;
-        view.Render(currentEntry, count, Mathf.Max(0, displayedIndex), spreads.Count, currentMaterials, currentMaterialsAvailable, roster, localId);
+        view.Render(currentEntry, count, Mathf.Max(0, displayedIndex), spreads.Count, currentMaterials, currentMaterialsAvailable, roster, localId, IsAssigned,
+            RequestAssignment, () => IsPageTransitioning || additionalInteractionBlock != null && additionalInteractionBlock(), view == worldView);
+    }
+
+    public bool IsPageTransitioning => turnRoutine != null || pendingAnimatedIndices.Count > 0;
+
+    public bool IsAssigned(int spreadIndex, int stepIndex, ulong clientId)
+    {
+        if (assignments == null) return false;
+        return assignments.Contains(new ConstructionBookAssignment(spreadIndex, stepIndex, clientId));
+    }
+
+    public bool HasBookDataFor(ISet<BridgeComponentSO> componentTypes)
+    {
+        if (!initialized || catalog == null || componentTypes == null) return false;
+        foreach (BridgeComponentSO component in componentTypes)
+        {
+            if (component == null || !catalog.TryGetEntry(component, out ConstructionBookCatalogSO.Entry entry) ||
+                entry.steps == null || entry.steps.Length == 0)
+            {
+                return false;
+            }
+
+            foreach (ConstructionBookCatalogSO.Step step in entry.steps)
+            {
+                if (step == null || string.IsNullOrWhiteSpace(step.instruction)) return false;
+                if (step.requirements == null) return false;
+                foreach (ConstructionBookCatalogSO.Requirement requirement in step.requirements)
+                {
+                    if (requirement == null || string.IsNullOrWhiteSpace(requirement.displayName)) return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public void AppendAssignedTasks(ulong clientId, ISet<BridgeComponentSO> currentStageTypes, StringBuilder destination)
+    {
+        if (destination == null || currentStageTypes == null || catalog == null) return;
+
+        HashSet<BridgeComponentSO> emittedTypes = new HashSet<BridgeComponentSO>();
+        for (int spreadIndex = 0; spreadIndex < spreads.Count; spreadIndex++)
+        {
+            BridgeComponentSO component = spreads[spreadIndex].Component;
+            if (component == null || !currentStageTypes.Contains(component) || !emittedTypes.Add(component) ||
+                !catalog.TryGetEntry(component, out ConstructionBookCatalogSO.Entry entry) || entry?.steps == null)
+            {
+                continue;
+            }
+
+            string title = !string.IsNullOrWhiteSpace(entry.title) ? entry.title : component.componentName;
+            bool wroteGroupHeader = false;
+            for (int stepIndex = 0; stepIndex < entry.steps.Length; stepIndex++)
+            {
+                ConstructionBookCatalogSO.Step step = entry.steps[stepIndex];
+                if (step == null || !IsAssigned(spreadIndex, stepIndex, clientId)) continue;
+
+                if (wroteGroupHeader) destination.Append("  ");
+                destination.Append(wroteGroupHeader ? "Step " : title + "\n  Step ")
+                    .Append(stepIndex + 1).Append(": ")
+                    .Append(step.instruction);
+                if (step.requirements != null && step.requirements.Length > 0)
+                {
+                    destination.Append(" [");
+                    bool hasRequirement = false;
+                    foreach (ConstructionBookCatalogSO.Requirement requirement in step.requirements)
+                    {
+                        if (requirement == null || string.IsNullOrWhiteSpace(requirement.displayName)) continue;
+                        if (hasRequirement) destination.Append(" + ");
+                        destination.Append(requirement.displayName);
+                        hasRequirement = true;
+                    }
+                    destination.Append(']');
+                }
+                destination.AppendLine();
+                wroteGroupHeader = true;
+            }
+        }
+    }
+
+    public void RequestAssignment(int spreadIndex, int stepIndex, ulong clientId, bool desiredAssigned)
+    {
+        NetworkManager manager = NetworkManager.Singleton;
+        if (manager != null && manager.IsListening && !IsSpawned) return;
+        if (!IsSpawned || manager == null || !manager.IsListening)
+        {
+            TryApplyAssignment(spreadIndex, stepIndex, clientId, desiredAssigned);
+            return;
+        }
+
+        if (IsServer) TryApplyAssignmentRequest(spreadIndex, stepIndex, clientId, desiredAssigned, manager.LocalClientId);
+        else SetAssignmentServerRpc(spreadIndex, stepIndex, clientId, desiredAssigned);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void SetAssignmentServerRpc(int spreadIndex, int stepIndex, ulong clientId, bool desiredAssigned, ServerRpcParams rpcParams = default)
+    {
+        TryApplyAssignmentRequest(spreadIndex, stepIndex, clientId, desiredAssigned, rpcParams.Receive.SenderClientId);
+    }
+
+    private void TryApplyAssignmentRequest(int spreadIndex, int stepIndex, ulong clientId, bool desiredAssigned, ulong sender)
+    {
+        if (!TryValidateSender(sender, out NetworkClient client) || client.PlayerObject == null) return;
+        PlayerHealth health = client.PlayerObject.GetComponent<PlayerHealth>();
+        if (health == null || health.IsDowned) return;
+        if (!connectedPlayerIds.Contains(clientId)) return;
+        TryApplyAssignment(spreadIndex, stepIndex, clientId, desiredAssigned);
+    }
+
+    private bool TryApplyAssignment(int spreadIndex, int stepIndex, ulong clientId, bool desiredAssigned)
+    {
+        InitializeData();
+        if (spreadIndex < 0 || spreadIndex >= spreads.Count || !IsKnownClientId(clientId)) return false;
+        ConstructionBookCatalogSO.Entry entry = null;
+        if (catalog == null || !catalog.TryGetEntry(spreads[spreadIndex].Component, out entry) || entry?.steps == null ||
+            stepIndex < 0 || stepIndex >= entry.steps.Length || entry.steps[stepIndex] == null)
+            return false;
+
+        ConstructionBookAssignment target = new ConstructionBookAssignment(spreadIndex, stepIndex, clientId);
+        bool changed = false;
+        if (desiredAssigned)
+        {
+            if (!assignments.Contains(target)) { assignments.Add(target); changed = true; }
+        }
+        else
+        {
+            for (int i = assignments.Count - 1; i >= 0; i--)
+                if (assignments[i].Equals(target)) { assignments.RemoveAt(i); changed = true; }
+        }
+        if (changed && !IsSpawned)
+        {
+            Render(displayedIndex, true, false);
+            AssignmentsChanged?.Invoke();
+            PresentationChanged?.Invoke();
+        }
+        return changed;
+    }
+
+    private bool IsKnownClientId(ulong clientId)
+    {
+        NetworkManager manager = NetworkManager.Singleton;
+        return manager != null && manager.IsListening ? connectedPlayerIds.Contains(clientId) : rosterIds.Contains(clientId) || clientId == 0;
+    }
+
+    private bool TryValidateSender(ulong sender, out NetworkClient client)
+    {
+        client = null;
+        NetworkManager manager = NetworkManager.Singleton;
+        return manager != null && manager.ConnectedClients.TryGetValue(sender, out client) && client.PlayerObject != null &&
+               Vector3.Distance(client.PlayerObject.transform.position, transform.position) <= interactionRange;
+    }
+
+    private void OnAssignmentsListChanged(NetworkListEvent<ConstructionBookAssignment> _)
+    {
+        Render(displayedIndex, true, false);
+        AssignmentsChanged?.Invoke();
+        PresentationChanged?.Invoke();
     }
     private void WarnOnce(string issue) { if (!string.IsNullOrEmpty(issue) && loggedIssues.Add(issue)) Debug.LogWarning($"ConstructionBook: {issue}; spread retained with Data unavailable.", this); }
     private void OnClientConnected(ulong clientId)
@@ -313,15 +540,23 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     {
         if (!IsServer) return;
         PopulateServerRosterFromConnections();
-        PopulateView(worldView);
-        PageChanged?.Invoke(Mathf.Max(0, displayedIndex), true);
+        Render(displayedIndex, true, false);
+        PresentationChanged?.Invoke();
     }
     private void OnClientDisconnected(ulong clientId)
     {
         if (!IsServer) return;
         serverTurnQueue.RemoveSender(clientId);
+        for (int i = assignments.Count - 1; i >= 0; i--)
+            if (assignments[i].ClientId == clientId) assignments.RemoveAt(i);
         for (int i = connectedPlayerIds.Count - 1; i >= 0; i--)
             if (connectedPlayerIds[i] == clientId) connectedPlayerIds.RemoveAt(i);
+    }
+
+    private void ClearAssignments()
+    {
+        if (!IsServer || assignments == null || assignments.Count == 0) return;
+        assignments.Clear();
     }
     private void PopulateServerRosterFromConnections()
     {
@@ -348,8 +583,8 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     private void OnRosterListChanged(NetworkListEvent<ulong> _)
     {
         RefreshRoster();
-        PopulateView(worldView);
-        PageChanged?.Invoke(Mathf.Max(0, displayedIndex), true);
+        Render(displayedIndex, true, false);
+        PresentationChanged?.Invoke();
     }
     private void RefreshRoster()
     {

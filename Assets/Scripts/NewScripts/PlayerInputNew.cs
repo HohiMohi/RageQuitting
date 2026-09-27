@@ -25,6 +25,7 @@ public class PlayerInputNew : NetworkBehaviour
     public EventHandler OnSwapItems;
     public EventHandler OnDropItem;
     public EventHandler OnToggleBridgeRequirements;
+    public event Action<Vector2> OnBridgeRequirementsScroll;
     public EventHandler OnToggleRestartMenu;
     public EventHandler OnUI_Interact;
     public EventHandler OnUI_Up;
@@ -110,6 +111,7 @@ public class PlayerInputNew : NetworkBehaviour
         playerGameInputActions.Game.SwapItems.performed += SwapItems_performed;
         playerGameInputActions.Game.DropItem.performed += DropItem_performed;
         playerGameInputActions.Game.ToggleBridgeRequirements.performed += ToggleBridgeRequirements_performed;
+        playerGameInputActions.Game.BridgeRequirementsScroll.performed += BridgeRequirementsScroll_performed;
         playerGameInputActions.Game.ToggleRestartMenu.performed += ToggleRestartMenu_performed;
         playerGameInputActions.UI.Up.performed += UI_Up_performed;
         playerGameInputActions.UI.Down.performed += UI_Down_performed;
@@ -208,6 +210,20 @@ public class PlayerInputNew : NetworkBehaviour
         }
 
         OnToggleBridgeRequirements?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void BridgeRequirementsScroll_performed(InputAction.CallbackContext context)
+    {
+        RouteBridgeRequirementsScroll(context.ReadValue<Vector2>());
+    }
+
+    private void RouteBridgeRequirementsScroll(Vector2 scroll)
+    {
+        if (IsUIOpened || !IsInputActive()) return;
+        if (Mathf.Abs(scroll.y) > 0.001f)
+        {
+            OnBridgeRequirementsScroll?.Invoke(scroll);
+        }
     }
 
     private void ToggleRestartMenu_performed(InputAction.CallbackContext context)

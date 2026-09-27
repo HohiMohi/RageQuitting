@@ -4,7 +4,7 @@ Data: 2026-09-26
 
 ## Aktualizacja — 2026-09-26
 
-Opis V3 poniżej jest historycznym punktem powrotu. Aktualna scena używa TD_TerrainRoad_RoadsideV1.asset i nowej warstwy darni; szczegóły bieżącego wdrożenia opisuje [Pobocze V1](Roadside-V1-Implementation.md). Wyniki V3 pozostają zachowane bez przepisywania.
+Opis V3 poniżej jest historycznym punktem powrotu. Aktualna scena używa TD_TerrainRoad_RoadsideV1.asset i nowej warstwy darni; szczegóły pobocza opisuje [Pobocze V1](Roadside-V1-Implementation.md), a późniejsze warianty drogi [Terrain Road V4](TerrainRoad-V4-Implementation.md) i [Terrain Road V4.1](TerrainRoad-V4_1-Implementation.md). Wyniki V3 pozostają zachowane bez przepisywania.
 
 ## Rezultat
 

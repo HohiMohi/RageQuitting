@@ -190,6 +190,15 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""BridgeRequirementsScroll"",
+                    ""type"": ""Value"",
+                    ""id"": ""ad65887c-3cf3-4528-9fd7-e4551514146a"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -357,6 +366,17 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""action"": ""ToggleRestartMenu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1b8e5e1b-b72e-4ce6-a7dd-2e53d47748a5"",
+                    ""path"": ""<Mouse>/scroll"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard/Mouse"",
+                    ""action"": ""BridgeRequirementsScroll"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -501,6 +521,7 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         m_Game_DropItem = m_Game.FindAction("DropItem", throwIfNotFound: true);
         m_Game_ToggleBridgeRequirements = m_Game.FindAction("ToggleBridgeRequirements", throwIfNotFound: true);
         m_Game_ToggleRestartMenu = m_Game.FindAction("ToggleRestartMenu", throwIfNotFound: true);
+        m_Game_BridgeRequirementsScroll = m_Game.FindAction("BridgeRequirementsScroll", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Up = m_UI.FindAction("Up", throwIfNotFound: true);
@@ -600,6 +621,7 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
     private readonly InputAction m_Game_DropItem;
     private readonly InputAction m_Game_ToggleBridgeRequirements;
     private readonly InputAction m_Game_ToggleRestartMenu;
+    private readonly InputAction m_Game_BridgeRequirementsScroll;
     /// <summary>
     /// Provides access to input actions defined in input action map "Game".
     /// </summary>
@@ -655,6 +677,10 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// Provides access to the underlying input action "Game/ToggleRestartMenu".
         /// </summary>
         public InputAction @ToggleRestartMenu => m_Wrapper.m_Game_ToggleRestartMenu;
+        /// <summary>
+        /// Provides access to the underlying input action "Game/BridgeRequirementsScroll".
+        /// </summary>
+        public InputAction @BridgeRequirementsScroll => m_Wrapper.m_Game_BridgeRequirementsScroll;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -714,6 +740,9 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @ToggleRestartMenu.started += instance.OnToggleRestartMenu;
             @ToggleRestartMenu.performed += instance.OnToggleRestartMenu;
             @ToggleRestartMenu.canceled += instance.OnToggleRestartMenu;
+            @BridgeRequirementsScroll.started += instance.OnBridgeRequirementsScroll;
+            @BridgeRequirementsScroll.performed += instance.OnBridgeRequirementsScroll;
+            @BridgeRequirementsScroll.canceled += instance.OnBridgeRequirementsScroll;
         }
 
         /// <summary>
@@ -758,6 +787,9 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @ToggleRestartMenu.started -= instance.OnToggleRestartMenu;
             @ToggleRestartMenu.performed -= instance.OnToggleRestartMenu;
             @ToggleRestartMenu.canceled -= instance.OnToggleRestartMenu;
+            @BridgeRequirementsScroll.started -= instance.OnBridgeRequirementsScroll;
+            @BridgeRequirementsScroll.performed -= instance.OnBridgeRequirementsScroll;
+            @BridgeRequirementsScroll.canceled -= instance.OnBridgeRequirementsScroll;
         }
 
         /// <summary>
@@ -1028,6 +1060,13 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleRestartMenu(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "BridgeRequirementsScroll" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnBridgeRequirementsScroll(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

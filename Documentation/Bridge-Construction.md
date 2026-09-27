@@ -457,26 +457,50 @@ odłączony klient traci oczekujące żądania. Strony nie zawijają się na ko�
 
 Serwer utrzymuje autorytatywny replikowany `NetworkList` graczy, zasilany
 identyfikatorami połączeń, a nie obecnością `PlayerObject`. Snapshot w
-`OnNetworkSpawn` oraz connect/disconnect aktualizują listę natychmiast;
-lokalny snapshot omija reentrantne czyszczenie w `OnListChanged`. Roster jest
-sortowany i opisany jako `Host`, a następnie `Player N`. `PlayerObject` jest
-nadal wymagany wyłącznie do walidacji zasięgu żądania przewrócenia strony.
-Zmiana rosteru odświeża oba widoki bez animacji strony. Pod każdym krokiem
-widnieje nieaktywny checkbox dla każdej osoby; checkboxy nie zapisują postępu.
+`OnNetworkSpawn` oraz connect/disconnect aktualizują listę natychmiast. Roster
+jest sortowany i opisany jako `Host`, a następnie `Player N`. Odłączenie usuwa
+gracza i jego przypisania; ponowne połączenie otrzymuje nowy `ClientId` i
+zaczyna bez własnych zadań. Przypisania trwają między etapami i przy ponownym
+pojawieniu się typu części.
 
-Testy EditMode obejmują obliczenia materiałów, brak/duplikat/niedopasowaną
-recepturę, walidację katalogu, roster, FIFO i kolejność wymagań poziomu, a testy
-PlayMode granice stron, synchronizację, world/screen presenter oraz
-lifecycle UI. Automaty sprawdzają dokładną geometrię i orientację prefabu,
-sześć kroków, czterech graczy, 24 checkboxy wraz z rzeczywistymi rozmiarami i
-granicami rectów, pojedyncze przewrócenie strony klawiszami A/D bez kolizji
-handlerów oraz host smoke ze zespawnowaną księgą i rosterem `Host`. Ostatni
-ścisły preflight Gameplay zakończył się kodem 0; raport:
-`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\20260922T140337Z-9e46c866\summary.json`.
-Dowód wizualny:
-`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\construction-book-world-opposite-side-corrected-1920x1080.png`.
-Ocena w prawdziwej sesji wieloprocesowej z klientem zdalnym, late join i
-disconnect pozostaje kontrolą ręczną.
+Na ekranie `E` można przypisać kroki dowolnemu graczowi lub kilku graczom,
+także planować dla przyszłych etapów. World-space księga pokazuje zsynchronizowane,
+nieinteraktywne oznaczenia. To stan odpowiedzialności, nie śledzenie ukończenia
+instrukcji. Kluczem jest indeks typu części w rozkładówkach, oryginalny indeks
+kroku oraz `ClientId`, nigdy etykieta `Player N`. Serwer przechowuje rekordy
+w autorytatywnym replikowanym `NetworkList` przypisań i stosuje idempotentny
+stan docelowy. Weryfikuje połączenie, gracza, zdrowie, dystans `3.5 m`, wpis
+katalogu, stronę i krok. Zmiany mają osobne powiadomienie. Restart poziomu
+czyści przypisania.
+
+`GameplayManager` udostępnia rejestr księgi, globalny bieżący etap i referencje
+typów wymaganych w tym etapie. Przed lokalnym powiadomieniem o zmianie wymagań
+odtwarza indeks etapu i ukończenie z sieciowego snapshotu, aby late join nie
+pokazywał etapu początkowego. Panel `N` otwiera się niezależnie od `E` i
+pokazuje własne przypisane kroki tylko dla typów obecnego etapu, w kolejności
+księgi, z oryginalną numeracją, instrukcjami i nazwami wymagań. Wiele instancji
+typu nie dubluje zadań. Panel zachowuje położenie i rozmiar. Stały nagłówek
+brzmi `Bridge Requirements`, a przewijane body zawiera sekcje `Current stage`,
+`My tasks` i `Remaining stages`. Są jawne komunikaty braku zadań,
+niedostępnych danych i ukończenia. Otwarcie i zmiana etapu przewijają do
+początku, zwykłe zmiany zachowują pozycję i ograniczają ją do zakresu.
+
+Testy EditMode obejmują materiały, warianty receptur, katalog, roster, FIFO i
+wymagania poziomu; PlayMode obejmuje granice stron, synchronizację, presenter i
+lifecycle UI. Walidacja wieloprocesowa localhost objęła late join, przypisania
+w obu kierunkach, duplikaty i konflikty operacji, stronę po przewróceniu,
+zgodność world/screen/N, odrzucanie niepoprawnych żądań, przyszłe i powracające
+typy, przewijanie, disconnect/rejoin, ukończenie oraz restart poziomu.
+Callbacki częściowo wywoływano programowo, a etap/ukończenie wstrzykiwano;
+nie była to pełna ręczna rozgrywka wizualna. Ukierunkowany strict Gameplay
+zakończył się kodem 0; ukierunkowane suite ConstructionBook: EditMode 12/12,
+PlayMode 13/13:
+`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\20260927T164837Z-21a6ddd7\summary.json`.
+Dowody wieloprocesowe:
+`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\ConstructionBookMultiplayer`.
+Rejoin z nadal załadowanego Tutorial nie powiódł się przez duplikat
+`GlobalObjectIdHash` `NPC_BeaverScout`; rejoin przez lobby działał. Ocena
+wizualna pozostaje po stronie użytkownika.
 
 ## Ograniczenia
 

@@ -1,0 +1,790 @@
+[
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/RoadsideV1_Grass_Atlas.png",
+    "SHA256": "4D0A2B2DBD3A9F24C2814748C2EED4880EDFB2BA5695A17D738E70EE01222160"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Character/Models/Armature.fbx",
+    "SHA256": "855E05C72DA761CCD2BFB2EC8E77599677D327D627EE51C0BF6A818CE958B7F1"
+  },
+  {
+    "Path": "Assets/Shaders/TargetOutline.shader",
+    "SHA256": "154925B4D031F923420233D39E1C84F93E405DC597573B1084D7F5417DA9C508"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/NPCs/NPCFactionMember.cs",
+    "SHA256": "3AC063C461D68462230F9A3A42B18A5555E64E79D7147D06766F6BD9E70CE030"
+  },
+  {
+    "Path": "Assets/GeneratedAssets/Wheelbarrow/HardenedConcreteBreakProfile.asset",
+    "SHA256": "A0391E8E4AAFE26454B4B24FF4035A7227D069CF0380A91CEF06E4EE8ED426D4"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/Shovel.prefab",
+    "SHA256": "8C0D9861DC29526761531DBEBB0A601AFF7404F662B80E9D92E5C4B70787A2CE"
+  },
+  {
+    "Path": "Assets/AI_assets/Models/Tools/Axe_LowPoly.fbx",
+    "SHA256": "F57940A0B5220A671D92298818E0A6301FFC0EF24F11F00B1988EF02DE75E4C8"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/EquippableToolVisualBuilder.cs",
+    "SHA256": "616FD6FD182116D645CF4194E1A3FDD744BB194336B87EDE9CDCE5B5C619AD12"
+  },
+  {
+    "Path": "Assets/Meshes/Goblin_AI2_Assets/selected.fbm/NormalGL_12459a02-4210-4f83-b8f5-7f56e09bb7c8.png",
+    "SHA256": "DB2E4DBB56304C4DBAB1DF86ACEAE2BC60BC8BED78BAA1216AF2E4ACFB104ABC"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerLevelRestartController.cs",
+    "SHA256": "F56541B0F9C4423AE03FFE2070FB4F5D7FCD79FF89A8CAB71D501C3E839C0676"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Models/SM_RoadsideRock_01.fbx",
+    "SHA256": "CE2DB34A888F47F7DC9451595A4A1BAF9DE0F95FA0B5E5825C9772073397979C"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/Lighting/EnvironmentLightingController.cs",
+    "SHA256": "17133DA679345E04F94E56CAA357F04E30300F9F0CF43F2838A4A5ED880377F5"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/EquippableWorldPhysics/EquippableWorldPhysicsProfile_Wrench.asset",
+    "SHA256": "DF40127E4ED558D77967AFAE26B4A81424FF49118C32F3485820396FC0F091B8"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/EquippableWorldPhysics/EquippableWorldPhysicsProfile_IndustrialHammer.asset",
+    "SHA256": "BC439C9FB83BF6E71688228CB990B4A6D93CA3DA751B45DCB436E15F158DF3D9"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerHealth.cs",
+    "SHA256": "8CBF8F114D5592882924315EC644F33B9E9015DFDE78526AAA733DCE1402964A"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerWheelbarrowPouringUI.cs",
+    "SHA256": "C3A33E7E3AB8C9DCF3191A362759A978C6115FDA0761CDA7597B536592D4E90D"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SM_RoadsideGrass_01.fbx",
+    "SHA256": "4191776C9C5833F3BF8A27237CA1353DE121E3E7E523E21748AA54C1556E05B1"
+  },
+  {
+    "Path": "Assets/StarterAssets/FirstPersonController/Prefabs/PlayerFollowCamera.prefab",
+    "SHA256": "21BC9E3191C0629753F5C43544EA47A41C499FE7BC3451E1C7DCA739F07DA9B6"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Character/Animations/Locomotion--Walk_N.anim.fbx",
+    "SHA256": "D5D9574FB98CC9D44E654D47EA6AF766C3955E4C477D289644F25DBFB52CDA92"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerConcreteTrapController.cs",
+    "SHA256": "6FEC1E5D566DAE530E35C0ADA43AC9EB7440C809CAF8580705C4B2713CD0B70B"
+  },
+  {
+    "Path": "Assets/Materials/Pickaxe_material.mat",
+    "SHA256": "2030D1199C8683610AEC5A6849F6C0E63F25BB0F7EC6A461B210124C786779A2"
+  },
+  {
+    "Path": "Assets/Meshes/Goblin_AI2.prefab",
+    "SHA256": "CC63598F32950A6939FA059E75DEBE976B0367F004D90101E85426C230A45EF4"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Prefabs/PF_RoadsideV1_Grass_03.prefab",
+    "SHA256": "E09777F47E3D1DEC1662649A045388B81DEEC381799EF45D9BE0C71F2E41E082"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/Shovel.asset",
+    "SHA256": "FDA0127B9E3A54492D6D3177064A151FACC28C25311C2190599F0806511CDC17"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerDamageFeedback.cs",
+    "SHA256": "CA9DDE0FD176D9714DD191D47A7943B6E14D8DC754A00E2E72D6453C7C4B318D"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/EquippableItemUI.cs",
+    "SHA256": "36C870F4F612F8193DBED0D06ED8533A9702D8B61C2B9DF08601D052C098CE22"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/V4_1/TL_Earth_Dark_ReliefV4_1.terrainlayer",
+    "SHA256": "5DCD5A90B27E2DB9730677A7F5D399633000F14B7BE256FD52AB80642D54C759"
+  },
+  {
+    "Path": "Assets/Settings/Lighting/FairyAfternoonVolumeProfile.asset",
+    "SHA256": "ECE37C4924D4790749C32E1417578775714D22217BE726F5A5B3146D4AD1F980"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/T_Stone_MutedGrey.png",
+    "SHA256": "B08A452A5BA2C1D11740ED24176F8050132153AAAE5FFD6916F75953C892CDAB"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/SpiritLevelVial.cs",
+    "SHA256": "993AA3E24F00F943EC64DB5C66DDBB4E94DAE8A0DBB3485D4D65A8417749E310"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/Materials/M_TerrainRoad_TerrainLit_V3.mat",
+    "SHA256": "5EC25A7C7989405679B8E564A777484489BD2BE29FEC85C732A6B44D67E56B4B"
+  },
+  {
+    "Path": "Assets/Scenes/TerrainRoad_Lookdev.unity",
+    "SHA256": "2A2032A6B866B2D6D87E458B4C9E6428AEC2618457C97D2E641520A12CF9405C"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV3/RoadV3_URP_MaskMap.png",
+    "SHA256": "5F7251BB0F368B963B2F4E4BED0396AA92FBA0D29B1CBCDBF66853B9076C2219"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4_1/RoadV4_1_StoneAlbedo.png",
+    "SHA256": "A47A1BCE98E54524C547B1F74C5533DC84CF9F464AE1924EFCEFF236FCF8DFDD"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV3/RoadV3_A_Normal.png",
+    "SHA256": "B046A2960353F4F5037A59559FD7565634511CA3EFEDD120609687E9B4E52C26"
+  },
+  {
+    "Path": "Assets/Materials/EquippableWorldPhysics.physicMaterial",
+    "SHA256": "10447AD700232B801B42D6E10322890B7204ABCEC3D73C9CA03FE21319C1A7A0"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/ToolActionProfiles/WrenchActionProfile.asset",
+    "SHA256": "E4749212B5ACDDA75D544C42ACB3153812C8BCA143F0A26F86CA78B2AE81F9AD"
+  },
+  {
+    "Path": "Assets/AI_assets/Models/Tools/Pickaxe_LowPoly.fbx",
+    "SHA256": "EF6E5EDE0FBEB76D14D1187BB6AE7DC1AC95296F4D89388A4B14E712BEC72940"
+  },
+  {
+    "Path": "Assets/StarterAssets/InputSystem/StarterAssetsInputs.cs",
+    "SHA256": "C6CA285EBE2A05C21070874C6966A559F99BBEA4474B8F58F4D3F7FCC7DA72AB"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerRespawnPromptUI.cs",
+    "SHA256": "A373A5C1890F853C27376A83DB027B3535FCCFEF1C58071E91940A80683B939A"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Prefabs/PF_RoadsideV1_Rock_01.prefab",
+    "SHA256": "D9F50BFEA1385B3EF9F8F6DA64A158A57028A0CAB0FD476B0B7DE77620DFBD77"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/Rope.prefab",
+    "SHA256": "90C144A4A8C33B83EED502CA75B9A3FE692C1005A4B8790A9D69576B6D671600"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4_1/RoadV4_1_Normal.png",
+    "SHA256": "829E1937E683B0785787A8883D5ABA1D13DC7705929C1082C8D48F7F3B290E18"
+  },
+  {
+    "Path": "Assets/Characters/GoblinAnimationSetup/GoblinPlayerAnimatorController.controller",
+    "SHA256": "72B5A4DC190D2C3EC4F1097EF0E5862C9C58AB0DCB15A00CCC5ADE4B5F6A1A40"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/N_Grass_Warm.png",
+    "SHA256": "471C4C25309AC6216715D6243FA5B954A0FFD6B371A1F46848D4C3DD18EE0768"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SM_RoadsideRock_03.fbx",
+    "SHA256": "D2A4FBB0792D33641DBB708872280886F21B3D4DA978E398CC50A4BA9CF8355E"
+  },
+  {
+    "Path": "Assets/Meshes/Goblin_AI2_Assets/selected.fbm/Color_12459a02-4210-4f83-b8f5-7f56e09bb7c8.png",
+    "SHA256": "0FBFCCC5178C1F80B2DAFCFF2EB25CD35BAA19F2FB12FC3860651157C95B2208"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/IndustrialHammerImpactImpulse.asset",
+    "SHA256": "5CE25DA971846C61B4C267BB46A31218D820F3A42BCA19A869FFF02C5F7EC44D"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/CrosshairDotGraphic.cs",
+    "SHA256": "060954EC3BEFCEECC21DB94E0490CAEC684AD491A9AAEAAC13A31BF630C350FE"
+  },
+  {
+    "Path": "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset",
+    "SHA256": "3E255BF16C9D35F6019C541174813B6F9E2DBFA5B0B458311CAC63FEA66A0357"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SM_RoadsideRock_02.fbx",
+    "SHA256": "DC204891AA4887874C412E5DD510841C9253154A0FA119B272F9F861D098F84C"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/RopeEndProjectile.prefab",
+    "SHA256": "D84CE6E14BDCA88360362F91F7183080358F7F507576E928F14635C86B51E1DB"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerExternalImpulseController.cs",
+    "SHA256": "291626E429C3830C503FB5BEC72A389F04BDD1DB992B9437FC55F165B897924D"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Models/SM_RoadsideGrass_01.fbx",
+    "SHA256": "71E32922B14D40FCEC3330D5F03E4F1A98E32083A0BEDFE7F430A7563428143F"
+  },
+  {
+    "Path": "Assets/StarterAssets/FirstPersonController/Prefabs/MainCamera.prefab",
+    "SHA256": "430F77F08C791C98ED1C27294A2D9E803C32ABC9AF3D8422A869618408CB9691"
+  },
+  {
+    "Path": "Assets/GeneratedAssets/Wheelbarrow/FailedConcreteCrack.mat",
+    "SHA256": "C206F1686BEB337047B4328ED0842997478BA7FD0D9118D5D842DC9C62D2E390"
+  },
+  {
+    "Path": "Assets/Sprites/Pickaxe_icon.png",
+    "SHA256": "1347FF903C42412886BD25215280A0045E1F65507967AE0042E40241239B4739"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/LookAtCamera.cs",
+    "SHA256": "5327B4AFFF9FD7CF890F7F41386410783040EE1EE17E29F38F2B1A20A2271A51"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerRopeConstraintController.cs",
+    "SHA256": "B6F15C2E0D8D53FDEC0003F5CF65C8AEF6B9DB706396F0AB3F6D28D355187A21"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Models/SM_RoadsideRock_03.fbx",
+    "SHA256": "80B9970976AAC74857B17F12FC568F0FA7F0F14C520E7947476388CC7D5DC80F"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/Materials/M_RoadsideRock_URP.mat",
+    "SHA256": "BD40094E6CE7A477B631D8479371B839097F674DE95BC277F65D6547C5DB9DF9"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/RoadsideV1_Rock_Normal.png",
+    "SHA256": "C00C765CE32F7C2F662FB343975769265E773A36F57FCD369617378BB63ADB7E"
+  },
+  {
+    "Path": "Assets/Materials/Lighting/FairyAfternoonProceduralSkybox.mat",
+    "SHA256": "419C64C0833956701600034CECF6B408C53DEEDDD50DDEDFE6DDE8C7C20277AB"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/IndustrialHammer.asset",
+    "SHA256": "81F66C8DCDD9574D77C5929AAD0BA68972FA2238AFA86E7E5307543DAC79B252"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/RoadsideV1_Ground_Albedo.png",
+    "SHA256": "EC1DEBB5E2295A86910D23495902190ABD918315F68FCF052BC5543335D97C7A"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/ToolActionProfiles/AxeActionProfile.asset",
+    "SHA256": "1B6D6A6A9845D24DB5828590BA8365203C38F8847056B54503FDC55B492AF45D"
+  },
+  {
+    "Path": "Assets/StarterAssets/Mobile/UI/UI_Circle_Bevel_Base.png",
+    "SHA256": "8D5C5186DBD1CD057396DF23EF3412C82ED8BB0F3C9C8E2153980645688786D9"
+  },
+  {
+    "Path": "Assets/GeneratedAssets/Wheelbarrow/ConcreteDry.mat",
+    "SHA256": "CC88B1C97E6E9A0A36677BD8CA0D1985200083AF6DC7ACB243DF27FD90980C03"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/HardenedConcreteBreakProfileSO.cs",
+    "SHA256": "1777B2E8B4E2673E1FCFB3D6059B009D565164266E2116D72D3A11720BA8CF30"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerAnimationController.cs",
+    "SHA256": "0EA5DED5E288D95F2F3D667FCA60B908472FEE77A9D0670495AF22DCC7E6C0CC"
+  },
+  {
+    "Path": "Assets/AI_assets/Models/Tools/Axe_LowPoly_Corrected.asset",
+    "SHA256": "71871ACEF319C7F39087BDC1FF6634C6CBE2EF82E26581F0E14EDC39B0D1AF85"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/RopeEndProjectile.cs",
+    "SHA256": "860A019C404B98C3886657AE534C278192FA6BDD6CA61AD6DD4B26F05877F89F"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/EquippableWorldPhysics/EquippableWorldPhysicsProfile_Shovel.asset",
+    "SHA256": "3590FDF1F59B89D5647A372D5CE0DD065027F37BF2197DA4A1C6857A356D2384"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4_1/RoadV4_1_DarkEarthAlbedo.png",
+    "SHA256": "01012C70E6F1BB536E69E0BB5D585F6A084AA462D94EEB8BA07A9A883FFC9D3B"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerHealthUI.cs",
+    "SHA256": "232855C52BEDCE8823A6C93C379800B11C817F09EE20B2F8F1646AACD3924DA0"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerInputNew.cs",
+    "SHA256": "718CD990487FB1379BB9D69ACB8B24447080DC6DF1B1F131F6C95DCA07FE5C34"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/SpiritLevel.asset",
+    "SHA256": "5FF30277F8C28BF3FA5468D57DA5A9D415ABC1B29F9BE69F9A6BBE68968508B0"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerTurnFeedback.cs",
+    "SHA256": "677BFA7F2F80136264915A15D6F9FF40CF5C32984EB5EBE6DC5818080558CA0F"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Materials/M_RoadsideV1_Grass.mat",
+    "SHA256": "96FBD087B6BF3650C8A6582B67B4E545A7B06F6E1A678566D5EC9857D5DE3DCE"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/EquippableItem.cs",
+    "SHA256": "4B0C74ED922A7701789E5326ADE4E27138750DBDEB8CA0991D8433EE4B39ACAE"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Prefabs/PF_RoadsideV1_Grass_01.prefab",
+    "SHA256": "01479196C48184DF0F0AB8161EE2EE67D3E86E9811CC0F809FF2279010DB6FB7"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/IndustrialHammer.prefab",
+    "SHA256": "BF5160EE77398D27D0B354B8AFDD66723D44CEB3BF3C001D51C1DD731F11B722"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV3/RoadV3_DarkEarthAlbedo.png",
+    "SHA256": "CC271F5EFBB27E1FD54555474884D255C7663AD20510D44632417651055B56CD"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/EquippableWorldPhysics/EquippableWorldPhysicsProfile_Axe.asset",
+    "SHA256": "12FCA1CDBEFBC682B0BDEEE6A8035D3773251881873C065B9AAE2D35EE5256A3"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/EquippableWorldPhysics/EquippableWorldPhysicsProfile_Pickaxe.asset",
+    "SHA256": "B4FD58D51053E5623174BDEBB6115F6C0165F382F637D78D4A8F377895E5E8FE"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerActionController.cs",
+    "SHA256": "61CA61709A48BE1B01497634ABDBB832C04849303F6044CC1ED10A25DE8F41E3"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/EquippableWorldPhysics/EquippableWorldPhysicsProfile_Rope.asset",
+    "SHA256": "A1F9B5D0C4C07424340204C6434275C539FE8659F228F8E7D414419274A18B17"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Character/Animations/Jump--InAir.anim.fbx",
+    "SHA256": "99806EC74B51F36A591DABBFEA7D2CC10B1D9A233C3BC2088B0764F96CBC5ADE"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Character/Animations/Locomotion--Run_S.anim.fbx",
+    "SHA256": "36BF882D36113820169653CFE90835664AFDF3B6C5829226F9A46C3137DC85BF"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/TerrainData/TD_TerrainRoad_RoadsideV1.asset",
+    "SHA256": "BFCEE3EE4E9AA0F9E87842108C3B26BF8E489831AF6756B8A8D245EC6842DF83"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerInventory.cs",
+    "SHA256": "FB3F2A6B29B20B1A392856A3A2517AF5ACC5C4F926741FDD4EA408A939BD4B57"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/BridgeRequirementsUI.cs",
+    "SHA256": "CF4648AF146CAAD85061179D6EE0E1D37D82CB85DCE5937DDB7626B15FD10DAF"
+  },
+  {
+    "Path": "Assets/Scripts/NetworkManagement/ServerNetworkTransform.cs",
+    "SHA256": "EB94C1450D043FFED19A13B7B46BE6B2395D07865F9F988D5904A11E0ECEC685"
+  },
+  {
+    "Path": "Assets/Scripts/NetworkManagement/ClientNetworkTransform.cs",
+    "SHA256": "3E3741F71B83570CD779E8BE62D296104094519E35905FCCCB90DBA43E3BD2E9"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/Pickaxe.asset",
+    "SHA256": "2BF8CE8112897DDD111E2F61B3558B65C449E3FA22DE99882FA9AA88D147C384"
+  },
+  {
+    "Path": "Assets/Meshes/Goblin_AI2_Assets/Materials/Color_12459a02-4210-4f83-b8f5-7f56e09bb7c8.mat",
+    "SHA256": "39BB4C74072CA4B336E403832B1E9B996A9F989B37E51693A76B4CE55BAA4173"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/RoadsideV1_Ground_URP_MaskMap.png",
+    "SHA256": "D712B42FD0B60F489EB493FA7807E5E454E6A31B9E79C38C90219DF1C07D168A"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/EquippableItemSO.cs",
+    "SHA256": "3C70222FAD81DB75059AB392771E49CBE25F38A1C463CA1DB97650EF874ED0B3"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/TL_Stone_Grey_ReliefV3.terrainlayer",
+    "SHA256": "024141F4D7E0220443A81FEB54DEBFC9C7A027778A2D808F2415F503E62F41ED"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerWheelbarrowController.cs",
+    "SHA256": "EDAFF406B7251098C978F2305FB8DCECCAFB6B1796E6D7F41C5D7E67B51AB75A"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Scripts/BasicRigidBodyPush.cs",
+    "SHA256": "BC97164B2D1E74379128332C7C073706DDBD708422308A9A91BFC05DC8DF4658"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/ConstructionBookPlayerUI.cs",
+    "SHA256": "EFD665657D2B0D69CD0C3029AC1263CB0E63D30E0C86CFBA8E354B457FF44076"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Models/SM_RoadsideGrass_02.fbx",
+    "SHA256": "805EB0C1F8D62E1C832C3EB1A5B1530345FB70BDD6D2FDDFBC0E02ED9C4C001A"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/N_Stone_MutedGrey.png",
+    "SHA256": "A7A4E192CA157846B6E73A6B85B5E53152FE8AE26809D1CBC71725865BA349AB"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/RoadsideV1_Ground_Normal.png",
+    "SHA256": "5D7D33361C925C344DABBD2BC88EC4525B812AFDC7C0D90552FA073A12C8EB9E"
+  },
+  {
+    "Path": "Assets/Sprites/Axe_icon.png",
+    "SHA256": "7DA452222CCA209F2C16190BCB172D961188A56327D681524068CC4FC8607918"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerCrosshairUI.cs",
+    "SHA256": "F2B357631129DD776ABFFAD9FF72145C42C145D9B848D08F3BE57D9FD0A29AED"
+  },
+  {
+    "Path": "Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs",
+    "SHA256": "0E49491EF30364EC732983BBC9F7DA0D695B6852EFBEE6941B7AE6A68F73E4F3"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4_1/RoadV4_1_URP_MaskMap.png",
+    "SHA256": "99DFDBA668EF6A2F3D31784A2ECE624EF6CA459D6C222DE950C270A1812EED76"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Character/Animations/Locomotion--Walk_N_Land.anim.fbx",
+    "SHA256": "5BF601E30E89E7601E1735A3C2CA165F370D90457E3B22EBFA366DC84ECFFDA5"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/Axe.asset",
+    "SHA256": "909A2B98570536FC61AAFE576B1A698A24F5B307AEE635CB65F54B09FF8AD2C3"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Materials/M_RoadsideV1_Rock.mat",
+    "SHA256": "9656A150ADAF41D203E5831FC5FCF34C5362FCD0125E3BFA9E5256538483DEEC"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/NPC/PlayerFaction.asset",
+    "SHA256": "92AD2B8CEDCD382B93AD14FF55758FF74ED9111E32098458B43E151376999E3C"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerHeldObjectUI.cs",
+    "SHA256": "86BCE6DB82FDDDFA4DAD17D5FF3A989E76E3A4B28C0BAF8E2E079415F70BA87E"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Prefabs/PF_RoadsideV1_Rock_03.prefab",
+    "SHA256": "51397366E0C23A843E009C55057C97989621069A1E05707FF2CDBA139E737D08"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerSpiritLevelController.cs",
+    "SHA256": "D9D98372B8D9C77356F9C4D962F7EC7117602FC6094D331C0CEF31BE0C114AD0"
+  },
+  {
+    "Path": "Assets/Prefabs/PlayerNew.prefab",
+    "SHA256": "5C5A5797F52A92D0C3E06691AED992642668A419CEE1FF5B76F231979276BD0B"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/TL_Earth_Dark_ReliefV3.terrainlayer",
+    "SHA256": "23AD503109250FBE95F36924C1CA3689452EC4F7CA0EECD634F8436D59919126"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerFirstPersonArms.cs",
+    "SHA256": "62FBD32B7F4A7BEE31B9D88ADDF43EA39B064A99654D5AE899DAFE44D8F62EE7"
+  },
+  {
+    "Path": "Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile.shader",
+    "SHA256": "EA5BB3F5540DE2FBA59704D7F31382CF884595980E0B99C05A083873B9E26E3B"
+  },
+  {
+    "Path": "Assets/Scripts/InputSystem/PlayerGameInputActions.inputactions",
+    "SHA256": "E7C5BE63873CBE1A9DFB758D66654586B4E2442197274C34C54404409491F392"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Models/SM_RoadsideGrass_03.fbx",
+    "SHA256": "7681F53402C7EE20D58D85F824FC5BD230A0A0B9E6469615622B2EDFCE706665"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/LookingAtComponentUI.cs",
+    "SHA256": "252E7A8A7EE867FD857EC7A11D98307E6A8E4C0EAAC7C5964DE82ADE4F17E074"
+  },
+  {
+    "Path": "Assets/Scripts/Lookdev/TerrainRoadV3/TerrainRoadV3RuntimeSwitcher.cs",
+    "SHA256": "B91A5536168A4989FB2A63D8EB534C83FA31F1B405D878A759FB68144ADE9402"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/Axe.prefab",
+    "SHA256": "944BEA3BC36F8CDBA112627DB7FCF43BED3F467921C034A210D61A76AC1FCD29"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/SpiritLevelProfile.asset",
+    "SHA256": "91A12B01BC6AD3C6DC109AE84125F7B9B25DFCDFBFDFD4892BB93BF10220C093"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/EquippableWorldPhysicsProfileSO.cs",
+    "SHA256": "741CFBF1981701A3F5637A19E79BF8076DE321C3BCAF825801B69E1E8A8E1511"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/NPCs/NPCFactionSO.cs",
+    "SHA256": "9B3991C353888079927C2598E8415A613FB22BBA8096F94FF18B4B14B38CA082"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Character/Animations/Locomotion--Run_N.anim.fbx",
+    "SHA256": "AB015B180E89496180A3E81A75160C9FE2B27095E6590D1F0125FCFA85BD787C"
+  },
+  {
+    "Path": "Assets/Characters/GoblinAnimationSetup/Goblin_Idle.anim",
+    "SHA256": "8B3B4EDC7CF5D2473F6DFBB62326B4D9F3F9DDDDB1893833B35B4FB98D97EB55"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Models/SM_RoadsideRock_02.fbx",
+    "SHA256": "8D3E3317AEF65F18254B12CE724239DAEC918F93B3C571D5A74C80BBCA491366"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/Rope.asset",
+    "SHA256": "C71631372E4BADF5A30028B84A3E0432E2C5B118810E3B450D20411E4C7EDA4C"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerMovementFeedback.cs",
+    "SHA256": "01F3BB0816DF25428D8743B4D0F4248564760AA64ED34462AF92A28F73D9613E"
+  },
+  {
+    "Path": "Assets/Meshes/Goblin_AI2_Assets/selected.fbx",
+    "SHA256": "2ED0827954771574C413EF59BBD728786BA564C8A79A1E92516C3C5DC15D3918"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV3/RoadV3_RoadAlbedo.png",
+    "SHA256": "3C7C31D54C6084DCBCD4B9CB569474CCB40B34A84C2252DDA32213CE16CC572A"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV3/RoadV3_B_Normal.png",
+    "SHA256": "DEB68DC83D303F2C66234C117124980845A735B7BAF2F003E81B0B4078AB927C"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/EquippableActionProfileSO.cs",
+    "SHA256": "30E8468F9843C17D49B0F5CE6447BDDCEAE85ABF9755C238EFDA0E5D3B6D4380"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/RopeToolProfileSO.cs",
+    "SHA256": "325B03FAC4624CF5E1D53B04BE2835E89F664DDC1B8ED4DA77B0201FF4EC9DB2"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/RopeToolProfile.asset",
+    "SHA256": "AB71D74CA62F9351E044AC1C0B4C06FAB082C9F59AC96707FEA67510B4A7665E"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/Wrench.asset",
+    "SHA256": "A26F1038CC7420224A0C1C4CF2A143C73E1EA719C4F6ABF1013A7F2A89AF184B"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Character/Animations/Jump--Jump.anim.fbx",
+    "SHA256": "78FA361C2443838DB77ABAB4776E37DD4417AD80CE10FD504B261A57DB54CB17"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/T_Grass_Warm.png",
+    "SHA256": "F65C9657A3282B3651A635E97044DA02A2821E707CE3A05E928130686F4CDFF5"
+  },
+  {
+    "Path": "Assets/Sprites/Rope_icon.png",
+    "SHA256": "6A1587F7600BA13851A5B780526E6129588C933928F320E1273A4B6A01479A8B"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerBridgeStageInfoUI.cs",
+    "SHA256": "7905E06DAC5FBBCC7E50F079A7ADCF4D5C4A7DC778F57FF4CF72435A4242CDD5"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerCameraFeedbackComposer.cs",
+    "SHA256": "CDBA74D1D24DD45C8A4FFADFEBDDCD40722102CD13BF9C486FD2AAB3AF270ACE"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/ExternalImpulseProfileSO.cs",
+    "SHA256": "2A39A855DB50B20A19FB4F095D5F8479ACD50B36916DA11A997B7F1A9FDAF1B4"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/V4_1/TL_Road_ReliefV4_1.terrainlayer",
+    "SHA256": "3858DA7F35217A5BA540075B0E04B9BB3F9DC8F6D97B9B5CA1163A2D74DF8187"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/TL_Road_ReliefV3.terrainlayer",
+    "SHA256": "B7166E86D5E38A59A6DBA063F7714C7464C95784FEF28B7A91F4A7265CD4C50E"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/Pickaxe.prefab",
+    "SHA256": "206E4245C370000E07F0E4C84168E325910078CC3D2CEF643372E8C7C913E8FB"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SM_RoadsideGrass_02.fbx",
+    "SHA256": "F0C510C27730F5C9E35444A8A3A57D175F1C5DCCFEA09B54F814620BC38C2F0C"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Prefabs/PF_RoadsideV1_Grass_02.prefab",
+    "SHA256": "DEDD231D166EA19DF635DED3828B9C225435EE07A16DF5ADB9FDA796BB99E54A"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SM_RoadsideRock_01.fbx",
+    "SHA256": "F7F15731AFCDC5E6798DBB0B68CDE38999E674084E59A0BDAF55B3A3E4E4E06C"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/EquippableItem.prefab",
+    "SHA256": "923BD638CCC36D412A0AA694D39B8351825D83FC14750949E29FB48EC313859F"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerSharedCarryAnchorPreview.cs",
+    "SHA256": "E693B995D43F87563DD75655556C9D82F53169EF6CDBA5AD6CEFD128A3265DE9"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV3/RoadV3_StoneAlbedo.png",
+    "SHA256": "1589BA83E54A81560E290145F2DFD9936D8D9E0138EEBA86F381F53074D55EB4"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerGoblinVisualSetup.cs",
+    "SHA256": "43B07D1B625CF3A415BFE60187CBFA9CFE891DC4D6ED7DC6A8BFEA522EA9C196"
+  },
+  {
+    "Path": "Assets/Sprites/SpiritLevel_icon.png",
+    "SHA256": "ADADE7B5A6106ECED9B05AFF0671EB5536185E19CE526D4C1397F29FC72098DB"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerRopeUI.cs",
+    "SHA256": "3F6143B20C588623E1BAFE1D049DC4A514F11FAE241240DC37447A6D60B061CE"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/Wrench.prefab",
+    "SHA256": "F906BAB67AE4C82B853F84D75608BD88B5F4F67530906A7111C8E13BA19F9EA3"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/ToolActionProfiles/IndustrialHammerActionProfile.asset",
+    "SHA256": "98CA25AE5C54AB60C457D248FBE909E7C9B0BF9FFA5BB200A05609033222E91B"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/DownedPlayerCarryable.cs",
+    "SHA256": "F3C072045C7698532862E3A383D7BF584186C1FD07C4370D0920C9A35D5A4659"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/ActionImpactEffectSpawner.cs",
+    "SHA256": "5C31B9AA12654D24FE7A2BE2A66ADD4DDBF9DDD0B96011E2AE5DF70483C253D4"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/ToolActionProfiles/PickaxeActionProfile.asset",
+    "SHA256": "CB3EAA4F3DC649F02FA1A193EA7318CDFCBF6B5378E99F27EF99D140DC26D78E"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4_1/RoadV4_1_RoadAlbedo.png",
+    "SHA256": "8E2575D3DCABA543A037904CDDAF583D80A5416347BD04272AC94E0BC1146D26"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerInteractionNew.cs",
+    "SHA256": "DE7C192FF95715C99124EE06F766233F036DE982C09DFB2B51B46804448D44F9"
+  },
+  {
+    "Path": "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Fallback.asset",
+    "SHA256": "813EF8CD69195F051006240800DF35AADEA6C36B5B80A39CFE75878CCD991B0D"
+  },
+  {
+    "Path": "Assets/Materials/TargetOutline.mat",
+    "SHA256": "601897E38B7C34720104E62C026302151980CD45CC9BEEAEAD79072580E15842"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/TerrainData/TL_RoadsideV1_Grass.terrainlayer",
+    "SHA256": "2E7DE30B205FB66F2D4485E07E3E34C173EF1F81653B3E65B39DD19109222270"
+  },
+  {
+    "Path": "Assets/StarterAssets/ThirdPersonController/Character/Animations/Locomotion--Run_N_Land.anim.fbx",
+    "SHA256": "C6EB01346C8898A0256CFC27DF52BBA82C3B49703D19B23C2859E3E2285DCD60"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerEquippableItemVisuals.cs",
+    "SHA256": "780E01E151BEA26997D351AB8C78B63A00510448A6A818A4B9721A7AF9D8A898"
+  },
+  {
+    "Path": "Assets/Prefabs/New/UI/PlayerHUD.prefab",
+    "SHA256": "E873AC1752A4A31D88E90FAAE6F272BD00E33665A1B0797CCCF48E5A37EAF25C"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerTargetHighlightController.cs",
+    "SHA256": "3AFD447A58F9111F30F14E4B620D0EEC9B265C9A54152A6C74BC1940112F9EFB"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/SpiritLevelProfileSO.cs",
+    "SHA256": "1A5F3222CED6AD101E69C708D7D735F47EE7CA8BF707B4C67E543A30FBEF1311"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/RoadsideV1_Rock_Albedo.png",
+    "SHA256": "D16B96F4F0426F81BA52537F808C4246A50A5E9408E294FC4D7FC45C53419229"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerInventoryUI.cs",
+    "SHA256": "7DD5BFDEED0C8B4CA9DF08A50DACE7ED0B40C0FEFB2EF9C2133C63CF7FD28A50"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/RopeToolController.cs",
+    "SHA256": "06A16379E3BEDDD29C800ECC6188D148F9F40747AA46477CA278929890E2C265"
+  },
+  {
+    "Path": "Assets/Materials/RopeLine.mat",
+    "SHA256": "C4EBB13A2CE6B7E3CEB266F733C7AB838BBCD9423EC7697F29C9DE5F00821644"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/EquippableItemInfoUI.cs",
+    "SHA256": "F5AEE565B1E8A1FA47DD261D773D8DF02E7ED7C75CE8B0B848DC6E4CF16AA03D"
+  },
+  {
+    "Path": "Assets/Prefabs/New/EquippableItems/SpiritLevel.prefab",
+    "SHA256": "4500D44E29D8C1AD3572058C95A1E0C0430E2DB457418F5E71A46BFAF5F4B6A7"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/Materials/M_RoadsideGrass_URP.mat",
+    "SHA256": "B065558794795FDA13AE8FB525CD0F8FFEF160E8FED5876FDDD8A49B8915EE52"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/RoadsideV1/Prefabs/PF_RoadsideV1_Rock_02.prefab",
+    "SHA256": "26E32668BF7297CDDD469DBECEC2D7FCE6A6E51EA8F652E59D43F225E847B96F"
+  },
+  {
+    "Path": "Assets/AI_assets/Models/Tools/Axe_LowPoly_Corrected.prefab",
+    "SHA256": "C896EAB59301793A4079D1D787E43F18798456BEB3EE8B6246145849CB9BDFC9"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/EquippableWorldPhysics.cs",
+    "SHA256": "455DB18C9AF3EA925615EDC25E207E48B08B30692770EEADA33718FA2767B9B6"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/Lighting/FairyAfternoonEnvironmentLightingProfile.asset",
+    "SHA256": "FECCD5379488270C9841BA7F16DDC5E88FCF8B52C6E251266066037F16409124"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/Lighting/EnvironmentLightingProfile.cs",
+    "SHA256": "543EDD9FA86BFD052BA847204596C13369350DE9EFA44600260C429AEB400F71"
+  },
+  {
+    "Path": "Assets/Materials/Rope.mat",
+    "SHA256": "B9C6CC75BB6C47F9C84954DD4D1159CEF9C7F1EB5CFDC6AEF1D0047CEA560532"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/EquippableWorldPhysics/EquippableWorldPhysicsProfile_SpiritLevel.asset",
+    "SHA256": "F9385AC22CD0DD6CD18BB2B71D8334F9CB5754046A2E4D5EAA3752E2983577ED"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/PlayerStaminaController.cs",
+    "SHA256": "218883D851FFFCB56583C1A96AB33895D180758BA2DF888ABD029485D827D227"
+  },
+  {
+    "Path": "Assets/ScriptableObjectAssets/New/ToolActionProfiles/ShovelActionProfile.asset",
+    "SHA256": "13019DAB589A4FE15FD457C7A8659DE43134D5DEC0F47E37657BA966034E6D16"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/PlayerStaminaUI.cs",
+    "SHA256": "98260B432A7CEF10C5789230490AFFE94C32FE8E60426F9B50E962FB9D55EE6B"
+  },
+  {
+    "Path": "Assets/StarterAssets/Environment/Art/Materials/GreyBlue_Mat.mat",
+    "SHA256": "4C0E14AC3D1FE86A5F21DDECA15288053BD81E48B489AB3DB496335A5ED02E5F"
+  },
+  {
+    "Path": "Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/V4_1/TL_Stone_Grey_ReliefV4_1.terrainlayer",
+    "SHA256": "E054FA8C76FBCB7A9AC479A2EEFE5A5C5929B3F9D461636644EC28D319087336"
+  },
+  {
+    "Path": "Assets/Scripts/NetworkManagement/PlayerNetworkSetup.cs",
+    "SHA256": "B0A41E48149C4295516E5CE85A8D97D04893D53ECA7D1DFF108F10245B944020"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/Water/PlayerWaterExposureController.cs",
+    "SHA256": "5423E0D8FF840E675C09F7DA009981B125849B056F454B56869FF49D7DE6EF31"
+  },
+  {
+    "Path": "Assets/Scripts/NewScripts/UI/RestartLevelUI.cs",
+    "SHA256": "E6AB62465A1F71E50DE534248E2B53922A790BC803570173D5B420F18B934AAF"
+  },
+  {
+    "Path": "Assets/Materials/Axe_material.mat",
+    "SHA256": "43E8D694C643CBC5FBE66A0E89248F236637532E024A160EDD7245B2D7D9C261"
+  },
+  {
+    "Path": "Assets/TextMesh Pro/Fonts/LiberationSans.ttf",
+    "SHA256": "E5B0AF421EA2BFBC1AC8D251D647268087AE82786234C57F757D1F0B90FA8B49"
+  }
+]

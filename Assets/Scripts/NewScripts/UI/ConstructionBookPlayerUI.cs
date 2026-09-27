@@ -17,6 +17,7 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
     private Button previousButton;
     private Button nextButton;
     private bool open;
+    private bool presentationDirty;
     private Coroutine transition;
 
     private void Awake()
@@ -40,9 +41,16 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
         EnsureUi();
         if (book != target)
         {
-            if (book != null) book.PageChanged -= OnPageChanged;
+            if (book != null)
+            {
+                book.PageChanged -= OnPageChanged;
+                book.PresentationChanged -= OnPresentationChanged;
+                book.Despawned -= OnBookDespawned;
+            }
             book = target;
             book.PageChanged += OnPageChanged;
+            book.PresentationChanged += OnPresentationChanged;
+            book.Despawned += OnBookDespawned;
         }
         if (!open)
         {
@@ -72,7 +80,12 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
             input.OnUI_Back -= HandleUiBack;
             input.SetGameplayUiOpen(false);
         }
-        if (book != null) book.PageChanged -= OnPageChanged;
+        if (book != null)
+        {
+            book.PageChanged -= OnPageChanged;
+            book.PresentationChanged -= OnPresentationChanged;
+            book.Despawned -= OnBookDespawned;
+        }
         book = null;
         if (panel != null) panel.gameObject.SetActive(false);
     }
@@ -103,6 +116,13 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
         if (transition != null) StopCoroutine(transition);
         transition = StartCoroutine(SlideFade());
     }
+    private void OnPresentationChanged()
+    {
+        if (!open) return;
+        if (transition != null) presentationDirty = true;
+        else Refresh();
+    }
+    private void OnBookDespawned() => Close();
     private IEnumerator SlideFade()
     {
         const float duration = 0.15f;
@@ -110,11 +130,12 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
         Refresh(); panel.anchoredPosition = Vector2.right * 50f;
         for (float t = 0; t < duration * 0.5f; t += Time.unscaledDeltaTime) { group.alpha = t / (duration * 0.5f); panel.anchoredPosition = Vector2.Lerp(Vector2.right * 50f, Vector2.zero, t / (duration * 0.5f)); yield return null; }
         group.alpha = 1f; panel.anchoredPosition = Vector2.zero; transition = null;
+        if (presentationDirty) { presentationDirty = false; Refresh(); }
     }
     private void Refresh()
     {
         if (book == null) return;
-        book.PopulateView(view);
+        book.PopulateView(view, () => transition != null);
         previousButton.interactable = book.CanGoPrevious; nextButton.interactable = book.CanGoNext;
     }
 

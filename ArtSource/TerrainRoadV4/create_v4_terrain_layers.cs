@@ -1,0 +1,10 @@
+string folder="Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/V4";
+if(!UnityEditor.AssetDatabase.IsValidFolder(folder)) UnityEditor.AssetDatabase.CreateFolder("Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers","V4");
+var normal=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Texture2D>("Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4/RoadV4_Normal.png");
+var mask=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Texture2D>("Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4/RoadV4_URP_MaskMap.png");
+var diffuse=new[]{"RoadV4_RoadAlbedo.png","RoadV4_StoneAlbedo.png","RoadV4_DarkEarthAlbedo.png"};
+var names=new[]{"TL_Road_ReliefV4","TL_Stone_Grey_ReliefV4","TL_Earth_Dark_ReliefV4"};
+if(normal==null||mask==null) throw new System.Exception("V4 normal or mask was not imported");
+for(int i=0;i<3;i++) { string path=folder+"/"+names[i]+".terrainlayer"; if(UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.TerrainLayer>(path)!=null) throw new System.Exception("Already exists: "+path); var albedo=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Texture2D>("Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4/"+diffuse[i]); if(albedo==null) throw new System.Exception("Missing albedo: "+diffuse[i]); var layer=new UnityEngine.TerrainLayer(); layer.name=names[i]; layer.diffuseTexture=albedo; layer.normalMapTexture=normal; layer.maskMapTexture=mask; layer.tileSize=new UnityEngine.Vector2(4f,4f); layer.tileOffset=UnityEngine.Vector2.zero; layer.normalScale=1f; layer.metallic=0f; layer.smoothness=0f; layer.specular=UnityEngine.Color.clear; layer.diffuseRemapMin=UnityEngine.Color.clear; layer.diffuseRemapMax=UnityEngine.Color.white; layer.maskMapRemapMin=UnityEngine.Vector4.zero; layer.maskMapRemapMax=UnityEngine.Vector4.one; UnityEditor.AssetDatabase.CreateAsset(layer,path); }
+UnityEditor.AssetDatabase.SaveAssets();
+return "Created 3 Road V4 TerrainLayers";

@@ -7,37 +7,82 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
     [RequireComponent(typeof(Terrain), typeof(TerrainCollider))]
     public sealed class TerrainRoadV3RuntimeSwitcher : MonoBehaviour
     {
+        public enum Variant { V3A, V3B, V4 }
+
         [SerializeField] private Terrain terrain;
         [SerializeField] private TerrainLayer[] sourceLayers = new TerrainLayer[3];
         [SerializeField] private Texture2D normalA;
         [SerializeField] private Texture2D normalB;
         [SerializeField] private Key keyA = Key.F6;
         [SerializeField] private Key keyB = Key.F7;
+        [SerializeField] private TerrainLayer[] v4TemplateLayers = new TerrainLayer[3];
+        [SerializeField] private Key keyV4 = Key.F8;
 
         private TerrainData originalData;
         private TerrainData originalColliderData;
         private TerrainCollider terrainCollider;
         private TerrainData runtimeData;
         private TerrainLayer[] runtimeLayers;
+        private LayerMaps[] v3Maps;
+        private bool v4Available;
+        private bool v4WarningShown;
         private bool appliedA;
         private float messageUntil;
+        private Variant currentVariant = Variant.V3B;
+
+        private struct LayerMaps
+        {
+            public Texture2D diffuse;
+            public Texture2D normal;
+            public Texture2D mask;
+            public Vector2 tileSize;
+            public Vector2 tileOffset;
+            public float normalScale;
+            public float metallic;
+            public float smoothness;
+            public Color specular;
+            public Color diffuseRemapMin;
+            public Color diffuseRemapMax;
+            public Vector4 maskMapRemapMin;
+            public Vector4 maskMapRemapMax;
+
+            public LayerMaps(TerrainLayer layer)
+            {
+                diffuse = layer.diffuseTexture;
+                normal = layer.normalMapTexture;
+                mask = layer.maskMapTexture;
+                tileSize = layer.tileSize;
+                tileOffset = layer.tileOffset;
+                normalScale = layer.normalScale;
+                metallic = layer.metallic;
+                smoothness = layer.smoothness;
+                specular = layer.specular;
+                diffuseRemapMin = layer.diffuseRemapMin;
+                diffuseRemapMax = layer.diffuseRemapMax;
+                maskMapRemapMin = layer.maskMapRemapMin;
+                maskMapRemapMax = layer.maskMapRemapMax;
+            }
+        }
 
         public bool IsVariantA => appliedA;
+        public Variant CurrentVariant => currentVariant;
         public TerrainData RuntimeData => runtimeData;
         public TerrainLayer[] RuntimeLayers => runtimeLayers;
 
         private void OnEnable()
         {
+            v4WarningShown = false;
             if (!CreateRuntimeCopies()) return;
-            ApplyVariant(false);
+            ApplyVariant(Variant.V3B);
         }
 
         private void Update()
         {
             var keyboard = Keyboard.current;
             if (keyboard == null || runtimeLayers == null) return;
-            if (keyboard[keyA].wasPressedThisFrame) ApplyVariant(true);
-            else if (keyboard[keyB].wasPressedThisFrame) ApplyVariant(false);
+            if (keyboard[keyA].wasPressedThisFrame) ApplyVariant(Variant.V3A);
+            else if (keyboard[keyB].wasPressedThisFrame) ApplyVariant(Variant.V3B);
+            else if (keyboard[keyV4].wasPressedThisFrame) ApplyVariant(Variant.V4);
         }
 
         private bool CreateRuntimeCopies()
@@ -54,7 +99,17 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
 
             originalData = terrain.terrainData;
             originalColliderData = terrainCollider.terrainData;
-            var stack = (TerrainLayer[])originalData.terrainLayers.Clone();
+            var sourceStack = originalData.terrainLayers;
+            if (sourceStack == null || sourceStack.Length == 0)
+            {
+                Debug.LogError("TerrainRoadV3 requires a non-empty terrain layer stack.", this);
+                originalData = null;
+                originalColliderData = null;
+                terrainCollider = null;
+                return false;
+            }
+            var stack = (TerrainLayer[])sourceStack.Clone();
+            v3Maps = new LayerMaps[sourceLayers.Length];
             for (var i = 0; i < sourceLayers.Length; i++)
             {
                 if (sourceLayers[i] == null || System.Array.IndexOf(stack, sourceLayers[i]) < 0)
@@ -65,6 +120,7 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
                     terrainCollider = null;
                     return false;
                 }
+                v3Maps[i] = new LayerMaps(sourceLayers[i]);
                 for (var j = 0; j < i; j++)
                     if (sourceLayers[j] == sourceLayers[i])
                     {
@@ -73,8 +129,10 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
                         originalColliderData = null;
                         terrainCollider = null;
                         return false;
-                    }
+                }
             }
+
+            v4Available = HasValidV4Templates();
 
             runtimeData = Instantiate(originalData);
             runtimeData.name = originalData.name + " (Road V3 Runtime)";
@@ -95,19 +153,96 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
             return true;
         }
 
-        private void ApplyVariant(bool variantA)
+        private bool HasValidV4Templates()
+        {
+            if (v4TemplateLayers == null || v4TemplateLayers.Length != 3) return false;
+            for (var i = 0; i < v4TemplateLayers.Length; i++)
+            {
+                var layer = v4TemplateLayers[i];
+                if (layer == null || layer.diffuseTexture == null || layer.normalMapTexture == null || layer.maskMapTexture == null)
+                    return false;
+                if (!Mathf.Approximately(layer.diffuseRemapMin.w, 0f) || !Mathf.Approximately(layer.diffuseRemapMax.w, 1f))
+                    return false;
+                for (var j = 0; j < i; j++) if (v4TemplateLayers[j] == layer) return false;
+            }
+            return true;
+        }
+
+        private void ApplyVariant(Variant variant)
         {
             if (runtimeLayers == null) return;
-            var normal = variantA ? normalA : normalB;
-            for (var i = 0; i < runtimeLayers.Length; i++) runtimeLayers[i].normalMapTexture = normal;
-            appliedA = variantA;
+            if (variant == Variant.V4 && !v4Available)
+            {
+                if (!v4WarningShown)
+                {
+                    Debug.LogWarning("Road V4 is unavailable: assign three unique TerrainLayer templates with diffuse, normal, and mask textures, and diffuse remap alpha 0 to 1. V3 remains active.", this);
+                    v4WarningShown = true;
+                }
+                return;
+            }
+
+            if (variant == Variant.V4)
+            {
+                for (var i = 0; i < runtimeLayers.Length; i++)
+                {
+                    runtimeLayers[i].diffuseTexture = v4TemplateLayers[i].diffuseTexture;
+                    runtimeLayers[i].normalMapTexture = v4TemplateLayers[i].normalMapTexture;
+                    runtimeLayers[i].maskMapTexture = v4TemplateLayers[i].maskMapTexture;
+                    CopyLayerProperties(runtimeLayers[i], v4TemplateLayers[i]);
+                }
+            }
+            else
+            {
+                // F6/F7 always restore the complete V3 texture set before selecting its normal.
+                for (var i = 0; i < runtimeLayers.Length; i++)
+                {
+                    runtimeLayers[i].diffuseTexture = v3Maps[i].diffuse;
+                    runtimeLayers[i].normalMapTexture = v3Maps[i].normal;
+                    runtimeLayers[i].maskMapTexture = v3Maps[i].mask;
+                    RestoreLayerProperties(runtimeLayers[i], v3Maps[i]);
+                }
+                var normal = variant == Variant.V3A ? normalA : normalB;
+                for (var i = 0; i < runtimeLayers.Length; i++) runtimeLayers[i].normalMapTexture = normal;
+            }
+
+            currentVariant = variant;
+            appliedA = variant == Variant.V3A;
             messageUntil = Time.unscaledTime + 1.5f;
+        }
+
+        private static void CopyLayerProperties(TerrainLayer target, TerrainLayer source)
+        {
+            target.tileSize = source.tileSize;
+            target.tileOffset = source.tileOffset;
+            target.normalScale = source.normalScale;
+            target.metallic = source.metallic;
+            target.smoothness = source.smoothness;
+            target.specular = source.specular;
+            target.diffuseRemapMin = source.diffuseRemapMin;
+            target.diffuseRemapMax = source.diffuseRemapMax;
+            target.maskMapRemapMin = source.maskMapRemapMin;
+            target.maskMapRemapMax = source.maskMapRemapMax;
+        }
+
+        private static void RestoreLayerProperties(TerrainLayer target, LayerMaps maps)
+        {
+            target.tileSize = maps.tileSize;
+            target.tileOffset = maps.tileOffset;
+            target.normalScale = maps.normalScale;
+            target.metallic = maps.metallic;
+            target.smoothness = maps.smoothness;
+            target.specular = maps.specular;
+            target.diffuseRemapMin = maps.diffuseRemapMin;
+            target.diffuseRemapMax = maps.diffuseRemapMax;
+            target.maskMapRemapMin = maps.maskMapRemapMin;
+            target.maskMapRemapMax = maps.maskMapRemapMax;
         }
 
         private void OnGUI()
         {
             if (runtimeLayers == null || Time.unscaledTime > messageUntil) return;
-            GUI.Label(new Rect(18f, 18f, 260f, 28f), $"Road normal variant {(appliedA ? "A" : "B")}  |  F6 / F7");
+            var displayVariant = currentVariant == Variant.V4 ? "RoadBands V1.1 — Płynny" : $"Road {currentVariant}";
+            GUI.Label(new Rect(18f, 18f, Mathf.Min(460f, Screen.width - 36f), 28f), $"{displayVariant}  |  F6 / F7 / F8");
         }
 
         private void OnDisable() => RestoreAndRelease();
@@ -132,6 +267,10 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
             originalData = null;
             originalColliderData = null;
             terrainCollider = null;
+            v3Maps = null;
+            v4Available = false;
+            currentVariant = Variant.V3B;
+            appliedA = false;
         }
 
         private static void DestroyOwned(Object value)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -51,7 +52,7 @@ public sealed class ConstructionBookView : MonoBehaviour
         stepsRoot = LayoutArea("Steps", right, new Vector2(.04f, .04f), new Vector2(.96f, .96f), CardGap, 6);
     }
 
-    public void Render(ConstructionBookCatalogSO.Entry entry, int count, int pageIndex, int pageCount, IReadOnlyList<ConstructionBookMaterialLine> materials, bool materialsAvailable, IReadOnlyList<ConstructionBookRosterMember> roster, ulong localClientId)
+    public void Render(ConstructionBookCatalogSO.Entry entry, int count, int pageIndex, int pageCount, IReadOnlyList<ConstructionBookMaterialLine> materials, bool materialsAvailable, IReadOnlyList<ConstructionBookRosterMember> roster, ulong localClientId, Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment, Func<bool> isPageTransitioning, bool worldView)
     {
         Clear(materialsRoot);
         Clear(stepsRoot);
@@ -95,11 +96,12 @@ public sealed class ConstructionBookView : MonoBehaviour
 
             RectTransform players = Horizontal("Players", card, PlayerRowHeight, CardGap, TextAnchor.MiddleCenter);
             players.GetComponent<LayoutElement>().flexibleWidth = 1f;
-            foreach (ConstructionBookRosterMember member in roster) AddPlayerCell(players, member, localClientId);
+            foreach (ConstructionBookRosterMember member in roster)
+                AddPlayerCell(players, member, localClientId, pageIndex, i, isAssigned, requestAssignment, isPageTransitioning, worldView);
         }
     }
 
-    private static void AddPlayerCell(RectTransform players, ConstructionBookRosterMember member, ulong localClientId)
+    private static void AddPlayerCell(RectTransform players, ConstructionBookRosterMember member, ulong localClientId, int spreadIndex, int stepIndex, Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment, Func<bool> isPageTransitioning, bool worldView)
     {
         bool isLocal = member.ClientId == localClientId;
         RectTransform cell = Vertical("Player", players, PlayerCellHeight, 1f, new RectOffset());
@@ -123,14 +125,28 @@ public sealed class ConstructionBookView : MonoBehaviour
         checkRect.anchorMax = new Vector2(.8f, .8f);
         checkRect.offsetMin = checkRect.offsetMax = Vector2.zero;
         Image check = checkObject.GetComponent<Image>();
-        check.color = Color.clear;
+        bool assigned = isAssigned != null && isAssigned(spreadIndex, stepIndex, member.ClientId);
+        check.color = assigned ? Ink() : Color.clear;
         check.raycastTarget = false;
         Toggle toggle = checkboxObject.GetComponent<Toggle>();
-        toggle.interactable = false;
+        toggle.interactable = !worldView && requestAssignment != null;
         toggle.transition = Selectable.Transition.None;
         toggle.targetGraphic = checkbox;
         toggle.graphic = check;
-        toggle.SetIsOnWithoutNotify(false);
+        toggle.SetIsOnWithoutNotify(assigned);
+        toggle.onValueChanged.AddListener(desired =>
+        {
+            if (worldView || requestAssignment == null || isPageTransitioning != null && isPageTransitioning())
+            {
+                toggle.SetIsOnWithoutNotify(assigned);
+                check.color = assigned ? Ink() : Color.clear;
+                return;
+            }
+            // Keep the visible checkbox authoritative until the NetworkList update arrives.
+            toggle.SetIsOnWithoutNotify(assigned);
+            check.color = assigned ? Ink() : Color.clear;
+            requestAssignment(spreadIndex, stepIndex, member.ClientId, desired);
+        });
         LayoutElement boxLayout = checkboxObject.AddComponent<LayoutElement>();
         boxLayout.minWidth = boxLayout.preferredWidth = CheckboxSize;
         boxLayout.minHeight = boxLayout.preferredHeight = CheckboxSize;
@@ -145,5 +161,5 @@ public sealed class ConstructionBookView : MonoBehaviour
     private static RectTransform Horizontal(string name, Transform parent, float height, float spacing, TextAnchor alignment) { RectTransform rt = (RectTransform)Node(name, parent, typeof(RectTransform)).transform; HorizontalLayoutGroup layout = rt.gameObject.AddComponent<HorizontalLayoutGroup>(); layout.spacing = spacing; layout.childAlignment = alignment; layout.childControlHeight = true; layout.childControlWidth = true; layout.childForceExpandHeight = false; layout.childForceExpandWidth = false; LayoutElement element = rt.gameObject.AddComponent<LayoutElement>(); element.minHeight = element.preferredHeight = height; return rt; }
     private static TextMeshProUGUI Text(string value, Transform parent, float size, Color color, TextAlignmentOptions alignment, float height, bool flexibleWidth = false) { TextMeshProUGUI text = Node("Text", parent, typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>(); text.text = value; text.fontSize = size; text.color = color; text.alignment = alignment; text.textWrappingMode = TextWrappingModes.Normal; LayoutElement element = text.gameObject.AddComponent<LayoutElement>(); element.minHeight = element.preferredHeight = height; if (flexibleWidth) element.flexibleWidth = 1f; return text; }
     private static void AddIcon(Transform parent, Sprite sprite, float size) { Image image = Node("Icon", parent, typeof(RectTransform), typeof(Image)).GetComponent<Image>(); image.sprite = sprite; image.preserveAspect = true; image.enabled = sprite != null; LayoutElement element = image.gameObject.AddComponent<LayoutElement>(); element.minWidth = element.preferredWidth = size; element.minHeight = element.preferredHeight = size; }
-    private static void Clear(RectTransform root) { for (int i = root.childCount - 1; i >= 0; i--) Destroy(root.GetChild(i).gameObject); }
+    private static void Clear(RectTransform root) { for (int i = root.childCount - 1; i >= 0; i--) { GameObject child = root.GetChild(i).gameObject; child.SetActive(false); Destroy(child); } }
 }

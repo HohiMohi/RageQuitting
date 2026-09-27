@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,8 +16,20 @@ public class BridgeRequirementsUI : MonoBehaviour
     [SerializeField] private Vector2 anchoredPosition = new Vector2(-24f, -120f);
     [SerializeField] private Vector2 panelSize = new Vector2(380f, 430f);
 
+    private TextMeshProUGUI myTasksText;
+    private ScrollRect scrollRect;
+    private RectTransform contentRoot;
     private GameplayManager subscribedGameplayManager;
+    private ConstructionBookController subscribedBook;
+    private readonly List<BridgeComponentSO> currentStageTypes = new List<BridgeComponentSO>();
+    private readonly HashSet<BridgeComponentSO> currentStageTypeSet = new HashSet<BridgeComponentSO>();
     private bool isVisible;
+    private bool hasSnapshot;
+    private int previousStageIndex;
+    private bool previousBridgeComplete;
+
+    public bool IsVisible => isVisible;
+    public ScrollRect ScrollRect => scrollRect;
 
     private void Awake()
     {
@@ -33,16 +47,14 @@ public class BridgeRequirementsUI : MonoBehaviour
 
     private void OnDisable()
     {
-        if (playerInput != null)
+        isVisible = false;
+        if (panelRoot != null)
         {
-            playerInput.OnToggleBridgeRequirements -= PlayerInput_OnToggleBridgeRequirements;
+            panelRoot.SetActive(false);
         }
-
-        if (subscribedGameplayManager != null)
-        {
-            subscribedGameplayManager.OnBridgeRequirementsChanged -= GameplayManager_OnBridgeRequirementsChanged;
-            subscribedGameplayManager = null;
-        }
+        UnsubscribeInput();
+        UnsubscribeGameplayManager();
+        UnsubscribeBook();
     }
 
     private void Update()
@@ -64,21 +76,84 @@ public class BridgeRequirementsUI : MonoBehaviour
 
         playerInput.OnToggleBridgeRequirements -= PlayerInput_OnToggleBridgeRequirements;
         playerInput.OnToggleBridgeRequirements += PlayerInput_OnToggleBridgeRequirements;
+        playerInput.OnBridgeRequirementsScroll -= PlayerInput_OnScroll;
+        playerInput.OnBridgeRequirementsScroll += PlayerInput_OnScroll;
     }
 
-    private void TrySubscribeGameplayManager()
+    private void UnsubscribeInput()
     {
-        if (subscribedGameplayManager != null || GameplayManager.Instance == null)
+        if (playerInput == null)
         {
             return;
         }
 
-        subscribedGameplayManager = GameplayManager.Instance;
-        subscribedGameplayManager.OnBridgeRequirementsChanged += GameplayManager_OnBridgeRequirementsChanged;
+        playerInput.OnToggleBridgeRequirements -= PlayerInput_OnToggleBridgeRequirements;
+        playerInput.OnBridgeRequirementsScroll -= PlayerInput_OnScroll;
+    }
+
+    private void TrySubscribeGameplayManager()
+    {
+        GameplayManager currentManager = GameplayManager.Instance;
+        bool managerChanged = subscribedGameplayManager != currentManager;
+        if (managerChanged)
+        {
+            UnsubscribeGameplayManager();
+            subscribedGameplayManager = currentManager;
+            if (subscribedGameplayManager != null)
+            {
+                subscribedGameplayManager.OnBridgeRequirementsChanged += GameplayManager_OnBridgeRequirementsChanged;
+                subscribedGameplayManager.ConstructionBookAvailabilityChanged += GameplayManager_OnBookAvailabilityChanged;
+            }
+        }
+
+        RebindBook(currentManager != null ? currentManager.RegisteredConstructionBook : null);
+        if (managerChanged && isVisible)
+        {
+            Refresh(false);
+        }
+    }
+
+    private void UnsubscribeGameplayManager()
+    {
+        if (subscribedGameplayManager != null)
+        {
+            subscribedGameplayManager.OnBridgeRequirementsChanged -= GameplayManager_OnBridgeRequirementsChanged;
+            subscribedGameplayManager.ConstructionBookAvailabilityChanged -= GameplayManager_OnBookAvailabilityChanged;
+        }
+
+        subscribedGameplayManager = null;
+    }
+
+    private void RebindBook(ConstructionBookController book)
+    {
+        if (subscribedBook == book)
+        {
+            return;
+        }
+
+        UnsubscribeBook();
+        subscribedBook = book;
+        if (subscribedBook != null)
+        {
+            subscribedBook.AssignmentsChanged += Book_OnAssignmentsChanged;
+            subscribedBook.Despawned += Book_OnDespawned;
+        }
+
         if (isVisible)
         {
-            Refresh();
+            Refresh(false);
         }
+    }
+
+    private void UnsubscribeBook()
+    {
+        if (subscribedBook != null)
+        {
+            subscribedBook.AssignmentsChanged -= Book_OnAssignmentsChanged;
+            subscribedBook.Despawned -= Book_OnDespawned;
+        }
+
+        subscribedBook = null;
     }
 
     private void PlayerInput_OnToggleBridgeRequirements(object sender, EventArgs e)
@@ -86,11 +161,41 @@ public class BridgeRequirementsUI : MonoBehaviour
         SetVisible(!isVisible);
     }
 
+    private void PlayerInput_OnScroll(Vector2 delta)
+    {
+        if (isVisible && playerInput != null && !playerInput.IsGameplayUiOpen)
+        {
+            ApplyWheelScroll(delta);
+        }
+    }
+
     private void GameplayManager_OnBridgeRequirementsChanged(object sender, EventArgs e)
     {
         if (isVisible)
         {
-            Refresh();
+            Refresh(false);
+        }
+    }
+
+    private void GameplayManager_OnBookAvailabilityChanged(ConstructionBookController book)
+    {
+        RebindBook(book);
+    }
+
+    private void Book_OnAssignmentsChanged()
+    {
+        if (isVisible)
+        {
+            Refresh(false);
+        }
+    }
+
+    private void Book_OnDespawned()
+    {
+        UnsubscribeBook();
+        if (isVisible)
+        {
+            Refresh(false);
         }
     }
 
@@ -105,65 +210,151 @@ public class BridgeRequirementsUI : MonoBehaviour
 
         if (visible)
         {
-            Refresh();
+            Refresh(true);
         }
     }
 
-    private void Refresh()
+    public void ApplyWheelScroll(Vector2 delta)
+    {
+        if (!isVisible || scrollRect == null || playerInput != null && playerInput.IsGameplayUiOpen)
+        {
+            return;
+        }
+
+        scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollRect.verticalNormalizedPosition + delta.y * 0.08f);
+    }
+
+    public void Refresh(bool resetScrollToTop)
     {
         EnsureReferences();
-        if (titleText == null || currentStageText == null || remainingStagesText == null)
+        if (titleText == null || currentStageText == null || remainingStagesText == null || myTasksText == null)
         {
             return;
         }
 
-        if (GameplayManager.Instance == null)
+        float previousScrollOffset = GetScrollOffset();
+        GameplayManager manager = GameplayManager.Instance;
+        if (manager == null)
         {
-            titleText.text = "Bridge Requirements";
-            currentStageText.text = "Gameplay manager unavailable";
-            remainingStagesText.text = string.Empty;
+            SetContentText("Gameplay manager unavailable", "My tasks\nGameplay data unavailable", string.Empty);
+            hasSnapshot = false;
+            RestoreScroll(resetScrollToTop, previousScrollOffset);
             return;
         }
 
-        BridgeRequirementsSnapshot snapshot = GameplayManager.Instance.GetBridgeRequirementsSnapshot();
-        titleText.text = "Bridge Requirements";
+        BridgeRequirementsSnapshot snapshot = manager.GetBridgeRequirementsSnapshot();
+        bool stageTransition = hasSnapshot &&
+            (previousStageIndex != snapshot.CurrentStageIndex || previousBridgeComplete != snapshot.IsBridgeComplete);
+        previousStageIndex = snapshot.CurrentStageIndex;
+        previousBridgeComplete = snapshot.IsBridgeComplete;
+        hasSnapshot = true;
+
         if (snapshot.IsBridgeComplete)
         {
-            currentStageText.text = "Bridge complete";
-            remainingStagesText.text = string.Empty;
+            SetContentText("Bridge complete", "My tasks\nNo current stage tasks", string.Empty);
+            RestoreScroll(resetScrollToTop || stageTransition, previousScrollOffset);
             return;
         }
 
         StringBuilder currentBuilder = new StringBuilder();
-        currentBuilder.AppendLine($"Current stage {snapshot.CurrentStageIndex + 1}");
+        currentBuilder.Append("Current stage ").Append(snapshot.CurrentStageIndex + 1);
         if (snapshot.CurrentStageRequirements.Count == 0)
         {
-            currentBuilder.Append("No current requirements");
+            currentBuilder.AppendLine().Append("No current requirements");
         }
         else
         {
             foreach (BridgeRequirementLine requirement in snapshot.CurrentStageRequirements)
             {
-                currentBuilder.AppendLine($"{requirement.ComponentName} - {requirement.CurrentAmount} / {requirement.RequiredAmount}");
+                currentBuilder.AppendLine().Append(requirement.ComponentName).Append(" - ")
+                    .Append(requirement.CurrentAmount).Append(" / ").Append(requirement.RequiredAmount);
             }
         }
 
-        StringBuilder remainingBuilder = new StringBuilder();
-        remainingBuilder.AppendLine("Remaining stages");
+        StringBuilder taskBuilder = new StringBuilder("My tasks");
+        if (subscribedBook == null)
+        {
+            taskBuilder.AppendLine().Append("Construction book unavailable");
+        }
+        else
+        {
+            currentStageTypes.Clear();
+            manager.GetCurrentStageComponentTypes(currentStageTypes);
+            currentStageTypeSet.Clear();
+            foreach (BridgeComponentSO component in currentStageTypes)
+            {
+                currentStageTypeSet.Add(component);
+            }
+
+            if (!subscribedBook.HasBookDataFor(currentStageTypeSet))
+            {
+                taskBuilder.AppendLine().Append("Construction book data unavailable");
+            }
+            else
+            {
+                StringBuilder assignedTasks = new StringBuilder();
+                NetworkManager networkManager = NetworkManager.Singleton;
+                ulong localClientId = networkManager != null && networkManager.IsListening ? networkManager.LocalClientId : 0;
+                subscribedBook.AppendAssignedTasks(localClientId, currentStageTypeSet, assignedTasks);
+                if (assignedTasks.Length == 0)
+                {
+                    taskBuilder.AppendLine().Append("No assigned tasks in this stage");
+                }
+                else
+                {
+                    taskBuilder.AppendLine().Append(assignedTasks.ToString().TrimEnd());
+                }
+            }
+        }
+
+        StringBuilder remainingBuilder = new StringBuilder("Remaining stages");
         if (snapshot.RemainingStageRequirements.Count == 0)
         {
-            remainingBuilder.Append("No remaining requirements");
+            remainingBuilder.AppendLine().Append("No remaining requirements");
         }
         else
         {
             foreach (BridgeRequirementLine requirement in snapshot.RemainingStageRequirements)
             {
-                remainingBuilder.AppendLine($"{requirement.ComponentName} x {requirement.RequiredAmount}");
+                remainingBuilder.AppendLine().Append(requirement.ComponentName).Append(" x ").Append(requirement.RequiredAmount);
             }
         }
 
-        currentStageText.text = currentBuilder.ToString().TrimEnd();
-        remainingStagesText.text = remainingBuilder.ToString().TrimEnd();
+        SetContentText(currentBuilder.ToString(), taskBuilder.ToString(), remainingBuilder.ToString());
+        RestoreScroll(resetScrollToTop || stageTransition, previousScrollOffset);
+    }
+
+    private void SetContentText(string currentText, string tasksText, string remainingText)
+    {
+        titleText.text = "Bridge Requirements";
+        currentStageText.text = currentText;
+        myTasksText.text = tasksText;
+        remainingStagesText.text = remainingText;
+    }
+
+    private float GetScrollOffset()
+    {
+        return scrollRect != null && contentRoot != null ? contentRoot.anchoredPosition.y : 0f;
+    }
+
+    private void RestoreScroll(bool reset, float previousOffset)
+    {
+        if (scrollRect == null)
+        {
+            return;
+        }
+
+        Canvas.ForceUpdateCanvases();
+        if (contentRoot != null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(contentRoot);
+        }
+
+        float maxOffset = Mathf.Max(0f, contentRoot.rect.height - scrollRect.viewport.rect.height);
+        Vector2 position = contentRoot.anchoredPosition;
+        position.y = reset ? 0f : Mathf.Clamp(previousOffset, 0f, maxOffset);
+        contentRoot.anchoredPosition = position;
+        scrollRect.StopMovement();
     }
 
     private void EnsureReferences()
@@ -177,6 +368,8 @@ public class BridgeRequirementsUI : MonoBehaviour
         {
             CreateDefaultPanel();
         }
+
+        EnsureScrollLayout();
     }
 
     private void CreateDefaultPanel()
@@ -204,12 +397,11 @@ public class BridgeRequirementsUI : MonoBehaviour
 
             VerticalLayoutGroup layoutGroup = panelGameObject.GetComponent<VerticalLayoutGroup>();
             layoutGroup.padding = new RectOffset(18, 18, 16, 16);
-            layoutGroup.spacing = 12f;
+            layoutGroup.spacing = 10f;
             layoutGroup.childControlWidth = true;
             layoutGroup.childControlHeight = true;
             layoutGroup.childForceExpandWidth = true;
             layoutGroup.childForceExpandHeight = false;
-
             panelRoot = panelGameObject;
         }
 
@@ -228,6 +420,111 @@ public class BridgeRequirementsUI : MonoBehaviour
         {
             remainingStagesText = CreateText("RemainingStages", panelTransform, 18f, FontStyles.Normal);
         }
+    }
+
+    private void EnsureScrollLayout()
+    {
+        if (panelRoot == null || titleText == null || currentStageText == null || remainingStagesText == null)
+        {
+            return;
+        }
+
+        Transform panelTransform = panelRoot.transform;
+        Transform viewportTransform = panelTransform.Find("RequirementsViewport");
+        if (viewportTransform == null)
+        {
+            GameObject viewportObject = new GameObject("RequirementsViewport", typeof(RectTransform), typeof(RectMask2D), typeof(ScrollRect), typeof(LayoutElement));
+            RectTransform viewportRect = viewportObject.GetComponent<RectTransform>();
+            viewportRect.SetParent(panelTransform, false);
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.offsetMin = Vector2.zero;
+            viewportRect.offsetMax = Vector2.zero;
+            LayoutElement viewportLayout = viewportObject.GetComponent<LayoutElement>();
+            viewportLayout.flexibleHeight = 1f;
+            viewportLayout.minHeight = 0f;
+
+            GameObject contentObject = new GameObject("RequirementsContent", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            contentRoot = contentObject.GetComponent<RectTransform>();
+            contentRoot.SetParent(viewportRect, false);
+            contentRoot.anchorMin = new Vector2(0f, 1f);
+            contentRoot.anchorMax = Vector2.one;
+            contentRoot.pivot = new Vector2(0.5f, 1f);
+            contentRoot.sizeDelta = Vector2.zero;
+            VerticalLayoutGroup contentLayout = contentObject.GetComponent<VerticalLayoutGroup>();
+            contentLayout.spacing = 12f;
+            contentLayout.childControlWidth = true;
+            contentLayout.childControlHeight = true;
+            contentLayout.childForceExpandWidth = true;
+            contentLayout.childForceExpandHeight = false;
+            ContentSizeFitter fitter = contentObject.GetComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            currentStageText.transform.SetParent(contentRoot, false);
+            myTasksText = CreateText("MyTasks", contentRoot, 16f, FontStyles.Normal);
+            remainingStagesText.transform.SetParent(contentRoot, false);
+
+            scrollRect = viewportObject.GetComponent<ScrollRect>();
+            scrollRect.content = contentRoot;
+            scrollRect.viewport = viewportRect;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.inertia = false;
+            scrollRect.scrollSensitivity = 0f;
+        }
+        else
+        {
+            scrollRect = viewportTransform.GetComponent<ScrollRect>();
+            contentRoot = scrollRect != null ? scrollRect.content : null;
+            if (contentRoot != null)
+            {
+                Transform tasks = contentRoot.Find("MyTasks");
+                if (tasks != null)
+                {
+                    myTasksText = tasks.GetComponent<TextMeshProUGUI>();
+                }
+            }
+        }
+
+        if (scrollRect == null || contentRoot == null)
+        {
+            return;
+        }
+
+        if (myTasksText == null)
+        {
+            myTasksText = CreateText("MyTasks", contentRoot, 16f, FontStyles.Normal);
+        }
+
+        ConfigureBodyText(currentStageText, FontStyles.Bold);
+        ConfigureBodyText(myTasksText, FontStyles.Normal);
+        ConfigureBodyText(remainingStagesText, FontStyles.Normal);
+        AddFlexibleHeight(titleText.gameObject, 30f);
+    }
+
+    private static void ConfigureBodyText(TextMeshProUGUI text, FontStyles style)
+    {
+        text.fontSize = style == FontStyles.Bold ? 18f : 16f;
+        text.fontStyle = style;
+        text.alignment = TextAlignmentOptions.TopLeft;
+        text.textWrappingMode = TextWrappingModes.Normal;
+        text.raycastTarget = false;
+        AddFlexibleHeight(text.gameObject, 0f);
+    }
+
+    private static void AddFlexibleHeight(GameObject target, float preferredHeight)
+    {
+        LayoutElement layout = target.GetComponent<LayoutElement>();
+        if (layout == null)
+        {
+            layout = target.AddComponent<LayoutElement>();
+        }
+
+        layout.minHeight = preferredHeight;
+        layout.preferredHeight = -1f;
+        layout.flexibleHeight = 0f;
     }
 
     private TextMeshProUGUI CreateText(string objectName, Transform parent, float fontSize, FontStyles fontStyle)

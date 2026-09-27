@@ -166,7 +166,7 @@ public class GameplayManager : MonoBehaviour
     private const string RequestLevelingConfirmationMessageName = "GameplayManager_RequestLevelingConfirmation";
     private const string GirderFasteningWindowMessageName = "GameplayManager_GirderFasteningWindow";
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
-    private const int StateMessageBaseSize = sizeof(int);
+    private const int StateMessageBaseSize = sizeof(int) * 2 + sizeof(bool);
     private const int StateMessageItemSize = sizeof(int) * 5 + sizeof(bool) * 3 + sizeof(float) * 8 + sizeof(ulong) + sizeof(double);
     private const int MountRequestMessageSize = sizeof(int) + sizeof(ulong);
     private const int AssembleRequestMessageSize = sizeof(int) * 2;
@@ -187,6 +187,7 @@ public class GameplayManager : MonoBehaviour
     [SerializeField] private bool enableUnsupportedWaterDowning = true;
 
     private readonly List<BridgeComponentNetworkState> bridgeComponentStates = new List<BridgeComponentNetworkState>();
+    private readonly List<ConstructionBookController> constructionBooks = new List<ConstructionBookController>();
     private readonly HashSet<int> reportedInvalidStageComponentIndexes = new HashSet<int>();
     private readonly Dictionary<int, BridgeConstructionStage> observedConstructionStages =
         new Dictionary<int, BridgeConstructionStage>();
@@ -213,6 +214,44 @@ public class GameplayManager : MonoBehaviour
     public event EventHandler OnBridgeRequirementsChanged;
     public event EventHandler<BridgeConstructionStageChangedEventArgs> OnConstructionStageChanged;
     public event Action<int, int, double> OnLocalGirderFasteningWindowStarted;
+    public event Action<ConstructionBookController> ConstructionBookAvailabilityChanged;
+    public ConstructionBookController RegisteredConstructionBook => constructionBooks.Count > 0 ? constructionBooks[0] : null;
+
+    public void RegisterConstructionBook(ConstructionBookController book)
+    {
+        if (book == null || !book.isActiveAndEnabled || constructionBooks.Contains(book)) return;
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager != null && networkManager.IsListening && !book.IsSpawned) return;
+        constructionBooks.Add(book);
+        book.NotifyGameplayManagerAvailable();
+        if (constructionBooks.Count == 1) ConstructionBookAvailabilityChanged?.Invoke(book);
+    }
+
+    public void UnregisterConstructionBook(ConstructionBookController book)
+    {
+        if (book == null) return;
+        bool wasAvailable = constructionBooks.Count > 0 && constructionBooks[0] == book;
+        if (!constructionBooks.Remove(book) || !wasAvailable) return;
+        while (constructionBooks.Count > 0 && constructionBooks[0] == null) constructionBooks.RemoveAt(0);
+        ConstructionBookAvailabilityChanged?.Invoke(RegisteredConstructionBook);
+    }
+
+    public void GetCurrentStageComponentTypes(List<BridgeComponentSO> results)
+    {
+        if (results == null) return;
+        results.Clear();
+        if (isFullyAsembled || bridgeBuildingStages == null || bridgeComponentDataArray == null ||
+            currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length) return;
+        int[] indexes = bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes;
+        if (indexes == null) return;
+        HashSet<BridgeComponentSO> emitted = new HashSet<BridgeComponentSO>();
+        foreach (int index in indexes)
+        {
+            if (index < 0 || index >= bridgeComponentDataArray.Length) continue;
+            BridgeComponentSO component = bridgeComponentDataArray[index].bridgeComponentSO;
+            if (component != null && emitted.Add(component)) results.Add(component);
+        }
+    }
 
     public IReadOnlyList<OrderedBridgeComponentRequirement> GetOrderedBridgeComponentRequirements()
     {
@@ -281,6 +320,8 @@ public class GameplayManager : MonoBehaviour
         {
             yield break;
         }
+
+        foreach (ConstructionBookController book in FindObjectsOfType<ConstructionBookController>(true)) RegisterConstructionBook(book);
 
         EnsureBridgeReference();
         if (bridge == null)
@@ -625,6 +666,9 @@ public class GameplayManager : MonoBehaviour
         currentBridgeBuildingStageIndex++;
         if (currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
         {
+            // The caller broadcasts the state after this method returns. Set the
+            // terminal flag first so that snapshot carries the completed round.
+            isFullyAsembled = true;
             InvokeBridgeFullyAssembledOnce();
             return;
         }
@@ -1276,6 +1320,8 @@ public class GameplayManager : MonoBehaviour
     {
         FastBufferWriter writer = new FastBufferWriter(StateMessageBaseSize + bridgeComponentStates.Count * StateMessageItemSize, Allocator.Temp);
         writer.WriteValueSafe(bridgeComponentStates.Count);
+        writer.WriteValueSafe(currentBridgeBuildingStageIndex);
+        writer.WriteValueSafe(isFullyAsembled);
         for (int i = 0; i < bridgeComponentStates.Count; i++)
         {
             WriteState(writer, bridgeComponentStates[i]);
@@ -1286,22 +1332,58 @@ public class GameplayManager : MonoBehaviour
 
     private void HandleBridgeStateMessage(ulong senderClientId, FastBufferReader reader)
     {
-        reader.ReadValueSafe(out int stateCount);
-        bridgeComponentStates.Clear();
-        bool suppressStageEvents = !hasAppliedInitialNetworkBridgeState;
+        if (IsNetworkSessionActive() && senderClientId != NetworkManager.ServerClientId)
+        {
+            return;
+        }
 
+        if (!reader.TryBeginRead(sizeof(int)))
+        {
+            return;
+        }
+
+        reader.ReadValueSafe(out int stateCount);
+        if (stateCount < 0 ||
+            stateCount > (int.MaxValue - StateMessageBaseSize) / StateMessageItemSize ||
+            (bridgeComponentDataArray == null && stateCount > 0) ||
+            (bridgeComponentDataArray != null && stateCount > bridgeComponentDataArray.Length) ||
+            !reader.TryBeginRead(sizeof(int) + sizeof(bool) + stateCount * StateMessageItemSize))
+        {
+            return;
+        }
+
+        reader.ReadValueSafe(out int stageIndex);
+        reader.ReadValueSafe(out bool bridgeComplete);
+        if (stageIndex < 0 ||
+            (bridgeBuildingStages != null && stageIndex > bridgeBuildingStages.Length) ||
+            (!bridgeComplete && bridgeBuildingStages != null && bridgeBuildingStages.Length > 0 && stageIndex >= bridgeBuildingStages.Length))
+        {
+            return;
+        }
+
+        List<BridgeComponentNetworkState> receivedStates = new List<BridgeComponentNetworkState>(stateCount);
         for (int i = 0; i < stateCount; i++)
         {
-            BridgeComponentNetworkState state = ReadState(reader);
+            receivedStates.Add(ReadState(reader));
+        }
+
+        bool shouldRaiseCompletedEvent = bridgeComplete && !bridgeFullyAssembledEventInvoked;
+        currentBridgeBuildingStageIndex = stageIndex;
+        isFullyAsembled = bridgeComplete;
+        bridgeFullyAssembledEventInvoked = bridgeComplete;
+        bridgeComponentStates.Clear();
+        bool suppressStageEvents = !hasAppliedInitialNetworkBridgeState;
+        foreach (BridgeComponentNetworkState state in receivedStates)
+        {
             bridgeComponentStates.Add(state);
             ApplyNetworkState(state, suppressStageEvents);
         }
 
         hasAppliedInitialNetworkBridgeState = true;
         NotifyBridgeRequirementsChanged();
-        if (IsBridgeFullyAssembledFromStateList())
+        if (shouldRaiseCompletedEvent)
         {
-            InvokeBridgeFullyAssembledOnce();
+            OnBridgeFullyAssembled?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -1435,25 +1517,6 @@ public class GameplayManager : MonoBehaviour
                 this,
                 new BridgeConstructionStageChangedEventArgs(component, previousStage, currentStage));
         }
-    }
-
-    private bool IsBridgeFullyAssembledFromStateList()
-    {
-        if (bridgeComponentStates.Count == 0)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < bridgeComponentStates.Count; i++)
-        {
-            BridgeComponentNetworkState state = bridgeComponentStates[i];
-            if (!state.isMounted || !state.isAssembled)
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     public bool HasReachedConstructionStage(
