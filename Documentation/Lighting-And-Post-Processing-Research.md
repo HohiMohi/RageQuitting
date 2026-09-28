@@ -2,6 +2,30 @@
 
 > Stan: 2026-09-11, po wdrożeniu i walidacji pilota w `Tutorial_scene`. Dalsza część zachowuje pierwotny research i uzasadnienie; sekcja poniżej jest autorytatywnym opisem stanu faktycznie wdrożonego.
 
+## Aktualizacja 2026-09-28 — alternatywny profil NaturalDaylight
+
+Celem jest udostępnienie neutralnego światła dziennego z wyraźnym kierunkiem słońca do podglądu i porównania z zatwierdzonym wariantem FairyAfternoon. Wybór profilu jest ręczny w Inspectorze i dotyczy TerrainRoad_Lookdev oraz Tutorial_scene; domyślne przypisania scen i istniejący wariant FairyAfternoon pozostają bez zmian. Nie wykonano nowego bake’u.
+
+Nowe assety:
+
+- Assets/ScriptableObjectAssets/New/Lighting/NaturalDaylightEnvironmentLightingProfile.asset
+- Assets/Settings/Lighting/NaturalDaylightVolumeProfile.asset
+- Assets/Materials/Lighting/NaturalDaylightProceduralSkybox.mat
+
+Profil używa kierunku słońca (28, 215, 0), białej barwy i intensywności 1; sky tint jest biały, ground szary, ambient intensity 1. Mgła i lokalne akcenty direct light są wyłączone. Ekspozycja, kontrast, nasycenie, white balance i bloom mają wartości zerowe, a color filter jest biały. Volume zachowuje tonemapping Neutral i wyłącza ShadowsMidtonesHighlights.
+
+Aby uruchomić podgląd w Play Mode:
+
+1. Otwórz scenę TerrainRoad_Lookdev i wybierz obiekt Environment Lighting Controller albo otwórz Tutorial_scene i wybierz EnvironmentLightingRoot.
+2. W Inspectorze ustaw równocześnie pola profile, volumeProfileTemplate i proceduralSkyboxTemplate na odpowiadające im trzy assety NaturalDaylight wymienione wyżej.
+3. Uruchom Play Mode, aby obejrzeć wariant.
+
+Aby wrócić do poprzedniego wyglądu, przywróć w tych samych trzech polach odpowiadające assety FairyAfternoon.
+
+W Tutorial_scene istniejące ciepłe lightmapy, dane APV i reflection probes pozostają bez zmian. W konsekwencji profil NaturalDaylight nie zapewnia w pełni neutralnego światła pośredniego w tej scenie. Bake nie był wykonywany; użytkownik nadal musi ocenić odbiór wizualny.
+
+Końcowy ścisły Gameplay preflight wykonany przed tą aktualizacją dokumentacji zakończył się statusem FAILED, exit code 1: D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\20260928T152447Z-659ca0cf\summary.json. Wynik obejmuje nadwyżkę netto 15 diagnostyk względem baseline (17 nowych, 2 rozwiązane); wszystkie nowe dotyczą niezwiązanych, niezacommitowanych plików Assets/Samples. Compile, Console, EditMode, quick validators, PlayMode, gameplay scenario i network smoke przeszły. Ten wynik nie jest zaliczeniem preflightu.
+
 ## Stan powdrożeniowy
 
 ### Zatwierdzona konfiguracja renderingu
@@ -49,7 +73,7 @@
 
 - Końcowy art sign-off należy do użytkownika. Obecny proceduralny horyzont jest mocno limonkowo-żółty i wymaga oceny oraz ewentualnego tuningu.
 - Kadry porównawcze są szerokie i pochodzą ze Scene View, dlatego nie zastępują przeglądu FPP ani inspekcji w Frame Debuggerze.
-- Nie wdrożono dynamicznego dnia/nocy, pogody, TAA ani adaptera NGO. Tylko wariant `Afternoon` jest przygotowany do odbioru artystycznego.
+- Nie wdrożono dynamicznego dnia/nocy, pogody, TAA ani adaptera NGO. NaturalDaylight jest wariantem porównawczym bez wykonywania nowego bake i wymaga odbioru wizualnego.
 - Przyszły kierunek GI — APV Scenarios kontra Sky Occlusion — pozostaje nierozstrzygnięty.
 - Legacy PPSv2 pozostawiono bez zmian jako jawny dług techniczny.
 - Ręcznej weryfikacji nadal wymagają Frame Debugger, Rendering Debugger oraz zbliżenia pod kątem shadow acne i peter-panning. Profil GPU 1080p nie jest gate'em akceptacji tego pilota.

@@ -7,7 +7,7 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
     [RequireComponent(typeof(Terrain), typeof(TerrainCollider))]
     public sealed class TerrainRoadV3RuntimeSwitcher : MonoBehaviour
     {
-        public enum Variant { V3A, V3B, V4 }
+        public enum Variant { V3A, V3B, V4, DeepBump }
 
         [SerializeField] private Terrain terrain;
         [SerializeField] private TerrainLayer[] sourceLayers = new TerrainLayer[3];
@@ -17,6 +17,8 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
         [SerializeField] private Key keyB = Key.F7;
         [SerializeField] private TerrainLayer[] v4TemplateLayers = new TerrainLayer[3];
         [SerializeField] private Key keyV4 = Key.F8;
+        [SerializeField] private TerrainLayer[] deepBumpTemplateLayers = new TerrainLayer[3];
+        [SerializeField] private Key keyDeepBump = Key.F9;
 
         private TerrainData originalData;
         private TerrainData originalColliderData;
@@ -26,6 +28,8 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
         private LayerMaps[] v3Maps;
         private bool v4Available;
         private bool v4WarningShown;
+        private bool deepBumpAvailable;
+        private bool deepBumpWarningShown;
         private bool appliedA;
         private float messageUntil;
         private Variant currentVariant = Variant.V3B;
@@ -72,6 +76,7 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
         private void OnEnable()
         {
             v4WarningShown = false;
+            deepBumpWarningShown = false;
             if (!CreateRuntimeCopies()) return;
             ApplyVariant(Variant.V3B);
         }
@@ -83,6 +88,7 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
             if (keyboard[keyA].wasPressedThisFrame) ApplyVariant(Variant.V3A);
             else if (keyboard[keyB].wasPressedThisFrame) ApplyVariant(Variant.V3B);
             else if (keyboard[keyV4].wasPressedThisFrame) ApplyVariant(Variant.V4);
+            else if (keyboard[keyDeepBump].wasPressedThisFrame) ApplyVariant(Variant.DeepBump);
         }
 
         private bool CreateRuntimeCopies()
@@ -133,6 +139,7 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
             }
 
             v4Available = HasValidV4Templates();
+            deepBumpAvailable = HasValidDeepBumpTemplates();
 
             runtimeData = Instantiate(originalData);
             runtimeData.name = originalData.name + " (Road V3 Runtime)";
@@ -168,6 +175,21 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
             return true;
         }
 
+        private bool HasValidDeepBumpTemplates()
+        {
+            if (deepBumpTemplateLayers == null || deepBumpTemplateLayers.Length != 3) return false;
+            for (var i = 0; i < deepBumpTemplateLayers.Length; i++)
+            {
+                var layer = deepBumpTemplateLayers[i];
+                if (layer == null || layer.diffuseTexture == null || layer.normalMapTexture == null || layer.maskMapTexture == null)
+                    return false;
+                if (!Mathf.Approximately(layer.diffuseRemapMin.w, 0f) || !Mathf.Approximately(layer.diffuseRemapMax.w, 1f))
+                    return false;
+                for (var j = 0; j < i; j++) if (deepBumpTemplateLayers[j] == layer) return false;
+            }
+            return true;
+        }
+
         private void ApplyVariant(Variant variant)
         {
             if (runtimeLayers == null) return;
@@ -175,20 +197,30 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
             {
                 if (!v4WarningShown)
                 {
-                    Debug.LogWarning("Road V4 is unavailable: assign three unique TerrainLayer templates with diffuse, normal, and mask textures, and diffuse remap alpha 0 to 1. V3 remains active.", this);
+                    Debug.LogWarning("Road V4 is unavailable: assign three unique TerrainLayer templates with diffuse, normal, and mask textures, and diffuse remap alpha 0 to 1. The current terrain variant remains active.", this);
                     v4WarningShown = true;
                 }
                 return;
             }
-
-            if (variant == Variant.V4)
+            if (variant == Variant.DeepBump && !deepBumpAvailable)
             {
+                if (!deepBumpWarningShown)
+                {
+                    Debug.LogWarning("DeepBump is unavailable: assign three unique TerrainLayer templates with diffuse, normal, and mask textures, and diffuse remap alpha 0 to 1. The current terrain variant remains active.", this);
+                    deepBumpWarningShown = true;
+                }
+                return;
+            }
+
+            if (variant == Variant.V4 || variant == Variant.DeepBump)
+            {
+                var templates = variant == Variant.V4 ? v4TemplateLayers : deepBumpTemplateLayers;
                 for (var i = 0; i < runtimeLayers.Length; i++)
                 {
-                    runtimeLayers[i].diffuseTexture = v4TemplateLayers[i].diffuseTexture;
-                    runtimeLayers[i].normalMapTexture = v4TemplateLayers[i].normalMapTexture;
-                    runtimeLayers[i].maskMapTexture = v4TemplateLayers[i].maskMapTexture;
-                    CopyLayerProperties(runtimeLayers[i], v4TemplateLayers[i]);
+                    runtimeLayers[i].diffuseTexture = templates[i].diffuseTexture;
+                    runtimeLayers[i].normalMapTexture = templates[i].normalMapTexture;
+                    runtimeLayers[i].maskMapTexture = templates[i].maskMapTexture;
+                    CopyLayerProperties(runtimeLayers[i], templates[i]);
                 }
             }
             else
@@ -241,8 +273,9 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
         private void OnGUI()
         {
             if (runtimeLayers == null || Time.unscaledTime > messageUntil) return;
-            var displayVariant = currentVariant == Variant.V4 ? "RoadBands V1.1 — Płynny" : $"Road {currentVariant}";
-            GUI.Label(new Rect(18f, 18f, Mathf.Min(460f, Screen.width - 36f), 28f), $"{displayVariant}  |  F6 / F7 / F8");
+            var displayVariant = currentVariant == Variant.DeepBump ? "DeepBump — kolor V1 + normalne V2" :
+                currentVariant == Variant.V4 ? "RoadBands V1.1 — Płynny" : $"Road {currentVariant}";
+            GUI.Label(new Rect(18f, 18f, Mathf.Min(680f, Screen.width - 36f), 28f), $"{displayVariant}  |  F6 / F7 / F8 / F9");
         }
 
         private void OnDisable() => RestoreAndRelease();
@@ -269,6 +302,7 @@ namespace RageQuitting.Lookdev.TerrainRoadV3
             terrainCollider = null;
             v3Maps = null;
             v4Available = false;
+            deepBumpAvailable = false;
             currentVariant = Variant.V3B;
             appliedA = false;
         }

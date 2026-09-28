@@ -1,0 +1,10 @@
+00:00.438  blend            | Read blend: "C:\Users\dunia\Documents\RageQuitting\Experiments\DeepBumpRoadV2\DeepBump_Road_V2.blend"
+C:\Users\dunia\Documents\RageQuitting\Experiments\DeepBumpRoadV3Mix\reproduce.py:81: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  assert mat and mat.use_nodes
+00:02.110  render           | Saved: 'C:\Users\dunia\Documents\RageQuitting\Experiments\DeepBumpRoadV3Mix\preview_albedoV1_normalV2.png'
+00:02.125  blend            | Read blend: "C:\Users\dunia\Documents\RageQuitting\Experiments\DeepBumpRoadV3Mix\DeepBump_Road_V3Mix.blend"
+Info: Packed 2 file(s)
+Info: Saved as "DeepBump_Road_V3Mix.blend"
+Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)
+
+Blender quit

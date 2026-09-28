@@ -1,0 +1,116 @@
+{
+  "blender": "5.1.2",
+  "inputs": {
+    "albedo_v1": {
+      "source": "C:\\Users\\dunia\\Documents\\RageQuitting\\Experiments\\DeepBumpRoadV1\\road_albedo.png",
+      "copied": "road_albedo.png",
+      "sha256": "c3168d8742cb5eabc2886bd1c134a0e48b6a438ec4d286f9f82bc5f905c86b55",
+      "byte_identical": true
+    },
+    "normal_v2": {
+      "source": "C:\\Users\\dunia\\Documents\\RageQuitting\\Experiments\\DeepBumpRoadV2\\road_normal_deepbump16.png",
+      "copied": "road_normal_deepbump16.png",
+      "sha256": "bf6c42699cff0e232af59ca251fdb213f5363a9b813ec149c1cde76e1fd5b44d",
+      "byte_identical": true
+    }
+  },
+  "active_material": {
+    "name": "Road | Albedo + DeepBump Normal",
+    "albedo_image": "V1 road_albedo.png",
+    "albedo_colorspace": "sRGB",
+    "normal_image": "V2 road_normal_deepbump16.png",
+    "normal_colorspace": "Non-Color",
+    "normal_map_space": "TANGENT",
+    "normal_strength": 1.0,
+    "packed_after_reopen": {
+      "albedo": true,
+      "normal": true
+    }
+  },
+  "scene_before_and_after_equal": true,
+  "scene_preserved": {
+    "plane": {
+      "name": "Road Plane 4m x 4m",
+      "dimensions": [
+        4.0,
+        4.0,
+        0.0
+      ],
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "roughness": 0.8600000143051147,
+      "metallic": 0.0
+    },
+    "camera": {
+      "name": "Shared Preview Camera",
+      "type": "PERSP",
+      "location": [
+        0.0,
+        -2.9000000953674316,
+        1.7000000476837158
+      ],
+      "rotation": [
+        1.04058039188385,
+        -0.0,
+        0.0
+      ],
+      "lens": 24.0
+    },
+    "lights": [
+      {
+        "name": "Large soft key",
+        "type": "AREA",
+        "location": [
+          -1.0,
+          -1.5,
+          3.700000047683716
+        ],
+        "rotation": [
+          0.45338502526283264,
+          -3.757900657319624e-08,
+          -0.5880026817321777
+        ],
+        "energy": 48.0,
+        "shape": "DISK",
+        "size": 4.0
+      }
+    ],
+    "world": {
+      "name": "World",
+      "color": [
+        0.11999999731779099,
+        0.11999999731779099,
+        0.11999999731779099
+      ]
+    },
+    "render": {
+      "engine": "CYCLES",
+      "resolution": [
+        1024,
+        768,
+        100
+      ],
+      "samples": 24,
+      "denoising": true,
+      "view_transform": "Standard",
+      "look": "None",
+      "exposure": 0.0,
+      "gamma": 1.0,
+      "film_transparent": false,
+      "format": "PNG",
+      "color_mode": "RGBA",
+      "color_depth": "8"
+    }
+  },
+  "blend": "DeepBump_Road_V3Mix.blend",
+  "preview": "preview_albedoV1_normalV2.png",
+  "preview_exists": true,
+  "saved_viewport_material_preview": true,
+  "execution": {
+    "process_exit_code": 0,
+    "errors": []
+  }
+}

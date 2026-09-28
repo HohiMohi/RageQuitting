@@ -19,3 +19,27 @@ Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4/RoadV4_RoadAlbedo.png filter
 Assets/Art/Environment/TerrainRoadLookdev/SurfaceRoadBandsV1_1/RoadBandsV1_1_Albedo.png filter=lfs diff=lfs merge=lfs -text
 Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4_1/RoadV4_1_DarkEarthAlbedo.png filter=lfs diff=lfs merge=lfs -text
 Assets/Art/Environment/TerrainRoadLookdev/SurfaceV4/RoadV4_URP_MaskMap.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/SurfaceDeepBumpV3Mix/Road_Normal_DeepBump_V2.png filter=lfs diff=lfs merge=lfs -text
+ArtSource/DeepBumpV3Mix/road_normal_deepbump16.png filter=lfs diff=lfs merge=lfs -text
+
+ArtSource/DeepBumpV3Mix/road_albedo.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/SurfaceDeepBumpV3Mix/Road_Albedo_V1.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Road_brighter_test.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Road_low_res_test.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Road_normals_test.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Road_paint_shadow_test.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Road_paint_test.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Road_shadows_brighter_test.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Road_test.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_persp_no_shadows_normals.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_persp_no_shadows.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_persp_shadows_first_normals.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_persp_shadows_first.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_persp_shadows_normals.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_persp_shadows_second_normals.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_persp_shadows_second.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_persp_shadows.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_top_no_shadows_normals.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_top_no_shadows.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_top_shadows_normals.png filter=lfs diff=lfs merge=lfs -text
+Assets/Art/Environment/TerrainRoadLookdev/TerrainLayers/DeepBumpV3Mix/Textures_test/Road_top_shadows.png filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "sourceExperiment": "C:\\Users\\dunia\\Documents\\RageQuitting\\Experiments\\DeepBumpRoadV3Mix",
+  "purpose": "DeepBump Road V3Mix F9 lookdev source package",
+  "sourceValidation": "validation.json preserves the Blender scene/material/image-packing and input-copy checks.",
+  "inputs": [
+    {
+      "file": "road_albedo.png",
+      "source": "DeepBumpRoadV3Mix/road_albedo.png",
+      "approvedSha256": "C3168D8742CB5EABC2886BD1C134A0E48B6A438EC4D286F9F82BC5F905C86B55",
+      "byteIdentical": true
+    },
+    {
+      "file": "road_normal_deepbump16.png",
+      "source": "DeepBumpRoadV3Mix/road_normal_deepbump16.png",
+      "approvedSha256": "BF6C42699CFF0E232AF59CA251FDB213F5363A9B813EC149C1CDE76E1FD5B44D",
+      "byteIdentical": true
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "road_albedo.png",
+      "bytes": 2914572,
+      "sha256": "C3168D8742CB5EABC2886BD1C134A0E48B6A438EC4D286F9F82BC5F905C86B55"
+    },
+    {
+      "file": "road_normal_deepbump16.png",
+      "bytes": 9301557,
+      "sha256": "BF6C42699CFF0E232AF59CA251FDB213F5363A9B813EC149C1CDE76E1FD5B44D"
+    },
+    {
+      "file": "DeepBump_Road_V3Mix.blend",
+      "bytes": 12310854,
+      "sha256": "620672E3ACFF814480F05F9C4A57661B9D15607EF02074375F81CE69B9E11EE1"
+    },
+    {
+      "file": "validation.json",
+      "bytes": 2868,
+      "sha256": "9376519E528AFA4EA91645729EF22915F281B6F3299856B7DBFCE6D4B6632981"
+    },
+    {
+      "file": "preview_albedoV1_normalV2.png",
+      "bytes": 1070738,
+      "sha256": "9E571563846E2DF1BD9846107DBE7A60148784B58AC3EFB2CD76D3E8DBBFB6DA"
+    },
+    {
+      "file": "run.log",
+      "bytes": 755,
+      "sha256": "8D88065B16F80BE1045F97EC768337269A4EC411A709C99555A1724960F3EB99"
+    }
+  ]
+}

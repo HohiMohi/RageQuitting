@@ -460,6 +460,7 @@ GameObject:
   m_Component:
   - component: {fileID: 122759657}
   - component: {fileID: 122759656}
+  - component: {fileID: 122759658}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -547,6 +548,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &122759658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 122759655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1001 &143222827
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3959,6 +3989,11 @@ MonoBehaviour:
   - {fileID: 8574412962073106934, guid: 9cd46253d094f5342a197e35ff7bddaa, type: 2}
   - {fileID: 8574412962073106934, guid: fa5ab7cd75dd4b141bfb647d8d49fcbd, type: 2}
   keyV4: 101
+  deepBumpTemplateLayers:
+  - {fileID: 8574412962073106934, guid: b9c75ef141f124c4db238085c10e803a, type: 2}
+  - {fileID: 8574412962073106934, guid: 40e9222bffd4c714f8d47079f5c59e82, type: 2}
+  - {fileID: 8574412962073106934, guid: 71888aeceebfd054299dfa0907e04268, type: 2}
+  keyDeepBump: 102
 --- !u!1001 &1372342773
 PrefabInstance:
   m_ObjectHideFlags: 0
