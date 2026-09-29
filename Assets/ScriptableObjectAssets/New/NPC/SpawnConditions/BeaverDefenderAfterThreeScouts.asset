@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: BeaverDefenderAfterThreeScouts
   m_EditorClassIdentifier: Assembly-CSharp::NPCSpawnCountConditionSO
   scope: 1
-  spawnCountThreshold: 2
+  spawnCountThreshold: 4
   targetGroup: {fileID: 11400000, guid: 7dd53e38258208f49b51d7a470630530, type: 2}

@@ -1,0 +1,150 @@
+{
+    "scene": "Tutorial_scene",
+    "date": "2026-09-29T20:35:48",
+    "entries": [
+        {
+            "id": "GlobalObjectId_V1-2-edece891c3db5784595448fd64851296-793052759307458826-1710827547",
+            "path": "levelDuration",
+            "kind": "float",
+            "f": 300.0,
+            "i": 0,
+            "b": false,
+            "label": "GameplayManager/GameTimerManager.levelDuration"
+        },
+        {
+            "id": "GlobalObjectId_V1-2-edece891c3db5784595448fd64851296-3416315547252794666-1295405457",
+            "path": "initialSpawnDelay",
+            "kind": "float",
+            "f": 5.0,
+            "i": 0,
+            "b": false,
+            "label": "BeaverSpawner_North/NPCSpawner.initialSpawnDelay"
+        },
+        {
+            "id": "GlobalObjectId_V1-2-edece891c3db5784595448fd64851296-3416315547252794666-1295405457",
+            "path": "spawnIntervalMin",
+            "kind": "float",
+            "f": 3.0,
+            "i": 0,
+            "b": false,
+            "label": "BeaverSpawner_North/NPCSpawner.spawnIntervalMin"
+        },
+        {
+            "id": "GlobalObjectId_V1-2-edece891c3db5784595448fd64851296-3416315547252794666-1295405457",
+            "path": "spawnIntervalMax",
+            "kind": "float",
+            "f": 5.0,
+            "i": 0,
+            "b": false,
+            "label": "BeaverSpawner_North/NPCSpawner.spawnIntervalMax"
+        },
+        {
+            "id": "GlobalObjectId_V1-2-edece891c3db5784595448fd64851296-3416315547252794666-15570103",
+            "path": "initialSpawnDelay",
+            "kind": "float",
+            "f": 5.0,
+            "i": 0,
+            "b": false,
+            "label": "BeaverSpawner_South/NPCSpawner.initialSpawnDelay"
+        },
+        {
+            "id": "GlobalObjectId_V1-2-edece891c3db5784595448fd64851296-3416315547252794666-15570103",
+            "path": "spawnIntervalMin",
+            "kind": "float",
+            "f": 3.0,
+            "i": 0,
+            "b": false,
+            "label": "BeaverSpawner_South/NPCSpawner.spawnIntervalMin"
+        },
+        {
+            "id": "GlobalObjectId_V1-2-edece891c3db5784595448fd64851296-3416315547252794666-15570103",
+            "path": "spawnIntervalMax",
+            "kind": "float",
+            "f": 5.0,
+            "i": 0,
+            "b": false,
+            "label": "BeaverSpawner_South/NPCSpawner.spawnIntervalMax"
+        },
+        {
+            "id": "GlobalObjectId_V1-3-7d0344f0a86e0004e815838639edf43b-11400000-0",
+            "path": "spawnCountThreshold",
+            "kind": "int",
+            "f": 0.0,
+            "i": 2,
+            "b": false,
+            "label": "BeaverDefenderAfterThreeScouts.spawnCountThreshold"
+        },
+        {
+            "id": "GlobalObjectId_V1-3-ab1e4eaf154f04b46851e42d26a586d6-11400000-0",
+            "path": "followDurationMin",
+            "kind": "float",
+            "f": 15.0,
+            "i": 0,
+            "b": false,
+            "label": "BeaverScoutBehavior.followDurationMin"
+        },
+        {
+            "id": "GlobalObjectId_V1-3-ab1e4eaf154f04b46851e42d26a586d6-11400000-0",
+            "path": "followDurationMax",
+            "kind": "float",
+            "f": 30.0,
+            "i": 0,
+            "b": false,
+            "label": "BeaverScoutBehavior.followDurationMax"
+        },
+        {
+            "id": "GlobalObjectId_V1-2-edece891c3db5784595448fd64851296-5084753893046122314-618192486",
+            "path": "m_IsActive",
+            "kind": "active",
+            "f": 0.0,
+            "i": 0,
+            "b": true,
+            "label": "Tutorial_Goat.m_IsActive"
+        },
+        {
+            "id": "GlobalObjectId_V1-3-ffc20c6e966ec194794524dbe45c0469-11400000-0",
+            "path": "neededProgress",
+            "kind": "float",
+            "f": 550.0,
+            "i": 0,
+            "b": false,
+            "label": "Furnace_BoltAndNutSet.neededProgress"
+        },
+        {
+            "id": "GlobalObjectId_V1-3-6027e79d3b101624e9d7bf5684e98a74-11400000-0",
+            "path": "neededProgress",
+            "kind": "float",
+            "f": 450.0,
+            "i": 0,
+            "b": false,
+            "label": "Furnace_CementBag.neededProgress"
+        },
+        {
+            "id": "GlobalObjectId_V1-3-6ee892a8b22046b4cb8230be1fce9696-11400000-0",
+            "path": "neededProgress",
+            "kind": "float",
+            "f": 700.0,
+            "i": 0,
+            "b": false,
+            "label": "Furnace_ConnectorPlateSet.neededProgress"
+        },
+        {
+            "id": "GlobalObjectId_V1-3-8ab9e03dbe2f5984088b3cf20e2a1b31-11400000-0",
+            "path": "neededProgress",
+            "kind": "float",
+            "f": 400.0,
+            "i": 0,
+            "b": false,
+            "label": "Furnace_ForgedNailBundle.neededProgress"
+        },
+        {
+            "id": "GlobalObjectId_V1-3-d6571f3ca348be743a63dc66ddefb6de-11400000-0",
+            "path": "neededProgress",
+            "kind": "float",
+            "f": 800.0,
+            "i": 0,
+            "b": false,
+            "label": "Furnace_FoundationAnchorKit.neededProgress"
+        }
+    ]
+}

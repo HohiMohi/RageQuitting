@@ -23,5 +23,5 @@ MonoBehaviour:
   outputAmount: 2
   meltingPoint: 750
   combustionTemperature: 950
-  neededProgress: 550
+  neededProgress: 400
   neededCombustionProgress: 950

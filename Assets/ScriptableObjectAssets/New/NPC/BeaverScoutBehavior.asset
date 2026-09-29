@@ -23,8 +23,8 @@ MonoBehaviour:
   hitReactionLockDuration: 0.4
   playerFaction: {fileID: 11400000, guid: 4bae5ec511184baa8a3d2ff9e76710bd, type: 2}
   noticePlayerLockDuration: 1.25
-  followDurationMin: 15
-  followDurationMax: 30
+  followDurationMin: 8
+  followDurationMax: 15
   followRefreshInterval: 0.25
   followStoppingDistance: 1.5
   closeCombatAttack:
