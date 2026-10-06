@@ -1,0 +1,59 @@
+// Editor preparation procedure for TutorialTerrainStage02. Stored as .cs.txt; not compiled into runtime.
+// Execute from Unity_RunCommand in the connected Editor with Stage02 as the active, saved scene.
+// Source a separate, owned NavMeshData asset before replacing the current Stage02 asset.
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
+using UnityEngine.AI;
+using Unity.AI.Navigation;
+using System.Linq;
+
+internal class CommandScript : IRunCommand
+{
+    public void Execute(ExecutionResult result)
+    {
+        var scene = SceneManager.GetActiveScene();
+        if (scene.path != "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity")
+            throw new System.InvalidOperationException("Stage02 must be the active scene.");
+
+        var surface = Object.FindObjectsByType<NavMeshSurface>(FindObjectsSortMode.None)
+            .First(s => s.gameObject.scene == scene && s.collectObjects == CollectObjects.All);
+        var ownedData = AssetDatabase.LoadAssetAtPath<NavMeshData>(
+            "Assets/Experiments/TutorialTerrainStage02/TutorialTerrainStage02_Main_NavMeshData.asset");
+        if (ownedData == null)
+            throw new System.InvalidOperationException("Expected Stage02-owned NavMeshData asset is missing.");
+
+        result.RegisterObjectModification(surface);
+        surface.BuildNavMesh();
+        var generated = surface.navMeshData;
+        if (generated == null)
+            throw new System.InvalidOperationException("BuildNavMesh did not produce data.");
+
+        // BuildNavMesh produces transient data. Copy its serialized bake payload into the existing
+        // Stage02 asset so the persistent reference/GUID is retained; never target source data.
+        surface.RemoveData();
+        result.RegisterObjectModification(ownedData);
+        EditorUtility.CopySerialized(generated, ownedData);
+        ownedData.name = "TutorialTerrainStage02_Main_NavMeshData";
+        EditorUtility.SetDirty(ownedData);
+        surface.navMeshData = ownedData;
+        surface.AddData();
+        EditorUtility.SetDirty(surface);
+        EditorSceneManager.MarkSceneDirty(scene);
+        AssetDatabase.SaveAssets();
+        EditorSceneManager.SaveScene(scene);
+
+        var filter = new NavMeshQueryFilter { agentTypeID = surface.agentTypeID, areaMask = 1 };
+        var path = new NavMeshPath();
+        bool startFound = NavMesh.SamplePosition(new Vector3(-15, 0, -28), out var start, 2f, filter);
+        bool endFound = NavMesh.SamplePosition(new Vector3(18, 0, 20), out var end, 2f, filter);
+        bool calculated = startFound && endFound &&
+            NavMesh.CalculatePath(start.position, end.position, filter, path);
+        result.Log("Saved Stage02 bake. Camp-East endpoints {0}/{1}; path calculated={2}, status={3}, areaMask={4}.",
+            startFound, endFound, calculated, path.status, filter.areaMask);
+    }
+}
+
+
+

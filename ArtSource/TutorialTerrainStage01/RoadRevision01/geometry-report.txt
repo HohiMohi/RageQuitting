@@ -1,0 +1,7 @@
+RoadRevision01 regeneration from immutable BEFORE state. Scene=Assets/Experiments/TutorialTerrainStage01/Scenes/TutorialTerrainStage01.unity; active scene only.
+Axis0 length=39,284m; samples=394; endpoints=(-15,-22)..(-4.5,0). Axis1 length=11,702m; samples=119; endpoints=(20.5,0)..(32.1,0).
+Curve: centripetal Catmull-Rom alpha=.5; arc samples 0.1m. Width: seed=2302, independent side Perlin, each half-width 1.5 +/-0.1m, total 2.8..3.2m; constrain to exactly3m within0.25m of each pit endpoint and gate center (26,0). Road edge fade=.25m.
+Distance uses finite sampled-segment Euclidean distance at clamped interior segment endpoints; tangent-extended s only at the two exterior caps. This prevents adjacent short segments making oversized wedges.
+Hole convention true=solid, false=hole. Solid pixels=1041176; false hole pixels=7400; road painted under false cells=0
+Road alpha post-save max=1 nonzero texels=24015 fully painted texels=20555; gate x-index=864 full-alpha width=2,988m at z centers -1,450..1,450; axis-point alpha values at (-15,-22),(-24,-10),(-14,-2),(26,0),(30,0),(-4.5,0),(20.5,0) are measured from the post-save map in the Editor.
+Heights sourced from BEFORE float32 array; changed samples=50872; candidate support samples evaluated=72163; support heightmap indices x=234..995 z=285..579; river X2..14 changed=0; holes changed=0; changed samples outside old/new support=0.

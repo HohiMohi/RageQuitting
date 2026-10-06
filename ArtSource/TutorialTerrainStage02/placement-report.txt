@@ -1,0 +1,44 @@
+Stage02 final placement and scene implementation report
+Captured: 2026-10-06
+Scene: Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity
+
+Terrain and authored geometry
+- Full Tutorial_scene clone was created in the Editor before source scene mutation; Stage02 is an independent scene with cloned authored gameplay, UI, player/spawn/cameras, lights, probes, factories, excavation systems, water, and bridge assemblies.
+- Prepared Terrain origin (-50,-4,-45), size (90,8,90), resolutions height 1025 / alpha 1024 / holes 1024. Own Stage02 TerrainData/material/TerrainLayers; source Stage01 map/shader/albedo inputs remain shared read-only.
+- Stage02 height/alphamap arrays exactly match Stage01 (delta 0); 7,400 hole cells match source (delta 0). TerrainCollider references this scene's own TerrainData.
+- Replaced old TutorialEnvironment ground/river bank/bed renderers and colliders, the old WestPath_0..3 and EastPath_0 mesh road pieces, and the superseded Ground_West_ExcavationRebuild and Ground_East_ExcavationRebuild subtrees. Kept water visual/gameplay helpers, excavation floor/wall/ramp/concrete systems, construction sites, bridge holders, pads, props, and forest exclusions.
+- River_Decorative restored to its original source transform (8,.02,0). Water gameplay surface and water entry helpers retained.
+- Terrain-snapped authored world roots while retaining XZ and authored vertical offset. Terrain.SampleHeight was converted from Terrain-local height to world Y using Terrain.transform.y (-4); this corrected an earlier placement batch. Runtime systems/UI child transforms were left with their parent assemblies.
+
+Forest spawn protection
+- Removed the overly broad interim AABB boxes. Final road exclusion follows the Stage01 West curve at alpha .5, resampled to 394 points over 39.284m. 27 overlapping, rotated scene-only BoxCollider trigger segments use 5.3m width and 1.5m segment length (.12m overlap). All 394 sampled path points are covered. Modifiers retain ignoreFromBuild and triggers do not add physical collision. This covers the road and shoulders without a broad rectangle over unrelated forest.
+
+River navigation correction
+- Source RiverBank_West, RiverBank_East, and RiverBed had NavMeshModifier overrideArea=true, area=1 (Not Walkable), ignoreFromBuild=true. In the source, agentType 0, areaMask 1, Camp (-15,-28) to EastLand was PathPartial, ending at (0,.05,20).
+- After replacing those meshes with Terrain, an initial Stage02 bake introduced a dry walkable route around the outer map edge (z≈-44). The Stage02 scene now has TutorialEnvironment/RiverGameplay/TerrainRiverbedNotWalkable: NavMeshModifierVolume area=1, center local (0,-2.42,0), size (9.5,3.2,90), covering the lower central river Terrain only. Existing upper WaterSurface/WaterEntry modifiers were not changed.
+- After rebake, saved-scene reopen, and endpoint projection, central bed samples at x=8, z=-20/0/20 fail under mask 1. Both land endpoints sample: camp (-15,0,-28) -> (-15,.12,-28); east land (18,0,20) -> (18,.23,20). Agent type 0, Walkable-only mask 1 path is PathPartial (8 corners), ending at (0,.08,20) on the west shore. No land route under the river or around the map edge remains.
+- Camp to West grove, sawmill, forge, mine, cave, and west excavation approach each PathComplete (both endpoints sampled). East local route (18,0,10) -> (18,0,20) is PathComplete. Camp->EastLand remains PathPartial; this is expected until the bridge is built.
+- Source and Stage02 were compared with the same transient main NavMesh bake and agentType 0 filters: the central WaterSurface mask8 sample at x=8,z=0 fails in both, so the lack of central WaterSurface NavMesh is inherited. WaterEntry mask16 samples succeed on both banks at x=2.5/13.5,z=0 (hit Y≈-.2) in both source and Stage02. Existing water-specific modifiers remain unchanged; the Stage02-only lower-bed Not Walkable volume prevents new Walkable Terrain beneath the channel. Not Walkable pit centers have no sample. This report records Editor navigation sampling only, not runtime/multiplayer proof.
+- Three surfaces use agent type 0 and preserve source collection/layer/physics settings: main surface collects All; two failed-concrete proxies collect Children on layer 1. The scene references three distinct Stage02 NavMeshData assets and reopens with them assigned.
+
+Scene/save/readback
+- EditorBuildSettings appended enabled Stage02 after all five existing entries; earlier entries and order preserved. GameplaySceneRegistry recognizes TutorialTerrainStage02 while TutorialSceneName remains Tutorial_scene; lobby selection was not changed.
+- Root final read: saved Stage02 reopened with 2624 GameObjects / 69 roots, 0 missing scripts, 0 cross-scene refs; Terrain and TerrainCollider data refs match.
+- Independent root inspection: 72 scene NGO objects; no null or duplicate GlobalObjectIdHash; hashes belong to this scene GUID. Protected bridge/pit/water transforms match source. Full serialized ref scan finds the same 17 pre-existing unresolved refs in source and Stage02 (2 pickaxeModelPrefab and 15 materials on ReadyForMounting/factoryOutline objects); no new unresolved paths.
+- Source Tutorial_scene and Stage01 were not intentionally modified. Source Tutorial_scene already had pre-existing dirty state when task began and is still dirty in git. Root captured the pre-implementation source baseline. Its final comparison covered 137 entries with zero differences, including Tutorial_scene and its .meta, Stage01 scene/data/material/.meta, protected Stage01 inputs, Stage17, Packages and global settings (excluding the authorized EditorBuildSettings append). All six fingerprints below match that baseline.
+
+Final SHA-256 fingerprints (all match root-captured pre-edit baseline)
+A936E58FD6B0FD909750BAC3E5BC035C637121DE968280E5418C6CEF066C98AB  Assets/Scenes/Tutorial_scene.unity
+2BF782A65AE163F4B3EBBB5028A9B7CE4423767BCFD21E8CD8C631484540B046  Assets/Experiments/TutorialTerrainStage01/Scenes/TutorialTerrainStage01.unity
+D15E1CF5CC4247C9C649A57D62A35ECD179483A777EA3BEB86B00256B3C2729A  Assets/Experiments/TutorialTerrainStage01/TutorialTerrainData.asset
+1AABEDA3A01C3E99DFF87E3C52B96ACE922F2590B2B7F9C543881C44A8B74D58  Assets/Experiments/TutorialTerrainStage01/TutorialTerrain.mat
+C1DCC9D81AA6B5F4FFC93498047133DE6E38B0E43DCDB815DB8E837B88168773  Assets/Experiments/TutorialTerrainStage01/TutorialTerrain_Road.terrainlayer
+581950D3E28970EC7F38308210E0286E3B72F51FB3F91F78332E192905BF3ADA  Assets/Experiments/TutorialTerrainStage01/TutorialTerrain_Soil.terrainlayer
+
+Editor capture artifacts (1536x1024)
+- TutorialTerrainStage02_Overview.png
+- TutorialTerrainStage02_Top.png
+- TutorialTerrainStage02_BridgeAndExcavations.png
+All three preview camera objects remain inactive and tagged Untagged after capture.
+
+

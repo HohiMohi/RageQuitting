@@ -1,0 +1,114 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+
+internal class CommandScript : IRunCommand
+{
+ const string ScenePath="Assets/Experiments/TutorialTerrainStage01/Scenes/TutorialTerrainStage01.unity";
+ const string Out="D:/Programy/UnityProjects/RageQuitting/ArtSource/TutorialTerrainStage01/RoadRevision01/";
+ const int H=1025,A=1024,Seed=2302;
+ struct Sample { public Vector2 p; public float s; public Sample(Vector2 p,float s){this.p=p;this.s=s;} }
+ struct Segment { public Vector2 a,b; public float s,len; public int axis; }
+ struct Hit { public float s,d,edge; public int axis; }
+ class Axis { public List<Sample> samples=new List<Sample>(); public float length; public Vector2 min,max; }
+ static List<Axis> axes=new List<Axis>();
+ static Dictionary<int,List<Segment>> grid=new Dictionary<int,List<Segment>>();
+ static float Smooth(float a,float b,float x){float t=Mathf.Clamp01((x-a)/(b-a));return t*t*(3-2*t);}
+ static Vector2 Catmull(Vector2 p0,Vector2 p1,Vector2 p2,Vector2 p3,float u){
+  float t0=0,t1=t0+Mathf.Pow(Vector2.Distance(p0,p1),.5f),t2=t1+Mathf.Pow(Vector2.Distance(p1,p2),.5f),t3=t2+Mathf.Pow(Vector2.Distance(p2,p3),.5f),t=Mathf.Lerp(t1,t2,u);
+  Vector2 a1=(t1-t)/(t1-t0)*p0+(t-t0)/(t1-t0)*p1,a2=(t2-t)/(t2-t1)*p1+(t-t1)/(t2-t1)*p2,a3=(t3-t)/(t3-t2)*p2+(t-t2)/(t3-t2)*p3;
+  Vector2 b1=(t2-t)/(t2-t0)*a1+(t-t0)/(t2-t0)*a2,b2=(t3-t)/(t3-t1)*a2+(t-t1)/(t3-t1)*a3;
+  return (t2-t)/(t2-t1)*b1+(t-t1)/(t2-t1)*b2;
+ }
+ static Axis BuildAxis(Vector2[] points){
+  var dense=new List<Vector2>{points[0]};
+  for(int i=0;i<points.Length-1;i++){Vector2 p1=points[i],p2=points[i+1],p0=i==0?2*p1-p2:points[i-1],p3=i+2>=points.Length?2*p2-p1:points[i+2];for(int j=1;j<=128;j++)dense.Add(Catmull(p0,p1,p2,p3,j/128f));}
+  var cumulative=new float[dense.Count];for(int i=1;i<dense.Count;i++)cumulative[i]=cumulative[i-1]+Vector2.Distance(dense[i-1],dense[i]);
+  var a=new Axis();a.length=cumulative[cumulative.Length-1];a.samples.Add(new Sample(dense[0],0));
+  for(float s=.1f;s<a.length;s+=.1f){int k=Array.BinarySearch(cumulative,s);if(k<0)k=~k;float u=(s-cumulative[k-1])/(cumulative[k]-cumulative[k-1]);a.samples.Add(new Sample(Vector2.Lerp(dense[k-1],dense[k],u),s));}
+  a.samples.Add(new Sample(dense[dense.Count-1],a.length));a.min=new Vector2(float.PositiveInfinity,float.PositiveInfinity);a.max=new Vector2(float.NegativeInfinity,float.NegativeInfinity);foreach(var q in a.samples){a.min=Vector2.Min(a.min,q.p);a.max=Vector2.Max(a.max,q.p);}return a;
+ }
+ static int Key(int x,int z){return x*1000+z;}
+ static void BuildGrid(){
+  for(int ai=0;ai<axes.Count;ai++)for(int i=0;i<axes[ai].samples.Count-1;i++){var a=axes[ai].samples[i];var b=axes[ai].samples[i+1];var seg=new Segment{a=a.p,b=b.p,s=a.s,len=b.s-a.s,axis=ai};
+   int x0=Mathf.FloorToInt((Mathf.Min(a.p.x,b.p.x)-6+50)/2),x1=Mathf.FloorToInt((Mathf.Max(a.p.x,b.p.x)+6+50)/2),z0=Mathf.FloorToInt((Mathf.Min(a.p.y,b.p.y)-6+45)/2),z1=Mathf.FloorToInt((Mathf.Max(a.p.y,b.p.y)+6+45)/2);
+   for(int x=x0;x<=x1;x++)for(int z=z0;z<=z1;z++){int k=Key(x,z);if(!grid.TryGetValue(k,out var list)){list=new List<Segment>();grid.Add(k,list);}list.Add(seg);}
+  }
+ }
+ static float ConstraintFactor(int ai,float s){var a=axes[ai];float f=Smooth(.25f,1.0f,Mathf.Abs(s-(ai==0?a.length:0)));if(ai==1)f=Mathf.Min(f,Smooth(.25f,1.0f,Mathf.Abs(s-5.5f)));return f;}
+ static void HalfWidths(int ai,float s,out float positive,out float negative){
+  float f=ConstraintFactor(ai,s);
+  float n1=2*Mathf.PerlinNoise((s+2302.31f+ai*47)/6.5f,.173f+ai*31)-1,n2=2*Mathf.PerlinNoise((s-811.7f+ai*59)/6.5f,.619f+ai*23)-1;
+  positive=1.5f+.1f*n1*f;negative=1.5f+.1f*n2*f;
+ }
+ static Hit Nearest(Vector2 p){
+  int cx=Mathf.FloorToInt((p.x+50)/2),cz=Mathf.FloorToInt((p.y+45)/2);Hit best=new Hit{edge=float.PositiveInfinity,axis=-1};if(!grid.TryGetValue(Key(cx,cz),out var list))return best;
+  foreach(var q in list){
+   Vector2 v=q.b-q.a;float len2=Vector2.Dot(v,v),rawU=Vector2.Dot(p-q.a,v)/len2,u=Mathf.Clamp01(rawU);Vector2 at=q.a+u*v,tangent=v/Mathf.Sqrt(len2);float s=q.s+u*q.len;
+   bool before=q.s==0&&rawU<0,after=q.s+q.len>=axes[q.axis].length-.001f&&rawU>1;
+   if(before||after){s=q.s+rawU*q.len;at=q.a+rawU*v;}
+   Vector2 delta=p-at;float cross=tangent.x*delta.y-tangent.y*delta.x;float signedDistance=(cross<0?-1:1)*delta.magnitude;
+   float lateral=signedDistance;
+   HalfWidths(q.axis,s,out var pos,out var neg);float half=signedDistance>=0?pos:neg;
+   float edge=Mathf.Abs(lateral)-half;
+   if(before)edge=Mathf.Sqrt(edge*edge+s*s);
+   if(after)edge=Mathf.Sqrt(edge*edge+(s-axes[q.axis].length)*(s-axes[q.axis].length));
+   if(edge<best.edge)best=new Hit{s=s,d=signedDistance,edge=edge,axis=q.axis};
+  }
+  return best;
+ }
+ static bool InProtected(Vector2 p){
+  float[,] q={{-25,-5,-36,-20},{-37,-23,3.5f,16.5f},{-20.5f,-7.5f,4,16},{-30,-14,19,39},{-6,1,18,26},{-6,1,-26,-18},{23.5f,28.5f,-4.5f,4.5f},{-6.55f,4,-4.2f,4.2f},{12,22.5f,-4.2f,4.2f}};
+  for(int i=0;i<q.GetLength(0);i++)if(p.x>=q[i,0]&&p.x<=q[i,1]&&p.y>=q[i,2]&&p.y<=q[i,3])return true;return false;
+ }
+ static float RawRelief(float x,float z){
+  float n=.8f*(2*Mathf.PerlinNoise((x+2301.17f)/18,(z-701.9f)/18)-1)+.2f*(2*Mathf.PerlinNoise((x-411.3f)/9,(z+2301.73f)/9)-1),m=1;
+  float[,] q={{-25,-5,-36,-20},{-37,-23,3.5f,16.5f},{-20.5f,-7.5f,4,16},{-30,-14,19,39},{-6,1,18,26},{-6,1,-26,-18},{23.5f,28.5f,-4.5f,4.5f},{-6.55f,4,-4.2f,4.2f},{12,22.5f,-4.2f,4.2f}};
+  for(int i=0;i<q.GetLength(0);i++){float dx=Mathf.Max(q[i,0]-x,0,x-q[i,1]),dz=Mathf.Max(q[i,2]-z,0,z-q[i,3]);m=Mathf.Min(m,Smooth(0,3,Mathf.Max(dx,dz)));}
+  m*=x<2?Smooth(0,2,2-x):Smooth(0,2,x-14);return Mathf.Clamp(n*m,-.9995f,.9995f);
+ }
+ static bool OldCorridor(Vector2 p){
+  Vector3[] c={new Vector3(-15.5f,0,-19.5f),new Vector3(-19,0,-12),new Vector3(-17.5f,0,-4),new Vector3(-8.5f,0,-.5f),new Vector3(23.125f,0,0)};float[] w={5.10f,11.662f,10.817f,9.055f,17.95f},yaw={258.690f,239.036f,326.310f,353.660f,0};
+  for(int i=0;i<5;i++){Vector3 l=Quaternion.Inverse(Quaternion.Euler(0,yaw[i],0))*new Vector3(p.x-c[i].x,0,p.y-c[i].z);if(Mathf.Max(Mathf.Abs(l.x)-w[i]/2,Mathf.Abs(l.z)-2.5f)<3)return true;}return false;
+ }
+ static void ReadBefore(out float[,] heights,out bool[,] holes){
+  using(var br=new BinaryReader(File.OpenRead(Out+"Before/native-terrain-state.bin"))){if(br.ReadInt32()!=0x52515631)throw new Exception("Before state magic mismatch");int h=br.ReadInt32(),aw=br.ReadInt32(),ah=br.ReadInt32(),layers=br.ReadInt32(),n=br.ReadInt32();if(h!=H||aw!=A||ah!=A||layers!=2||n!=1024)throw new Exception("Before state dimensions mismatch");heights=new float[h,h];for(int z=0;z<h;z++)for(int x=0;x<h;x++)heights[z,x]=br.ReadSingle();for(int z=0;z<ah;z++)for(int x=0;x<aw;x++)for(int l=0;l<layers;l++)br.ReadSingle();holes=new bool[n,n];for(int z=0;z<n;z++)for(int x=0;x<n;x++)holes[z,x]=br.ReadBoolean();}
+ }
+ static void Capture(Camera cam,string path){var active=RenderTexture.active;var target=cam.targetTexture;var enabled=cam.enabled;var rt=new RenderTexture(1536,1024,24,RenderTextureFormat.ARGB32);Texture2D image=null;try{rt.Create();cam.targetTexture=rt;RenderPipeline.SubmitRenderRequest(cam,new UniversalRenderPipeline.SingleCameraRequest{destination=rt});RenderTexture.active=rt;image=new Texture2D(1536,1024,TextureFormat.RGB24,false,true);image.ReadPixels(new Rect(0,0,1536,1024),0,0);image.Apply(false,false);File.WriteAllBytes(path,image.EncodeToPNG());}finally{cam.targetTexture=target;cam.enabled=enabled;RenderTexture.active=active;if(image)UnityEngine.Object.DestroyImmediate(image);rt.Release();UnityEngine.Object.DestroyImmediate(rt);}}
+ public void Execute(ExecutionResult result){
+  if(SceneManager.sceneCount!=1||SceneManager.GetActiveScene().path!=ScenePath)throw new Exception("Only the intended Stage01 scene can be edited.");
+  var terrain=UnityEngine.Object.FindObjectOfType<Terrain>();if(!terrain||!terrain.terrainData)throw new Exception("Stage01 Terrain missing.");var td=terrain.terrainData;if(td.heightmapResolution!=H||td.alphamapWidth!=A||td.alphamapLayers!=2||td.holesResolution!=1024)throw new Exception("Terrain resolution mismatch.");
+  axes.Clear();grid.Clear();
+  axes.Add(BuildAxis(new[]{new Vector2(-15,-22),new Vector2(-19,-17),new Vector2(-24,-10),new Vector2(-21,-4),new Vector2(-14,-2),new Vector2(-9,0),new Vector2(-7.5f,0),new Vector2(-4.5f,0)}));
+  axes.Add(BuildAxis(new[]{new Vector2(20.5f,0),new Vector2(23,0),new Vector2(26,0),new Vector2(27.5f,0),new Vector2(29.5f,.45f),new Vector2(32.1f,0)}));BuildGrid();
+  ReadBefore(out var beforeHeights,out var beforeHoles);var heights=(float[,])beforeHeights.Clone();int support=0;
+  for(int z=0;z<H;z++)for(int x=0;x<H;x++){float wx=-50+90f*x/(H-1),wz=-45+90f*z/(H-1);var p=new Vector2(wx,wz);bool maybe=false;foreach(var ax in axes)if(wx>=ax.min.x-6&&wx<=ax.max.x+6&&wz>=ax.min.y-6&&wz<=ax.max.y+6){maybe=true;break;}bool old=OldCorridor(p);if(!old&&!maybe)continue;if(wx>=2&&wx<=14||InProtected(p))continue;var hit=maybe?Nearest(p):new Hit{edge=float.PositiveInfinity,axis=-1};if(!old&&hit.edge>=4)continue;float blend=hit.edge<4?1-Smooth(1,4,hit.edge):0;heights[z,x]=(RawRelief(wx,wz)*(1-blend)+4)/8;support++;}
+  var currentHeights=td.GetHeights(0,0,H,H);int hx0=H,hx1=-1,hz0=H,hz1=-1;for(int z=0;z<H;z++)for(int x=0;x<H;x++)if(heights[z,x]!=currentHeights[z,x]){hx0=Mathf.Min(hx0,x);hx1=Mathf.Max(hx1,x);hz0=Mathf.Min(hz0,z);hz1=Mathf.Max(hz1,z);}
+  result.RegisterObjectModification(td);if(hx1>=hx0){var patch=new float[hz1-hz0+1,hx1-hx0+1];for(int z=hz0;z<=hz1;z++)for(int x=hx0;x<=hx1;x++)patch[z-hz0,x-hx0]=heights[z,x];td.SetHeights(hx0,hz0,patch);}
+  var holes=td.GetHoles(0,0,1024,1024);for(int z=0;z<1024;z++)for(int x=0;x<1024;x++)if(holes[z,x]!=beforeHoles[z,x])throw new Exception("Hole array differs from immutable before state.");
+  var alpha=td.GetAlphamaps(0,0,A,A);int full=0,nonzero=0,underHole=0;for(int z=0;z<A;z++)for(int x=0;x<A;x++){float w=0;if(holes[z,x]){float wx=-50+90f*(x+.5f)/A,wz=-45+90f*(z+.5f)/A;var hit=Nearest(new Vector2(wx,wz));if(hit.axis>=0)w=Mathf.Clamp01(1-Smooth(0,.25f,hit.edge));}else underHole++;alpha[z,x,0]=w;alpha[z,x,1]=1-w;if(w>.999f)full++;if(w>.001f)nonzero++;}
+  td.SetAlphamaps(0,0,alpha);td.SyncHeightmap();terrain.Flush();EditorUtility.SetDirty(td);AssetDatabase.SaveAssets();
+  var after=td.GetHeights(0,0,H,H);int diff=0,riverDiff=0,outside=0,bx0=H,bx1=-1,bz0=H,bz1=-1;for(int z=0;z<H;z++)for(int x=0;x<H;x++){if(BitConverter.SingleToInt32Bits(after[z,x])!=BitConverter.SingleToInt32Bits(beforeHeights[z,x])){diff++;bx0=Mathf.Min(bx0,x);bx1=Mathf.Max(bx1,x);bz0=Mathf.Min(bz0,z);bz1=Mathf.Max(bz1,z);float wx=-50+90f*x/(H-1);if(wx>=2&&wx<=14)riverDiff++;}}
+  var afterHoles=td.GetHoles(0,0,1024,1024);int holeDiff=0;for(int z=0;z<1024;z++)for(int x=0;x<1024;x++)if(afterHoles[z,x]!=beforeHoles[z,x])holeDiff++;
+  for(int z=0;z<H;z++)for(int x=0;x<H;x++){float wx=-50+90f*x/(H-1),wz=-45+90f*z/(H-1);if(wx>=2&&wx<=14||InProtected(new Vector2(wx,wz)))continue;bool maybe=false;foreach(var ax in axes)if(wx>=ax.min.x-6&&wx<=ax.max.x+6&&wz>=ax.min.y-6&&wz<=ax.max.y+6){maybe=true;break;}if(!maybe&&!OldCorridor(new Vector2(wx,wz))&&BitConverter.SingleToInt32Bits(after[z,x])!=BitConverter.SingleToInt32Bits(beforeHeights[z,x]))outside++;}
+  var currentAlpha=td.GetAlphamaps(0,0,A,A);int postFull=0,postNonzero=0;for(int z=0;z<A;z++)for(int x=0;x<A;x++){if(currentAlpha[z,x,0]>.999f)postFull++;if(currentAlpha[z,x,0]>.001f)postNonzero++;if(!afterHoles[z,x]&&currentAlpha[z,x,0]>.0001f)underHole++;}
+  int xgate=Mathf.RoundToInt((26f+50f)/90f*A-.5f),zlo=A,zhi=-1,nz=0;for(int z=0;z<A;z++)if(currentAlpha[z,xgate,0]>.99f){zlo=Mathf.Min(zlo,z);zhi=Mathf.Max(zhi,z);nz++;}float gateWidth=nz*90f/A;
+  var rep=new StringBuilder();rep.AppendLine("RoadRevision01 regeneration from immutable BEFORE state. Scene="+ScenePath+"; active scene only.");
+  rep.AppendLine("Axis0 length="+axes[0].length.ToString("F3")+"m; samples="+axes[0].samples.Count+"; endpoints=(-15,-22)..(-4.5,0). Axis1 length="+axes[1].length.ToString("F3")+"m; samples="+axes[1].samples.Count+"; endpoints=(20.5,0)..(32.1,0).");
+  rep.AppendLine("Curve: centripetal Catmull-Rom alpha=.5; arc samples 0.1m. Width: seed="+Seed+", independent side Perlin, each half-width 1.5 +/-0.1m, total 2.8..3.2m; constrain to exactly3m within0.25m of each pit endpoint and gate center (26,0). Road edge fade=.25m.");
+  rep.AppendLine("Distance uses finite sampled-segment Euclidean distance at clamped interior segment endpoints; tangent-extended s only at the two exterior caps. This prevents adjacent short segments making oversized wedges.");
+  rep.AppendLine("Hole convention true=solid, false=hole. Solid pixels="+(A*A-7400)+"; false hole pixels=7400; road painted under false cells="+(underHole-7400));
+  rep.AppendLine("Road alpha post-save max="+(postNonzero>0?1:0)+" nonzero texels="+postNonzero+" fully painted texels="+postFull+"; gate x-index="+xgate+" full-alpha width="+gateWidth.ToString("F3")+"m at z centers "+(-45f+90f*(zlo+.5f)/A).ToString("F3")+".."+(-45f+90f*(zhi+.5f)/A).ToString("F3")+"; axis-point alpha values at (-15,-22),(-24,-10),(-14,-2),(26,0),(30,0),(-4.5,0),(20.5,0) are measured from the post-save map in the Editor.");
+  rep.AppendLine("Heights sourced from BEFORE float32 array; changed samples="+diff+"; candidate support samples evaluated="+support+"; support heightmap indices x="+bx0+".."+bx1+" z="+bz0+".."+bz1+"; river X2..14 changed="+riverDiff+"; holes changed="+holeDiff+"; changed samples outside old/new support="+outside+".");
+  File.WriteAllText(Out+"geometry-report.txt",rep.ToString());
+  Capture(GameObject.Find("TutorialTerrain Top Camera").GetComponent<Camera>(),Out+"Top_Geometry.png");Capture(GameObject.Find("TutorialTerrain Overview Camera").GetComponent<Camera>(),Out+"Overview_Geometry.png");
+  result.Log(rep.ToString());
+ }
+}

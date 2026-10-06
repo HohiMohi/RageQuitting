@@ -1,0 +1,27 @@
+NavMesh bake and sampling record — Stage02
+
+Source baseline:
+- Main NavMeshSurface agentTypeID 0, collect All, source layers -1, physics colliders; path endpoints were sampled before CalculatePath.
+- RiverBank_West/East and RiverBed modifiers: overrideArea=true, area=1 (Not Walkable), ignoreFromBuild=true. The Stage02 Terrain replaces the excluded old bed, so a scene-only lower-river Not Walkable volume restores the intended navigation boundary.
+- Source Camp (-15,0,-28) to EastLand with mask 1: endpoint samples succeeded and path was PathPartial, ending (0,.05,20).
+
+Stage02 bake:
+- Added scene-only volume under TutorialEnvironment/RiverGameplay/TerrainRiverbedNotWalkable, local center (0,-2.42,0), size (9.5,3.2,90), area 1 Not Walkable. It covers lower river Terrain (world Y approximately -4 to -.8) while retaining the source WaterSurface and WaterEntry volumes.
+- Main surface rebuilt and assigned persistent data at Assets/Experiments/TutorialTerrainStage02/TutorialTerrainStage02_Main_NavMeshData.asset. Two failed-concrete proxy assets remain scene-owned and distinct. Reopened scene persisted all three references.
+- Agent type 0 and filter areaMask 1: Camp sample success at (-15,.12,-28); EastLand sample success at (18,.23,20); Camp->EastLand PathPartial, 8 corners, end (0,.08,20). No walkable-only sample at central river x=8,z=-20/0/20.
+- Camp->Grove, Sawmill, Forge, Mine, Cave, West excavation approach: PathComplete. East local sample route (18,0,10)->(18,0,20): PathComplete. No east-west land crossing while the bridge is unbuilt.
+- Source and Stage02 were compared with the same transient main NavMesh bake and agentType 0 filters: the central WaterSurface mask8 sample at x=8,z=0 fails in both, so the lack of central WaterSurface NavMesh is inherited. WaterEntry mask16 samples succeed on both banks at x=2.5/13.5,z=0 (hit Y≈-.2) in both source and Stage02. Existing water-specific modifiers remain unchanged; the Stage02-only lower-bed Not Walkable volume prevents new Walkable Terrain beneath the channel. Not Walkable pit centers have no sample.
+- Main NavMesh source bounds center (-5,.30,0), extents (45.05,4.35,45.05); triangulation 660 triangles / 1506 vertices. East/West proxy surfaces keep agent 0, child collection, layer 1, physics colliders.
+
+Persistence details:
+- A fresh build produced transient NavMeshData. It was persisted as a temporary Stage02 asset, then copied into the original Stage02 Main_NavMeshData asset with EditorUtility.CopySerialized, assigned to the surface, and re-added. Existing persistent asset GUID/path was retained. The rebaked copy remains at TutorialTerrainStage02_Main_NavMeshData_Rebaked.asset because Unity MCP rejected a standalone exact-path AssetDatabase.DeleteAsset call; dependency scan had confirmed the scene does not reference it. No shared/source NavMesh asset was altered.
+
+Tool/Editor diagnostics:
+- One combined build/asset delete-move-save attempt was rejected with `UNEXPECTED_ERROR: User interactions are not supported for MCP tool calls`; no bake happened in that call. Smaller BuildNavMesh, SaveScene, and noninteractive own-asset assignment completed afterward.
+- One EditorUtility.CopySerialized save emitted a warning because the incoming data object's name had a `_Rebaked` suffix; the owned asset was renamed to match its filename and saved cleanly afterward.
+- The latest Console read contained two GetAreaCost inspection errors on inactive, unplaced serialized agents (“GetAreaCost can only be called on an active agent placed on NavMesh.”) and 23 warnings, mostly analyzer warnings plus MCP-mode/object-name mismatch warnings. No C# project compile errors were observed in Console. Several temporary Unity_RunCommand helper snippets initially failed to compile due to a missing using or unavailable API probe; corrected helper snippets executed and did not alter project scripts. The CopySerialized object-name warning was resolved by renaming the owned asset to match its filename.
+- No test suite, preflight, build, or Play Mode was run, per task instruction. No runtime or multiplayer behavior is claimed.
+
+
+- Root final read confirmed 2624 GameObjects / 69 roots, 72 valid unique nonzero NGO hashes, zero missing scripts, zero cross-scene refs, and the inherited 17 unresolved refs. Main plus both proxy NavMesh refs were scene-owned and distinct. Independent sampling confirmed 5 West paths complete; Camp→East Partial ending (0,.08,20); 3 lower-bed points and 2 pit points fail sampling; both WaterEntry banks sample. TerrainCollider raycasts are false in both holes and true at (-30,-12), y=-.3437. Final triangulation was 1506 vertices / 660 triangles, areas 0 and 4.
+- A separate exact-path delete attempt for the unreferenced _Rebaked.asset was rejected by MCP with “UNEXPECTED_ERROR: User interactions are not supported for MCP tool calls.” The asset and its .meta were retained.

@@ -1,0 +1,23 @@
+RoadRevision01 final saved-scene verification after OpenScene reload.
+Scene=Assets/Experiments/TutorialTerrainStage01/Scenes/TutorialTerrainStage01.unity roots=7 soleLoadedScene=true; shader=RageQuitting/TutorialTerrainStage01Terrain; baseMapDependency=True; basemapDistance=1000.
+Road map=1024x1024 RGFloat (linear float channels), mipCount=1, bilinear, clamp, readable=True; nonfinite RG pairs=0; s=-42.051..51.747m; d=-45.011..56.836m.
+GPU-convention bilinear coordinate at (-15.00,-22.00): s=0.000 d=0.000m.
+GPU-convention bilinear coordinate at (-24.00,-10.00): s=15.122 d=0.001m.
+GPU-convention bilinear coordinate at (-14.00,-2.00): s=29.386 d=0.000m.
+GPU-convention bilinear coordinate at (26.00,0.00): s=5.500 d=0.000m.
+GPU-convention bilinear coordinate at (30.00,0.00): s=9.611 d=-0.422m.
+GPU-convention bilinear coordinate at (-4.50,0.00): s=39.284 d=0.000m.
+GPU-convention bilinear coordinate at (20.50,0.00): s=0.000 d=0.000m.
+Temporary Bend capture cloned Overview camera and URP data: renderPostProcessing=True volumeLayerMask=256 volumeTrigger=self; only pose/FOV changed; clone destroyed.
+TerrainCollider downward ray at (-15.00,-22.00) hit=True y=0.000
+TerrainCollider downward ray at (-24.00,-10.00) hit=True y=0.000
+TerrainCollider downward ray at (-14.00,-2.00) hit=True y=0.000
+TerrainCollider downward ray at (26.00,0.00) hit=True y=0.000
+TerrainCollider downward ray at (30.00,0.00) hit=True y=0.000
+TerrainCollider downward ray at (-4.50,0.00) hit=True y=0.000
+TerrainCollider downward ray at (20.50,0.00) hit=True y=0.000
+Temporary TerrainData alpha painting proof using native SetAlphamaps on disposable clone: layers=2 changedCoverage=True paintedRoad=0 paintedSoil=1 requestedRoad=0 requestedSoil=1 originalRoad=1 originalSoil=0 restoredRoad=1 restoredSoil=0 restoredCoverage=True maxRestoreDelta=0; working copy destroyed; saved masks untouched.
+Original authored camera poses after reload: Overview=(-80.00, 68.00, -98.00); Top=(-5.00, 95.00, 0.00); River=(8.00, 20.00, -30.00); Excavation=(8.00, 18.00, -34.00).
+Post-line-ending-normalization targeted Editor import verification.
+Imported only Assets/Experiments/TutorialTerrainStage01/TutorialTerrainStage01Terrain.shader and Assets/Experiments/TutorialTerrainStage01/TutorialTerrainStage01TerrainLitPasses.hlsl.
+Shader=RageQuitting/TutorialTerrainStage01Terrain; isSupported=True; ShaderUtil.GetShaderMessages count=0.

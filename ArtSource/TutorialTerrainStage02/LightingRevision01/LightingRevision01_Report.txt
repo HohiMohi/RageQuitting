@@ -1,0 +1,35 @@
+TutorialTerrainStage02 Lighting Revision 01
+Date: 2026-10-06
+
+Scope and result
+- Updated only the Stage02 scene and its owned lighting assets. Kept scene hierarchy and gameplay references intact.
+- Active scene after save/reopen: Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity; clean; 69 roots / 2,624 GameObjects.
+- Scene saved SHA256: C235DB60CC3CFBCE00F3CC0E15C75FD38A7B02805A52DECE5C51D6C2EB1BA309.
+- Before-scene backup SHA256 matches the parent-confirmed baseline: A84C70A3A17E7F9024D746991E52E68847E508745CB43246E31153F0651FF705.
+- SceneState_Before.csv and SceneState_After.csv each contain 2,624 rows with identical GlobalObjectIds, paths, and active states. The only local transform difference is the authorized Afternoon Sun rotation: (-0.07275, 0.92539, -0.23073, -0.29177) before and (-0.40486, 0.19695, -0.08976, -0.88839) after. All other local positions, rotations, and scales match; no hierarchy objects were added or removed.
+
+Lighting state verified after reopening the saved scene
+- Afternoon Sun: world quaternion (-0.40486336, 0.19695176, -0.08975609, -0.88839155); color (1, 0.88, 0.73); intensity 1.15; realtime; soft shadow strength 0.6; bias 0.05; normal bias 0.4; near plane 0.2; culling mask all; RenderSettings.sun assigned.
+- Ambient: Trilight intensity 1; sky (0.58, 0.62, 0.72), equator (0.42, 0.46, 0.55), ground (0.28, 0.30, 0.38); fog off; owned procedural skybox assigned.
+- Owned global Volume profile: layer 8, priority 10, weight 1; ACES tonemapping and Color Adjustments only; exposure +0.15, contrast +7, saturation -12, white filter.
+- MainCamera volume mask is 257 after clean reopen, preserving bit 0 and including layer 8. Preview camera masks remain 256. Camera positions, rotations, FOV, AA, enabled/active state and tags were preserved; only approved volume mask changes were made.
+- EnvironmentLightingController component disabled while its root remains active. Five named Point accents disabled. Eight ReflectionProbe components, APV ProbeVolume and ProbeVolumePerSceneData, and the LightProbeGroup are disabled; objects remain in the hierarchy. Renderer lightmap/realtime lightmap bindings: 0; renderer probe usage: Off; LightmapSettings has 0 lightmaps and null light probes; scene LightingDataAsset getter is null.
+- Stage02-owned LightingSettings has autoGenerate=false. No light, NavMesh, or APV bake was run.
+
+Captures
+- 1536x1024 actual Unity URP camera renders. Paired view configuration is in CaptureStage02LightingRevision01.cs.txt; capture code saves/restores camera target, aspect, transforms, masks, active/enabled state and RenderTexture.active in finally.
+- Before and after overview/detail use identical camera/view configuration. Parent reviewed the Before and After pairs and approved the visual result.
+- SubmitRenderRequest initially produced skybox-only images, so the four final images use Camera.Render through the active URP pipeline. A RenderTexture-active warning was logged during the earlier capture attempt; the final capture script restores RenderTexture.active in finally. Diagnostic failed output is not part of the deliverables.
+
+Files
+- Images: Lighting_Before_Overview.png, Lighting_After_Overview.png, Lighting_Before_Detail.png, Lighting_After_Detail.png.
+- Scripts: PrepareStage02LightingRevision01.cs.txt and CaptureStage02LightingRevision01.cs.txt.
+- Scene recovery: TutorialTerrainStage02_Before.unity. Source lighting recovery copies: SourceLightingBackup/ (40 files).
+- State records: Preparation_Before.txt, SceneState_Before.csv, SceneState_After.csv.
+- Unity-owned new assets: Assets/Experiments/TutorialTerrainStage02/Lighting/TutorialTerrainStage02_VolumeProfile.asset; TutorialTerrainStage02_ProceduralSkybox.mat; TutorialTerrainStage02_LightingSettings.lighting (plus Unity-generated .meta files).
+
+Integrity and limitations
+- All 40 backed-up files from the shared original lighting data, settings, APV baking data and lightmap/probe textures were SHA256-compared to their originals; 0 mismatches.
+- CLI fallback check: unity.exe status --format json reported STATUS_NO_INSTANCES although OfficialUnityMCP remained reachable and was used for all Unity scene/asset edits.
+- No automated tests, preflight, build, Play Mode, runtime C#, package/global-pipeline/quality changes, or baking were performed, as required.
+- Console snapshot showed a Pipeline startup warning, earlier capture-related Camera instance errors, and the earlier RenderTexture.active warning. No C# compile or shader compile error appeared in that snapshot. Several exploratory MCP snippets initially failed compilation due API/property-name mismatches and were corrected; no project source was changed.

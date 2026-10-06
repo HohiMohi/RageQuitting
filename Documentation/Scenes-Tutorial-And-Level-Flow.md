@@ -268,6 +268,27 @@ Obszar NavMesh `WaterSurface` ma indeks `3` i koszt `4`, a `WaterEntry` indeks `
 
 Visual rzeki pozostaje osobny od colliderow gameplayowych. Zmiana jego materialu lub skali nie powinna zmieniac `WaterVolume`, punktow wyjscia ani powierzchni nawigacyjnej.
 
+
+## Eksperymentalna scena `TutorialTerrainStage02`
+
+W repozytorium znajdują się zapisana scena Stage02, jej bazowe assety oraz wybrane raporty i skrypty tekstowe. Rendery, warianty podglądów i prototypy pozostają w lokalnym archiwum; poniższe wzmianki o nich nie są linkami do plików repozytorium.
+
+`Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity` to zapisana, samodzielna kopia gameplayu tutorialu przeznaczona do dalszej pracy w Editorze. `GameplaySceneRegistry` rozpoznaje ją jako gameplay scene, a włączony wpis Build Settings umożliwia bezpośrednie ładowanie/restart. Lobby nadal wybiera `Tutorial_scene`; Stage02 nie zmienia routingu lobby.
+
+Scena zachowuje gameplay, gracza, UI, fabryki, most, wykopy, zasoby i systemy wody, zastępując starą geometrię gruntu i ścieżek własnym TerrainData, materiałem i dwiema TerrainLayers. Wysokości, alphamapy oraz dwa otwory, obejmujące 7400 komórek maski, odpowiadają Stage01. Shader, albedo i mapa współrzędnych drogi Stage01 są używane współdzielone i tylko do odczytu. Props ustawiono na powierzchni Terrain. Leśne wykluczenie respawnu podąża za naturalną drogą 27 obróconymi triggerami. Własne dane NavMesh obejmują powierzchnię główną i dwie proxy wykopów; dodatkowy obszar `Not Walkable` pod dolnym korytem rzeki zapobiega suchym obejściom po zastąpieniu geometrii Terrainem.
+
+Ręczna kontrola Editorze wykazała 2624 obiekty / 69 korzeni, brak brakujących skryptów i referencji między scenami, 72 niezerowe i unikalne hashe NGO oraz pięć kompletnych tras zachodnich. Trasa Camp→East pozostaje częściowa do czasu zbudowania mostu; środki obu wykopów i punkty dna rzeki nie próbkowały się jako `Walkable`, a `WaterEntry` działa na obu brzegach. Stage01 i `Tutorial_scene` pozostały bez zmian według bazowych fingerprintów. Pozostało 17 odziedziczonych nierozwiązanych referencji (2 pola prefaba kilofa, 15 materiałów ghost/outline) oraz brak centralnej próbki `WaterSurface` obecny także w źródle.
+
+Nie wykonano testów, preflightu, buildu, Play Mode ani weryfikacji runtime/multiplayer. Console zawierał błędy diagnostycznego `GetAreaCost` dla nieaktywnych agentów, tymczasowe błędy kompilacji helperów poprawiono; nie zaobserwowano błędów kompilacji projektu. Niezreferencjonowany `TutorialTerrainStage02_Main_NavMeshData_Rebaked.asset` wraz z `.meta` pozostał po odrzuconej próbie usunięcia przez MCP; scena nie odwołuje się do tego artefaktu.
+
+Szczegółowy zapis i obrazy: [raport migracji](../ArtSource/TutorialTerrainStage02/verification-report.txt), [rozmieszczenie](../ArtSource/TutorialTerrainStage02/placement-report.txt), [NavMesh](../ArtSource/TutorialTerrainStage02/navmesh-bake-report.txt), [skrypt procedury ponownego bake głównego NavMesh](../ArtSource/TutorialTerrainStage02/RebakeTutorialTerrainStage02NavMesh.cs.txt), `lokalne archiwum: ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_Overview.png`, `lokalne archiwum: ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_Top.png`, `lokalne archiwum: ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_BridgeAndExcavations.png`.
+
+Przed uznaniem sceny za gotową należy ocenić ją wizualnie w Editorze, uzupełnić odziedziczone referencje i sprawdzić zachowanie graczy/NPC/wody oraz sesji host-klient w runtime.
+
+Pełna dokumentacja: [Tutorial Terrain Stage02 — migracja gameplayu](TutorialTerrainStage02-GameplayMigration.md).
+
+Rewizja oświetlenia 01 została zapisana i sprawdzona po ponownym otwarciu sceny; raport oraz obrazy porównawcze znajdują się w [dokumentacji rewizji](../ArtSource/TutorialTerrainStage02/LightingRevision01/LightingRevision01_Report.txt), `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_Before_Detail.png` i `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_After_Detail.png`. Nie wykonano bake ani walidacji runtime/multiplayer. [Szczegóły migracji i oświetlenia](TutorialTerrainStage02-GameplayMigration.md).
+
 ## Przygotowanie betonu w `Tutorial_scene`
 
 `ConcretePreparationV1_Setup` zawiera dwa punkty poboru wody, dwie

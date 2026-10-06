@@ -1,0 +1,165 @@
+using UnityEngine;
+using UnityEditor;
+using System;
+using UnityEngine.SceneManagement;
+using System.Collections.Generic;
+
+internal class CommandScript : IRunCommand
+{
+    const int Resolution = 1024;
+    const string ScenePath = "Assets/Experiments/TutorialTerrainStage01/Scenes/TutorialTerrainStage01.unity";
+    const string AssetPath = "Assets/Experiments/TutorialTerrainStage01/TutorialTerrainRoadCoordinates.asset";
+    const float MinX = -50f, MinZ = -45f, SizeX = 90f, SizeZ = 90f;
+
+    struct Sample { public Vector2 p; public float s; public Sample(Vector2 p, float s) { this.p = p; this.s = s; } }
+    struct Segment { public Vector2 a, b; public float s, len; public int axis; public float minX, maxX, minY, maxY; }
+    struct Hit { public float s, d2, d; public int axis; public Segment segment; }
+    class Axis { public List<Sample> samples = new List<Sample>(); public float length; }
+    class Node { public float minX, maxX, minY, maxY; public int left = -1, right = -1, start, count; }
+    class SegmentComparer : IComparer<Segment>
+    {
+        readonly bool x;
+        public SegmentComparer(bool x) { this.x = x; }
+        public int Compare(Segment a, Segment b) { return (x ? (a.minX + a.maxX) : (a.minY + a.maxY)).CompareTo(x ? (b.minX + b.maxX) : (b.minY + b.maxY)); }
+    }
+
+    static readonly List<Segment> segments = new List<Segment>();
+    static readonly List<Node> nodes = new List<Node>();
+    static readonly float[] axisLengths = new float[2];
+    static readonly Segment[] firstSegments = new Segment[2], lastSegments = new Segment[2];
+
+    static Vector2 Catmull(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float u)
+    {
+        float t0 = 0, t1 = t0 + Mathf.Pow(Vector2.Distance(p0, p1), .5f), t2 = t1 + Mathf.Pow(Vector2.Distance(p1, p2), .5f), t3 = t2 + Mathf.Pow(Vector2.Distance(p2, p3), .5f), t = Mathf.Lerp(t1, t2, u);
+        Vector2 a1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1, a2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2, a3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
+        Vector2 b1 = (t2 - t) / (t2 - t0) * a1 + (t - t0) / (t2 - t0) * a2, b2 = (t3 - t) / (t3 - t1) * a2 + (t - t1) / (t3 - t1) * a3;
+        return (t2 - t) / (t2 - t1) * b1 + (t - t1) / (t2 - t1) * b2;
+    }
+
+    static Axis BuildAxis(Vector2[] points)
+    {
+        var dense = new List<Vector2> { points[0] };
+        for (int i = 0; i < points.Length - 1; i++)
+        {
+            Vector2 p1 = points[i], p2 = points[i + 1], p0 = i == 0 ? 2 * p1 - p2 : points[i - 1], p3 = i + 2 >= points.Length ? 2 * p2 - p1 : points[i + 2];
+            for (int j = 1; j <= 128; j++) dense.Add(Catmull(p0, p1, p2, p3, j / 128f));
+        }
+        var cumulative = new float[dense.Count];
+        for (int i = 1; i < dense.Count; i++) cumulative[i] = cumulative[i - 1] + Vector2.Distance(dense[i - 1], dense[i]);
+        var axis = new Axis { length = cumulative[cumulative.Length - 1] };
+        axis.samples.Add(new Sample(dense[0], 0));
+        for (float s = .1f; s < axis.length; s += .1f)
+        {
+            int k = Array.BinarySearch(cumulative, s); if (k < 0) k = ~k;
+            float u = (s - cumulative[k - 1]) / (cumulative[k] - cumulative[k - 1]);
+            axis.samples.Add(new Sample(Vector2.Lerp(dense[k - 1], dense[k], u), s));
+        }
+        axis.samples.Add(new Sample(dense[dense.Count - 1], axis.length));
+        return axis;
+    }
+
+    static void AddAxis(Axis axis, int index)
+    {
+        axisLengths[index] = axis.length;
+        int first = segments.Count;
+        for (int i = 0; i < axis.samples.Count - 1; i++)
+        {
+            Sample a = axis.samples[i], b = axis.samples[i + 1];
+            segments.Add(new Segment { a = a.p, b = b.p, s = a.s, len = b.s - a.s, axis = index, minX = Mathf.Min(a.p.x, b.p.x), maxX = Mathf.Max(a.p.x, b.p.x), minY = Mathf.Min(a.p.y, b.p.y), maxY = Mathf.Max(a.p.y, b.p.y) });
+        }
+        firstSegments[index] = segments[first]; lastSegments[index] = segments[segments.Count - 1];
+    }
+
+    static int BuildNode(int start, int count)
+    {
+        var node = new Node { minX = float.PositiveInfinity, minY = float.PositiveInfinity, maxX = float.NegativeInfinity, maxY = float.NegativeInfinity, start = start, count = count };
+        for (int i = start; i < start + count; i++) { Segment s = segments[i]; node.minX = Mathf.Min(node.minX, s.minX); node.maxX = Mathf.Max(node.maxX, s.maxX); node.minY = Mathf.Min(node.minY, s.minY); node.maxY = Mathf.Max(node.maxY, s.maxY); }
+        int index = nodes.Count; nodes.Add(node);
+        if (count > 8)
+        {
+            bool splitX = node.maxX - node.minX >= node.maxY - node.minY;
+            segments.Sort(start, count, new SegmentComparer(splitX));
+            int leftCount = count / 2;
+            node.left = BuildNode(start, leftCount); node.right = BuildNode(start + leftCount, count - leftCount); node.count = 0; nodes[index] = node;
+        }
+        return index;
+    }
+
+    static float BoxDistance2(Node n, Vector2 p)
+    {
+        float dx = Mathf.Max(n.minX - p.x, 0, p.x - n.maxX), dz = Mathf.Max(n.minY - p.y, 0, p.y - n.maxY);
+        return dx * dx + dz * dz;
+    }
+
+    static void Consider(Segment seg, Vector2 p, float rawU, bool extended, ref Hit best)
+    {
+        float u = extended ? rawU : Mathf.Clamp01(rawU);
+        Vector2 v = seg.b - seg.a, tangent = v / seg.len, delta = p - (seg.a + u * v);
+        float d2 = delta.sqrMagnitude;
+        if (d2 < best.d2)
+        {
+            float cross = tangent.x * delta.y - tangent.y * delta.x;
+            best = new Hit { axis = seg.axis, s = seg.s + u * seg.len, d2 = d2, d = (cross < 0 ? -1 : 1) * delta.magnitude, segment = seg };
+        }
+    }
+
+    static void Search(int nodeIndex, Vector2 p, ref Hit best)
+    {
+        Node n = nodes[nodeIndex];
+        if (BoxDistance2(n, p) > best.d2) return;
+        if (n.count > 0)
+        {
+            for (int i = n.start; i < n.start + n.count; i++)
+            {
+                Segment seg = segments[i]; Vector2 v = seg.b - seg.a; float rawU = Vector2.Dot(p - seg.a, v) / (seg.len * seg.len);
+                Consider(seg, p, rawU, false, ref best);
+            }
+            return;
+        }
+        Node l = nodes[n.left], r = nodes[n.right];
+        if (BoxDistance2(l, p) <= BoxDistance2(r, p)) { Search(n.left, p, ref best); Search(n.right, p, ref best); }
+        else { Search(n.right, p, ref best); Search(n.left, p, ref best); }
+    }
+
+    public void Execute(ExecutionResult result)
+    {
+        if (SceneManager.GetActiveScene().path != ScenePath || SceneManager.sceneCount != 1) throw new Exception("Open only the intended Stage01 scene before baking.");
+        AssetDatabase.Refresh();
+        var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Experiments/TutorialTerrainStage01/TutorialTerrain.mat");
+        var shader = Shader.Find("RageQuitting/TutorialTerrainStage01Terrain");
+        if (!mat || !shader || !shader.isSupported) throw new Exception("Stage01 shader or material missing/unsupported; coordinate generation stopped.");
+        segments.Clear(); nodes.Clear();
+        AddAxis(BuildAxis(new[] { new Vector2(-15,-22), new Vector2(-19,-17), new Vector2(-24,-10), new Vector2(-21,-4), new Vector2(-14,-2), new Vector2(-9,0), new Vector2(-7.5f,0), new Vector2(-4.5f,0) }), 0);
+        AddAxis(BuildAxis(new[] { new Vector2(20.5f,0), new Vector2(23,0), new Vector2(26,0), new Vector2(27.5f,0), new Vector2(29.5f,.45f), new Vector2(32.1f,0) }), 1);
+        BuildNode(0, segments.Count);
+        var rg = new float[Resolution * Resolution * 2];
+        float minS = float.PositiveInfinity, maxS = float.NegativeInfinity, minD = float.PositiveInfinity, maxD = float.NegativeInfinity;
+        for (int y = 0; y < Resolution; y++) for (int x = 0; x < Resolution; x++)
+        {
+            Vector2 p = new Vector2(MinX + SizeX * (x + .5f) / Resolution, MinZ + SizeZ * (y + .5f) / Resolution);
+            Hit hit = new Hit { d2 = float.PositiveInfinity, axis = -1 }; Search(0, p, ref hit);
+            if (hit.axis < 0) throw new Exception("No finite nearest-axis result at texel " + x + "," + y);
+            Segment winner = hit.segment; Vector2 winningVector = winner.b - winner.a; float winningU = Vector2.Dot(p - winner.a, winningVector) / winningVector.sqrMagnitude;
+            if (winner.s <= 0.0001f && winningU < 0) Consider(winner, p, winningU, true, ref hit);
+            else if (winner.s + winner.len >= axisLengths[winner.axis] - .001f && winningU > 1) Consider(winner, p, winningU, true, ref hit);
+            if (float.IsNaN(hit.s) || float.IsInfinity(hit.s) || float.IsNaN(hit.d) || float.IsInfinity(hit.d)) throw new Exception("Nonfinite coordinate at texel " + x + "," + y);
+            int offset = (y * Resolution + x) * 2; rg[offset] = hit.s; rg[offset + 1] = hit.d;
+            minS = Mathf.Min(minS, hit.s); maxS = Mathf.Max(maxS, hit.s); minD = Mathf.Min(minD, hit.d); maxD = Mathf.Max(maxD, hit.d);
+        }
+        var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetPath); bool creating = !texture;
+        if (creating) texture = new Texture2D(Resolution, Resolution, TextureFormat.RGFloat, false, true) { name = "TutorialTerrainRoadCoordinates" };
+        else if (texture.width != Resolution || texture.height != Resolution || texture.format != TextureFormat.RGFloat) throw new Exception("Existing coordinate asset has the wrong native format; its GUID is preserved.");
+        if (!creating) result.RegisterObjectModification(texture);
+        texture.filterMode = FilterMode.Bilinear; texture.wrapMode = TextureWrapMode.Clamp; texture.anisoLevel = 0; texture.mipMapBias = 0;
+        texture.SetPixelData<float>(rg, 0); texture.Apply(false, false);
+        if (creating) { AssetDatabase.CreateAsset(texture, AssetPath); result.RegisterObjectCreation(texture); }
+        EditorUtility.SetDirty(texture);
+        result.RegisterObjectModification(mat); mat.shader = shader; mat.SetTexture("_RoadCoordinates", texture); mat.SetVector("_RoadCoordinateWorldRect", new Vector4(MinX, MinZ, SizeX, SizeZ)); EditorUtility.SetDirty(mat);
+        var terrain = UnityEngine.Object.FindObjectOfType<Terrain>(); if (!terrain) throw new Exception("Terrain missing.");
+        result.RegisterObjectModification(terrain); terrain.materialTemplate = mat; terrain.basemapDistance = 1000; EditorUtility.SetDirty(terrain);
+        var scene = SceneManager.GetActiveScene(); UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        if (!UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, ScenePath)) throw new Exception("Failed to save Stage01 scene.");
+        AssetDatabase.SaveAssets();
+        result.Log("Saved finite RGFloat 1024x1024 world-coordinate map: nearest finite axis globally via BVH; s extends only when its winning finite segment is a route endpoint; bilinear/clamp/no mips; s=" + minS.ToString("F3") + ".." + maxS.ToString("F3") + "m, signed d=" + minD.ToString("F3") + ".." + maxD.ToString("F3") + "m; assigned and saved Stage01 shader/material/scene.");
+    }
+}

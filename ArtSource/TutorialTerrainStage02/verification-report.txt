@@ -1,0 +1,57 @@
+Stage02 final verification and changed-file inventory
+Captured 2026-10-06. No tests, preflight, build, or Play Mode.
+
+Changed existing files
+- Assets/Scripts/NetworkManagement/GameplaySceneRegistry.cs — added TutorialTerrainStage02SceneName and recognized it in IsGameplayScene; retained TutorialSceneName and lobby behavior.
+- ProjectSettings/EditorBuildSettings.asset — appended enabled Stage02 scene; all original entries/order retained.
+- No runtime systems or public gameplay API were added. The .cs.txt artifact is an editor-only NavMesh rebake procedure; it only builds the Stage02 main NavMesh and persists into its own data asset.
+- Assets/Scenes/Tutorial_scene.unity is a pre-existing dirty file from before work. This worker made no source-scene edits or saves. Assets/DefaultNetworkPrefabs.asset, Assets/NGO_Minimal_Setup/NetworkPrefabsList.asset, and ProjectSettings/QualitySettings.asset were also dirty before work and preserved.
+
+New Stage02 Unity files
+- Assets/Experiments/TutorialTerrainStage02/Scenes.meta
+- Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity and .meta
+- Assets/Experiments/TutorialTerrainStage02/TutorialTerrainData.asset and .meta
+- Assets/Experiments/TutorialTerrainStage02/TutorialTerrain.mat and .meta
+- Assets/Experiments/TutorialTerrainStage02/TutorialTerrain_Road.terrainlayer and .meta
+- Assets/Experiments/TutorialTerrainStage02/TutorialTerrain_Soil.terrainlayer and .meta
+- Assets/Experiments/TutorialTerrainStage02/TutorialTerrainStage02_Main_NavMeshData.asset and .meta
+- Assets/Experiments/TutorialTerrainStage02/TutorialTerrainStage02_WestFailedConcrete_NavMeshData.asset and .meta
+- Assets/Experiments/TutorialTerrainStage02/TutorialTerrainStage02_EastFailedConcrete_NavMeshData.asset and .meta
+- Assets/Experiments/TutorialTerrainStage02/TutorialTerrainStage02_Main_NavMeshData_Rebaked.asset and .meta (not in the Stage02 dependency graph of 630 entries; exact-path AssetDatabase.DeleteAsset was attempted separately and rejected by MCP, so retained).
+
+New ArtSource files
+- ArtSource/TutorialTerrainStage02/placement-report.txt (supersedes the earlier interim report that listed broad AABBs)
+- ArtSource/TutorialTerrainStage02/navmesh-bake-report.txt
+- ArtSource/TutorialTerrainStage02/verification-report.txt
+- ArtSource/TutorialTerrainStage02/RebakeTutorialTerrainStage02NavMesh.cs.txt (registers ownedData modification before EditorUtility.CopySerialized)
+- ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_Overview.png
+- ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_Top.png
+- ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_BridgeAndExcavations.png
+- All three images are 1536x1024 and were rendered through URP SubmitRenderRequest. Preview cameras were inactive again after capture.
+
+Manual Editor verification
+- Stage02 saved/reopened; only Stage02 loaded for final readback. Root final read counted 2624 GameObjects / 69 roots, 0 missing scripts, 0 cross-scene refs. Terrain and TerrainCollider point at the own Stage02 TerrainData.
+- Main plus West/East proxy NavMesh surfaces reopen with 3 distinct Stage02-owned asset refs. AgentType 0; main Collect All, proxies Collect Children/layer 1 and preserve physics-collider source config.
+- Height and alpha maps equal Stage01 (delta 0); holes count and placement equal Stage01 (7400 cells, diff 0). No source Stage01 scene/assets were written by this task.
+- Root final read verified 2624 GameObjects / 69 roots, 72 valid unique nonzero own-scene GlobalObjectIdHash values, zero missing scripts, zero cross-scene refs, protected bridge/pit/water transforms unchanged, and the same 17 inherited unresolved paths: 2 pickaxeModelPrefab plus 15 material refs on ReadyForMounting bridge visuals/factoryOutline.
+- A transient main surface build on the source scene confirms central WaterSurface mask8 sample at (8,0,0) fails. Stage02 matches this baseline. Both source and Stage02 accept WaterEntry mask16 on banks at (2.5,0,0)/(13.5,0,0), y≈-.2. Thus absent central water surface NavMesh is inherited. Lower river Terrain is newly excluded from Walkable.
+- Camp→Grove, Sawmill, Forge, Mine, Cave, West excavation approach are PathComplete under agentType 0, areaMask 1 with valid endpoint samples. East local (18,0,10)→(18,0,20) also PathComplete. Camp→EastLand (-15,0,-28→18,0,20) has successful projected samples and PathPartial (8 corners ending x=0,z=20); no east-west crossing while bridge is unbuilt.
+- Walkable mask 1 returns no sample at river center x=8,z=-20/0/20. WaterEntry samples remain on both banks under mask16. Pit center sample fails.
+- Forest exclusion contains 27 rotated road-following trigger segments, width 5.3m, 1.5m segment length, .12m overlaps; all 394 curve samples are covered. Segments have ignoreFromBuild and no physical collision.
+- Old terrain-replaced ground/river surfaces, road pieces, and West/East ground-rebuild subroots removed only in Stage02. Foundation excavation systems, water gameplay helpers, bridge holders, pads, construction sites and props kept. River_Decorative transform is source-matched at (8,.02,0).
+
+Final source fingerprints (SHA-256; all six match root-captured baseline)
+A936E58FD6B0FD909750BAC3E5BC035C637121DE968280E5418C6CEF066C98AB  Assets/Scenes/Tutorial_scene.unity
+2BF782A65AE163F4B3EBBB5028A9B7CE4423767BCFD21E8CD8C631484540B046  Assets/Experiments/TutorialTerrainStage01/Scenes/TutorialTerrainStage01.unity
+D15E1CF5CC4247C9C649A57D62A35ECD179483A777EA3BEB86B00256B3C2729A  Assets/Experiments/TutorialTerrainStage01/TutorialTerrainData.asset
+1AABEDA3A01C3E99DFF87E3C52B96ACE922F2590B2B7F9C543881C44A8B74D58  Assets/Experiments/TutorialTerrainStage01/TutorialTerrain.mat
+C1DCC9D81AA6B5F4FFC93498047133DE6E38B0E43DCDB815DB8E837B88168773  Assets/Experiments/TutorialTerrainStage01/TutorialTerrain_Road.terrainlayer
+581950D3E28970EC7F38308210E0286E3B72F51FB3F91F78332E192905BF3ADA  Assets/Experiments/TutorialTerrainStage01/TutorialTerrain_Soil.terrainlayer
+
+Errors, deviations, limitations
+- A combined NavMesh build/asset delete-move-save request was rejected by Unity MCP with “User interactions are not supported for MCP tool calls”; that call did not bake. Smaller build, save, persistent Stage02 asset copy/assignment, and reopened readback succeeded. After a 630-entry dependency scan confirmed the _Rebaked.asset was unreferenced, standalone exact-path AssetDatabase.DeleteAsset was also rejected with “UNEXPECTED_ERROR: User interactions are not supported for MCP tool calls.” Asset and .meta were retained.
+- EditorUtility.CopySerialized initially logged a NavMeshData object-name/file-name mismatch warning; the owned persistent asset was renamed to match its path and saved successfully afterward.
+- Latest Console read: 2 GetAreaCost inspection errors on inactive/unplaced serialized agents and 23 warnings (mostly analyzer warnings plus MCP-mode/object-name mismatch); no C# project compile errors observed. Temporary RunCommand helper snippets had compilation failures while probing a missing using/unavailable API; corrected snippets ran without changing project scripts. GetAreaCost errors were inspection-call errors, not runtime behavior.
+- Source water nav sampling used a transient Editor-only BuildNavMesh on the open additive source scene and closed it unsaved. The Stage02 scene was restored active after the comparison.
+- The _Rebaked.asset is not a Stage02 dependency (630 dependencies scanned). Exact-path deletion was attempted separately and rejected by MCP; retained with its .meta.
+- Full serialized scan retains the inherited 17 unresolved refs above. Root final nav read confirmed 5 West paths complete, Camp→East PathPartial ending (0,.08,20), 3 riverbed points and 2 pit points nonsampling, WaterEntry on both banks, TerrainCollider false in both holes and true at (-30,-12), y=-.3437; triangulation 1506 vertices/660 triangles in areas 0 and 4. Tests, preflight, build, Play Mode, multiplayer proof, and runtime actor behavior were not performed by design.
