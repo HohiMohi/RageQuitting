@@ -1,0 +1,520 @@
+fileFormatVersion: 2
+guid: 2523f63e828853b4bbb5a5187a4939aa
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2527432469135092054
+    second: Spruce_Needle_Atlas_0
+  - first:
+      213: 576453309520335213
+    second: Spruce_Needle_Atlas_1
+  - first:
+      213: -1548500627750228279
+    second: Spruce_Needle_Atlas_2
+  - first:
+      213: -7267512536160407941
+    second: Spruce_Needle_Atlas_3
+  - first:
+      213: 6319144355198733875
+    second: Spruce_Needle_Atlas_4
+  - first:
+      213: -7580717570229081717
+    second: Spruce_Needle_Atlas_5
+  - first:
+      213: -1716988991491212662
+    second: Spruce_Needle_Atlas_6
+  - first:
+      213: 3749965668076349178
+    second: Spruce_Needle_Atlas_7
+  - first:
+      213: 8998872645891510908
+    second: Spruce_Needle_Atlas_8
+  - first:
+      213: -6223212680061251706
+    second: Spruce_Needle_Atlas_9
+  - first:
+      213: -52925735284260402
+    second: Spruce_Needle_Atlas_10
+  - first:
+      213: -8537129803474241758
+    second: Spruce_Needle_Atlas_11
+  - first:
+      213: -7327580724689838
+    second: Spruce_Needle_Atlas_12
+  - first:
+      213: -2056301483751660640
+    second: Spruce_Needle_Atlas_13
+  - first:
+      213: 7148888342677731492
+    second: Spruce_Needle_Atlas_14
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 1
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 2
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 0
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 662
+        width: 637
+        height: 624
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 659e594907e331320800000000000000
+      internalID: 2527432469135092054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_1
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1275
+        width: 11
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d61de871b39fff700800000000000000
+      internalID: 576453309520335213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_2
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1205
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ce6a7422ee928ae0800000000000000
+      internalID: -1548500627750228279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_3
+      rect:
+        serializedVersion: 2
+        x: 628
+        y: 662
+        width: 586
+        height: 612
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7ee5717adb942b90800000000000000
+      internalID: -7267512536160407941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1134
+        width: 11
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33e09009f4c12b750800000000000000
+      internalID: 6319144355198733875
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_5
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 651
+        height: 664
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b89eee3c881ebc690800000000000000
+      internalID: -7580717570229081717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_6
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 658
+        width: 10
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8af8e6fb970c28e0800000000000000
+      internalID: -1716988991491212662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_7
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 607
+        width: 46
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af6e99d28ed8a0430800000000000000
+      internalID: 3749965668076349178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_8
+      rect:
+        serializedVersion: 2
+        x: 702
+        y: 647
+        width: 27
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c72d75d4efa62ec70800000000000000
+      internalID: 8998872645891510908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 630
+        width: 11
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68f0e3b1a05b2a9a0800000000000000
+      internalID: -6223212680061251706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_10
+      rect:
+        serializedVersion: 2
+        x: 648
+        y: 0
+        width: 564
+        height: 655
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec1c7ecf258f34ff0800000000000000
+      internalID: -52925735284260402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_11
+      rect:
+        serializedVersion: 2
+        x: 652
+        y: 499
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2277486eca5068980800000000000000
+      internalID: -8537129803474241758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_12
+      rect:
+        serializedVersion: 2
+        x: 1191
+        y: 475
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25487d9aa97f5eff0800000000000000
+      internalID: -7327580724689838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_13
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 53
+        width: 112
+        height: 111
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a3afddf1bc8673e0800000000000000
+      internalID: -2056301483751660640
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spruce_Needle_Atlas_14
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 13
+        width: 27
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a8bc3c3214f53360800000000000000
+      internalID: 7148888342677731492
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Spruce_Needle_Atlas_0: 2527432469135092054
+      Spruce_Needle_Atlas_1: 576453309520335213
+      Spruce_Needle_Atlas_10: -52925735284260402
+      Spruce_Needle_Atlas_11: -8537129803474241758
+      Spruce_Needle_Atlas_12: -7327580724689838
+      Spruce_Needle_Atlas_13: -2056301483751660640
+      Spruce_Needle_Atlas_14: 7148888342677731492
+      Spruce_Needle_Atlas_2: -1548500627750228279
+      Spruce_Needle_Atlas_3: -7267512536160407941
+      Spruce_Needle_Atlas_4: 6319144355198733875
+      Spruce_Needle_Atlas_5: -7580717570229081717
+      Spruce_Needle_Atlas_6: -1716988991491212662
+      Spruce_Needle_Atlas_7: 3749965668076349178
+      Spruce_Needle_Atlas_8: 8998872645891510908
+      Spruce_Needle_Atlas_9: -6223212680061251706
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
