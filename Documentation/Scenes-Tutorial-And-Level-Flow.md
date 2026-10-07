@@ -2,8 +2,8 @@
 
 ## Status
 
-**Gotowe dla dwóch scen gameplayowych.** `Tutorial_scene` jest blockoutem
-pełnego nowego mostu i zawiera dodatkowe systemy edukacyjne oraz testowe.
+**Dwie sceny gameplayowe są skonfigurowane.** `Tutorial_scene` pozostaje źródłową
+sceną blockoutu pełnego nowego mostu. Lobby kieruje opcję `Tutorial` do `TutorialTerrainStage02`.
 
 ## `MultiplayerStartScene`
 
@@ -11,7 +11,7 @@ Zawiera NetworkManager/lobby, lokalny limit FPS i Camera Motion. Host po
 utworzeniu pokoju wybiera:
 
 - `FPP_scene` - wcześniejszy poziom;
-- `Tutorial` - nowy blockout.
+- `Tutorial` - `TutorialTerrainStage02`, eksperymentalna scena oparta na tutorialowym gameplayu.
 
 Klient widzi stan lobby, ale nie może rozpocząć ładowania.
 
@@ -273,7 +273,7 @@ Visual rzeki pozostaje osobny od colliderow gameplayowych. Zmiana jego materialu
 
 W repozytorium znajdują się zapisana scena Stage02, jej bazowe assety oraz wybrane raporty i skrypty tekstowe. Rendery, warianty podglądów i prototypy pozostają w lokalnym archiwum; poniższe wzmianki o nich nie są linkami do plików repozytorium.
 
-`Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity` to zapisana, samodzielna kopia gameplayu tutorialu przeznaczona do dalszej pracy w Editorze. `GameplaySceneRegistry` rozpoznaje ją jako gameplay scene, a włączony wpis Build Settings umożliwia bezpośrednie ładowanie/restart. Lobby nadal wybiera `Tutorial_scene`; Stage02 nie zmienia routingu lobby.
+`Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity` to zapisana, samodzielna kopia gameplayu tutorialu. `GameplaySceneRegistry` rozpoznaje ją jako gameplay scene, a włączony wpis Build Settings umożliwia bezpośrednie ładowanie/restart. Opcja `Tutorial` w lobby wybiera teraz Stage02; `Tutorial_scene` pozostaje dostępna jako scena źródłowa.
 
 Scena zachowuje gameplay, gracza, UI, fabryki, most, wykopy, zasoby i systemy wody, zastępując starą geometrię gruntu i ścieżek własnym TerrainData, materiałem i dwiema TerrainLayers. Wysokości, alphamapy oraz dwa otwory, obejmujące 7400 komórek maski, odpowiadają Stage01. Shader, albedo i mapa współrzędnych drogi Stage01 są używane współdzielone i tylko do odczytu. Props ustawiono na powierzchni Terrain. Leśne wykluczenie respawnu podąża za naturalną drogą 27 obróconymi triggerami. Własne dane NavMesh obejmują powierzchnię główną i dwie proxy wykopów; dodatkowy obszar `Not Walkable` pod dolnym korytem rzeki zapobiega suchym obejściom po zastąpieniu geometrii Terrainem.
 
@@ -287,7 +287,11 @@ Przed uznaniem sceny za gotową należy ocenić ją wizualnie w Editorze, uzupe�
 
 Pełna dokumentacja: [Tutorial Terrain Stage02 — migracja gameplayu](TutorialTerrainStage02-GameplayMigration.md).
 
-Rewizja oświetlenia 01 została zapisana i sprawdzona po ponownym otwarciu sceny; raport oraz obrazy porównawcze znajdują się w [dokumentacji rewizji](../ArtSource/TutorialTerrainStage02/LightingRevision01/LightingRevision01_Report.txt), `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_Before_Detail.png` i `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_After_Detail.png`. Nie wykonano bake ani walidacji runtime/multiplayer. [Szczegóły migracji i oświetlenia](TutorialTerrainStage02-GameplayMigration.md).
+Rewizja oświetlenia 01 (2026-10-06) została zapisana i sprawdzona po ponownym otwarciu sceny. W czasie tej rewizji lobby nadal kierowało do `Tutorial_scene`; późniejsza zmiana routingu jest opisana poniżej. Raport oraz obrazy porównawcze znajdują się w [dokumentacji rewizji](../ArtSource/TutorialTerrainStage02/LightingRevision01/LightingRevision01_Report.txt), `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_Before_Detail.png` i `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_After_Detail.png`. Nie wykonano bake ani walidacji runtime/multiplayer. [Szczegóły migracji i oświetlenia](TutorialTerrainStage02-GameplayMigration.md).
+
+## Routing lobby do Stage02 — 2026-10-07
+
+Przycisk hosta `Tutorial` w `MultiplayerStartScene` ładuje teraz `TutorialTerrainStage02` przez `GameplaySceneRegistry.TutorialTerrainStage02SceneName`. Ścieżka używa `NetworkManager.SceneManager.LoadScene`; wywołanie jest host-only, a NGO synchronizuje zmianę sceny klientom. Stage02 jest wpisana i włączona w Build Settings. Po zmianie Editor odświeżył projekt i kompilacja C# zakończyła się bez błędów. Nie wykonano testów, preflightu, buildu, Play Mode ani weryfikacji hosta i klienta w runtime.
 
 ## Przygotowanie betonu w `Tutorial_scene`
 

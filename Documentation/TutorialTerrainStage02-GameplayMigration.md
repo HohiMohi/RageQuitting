@@ -12,7 +12,7 @@ Migracja sceny eksperymentalnej została zapisana i niezależnie skontrolowana w
 
 - Scena: `Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity`.
 - Stage02 jest rozpoznawana przez `GameplaySceneRegistry`; włączony wpis Build Settings dodano na końcu listy dla bezpośredniego ładowania/restartu.
-- Lobby nadal kieruje do `Tutorial_scene`. Scena bazowa Tutorial i pusta Stage01 nie zostały zmienione względem bazowych SHA-256.
+- Przycisk hosta `Tutorial` w lobby kieruje teraz do `TutorialTerrainStage02` przez `GameplaySceneRegistry.TutorialTerrainStage02SceneName`. Ładowanie odbywa się przez `NetworkManager.SceneManager.LoadScene`; Stage02 jest wpisana i włączona w Build Settings. `Tutorial_scene` pozostaje dostępna jako scena źródłowa, a FPP nie zmienia routingu. Scena bazowa Tutorial i pusta Stage01 nie zostały zmienione względem bazowych SHA-256.
 - Stage02 ma własne TerrainData, materiał, dwie TerrainLayers oraz trzy osobne, zapisane dane NavMesh (główne i dwa proxy wykopów). Shader, albedo i mapa współrzędnych drogi są współdzielone ze Stage01 wyłącznie do odczytu.
 
 ## Zmiany
@@ -29,12 +29,16 @@ Zapisane i ponownie otwarte Stage02 zawierało 2624 GameObjects / 69 korzeni, br
 
 Po zapisie i ponownym otwarciu sceny potwierdzono stałe oświetlenie Stage02. `Afternoon Sun` jest światłem kierunkowym czasu rzeczywistego o barwie (1, 0.88, 0.73), intensywności 1.15 i miękkich cieniach o sile 0.6. Ambient Trilight ma intensywność 1 oraz kolory nieba (0.58, 0.62, 0.72), horyzontu (0.42, 0.46, 0.55) i gruntu (0.28, 0.30, 0.38). Scena zachowuje własny proceduralny skybox, mgła jest wyłączona, a własny profil Volume używa ACES, ekspozycji +0.15, kontrastu +7, nasycenia -12 i filtra bieli.
 
-Wyłączono `EnvironmentLightingController` oraz pięć lamp akcentujących. Odziedziczone APV, reflection probes i light probes są wyłączone; renderery nie używają probes ani lightmap, a scena nie ma przypisanego `LightingDataAsset` ani lightmap. Stage02 ma własne `LightingSettings` z `autoGenerate=false`, bez automatycznego bake. Gameplay, geometria i dane NavMesh zachowano; w porównaniu przed/po jedyną zatwierdzoną różnicą transformacji jest obrót słońca. Lobby nadal kieruje do `Tutorial_scene`.
+Wyłączono `EnvironmentLightingController` oraz pięć lamp akcentujących. Odziedziczone APV, reflection probes i light probes są wyłączone; renderery nie używają probes ani lightmap, a scena nie ma przypisanego `LightingDataAsset` ani lightmap. Stage02 ma własne `LightingSettings` z `autoGenerate=false`, bez automatycznego bake. Gameplay, geometria i dane NavMesh zachowano; w porównaniu przed/po jedyną zatwierdzoną różnicą transformacji jest obrót słońca. W dniu tej rewizji, 2026-10-06, lobby nadal kierowało do `Tutorial_scene`; routing zmieniono 2026-10-07.
 
 Po ponownym otwarciu maska Volume `MainCamera` wynosiła 257; pozostałe kamery zachowały maskę 256. Cztery obrazy przed/po (przegląd i detal) są renderami Unity URP w rozdzielczości 1536×1024. Nie wykonano testów, preflightu, buildu, Play Mode ani bake. Nie zaobserwowano błędów kompilacji C# ani shaderów w migawce Console, która zawierała wcześniejsze błędy przechwytywania i ostrzeżenia.
 
 - [Raport rewizji oświetlenia](../ArtSource/TutorialTerrainStage02/LightingRevision01/LightingRevision01_Report.txt)
 - Obrazy: przegląd przed (`lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_Before_Overview.png`), przegląd po (`lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_After_Overview.png`), detal przed (`lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_Before_Detail.png`), detal po (`lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_After_Detail.png`).
+
+## Routing lobby do Stage02 — 2026-10-07
+
+Przycisk hosta `Tutorial` w `MultiplayerStartScene` ładuje teraz scenę `TutorialTerrainStage02` przez `GameplaySceneRegistry.TutorialTerrainStage02SceneName` i `NetworkManager.SceneManager.LoadScene`. Zmiana sceny NGO jest wywoływana wyłącznie przez hosta i synchronizuje klientów. Stage02 jest wpisana i włączona w Build Settings. Editor odświeżył i skompilował projekt bez błędów C# po tej zmianie. Nie wykonano testów, preflightu, buildu, Play Mode ani weryfikacji sesji host-klient; routing multiplayer nie został sprawdzony w runtime.
 
 ## Ograniczenia i diagnostyka
 

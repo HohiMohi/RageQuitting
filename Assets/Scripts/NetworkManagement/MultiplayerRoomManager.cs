@@ -265,7 +265,7 @@ public class MultiplayerRoomManager : NetworkBehaviour
 
     private void OnStartTutorialSceneClicked()
     {
-        TryStartGameplayScene(GameplaySceneRegistry.TutorialSceneName);
+        TryStartGameplayScene(GameplaySceneRegistry.TutorialTerrainStage02SceneName);
     }
 
     private void TryStartGameplayScene(string sceneName)
