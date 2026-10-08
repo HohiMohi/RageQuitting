@@ -1,0 +1,25 @@
+River Width Revision 01 movement audit (final saved scene)
+
+Method: Every scene move uses absolute targets from the frozen baseline. The initial river batch had partial in-memory execution after an assertion stopped; the scene was subsequently completed from absolute baseline positions, saved, and re-opened. No additive retry was used. East excavation correction and all 42 descendants are recorded in east-excavation-after.txt. Full original IDs/transforms are in baseline_scene_snapshot.txt.
+
+East-side and river transforms
+- East_FoundationExcavation root: frozen baseline local/world X0 -> final world X-6; all 42 descendants retain baseline local transforms and activity, producing world delta -6m (e.g. PitBottom baseline17.25 -> final11.25). The previous temporary root value11.25 caused a 47-object mismatch and was corrected before the final bake/captures.
+- East WoodenFoundationBridgeComponent: X 16.10 -> 10.10.
+- East resources, props, shore markers, goal and loose mountables: absolute baseline X-6m. ThornyBush_Foundation2 roots at baseline14.8100014/16.2500019/15.5700016 are now8.8100014/10.2500019/9.5700016; each whole subtree moved. Parent hierarchy and per-object values are in baseline_scene_snapshot.txt; final excavation values in east-excavation-after.txt.
+- River decorative geometry/WaterVolume center X 8 -> 5, width12 -> 6; WaterSurfaceAreaVolume center8->5, width8->6; WaterSurfaceNavigation center8->5, scaleX12->6; AmphibiousNavigationSurface center8->5, colliderX24->18; TerrainRiverbedNotWalkable center8->5, width9.5->6; RiverBedCleanupZone center8->5, width3->1.5.
+- West content and west WaterEntryNavigation (X2.7) remain unchanged.
+
+Bridge layout (world coordinates)
+- Main girder IDs4,5: X8.1 -> 5.1; Y1.15; Z±0.75; dimensions 12.8m -> 6.8m wood, overall collider14m -> 8m.
+- Crossbeam IDs6,7: X5.1 -> 3.50625 and X8.35 -> 5.2328125, using x'=1.7+(x-1.7)*(6.8/12.8); orientation and Y/Z retained.
+- Diagonal brace IDs8,9: roots both X4.36953125,Y0.95,Z0; logical rotations remain ±45 degrees; per-instance correction frames are -4/+4 degrees. Exact wood/ghost endpoints are within 0.7mm of crossbeam targets; see bridge-reference-closure.txt.
+- Deck center X8.1->5.1; sectionLength14->8; gap0.04; three panel slots of length2.64; two crossbeams retained. Four obsolete extra slots removed.
+- Loose short diagonal mountables remain inactive and retain exact transforms (-1.04,0,7.06) and (-5.23,0,7.06); they now use the owned short prefab and Mountable SO.
+
+Component identity map
+- Final physical component IDs: 0..12, 13 scene components and 13 manager data records.
+- Baseline IDs0..7 retained; phantom old ID8 removed; old IDs9..13 compacted to8..12. Old extra panel records14..17 removed.
+- Final stage lists: [0,1], [2,3], [4,5], [6,7], [8,9], [10,11,12]. User completion flags preserved. Both crossbeam prerequisites, diagonal prerequisiteCrossBeams, and deck prerequisite pair were checked; deck references resolve to the two owned diagonal scene components.
+- Final scene reopened after save. The original 17 missing serialized refs were known baseline; affected bridge prerequisites and recipe/SO bindings were explicitly read after prefab replacement.
+
+

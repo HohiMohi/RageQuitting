@@ -41,6 +41,28 @@
 /Artifacts/PainterlyRoadLookdev/*
 !/Artifacts/PainterlyRoadLookdev/process_texture.py
 
+# Local art source is useful to keep on this machine without adding large working inputs to Git.
+# Already tracked/staged reports and scripts stay tracked. Review any new repo-worthy report or
+# tool, then add it deliberately with git add -f.
+/ArtSource/
+
+# Local experiments default to ignored; explicitly keep the three dependency-confirmed folders.
+/Assets/Experiments/*
+!/Assets/Experiments/ArtStyleStage22/
+!/Assets/Experiments/ArtStyleStage22.meta
+!/Assets/Experiments/TutorialTerrainStage01/
+!/Assets/Experiments/TutorialTerrainStage01.meta
+!/Assets/Experiments/TutorialTerrainStage02/
+!/Assets/Experiments/TutorialTerrainStage02.meta
+
+# Five unused ShortBack variants in BridgeWidthRevision are outside the current dependency closure.
+/Assets/Experiments/TutorialTerrainStage02/BridgeWidthRevision/*ShortBack*
+
+# Conventional location for future local experiments, including experiments outside Experiments/.
+/Assets/LocalExperiments/
+/Assets/LocalExperiments.meta
+
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/

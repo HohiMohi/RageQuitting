@@ -55,3 +55,4 @@ Assets/Experiments/ArtStyleStage22/Textures/Spruce_Bark_Albedo.png filter=lfs di
 Assets/Experiments/ArtStyleStage22/Textures/Spruce_BranchBark_Albedo.png filter=lfs diff=lfs merge=lfs -text
 Assets/Experiments/ArtStyleStage22/Textures/Spruce_Needle_Atlas.png filter=lfs diff=lfs merge=lfs -text
 Assets/Experiments/TutorialTerrainStage01/TutorialTerrain_Road_Ochre.png filter=lfs diff=lfs merge=lfs -text
+Assets/Experiments/TutorialTerrainStage02/TutorialTerrainRoadCoordinates.asset filter=lfs diff=lfs merge=lfs -text

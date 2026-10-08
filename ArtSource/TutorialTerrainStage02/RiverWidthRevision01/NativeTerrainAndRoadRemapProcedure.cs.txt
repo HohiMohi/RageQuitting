@@ -1,0 +1,134 @@
+// Callable live-Editor native TerrainData and road-map remap from the frozen binary arrays in this folder.
+// Run from Unity MCP only when the Stage02 scene is active. Stored as .cs.txt, so it is not compiled automatically.
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
+using System;
+using System.IO;
+using System.Linq;
+
+internal class CommandScript : IRunCommand
+{
+    const string Folder = "ArtSource/TutorialTerrainStage02/RiverWidthRevision01";
+    const string TerrainPath = "Assets/Experiments/TutorialTerrainStage02/TutorialTerrainData.asset";
+    const string RoadPath = "Assets/Experiments/TutorialTerrainStage02/TutorialTerrainRoadCoordinates.asset";
+    const string RoadSourcePath = "Assets/Experiments/TutorialTerrainStage01/TutorialTerrainRoadCoordinates.asset";
+    const string MatPath = "Assets/Experiments/TutorialTerrainStage02/TutorialTerrain.mat";
+    const float X0 = -50f, OldWidth = 90f, NewWidth = 84f, Z0 = -45f, Depth = 8f, LengthZ = 90f;
+
+    public void Execute(ExecutionResult result)
+    {
+        if (SceneManager.GetActiveScene().path != "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity")
+            throw new InvalidOperationException("Open Stage02 before running this editor command.");
+        var terrainData = AssetDatabase.LoadAssetAtPath<TerrainData>(TerrainPath);
+        if (!terrainData) throw new InvalidOperationException("Stage02-owned TerrainData missing.");
+        var heights = ReadFloatGrid(Path.Combine(Folder, "terrain_heights_before.bin"), 1025, 1025);
+        var alphas = ReadFloatGrid(Path.Combine(Folder, "terrain_alphas_before.bin"), 1024, 1024, 2);
+        var holes = ReadBoolGrid(Path.Combine(Folder, "terrain_holes_before.bin"), 1024, 1024);
+        RemapHeights(terrainData, heights);
+        RemapAlphas(terrainData, alphas);
+        RemapHoles(terrainData, holes);
+        terrainData.size = new Vector3(NewWidth, Depth, LengthZ);
+        EditorUtility.SetDirty(terrainData);
+
+        var sourceRoad = AssetDatabase.LoadAssetAtPath<Texture2D>(RoadSourcePath);
+        var ownRoad = AssetDatabase.LoadAssetAtPath<Texture2D>(RoadPath);
+        if (!sourceRoad || !ownRoad) throw new InvalidOperationException("Shared source or Stage02-owned road map missing.");
+        RemapRoad(sourceRoad, ownRoad);
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(MatPath);
+        if (!mat) throw new InvalidOperationException("Stage02-owned material missing.");
+        // Preserve its existing road texture property binding; update only the owned map and world rect.
+        mat.SetTexture("_RoadCoordinates", ownRoad);
+        mat.SetVector("_RoadCoordinateWorldRect", new Vector4(X0, Z0, NewWidth, LengthZ));
+        EditorUtility.SetDirty(mat);
+        AssetDatabase.SaveAssets();
+        EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+        EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
+        result.Log("Applied frozen native arrays to Stage02-owned terrain and remapped Stage01 road pixels into Stage02-owned texture; Stage01 sources were read only.");
+    }
+
+    static float[,] ReadFloatGrid(string path, int expectedX, int expectedZ, int layers = 1)
+    {
+        using (var r = new BinaryReader(File.OpenRead(path)))
+        {
+            int resolution = r.ReadInt32();
+            if (resolution != expectedX || (layers > 1 && r.ReadInt32() != layers)) throw new InvalidDataException("Unexpected array header: " + path);
+            var values = new float[expectedZ, expectedX * layers];
+            for (int z = 0; z < expectedZ; z++)
+            for (int x = 0; x < expectedX * layers; x++) values[z, x] = r.ReadSingle();
+            if (r.BaseStream.Position != r.BaseStream.Length) throw new InvalidDataException("Unexpected trailing bytes: " + path);
+            return values;
+        }
+    }
+
+    static bool[,] ReadBoolGrid(string path, int width, int height)
+    {
+        using (var r = new BinaryReader(File.OpenRead(path)))
+        {
+            if (r.ReadInt32() != width) throw new InvalidDataException("Unexpected holes header.");
+            var values = new bool[height, width];
+            for (int z = 0; z < height; z++) for (int x = 0; x < width; x++) values[z, x] = r.ReadBoolean();
+            if (r.BaseStream.Position != r.BaseStream.Length) throw new InvalidDataException("Unexpected holes trailing bytes.");
+            return values;
+        }
+    }
+
+    static float OldWorldX(float x)
+    {
+        if (x <= 2f) return x;
+        if (x < 8f) return 2f + 2f * (x - 2f);
+        return x + 6f;
+    }
+
+    static float OldHeight(float[,] a, float u, int z)
+    {
+        float x = Mathf.Clamp01(u) * (a.GetLength(1) - 1); int x0 = Mathf.FloorToInt(x), x1 = Mathf.Min(x0 + 1, a.GetLength(1) - 1);
+        return Mathf.Lerp(a[z, x0], a[z, x1], x - x0);
+    }
+
+    static void RemapHeights(TerrainData t, float[,] source)
+    {
+        int n = t.heightmapResolution; var dst = new float[n, n];
+        for (int z = 0; z < n; z++) for (int x = 0; x < n; x++)
+        { float worldX = X0 + NewWidth * x / (n - 1f); dst[z, x] = OldHeight(source, (OldWorldX(worldX) - X0) / OldWidth, z); }
+        t.SetHeights(0, 0, dst);
+    }
+
+    static void RemapAlphas(TerrainData t, float[,] source)
+    {
+        int n = t.alphamapResolution, layers = t.alphamapLayers; if (layers != 2) throw new InvalidOperationException("Expected two Stage02 terrain layers.");
+        var dst = new float[n, n, layers];
+        for (int z = 0; z < n; z++) for (int x = 0; x < n; x++)
+        {
+            float worldX = X0 + NewWidth * (x + 0.5f) / n; float u = Mathf.Clamp01((OldWorldX(worldX) - X0) / OldWidth) * n - 0.5f;
+            int x0 = Mathf.Clamp(Mathf.FloorToInt(u), 0, n - 1), x1 = Mathf.Min(x0 + 1, n - 1); float f = Mathf.Clamp01(u - Mathf.Floor(u));
+            for (int l = 0; l < layers; l++) dst[z, x, l] = Mathf.Lerp(source[z, x0 * layers + l], source[z, x1 * layers + l], f);
+        }
+        t.SetAlphamaps(0, 0, dst);
+    }
+
+    static void RemapHoles(TerrainData t, bool[,] source)
+    {
+        int n = t.holesResolution; var dst = new bool[n, n];
+        for (int z = 0; z < n; z++) for (int x = 0; x < n; x++)
+        { float worldX = X0 + NewWidth * (x + 0.5f) / n; float u = Mathf.Clamp01((OldWorldX(worldX) - X0) / OldWidth) * n - 0.5f; dst[z, x] = source[z, Mathf.Clamp(Mathf.RoundToInt(u), 0, n - 1)]; }
+        t.SetHoles(0, 0, dst);
+    }
+
+    static void RemapRoad(Texture2D source, Texture2D destination)
+    {
+        if (source.width != 1024 || source.height != 1024 || destination.width != 1024 || destination.height != 1024) throw new InvalidOperationException("Road maps must be 1024 square.");
+        var a = source.GetPixels(); var b = new Color[a.Length];
+        for (int y = 0; y < 1024; y++) for (int x = 0; x < 1024; x++)
+        {
+            float worldX = X0 + NewWidth * (x + 0.5f) / 1024f; float oldU = Mathf.Clamp01((OldWorldX(worldX) - X0) / OldWidth);
+            float sx = Mathf.Clamp(oldU * 1024f - 0.5f, 0f, 1023f); int x0 = Mathf.FloorToInt(sx), x1 = Mathf.Min(x0 + 1, 1023); float f = sx - x0; int k = y * 1024;
+            b[k + x] = Color.Lerp(a[k + x0], a[k + x1], f);
+        }
+        destination.SetPixels(b); destination.wrapMode = TextureWrapMode.Clamp; destination.filterMode = FilterMode.Bilinear; destination.Apply(false, false); EditorUtility.SetDirty(destination);
+    }
+}
+
+
+

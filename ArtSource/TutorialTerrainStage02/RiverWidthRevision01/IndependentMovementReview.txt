@@ -1,0 +1,4 @@
+[Log] ParsedDeltaAudit west=747 east=214 riverMidExcluded=13 mismatch=0 parseFailed=0 tolerance0.2mm; unchanged path hierarchy compared, bridge/camera/lighting/UI excluded
+
+Scope: baseline path-based world-position comparison; bridge, cameras, lighting and UI reviewed separately.
+
