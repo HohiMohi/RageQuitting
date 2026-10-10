@@ -64,10 +64,21 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
             return;
         }
 
+        SpawnNetworkedDrop(itemToDrop, dropper, dropper.transform.position + Vector3.up, dropper.transform.rotation);
+    }
+
+    public static void SpawnNetworkedDrop(EquippableItemSO itemToDrop, NetworkObject dropper,
+        Vector3 worldPosition, Quaternion worldRotation)
+    {
+        if (itemToDrop == null || itemToDrop.equippableItemPrefab == null || dropper == null)
+        {
+            return;
+        }
+
         GameObject droppedItem = Instantiate(
             itemToDrop.equippableItemPrefab,
-            dropper.transform.position + Vector3.up,
-            dropper.transform.rotation);
+            worldPosition,
+            worldRotation);
 
         if (droppedItem.TryGetComponent(out NetworkObject networkObject))
         {

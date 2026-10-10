@@ -15,6 +15,11 @@ public class LookingAtComponentUI : MonoBehaviour
     private PlayerInputNew playerInput;
     private PlayerHealth playerHealth;
     private PlayerActionController playerActionController;
+    private PlayerSingleCarryPlacementController placementController;
+    private string cachedPlacementHudText;
+    private string cachedPlacementHudStatus;
+    private string cachedPlacementHudConfirmHint;
+    private bool cachedPlacementHudPending;
     private readonly List<InteractionPrompt> prompts = new List<InteractionPrompt>();
     public MonoBehaviour EvaluatedTarget { get; private set; }
     public bool CurrentTargetHasActionablePrompt { get; private set; }
@@ -29,6 +34,7 @@ public class LookingAtComponentUI : MonoBehaviour
         playerInput = GetComponentInParent<PlayerInputNew>();
         playerHealth = GetComponentInParent<PlayerHealth>();
         playerActionController = GetComponentInParent<PlayerActionController>();
+        placementController = GetComponentInParent<PlayerSingleCarryPlacementController>();
         Hide();
     }
 
@@ -39,6 +45,14 @@ public class LookingAtComponentUI : MonoBehaviour
         if (playerHealth != null && playerHealth.IsDowned)
         {
             Hide();
+            return;
+        }
+
+        if (playerInput != null && playerInput.IsSingleCarryPlacementActive)
+        {
+            if (placementController == null)
+                placementController = GetComponentInParent<PlayerSingleCarryPlacementController>();
+            ShowPlacementStatus();
             return;
         }
 
@@ -344,6 +358,30 @@ public class LookingAtComponentUI : MonoBehaviour
         }
 
         return string.Join("\n", lines);
+    }
+
+    private void ShowPlacementStatus()
+    {
+        EvaluatedTarget = null;
+        CurrentTargetHasActionablePrompt = false;
+        if (progressCircleHolder != null) progressCircleHolder.SetActive(false);
+        if (assemblingProgressBar != null) assemblingProgressBar.fillAmount = 0f;
+        string status = placementController != null ? placementController.PlacementStatusLabel : "Placement status unavailable";
+        string confirmHint = placementController != null ? placementController.PlacementConfirmationHint : "E Placement unavailable";
+        bool waitingForServer = placementController != null && placementController.IsRequestPending;
+        if (cachedPlacementHudText == null || cachedPlacementHudStatus != status || cachedPlacementHudConfirmHint != confirmHint
+            || cachedPlacementHudPending != waitingForServer)
+        {
+            cachedPlacementHudStatus = status;
+            cachedPlacementHudConfirmHint = confirmHint;
+            cachedPlacementHudPending = waitingForServer;
+            cachedPlacementHudText = waitingForServer
+                ? $"{status}\nAwaiting server response\n{confirmHint}"
+                : $"{status}\nF Toggle | Esc Cancel | Up/Down X | Left/Right Z\n{confirmHint}";
+        }
+        if (componentInfoText != null && componentInfoText.text != cachedPlacementHudText)
+            componentInfoText.text = cachedPlacementHudText;
+        Show();
     }
 
     private void Show()

@@ -531,6 +531,14 @@ namespace StarterAssets
 				_horizontalVelocity = Vector3.zero;
 				return;
 			}
+			if (_playerInputNew != null && _playerInputNew.IsSingleCarryPlacementActive)
+			{
+				_isSprinting = false;
+				_isJumpPerformed = false;
+				_horizontalVelocity = Vector3.zero;
+				_controller.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
+				return;
+			}
 
 			if (_concreteTrapController != null && _concreteTrapController.BlocksGameplayInput)
 			{
@@ -778,6 +786,9 @@ namespace StarterAssets
 
 		private void JumpAndGravity()
 		{
+			if (_playerInputNew != null && _playerInputNew.IsSingleCarryPlacementActive)
+				_isJumpPerformed = false;
+
 			if (_concreteTrapController != null && _concreteTrapController.BlocksGameplayInput)
 			{
 				_isJumpPerformed = false;
@@ -1033,6 +1044,13 @@ namespace StarterAssets
 			_verticalVelocity = 0f;
 			float delta = targetRootY - transform.position.y;
 			_controller.Move(Vector3.up * Mathf.Clamp(delta, -2f * Time.deltaTime, 2f * Time.deltaTime));
+		}
+
+		public void StopHorizontalMovementForPlacement()
+		{
+			_horizontalVelocity = Vector3.zero;
+			_isSprinting = false;
+			_isJumpPerformed = false;
 		}
 
 		public void ResetMovementAfterForcedPlacement()

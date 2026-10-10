@@ -2,7 +2,9 @@
   "name": "AgentHarness.PlayModeTests",
   "rootNamespace": "RageQuitting.Tests.PlayMode",
   "references": [
-    "Unity.Netcode.Runtime"
+    "Unity.Netcode.Runtime",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

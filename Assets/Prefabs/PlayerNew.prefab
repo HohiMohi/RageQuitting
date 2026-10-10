@@ -449,6 +449,7 @@ GameObject:
   - component: {fileID: 8127641093237516443}
   - component: {fileID: 8127641093237516444}
   - component: {fileID: 8127641093237516445}
+  - component: {fileID: 6728895307675066483}
   - component: {fileID: 3720368351117420130}
   - component: {fileID: 4186271902374816054}
   - component: {fileID: 7382414467715117638}
@@ -1011,6 +1012,19 @@ MonoBehaviour:
   handToolLocalEulerAngles: {x: 0, y: 90, z: 0}
   backToolLocalEulerAngles: {x: 0, y: 0, z: 0}
   attachmentOverrides: []
+--- !u!114 &6728895307675066483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3fc44782b6e18d43b97854a36fedec1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSingleCarryPlacementNetworkPreview
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!114 &3720368351117420130
 MonoBehaviour:
   m_ObjectHideFlags: 0

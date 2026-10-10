@@ -192,9 +192,27 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""ToggleSingleCarryPlacement"",
+                    ""type"": ""Button"",
+                    ""id"": ""9ca5d544-3db6-485f-8544-a86eafde5d73"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""BridgeRequirementsScroll"",
                     ""type"": ""Value"",
                     ""id"": ""ad65887c-3cf3-4528-9fd7-e4551514146a"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""SingleCarryPlacementRotation"",
+                    ""type"": ""Value"",
+                    ""id"": ""96b87436-9822-479e-9036-e379ad5a8634"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -369,6 +387,17 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                 },
                 {
                     ""name"": """",
+                    ""id"": ""339413e8-5099-4632-8142-5ac9e015c161"",
+                    ""path"": ""<Keyboard>/f"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleSingleCarryPlacement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""1b8e5e1b-b72e-4ce6-a7dd-2e53d47748a5"",
                     ""path"": ""<Mouse>/scroll"",
                     ""interactions"": """",
@@ -377,6 +406,61 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""action"": ""BridgeRequirementsScroll"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""2DVector"",
+                    ""id"": ""aa23c9bc-d1a1-4eb3-bc61-da47bc76ed8b"",
+                    ""path"": ""2DVector(mode=1)"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SingleCarryPlacementRotation"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Up"",
+                    ""id"": ""c295e63d-bae1-4f78-9172-13e6bda48640"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SingleCarryPlacementRotation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Down"",
+                    ""id"": ""e38ed545-bf41-4bb7-b9b1-a43456e357e9"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SingleCarryPlacementRotation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Left"",
+                    ""id"": ""4a6e5fe7-f831-43c6-aacc-92a492d5198f"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SingleCarryPlacementRotation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Right"",
+                    ""id"": ""dea12efa-fb5f-4870-905d-c0ca6bdc4a79"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SingleCarryPlacementRotation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         },
@@ -521,7 +605,9 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         m_Game_DropItem = m_Game.FindAction("DropItem", throwIfNotFound: true);
         m_Game_ToggleBridgeRequirements = m_Game.FindAction("ToggleBridgeRequirements", throwIfNotFound: true);
         m_Game_ToggleRestartMenu = m_Game.FindAction("ToggleRestartMenu", throwIfNotFound: true);
+        m_Game_ToggleSingleCarryPlacement = m_Game.FindAction("ToggleSingleCarryPlacement", throwIfNotFound: true);
         m_Game_BridgeRequirementsScroll = m_Game.FindAction("BridgeRequirementsScroll", throwIfNotFound: true);
+        m_Game_SingleCarryPlacementRotation = m_Game.FindAction("SingleCarryPlacementRotation", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Up = m_UI.FindAction("Up", throwIfNotFound: true);
@@ -621,7 +707,9 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
     private readonly InputAction m_Game_DropItem;
     private readonly InputAction m_Game_ToggleBridgeRequirements;
     private readonly InputAction m_Game_ToggleRestartMenu;
+    private readonly InputAction m_Game_ToggleSingleCarryPlacement;
     private readonly InputAction m_Game_BridgeRequirementsScroll;
+    private readonly InputAction m_Game_SingleCarryPlacementRotation;
     /// <summary>
     /// Provides access to input actions defined in input action map "Game".
     /// </summary>
@@ -678,9 +766,17 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// </summary>
         public InputAction @ToggleRestartMenu => m_Wrapper.m_Game_ToggleRestartMenu;
         /// <summary>
+        /// Provides access to the underlying input action "Game/ToggleSingleCarryPlacement".
+        /// </summary>
+        public InputAction @ToggleSingleCarryPlacement => m_Wrapper.m_Game_ToggleSingleCarryPlacement;
+        /// <summary>
         /// Provides access to the underlying input action "Game/BridgeRequirementsScroll".
         /// </summary>
         public InputAction @BridgeRequirementsScroll => m_Wrapper.m_Game_BridgeRequirementsScroll;
+        /// <summary>
+        /// Provides access to the underlying input action "Game/SingleCarryPlacementRotation".
+        /// </summary>
+        public InputAction @SingleCarryPlacementRotation => m_Wrapper.m_Game_SingleCarryPlacementRotation;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -740,9 +836,15 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @ToggleRestartMenu.started += instance.OnToggleRestartMenu;
             @ToggleRestartMenu.performed += instance.OnToggleRestartMenu;
             @ToggleRestartMenu.canceled += instance.OnToggleRestartMenu;
+            @ToggleSingleCarryPlacement.started += instance.OnToggleSingleCarryPlacement;
+            @ToggleSingleCarryPlacement.performed += instance.OnToggleSingleCarryPlacement;
+            @ToggleSingleCarryPlacement.canceled += instance.OnToggleSingleCarryPlacement;
             @BridgeRequirementsScroll.started += instance.OnBridgeRequirementsScroll;
             @BridgeRequirementsScroll.performed += instance.OnBridgeRequirementsScroll;
             @BridgeRequirementsScroll.canceled += instance.OnBridgeRequirementsScroll;
+            @SingleCarryPlacementRotation.started += instance.OnSingleCarryPlacementRotation;
+            @SingleCarryPlacementRotation.performed += instance.OnSingleCarryPlacementRotation;
+            @SingleCarryPlacementRotation.canceled += instance.OnSingleCarryPlacementRotation;
         }
 
         /// <summary>
@@ -787,9 +889,15 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @ToggleRestartMenu.started -= instance.OnToggleRestartMenu;
             @ToggleRestartMenu.performed -= instance.OnToggleRestartMenu;
             @ToggleRestartMenu.canceled -= instance.OnToggleRestartMenu;
+            @ToggleSingleCarryPlacement.started -= instance.OnToggleSingleCarryPlacement;
+            @ToggleSingleCarryPlacement.performed -= instance.OnToggleSingleCarryPlacement;
+            @ToggleSingleCarryPlacement.canceled -= instance.OnToggleSingleCarryPlacement;
             @BridgeRequirementsScroll.started -= instance.OnBridgeRequirementsScroll;
             @BridgeRequirementsScroll.performed -= instance.OnBridgeRequirementsScroll;
             @BridgeRequirementsScroll.canceled -= instance.OnBridgeRequirementsScroll;
+            @SingleCarryPlacementRotation.started -= instance.OnSingleCarryPlacementRotation;
+            @SingleCarryPlacementRotation.performed -= instance.OnSingleCarryPlacementRotation;
+            @SingleCarryPlacementRotation.canceled -= instance.OnSingleCarryPlacementRotation;
         }
 
         /// <summary>
@@ -1061,12 +1169,26 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleRestartMenu(InputAction.CallbackContext context);
         /// <summary>
+        /// Method invoked when associated input action "ToggleSingleCarryPlacement" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleSingleCarryPlacement(InputAction.CallbackContext context);
+        /// <summary>
         /// Method invoked when associated input action "BridgeRequirementsScroll" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnBridgeRequirementsScroll(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SingleCarryPlacementRotation" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSingleCarryPlacementRotation(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

@@ -111,6 +111,19 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             return aimCamera != null ? aimCamera.transform : transform;
         }
     }
+
+    /// <summary>Server-known anchor used to constrain client supplied placement rays.</summary>
+    public Transform SingleCarryPlacementAimAnchor
+    {
+        get
+        {
+            if (interactionOrigin != null) return interactionOrigin;
+            TryGetComponent(out FirstPersonController controller);
+            return controller != null && controller.CinemachineCameraTarget != null
+                ? controller.CinemachineCameraTarget.transform
+                : transform;
+        }
+    }
     public class UpdateHoldedItemMovementSpeedPenaltyEventArgs : EventArgs
     {
         public float currentMovementSpeedPenaltyMultiplier;
@@ -258,6 +271,13 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         bucketHoldStartedAt = 0f;
         bucketTargetLostAt = -1f;
     }
+
+    public void CancelBucketActionHoldForPlacement() => CancelBucketActionHold();
+
+    public bool TryGetAimRay(out Ray aimRay) => TryGetAimRayInternal(out aimRay, out _, out _);
+
+    public bool TryGetAimRay(out Ray aimRay, out Camera sourceCamera, out Quaternion cameraYaw)
+        => TryGetAimRayInternal(out aimRay, out sourceCamera, out cameraYaw);
 
     private void HandleInteract(object sender, EventArgs e)
     {
@@ -895,7 +915,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         EndFlexibleSaplingSession(sapling);
     }
 
-    private bool TryGetAimRay(out Ray aimRay)
+    private bool TryGetAimRayInternal(out Ray aimRay, out Camera sourceCamera, out Quaternion cameraYaw)
     {
         if (aimCamera == null || !aimCamera.isActiveAndEnabled)
         {
@@ -905,17 +925,85 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         if (aimCamera != null)
         {
             aimRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+            sourceCamera = aimCamera;
+            cameraYaw = GetHorizontalYaw(aimCamera.transform);
             return true;
         }
 
         if (interactionOrigin != null)
         {
             aimRay = new Ray(interactionOrigin.position, interactionOrigin.forward);
+            sourceCamera = null;
+            cameraYaw = GetHorizontalYaw(interactionOrigin);
             return true;
         }
 
         aimRay = default;
+        sourceCamera = null;
+        cameraYaw = Quaternion.identity;
         return false;
+    }
+
+    /// <summary>Releases a single-carry object at an already validated pose without the ordinary drop offset or impulse.</summary>
+    public bool TryReleaseSingleCarryPlacement(GameObject expectedObject, ISingleCarryPlaceable expectedPlaceable,
+        Vector3 position, Quaternion rotation)
+    {
+        NetworkManager manager = NetworkManager.Singleton;
+        if (manager != null && manager.IsListening || expectedObject == null || expectedPlaceable == null
+            || _pickedUpGameObject != expectedObject || pickedUpObject == null
+            || !ReferenceEquals(pickedUpObject, expectedPlaceable)
+            || pickedUpObjectSelfPositioned || sharedCarryMovementActive
+            || _playerHealth != null && _playerHealth.IsDowned
+            || !IsFinite(position) || !IsFinite(rotation) || !expectedPlaceable.CanReleaseSingleCarryPlacement(this))
+            return false;
+
+        Transform originalParent = expectedObject.transform.parent;
+        Vector3 originalPosition = expectedObject.transform.position;
+        Quaternion originalRotation = expectedObject.transform.rotation;
+        expectedObject.transform.SetParent(null, true);
+        if (!expectedPlaceable.TryReleaseSingleCarryPlacement(this, position, rotation))
+        {
+            expectedObject.transform.SetParent(originalParent, true);
+            expectedObject.transform.SetPositionAndRotation(originalPosition, originalRotation);
+            return false;
+        }
+
+        _pickedUpGameObject = null;
+        pickedUpObjectParented = false;
+        pickedUpObjectFollowsHoldPosition = true;
+        pickedUpObjectSelfPositioned = false;
+        sharedCarryMovementActive = false;
+        sharedCarryAttachLocalPoint = Vector3.zero;
+        ClearSharedCarryOrbitState();
+        ClearSharedCarryStaminaLoad();
+        SetHoldedItemProperties(null);
+        OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
+        OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
+    private static bool IsFinite(Vector3 value)
+    {
+        return IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
+    }
+
+    private static bool IsFinite(Quaternion value)
+    {
+        return IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z) && IsFinite(value.w)
+            && value.x * value.x + value.y * value.y + value.z * value.z + value.w * value.w > 0.000001f;
+    }
+
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+
+    private static Quaternion GetHorizontalYaw(Transform source)
+    {
+        Vector3 forward = Vector3.ProjectOnPlane(source.forward, Vector3.up);
+        if (forward.sqrMagnitude < 0.000001f)
+        {
+            Vector3 right = Vector3.ProjectOnPlane(source.right, Vector3.up);
+            forward = Vector3.Cross(right, Vector3.up);
+        }
+        return forward.sqrMagnitude < 0.000001f ? Quaternion.identity : Quaternion.LookRotation(forward.normalized, Vector3.up);
     }
 
     private void SetCurrentTarget(MonoBehaviour target)

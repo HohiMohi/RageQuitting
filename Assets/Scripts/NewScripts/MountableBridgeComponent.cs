@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 
-public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInteractableNew, ISharedCarryObject, IHeldObjectHudInfoProvider, ICarriedObjectImpactTargetProvider, ISharedCarryAnchorPreviewProvider
+public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInteractableNew, ISharedCarryObject, IHeldObjectHudInfoProvider, ICarriedObjectImpactTargetProvider, ISharedCarryAnchorPreviewProvider, ISingleCarryPlaceable
 {
     private const ulong NoHolderClientId = ulong.MaxValue;
     private const float SharedCarryInputStaleTime = 0.2f;
@@ -22,12 +23,104 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     [SerializeField] private float sharedCarryMaxVerticalPlacementDelta = 0.75f;
     public bool IsPickedUp => isPickedUp;
     public bool IsActivelyCarried => isPickedUp;
+    public bool CanEnterSingleCarryPlacement => mountableBridgeComponentSO != null
+        && !mountableBridgeComponentSO.allowMultipleCarriers;
+    public bool CanReleaseSingleCarryPlacement(PlayerInteractionNew holder)
+    {
+        NetworkManager manager = NetworkManager.Singleton;
+        return CanEnterSingleCarryPlacement && holder != null && isPickedUp && _rigidbody != null
+            && _rigidbody.isKinematic && !_rigidbody.useGravity
+            && _rigidbody.gameObject.activeInHierarchy && !IsSpawned && (manager == null || !manager.IsListening)
+            && holder.GetPickedUpGameObject() == gameObject && !holder.IsHoldingSelfPositionedObject
+            && !holder.IsSharedCarryMovementActive && externalCarryActor == null
+            && holderClientIds.Count == 0 && npcHolderActorIds.Count == 0;
+    }
+
+    public bool TryReleaseSingleCarryPlacement(PlayerInteractionNew holder, Vector3 position, Quaternion rotation)
+    {
+        if (!CanReleaseSingleCarryPlacement(holder)) return false;
+        transform.SetPositionAndRotation(position, rotation);
+        SetPickedUpState(false);
+        ClearLocalSharedCarryState();
+        _rigidbody.useGravity = true;
+        _rigidbody.isKinematic = false;
+        _rigidbody.linearVelocity = Vector3.zero;
+        _rigidbody.angularVelocity = Vector3.zero;
+        return true;
+    }
+
+    public bool CanCompleteNetworkSingleCarryPlacement(ulong holderClientId, PlayerInteractionNew holder)
+    {
+        return IsServer && IsSpawned && NetworkManager != null && NetworkManager.IsListening
+            && CanEnterSingleCarryPlacement && holder != null && holder.gameObject.activeInHierarchy
+            && holder.TryGetComponent(out NetworkObject playerObject)
+            && playerObject.IsSpawned && playerObject.IsPlayerObject && playerObject.OwnerClientId == holderClientId
+            && isPickedUp && holderClientIds.Count == 1 && holderClientIds.Contains(holderClientId)
+            && npcHolderActorIds.Count == 0 && externalCarryActor == null && _rigidbody != null
+            && _rigidbody.isKinematic && !_rigidbody.useGravity && _rigidbody.gameObject.activeInHierarchy
+            && TryGetComponent(out NetworkTransform networkTransform)
+            && networkTransform.IsSpawned && NetworkObject.OwnerClientId == holderClientId
+            && !holder.IsHoldingSelfPositionedObject && !holder.IsSharedCarryMovementActive;
+    }
+
+    public bool TryCompleteNetworkSingleCarryPlacement(ulong holderClientId, PlayerInteractionNew holder,
+        Vector3 position, Quaternion rotation)
+    {
+        if (!CanCompleteNetworkSingleCarryPlacement(holderClientId, holder)) return false;
+
+        if (!TryGetComponent(out NetworkTransform networkTransform) || !networkTransform.IsSpawned
+            || NetworkObject.OwnerClientId != holderClientId)
+            return false;
+
+        if (NetworkObject.OwnerClientId != NetworkManager.ServerClientId)
+            NetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
+        if (!NetworkObject.IsOwner || !networkTransform.CanCommitToTransform)
+        {
+            if (NetworkObject.OwnerClientId == NetworkManager.ServerClientId)
+                NetworkObject.ChangeOwnership(holderClientId);
+            return false;
+        }
+
+        if (NetworkObject.transform.parent != null && !NetworkObject.TryRemoveParent())
+        {
+            NetworkObject.ChangeOwnership(holderClientId);
+            return false;
+        }
+
+        holderClientIds.Remove(holderClientId);
+        if (_sharedCarryCollisionController != null)
+            _sharedCarryCollisionController.SetHolderCollisionIgnored(holder.transform, false);
+        SetHolderCollisionIgnoredClientRpc(holderClientId, false);
+        ClearHeldComponent(holderClientId);
+        StopHolderVisualOverrideClientRpc(holderClientId);
+        SetPickedUpState(false);
+        if (_sharedCarryPhysicsBody != null) _sharedCarryPhysicsBody.EndSharedCarry();
+        _rigidbody.useGravity = true;
+        _rigidbody.isKinematic = false;
+        _rigidbody.detectCollisions = true;
+        transform.SetPositionAndRotation(position, rotation);
+        networkTransform.Teleport(position, rotation, transform.localScale);
+        _rigidbody.linearVelocity = Vector3.zero;
+        _rigidbody.angularVelocity = Vector3.zero;
+        CompleteSinglePlacementClientRpc(position, rotation);
+        ConfirmSinglePlacementReleaseClientRpc(CreateTargetClientRpcParams(holderClientId));
+        Physics.SyncTransforms();
+        return true;
+    }
     public Transform MountAlignmentTransform => mountAlignmentPoint != null ? mountAlignmentPoint : transform;
     public Rigidbody PhysicsBody => _rigidbody;
     public int ActiveCarrierCount => GetCurrentHolderCount();
     public int RecommendedCarriers => GetRecommendedCarriers();
     public bool SupportsAnchorPreview => _sharedCarryPhysicsBody != null
         && _sharedCarryPhysicsBody.ControlMode == SharedCarryControlMode.PhysicalPointGrip;
+
+    public void ClearHolderCollisionOverride(Transform holderRoot)
+    {
+        if (_sharedCarryCollisionController != null)
+        {
+            _sharedCarryCollisionController.SetHolderCollisionIgnored(holderRoot, false);
+        }
+    }
 
     private Rigidbody _rigidbody;
     private SharedCarryPhysicsBody _sharedCarryPhysicsBody;
@@ -120,6 +213,11 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     private void Awake()
     {
+        if (TryGetComponent(out NetworkObject networkObject))
+        {
+            networkObject.DontDestroyWithOwner = true;
+        }
+
         _rigidbody = GetComponent<Rigidbody>();
         if (_rigidbody == null)
         {
@@ -444,7 +542,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         return true;
     }
 
-    private bool TryCompleteNetworkDrop(ulong senderClientId, Vector3 dropPosition, Quaternion dropRotation)
+    private bool TryCompleteNetworkDrop(ulong senderClientId, Vector3 dropPosition, Quaternion dropRotation,
+        bool notifyReleasedHolder = true, Transform releasedHolderRoot = null)
     {
         if (!holderClientIds.Contains(senderClientId))
         {
@@ -452,14 +551,27 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         }
 
         holderClientIds.Remove(senderClientId);
-        if (TryGetPlayerObject(senderClientId, out NetworkObject senderPlayerObject))
+        if (releasedHolderRoot != null)
         {
-            _sharedCarryCollisionController?.SetHolderCollisionIgnored(senderPlayerObject.transform, false);
+            if (_sharedCarryCollisionController != null)
+            {
+                _sharedCarryCollisionController.SetHolderCollisionIgnored(releasedHolderRoot, false);
+            }
+        }
+        else if (TryGetPlayerObject(senderClientId, out NetworkObject senderPlayerObject))
+        {
+            if (_sharedCarryCollisionController != null)
+            {
+                _sharedCarryCollisionController.SetHolderCollisionIgnored(senderPlayerObject.transform, false);
+            }
         }
         SetHolderCollisionIgnoredClientRpc(senderClientId, false);
         ClearHeldComponent(senderClientId);
         StopHolderVisualOverrideClientRpc(senderClientId);
-        ConfirmReleaseClientRpc(CreateTargetClientRpcParams(senderClientId));
+        if (notifyReleasedHolder)
+        {
+            ConfirmReleaseClientRpc(CreateTargetClientRpcParams(senderClientId));
+        }
 
         if (GetCurrentHolderCount() > 0)
         {
@@ -476,7 +588,40 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
         SetPickedUpState(false);
         CompleteDropClientRpc(dropPosition, dropRotation);
+        if (!notifyReleasedHolder)
+        {
+            if (_rigidbody != null)
+            {
+                _rigidbody.linearVelocity = Vector3.zero;
+                _rigidbody.angularVelocity = Vector3.zero;
+            }
+
+            if (TryGetComponent(out NetworkTransform networkTransform) && networkTransform.IsSpawned
+                && networkTransform.CanCommitToTransform)
+            {
+                networkTransform.Teleport(dropPosition, dropRotation, transform.localScale);
+            }
+        }
+
         return true;
+    }
+
+    public bool TryReleaseDisconnectedHolder(ulong holderClientId, Transform releasedHolderRoot)
+    {
+        if (!IsServer || !IsSpawned || NetworkManager == null || !NetworkManager.IsListening
+            || NetworkManager.ShutdownInProgress || !holderClientIds.Contains(holderClientId))
+        {
+            return false;
+        }
+
+        bool released = TryCompleteNetworkDrop(holderClientId, transform.position, transform.rotation,
+            false, releasedHolderRoot);
+        if (released)
+        {
+            Physics.SyncTransforms();
+        }
+
+        return released;
     }
 
     public string HeldObjectDisplayName => mountableBridgeComponentSO != null ? mountableBridgeComponentSO.componentName : gameObject.name;
@@ -1597,6 +1742,33 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         {
             playerInteraction.ForceReleasePickedUpObject(gameObject);
         }
+    }
+
+    [ClientRpc]
+    private void ConfirmSinglePlacementReleaseClientRpc(ClientRpcParams clientRpcParams = default)
+    {
+        if (NetworkManager == null || NetworkManager.LocalClient?.PlayerObject == null
+            || !NetworkManager.LocalClient.PlayerObject.TryGetComponent(out PlayerInteractionNew playerInteraction))
+            return;
+
+        playerInteraction.ForceReleasePickedUpObject(gameObject);
+    }
+
+    [ClientRpc]
+    private void CompleteSinglePlacementClientRpc(Vector3 position, Quaternion rotation)
+    {
+        SetPickedUpState(false);
+        if (_sharedCarryPhysicsBody != null) _sharedCarryPhysicsBody.EndSharedCarry();
+        if (_rigidbody != null)
+        {
+            _rigidbody.useGravity = true;
+            _rigidbody.isKinematic = false;
+            _rigidbody.detectCollisions = true;
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.angularVelocity = Vector3.zero;
+        }
+        transform.SetPositionAndRotation(position, rotation);
+        Physics.SyncTransforms();
     }
 
     [ClientRpc]
