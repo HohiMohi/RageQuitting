@@ -1809,6 +1809,7 @@ MonoBehaviour:
   ghostMaterial: {fileID: 2100000, guid: e4086445596654d47bd5f343fe066ba1, type: 2}
   mountedPhysicalColliders:
   - {fileID: 8308931532407984415}
+  disabledAfterAssemblyColliders: []
 --- !u!65 &5571897640415329345
 BoxCollider:
   m_ObjectHideFlags: 0

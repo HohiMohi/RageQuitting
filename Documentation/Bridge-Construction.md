@@ -270,6 +270,27 @@ Complete`
 MoveLeft odpycha w prawo, MoveRight w lewo. Zaciski trzeba rozwijać
 naprzemiennie, potem ukończyć cztery fastenery.
 
+Prefab `WoodenCrossBeamBridgeComponent` zawiera child
+`CrossBeamClampColliders`, z którego collidery `COL_Clamp.Left` i
+`COL_Clamp.Right` są przypisane do opcjonalnego, domyślnie pustego pola
+`disabledAfterAssemblyColliders` w `BridgeComponent`. Po ukończeniu całego
+workflow (`Complete`: wyrównanie, oba zaciski i cztery fastenery) collidery
+obejm pozostają wyłączone również wtedy, gdy workflow włącza główny collider
+belki; widoczne modele zacisków pozostają na miejscu. Dotychczasowe reguły
+aktywacji colliderów przed ukończeniem workflow nie zmieniają się. Konfiguracja
+działa także dla `startFullyCompleted`, odświeżeń stanu i późniejszych snapshotów
+NGO, korzystając z istniejącego stanu sieciowego.
+
+Walidacja 2026-10-19: ścisły, nieprzefiltrowany preflight Gameplay zakończony
+powodzeniem (exit 0; 14/14 kroków). EditMode: 125/125; PlayMode: 127/127,
+w tym testy colliderów belki poprzecznej oraz synchronizacji z hostem, klientem
+i późnym dołączeniem w jednym procesie. Raport:
+[`summary.json`](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261019T181113Z-0bf0ed09/summary.json).
+Początkowy pełny przebieg miał jeden nieudany test sieciowego rozmieszczania
+Stage1; późniejszy przebieg izolowany i końcowy pełny przebieg przeszły. Przyczyna
+tamtego niepowodzenia nie została ustalona. Nie sprawdzano osobnego procesu,
+player builda, WAN/Relay ani ręcznie wizualnego rozmieszczenia panelu.
+
 ### Stężenie ukośne
 
 `WaitingForCrossBeams -> ReadyForMount -> Aligning -> TemporaryFixing ->

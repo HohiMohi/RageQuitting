@@ -1158,7 +1158,7 @@ Transform:
   m_GameObject: {fileID: 2614772363472312823}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.65, y: 0.35, z: 0.18}
+  m_LocalPosition: {x: -3.65, y: 0.35, z: 0.18}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1437,7 +1437,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2290162134789682299
 Transform:
   m_ObjectHideFlags: 0
@@ -1627,7 +1627,7 @@ Transform:
   m_GameObject: {fileID: 3100353881045524616}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.65, y: 0.35, z: -0.18}
+  m_LocalPosition: {x: -3.65, y: 0.35, z: -0.18}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1758,6 +1758,7 @@ MonoBehaviour:
   ghostMaterial: {fileID: 2100000, guid: e4086445596654d47bd5f343fe066ba1, type: 2}
   mountedPhysicalColliders:
   - {fileID: 2212236022907032066}
+  disabledAfterAssemblyColliders: []
 --- !u!65 &2212236022907032066
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2146,7 +2147,7 @@ Transform:
   m_GameObject: {fileID: 3703750511411233939}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.65, y: 0.35, z: -0.18}
+  m_LocalPosition: {x: 3.65, y: 0.35, z: -0.18}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2835,7 +2836,7 @@ Transform:
   m_GameObject: {fileID: 4930419474106338784}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.65, y: 0.35, z: 0.18}
+  m_LocalPosition: {x: 3.65, y: 0.35, z: 0.18}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3264,7 +3265,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5254762699495350333
 Transform:
   m_ObjectHideFlags: 0

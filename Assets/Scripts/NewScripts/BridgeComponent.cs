@@ -22,6 +22,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     [SerializeField] private Material ghostMaterial;
     [Tooltip("Optional explicit list of colliders enabled after mounting. When empty, all colliders outside the ghost visuals are used.")]
     [SerializeField] private Collider[] mountedPhysicalColliders;
+    [Tooltip("Optional physical colliders disabled once this component is fully assembled.")]
+    [SerializeField] private Collider[] disabledAfterAssemblyColliders = Array.Empty<Collider>();
     private float assemblingProgressNeeded;
     private float currentAssemblingProgress;
     private bool needAssembling;
@@ -516,11 +518,13 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         {
             if (physicalCollider != null)
             {
-                physicalCollider.enabled = UsesPhysicalDeckPanelPlacement && !startFullyCompleted
+                bool excludedAfterAssembly = isAssembled && disabledAfterAssemblyColliders != null &&
+                    Array.IndexOf(disabledAfterAssemblyColliders, physicalCollider) >= 0;
+                physicalCollider.enabled = !excludedAfterAssembly && (UsesPhysicalDeckPanelPlacement && !startFullyCompleted
                     ? false
                     : constructionSite != null
                     ? constructionSite.ShouldEnablePhysicalColliders(isMounted)
-                    : isMounted;
+                    : isMounted);
             }
         }
     }
