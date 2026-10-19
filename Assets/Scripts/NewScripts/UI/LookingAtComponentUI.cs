@@ -16,9 +16,11 @@ public class LookingAtComponentUI : MonoBehaviour
     private PlayerHealth playerHealth;
     private PlayerActionController playerActionController;
     private PlayerSingleCarryPlacementController placementController;
+    private BridgeDeckPanelSlotOutline focusedPanelOutline;
     private string cachedPlacementHudText;
     private string cachedPlacementHudStatus;
     private string cachedPlacementHudConfirmHint;
+    private string cachedPlacementHudMounting;
     private bool cachedPlacementHudPending;
     private readonly List<InteractionPrompt> prompts = new List<InteractionPrompt>();
     public MonoBehaviour EvaluatedTarget { get; private set; }
@@ -40,7 +42,14 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void Update()
     {
-        if (playerInteraction == null) return;
+        if (playerInteraction == null)
+        {
+            Hide();
+            return;
+        }
+
+        if (playerInput != null && !playerInput.IsLocalGameplayInputActive)
+            ClearPanelPlacementFeedback();
 
         if (playerHealth != null && playerHealth.IsDowned)
         {
@@ -50,6 +59,7 @@ public class LookingAtComponentUI : MonoBehaviour
 
         if (playerInput != null && playerInput.IsSingleCarryPlacementActive)
         {
+            ClearPanelPlacementFeedback();
             if (placementController == null)
                 placementController = GetComponentInParent<PlayerSingleCarryPlacementController>();
             ShowPlacementStatus();
@@ -66,6 +76,7 @@ public class LookingAtComponentUI : MonoBehaviour
         prompts.Clear();
         AddPromptsForCurrentState(currentTarget);
         FilterUnavailableActionPrompts(currentTarget);
+        RefreshPanelPlacementFeedback(currentTarget);
         EvaluatedTarget = currentTarget;
         CurrentTargetHasActionablePrompt = prompts.Exists(
             prompt => prompt.ActionKind != PlayerInputActionKind.Information);
@@ -164,6 +175,10 @@ public class LookingAtComponentUI : MonoBehaviour
             }
 
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Drop"));
+            BridgeDeckPanelMounting panelMarker = target != null ? target.GetComponentInParent<BridgeDeckPanelMounting>() : null;
+            if (panelMarker != null && panelMarker.TryGetComponent(out MountableBridgeComponent lookedAtPanel)
+                && !lookedAtPanel.IsPickedUp)
+                panelMarker.AddPlacementInformationPrompts(prompts);
             return;
         }
 
@@ -172,13 +187,19 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void AddPromptsForTarget(MonoBehaviour target)
     {
-        if (target.TryGetComponent(out IInteractionPromptProvider promptProvider))
+        MountingNail mountingNail = target as MountingNail;
+        if (mountingNail == null && target != null) mountingNail = target.GetComponentInParent<MountingNail>();
+        if (mountingNail != null && (mountingNail.State == MountingNailState.Prepared || mountingNail.BlocksPickup))
+        {
+            mountingNail.GetInteractionPrompts(playerInteraction.transform, prompts);
+            return;
+        }
+
+        if ((mountingNail == null || mountingNail.State != MountingNailState.Loose)
+            && target.TryGetComponent(out IInteractionPromptProvider promptProvider))
         {
             promptProvider.GetInteractionPrompts(playerInteraction.transform, prompts);
-            if (prompts.Count > 0)
-            {
-                return;
-            }
+            return;
         }
 
         if (TryAddDownedPlayerPrompts(target))
@@ -195,13 +216,16 @@ public class LookingAtComponentUI : MonoBehaviour
                 AddStoragePrompts(baseStorage);
                 break;
             case BaseResourceNew baseResource:
-                if (baseResource.CanBeCarried && !baseResource.IsPickedUp)
+                if (baseResource.CanBePickedUp && !baseResource.IsPickedUp)
                 {
                     prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Pick up"));
                 }
                 break;
             case MountableBridgeComponent:
-            case EquippableItem:
+                if (target is MountableBridgeComponent bridge && bridge.CanBePickedUp)
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Pick up"));
+                break;
+            case EquippableItem equippable when !MountingNailSceneState.IsTargetConnected(equippable.transform):
                 prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Pick up"));
                 break;
             default:
@@ -294,6 +318,9 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void UpdateProgressVisual(MonoBehaviour currentTarget)
     {
+        MountingNail mountingNail = currentTarget as MountingNail;
+        if (mountingNail == null && currentTarget != null) mountingNail = currentTarget.GetComponentInParent<MountingNail>();
+        bool showNailProgress = mountingNail != null && mountingNail.BlocksPickup;
         BridgeConstructionSite constructionSite = currentTarget as BridgeConstructionSite;
         if (constructionSite == null && currentTarget is BridgeComponent constructionBridge)
         {
@@ -308,7 +335,7 @@ public class LookingAtComponentUI : MonoBehaviour
                                     !bridgeComponent.IsAssembled &&
                                     bridgeComponent.NeedAssembling;
         bool showBucketHoldProgress = playerInteraction.IsBucketActionHoldActive;
-        bool showProgress = showBucketHoldProgress || showConstructionProgress || showAssemblyProgress;
+        bool showProgress = showNailProgress || showBucketHoldProgress || showConstructionProgress || showAssemblyProgress;
 
         if (progressCircleHolder != null)
         {
@@ -317,7 +344,11 @@ public class LookingAtComponentUI : MonoBehaviour
 
         if (showProgress && assemblingProgressBar != null)
         {
-            if (showBucketHoldProgress)
+            if (showNailProgress)
+            {
+                assemblingProgressBar.fillAmount = mountingNail.PenetrationProgressNormalized;
+            }
+            else if (showBucketHoldProgress)
             {
                 assemblingProgressBar.fillAmount = playerInteraction.BucketActionHoldProgress;
             }
@@ -362,22 +393,27 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void ShowPlacementStatus()
     {
+        ClearPanelPlacementFeedback();
         EvaluatedTarget = null;
         CurrentTargetHasActionablePrompt = false;
         if (progressCircleHolder != null) progressCircleHolder.SetActive(false);
         if (assemblingProgressBar != null) assemblingProgressBar.fillAmount = 0f;
         string status = placementController != null ? placementController.PlacementStatusLabel : "Placement status unavailable";
         string confirmHint = placementController != null ? placementController.PlacementConfirmationHint : "E Placement unavailable";
+        string mountingGuidance = placementController != null ? placementController.PanelMountingGuidanceLabel : string.Empty;
         bool waitingForServer = placementController != null && placementController.IsRequestPending;
         if (cachedPlacementHudText == null || cachedPlacementHudStatus != status || cachedPlacementHudConfirmHint != confirmHint
-            || cachedPlacementHudPending != waitingForServer)
+            || cachedPlacementHudMounting != mountingGuidance || cachedPlacementHudPending != waitingForServer)
         {
             cachedPlacementHudStatus = status;
             cachedPlacementHudConfirmHint = confirmHint;
+            cachedPlacementHudMounting = mountingGuidance;
             cachedPlacementHudPending = waitingForServer;
             cachedPlacementHudText = waitingForServer
                 ? $"{status}\nAwaiting server response\n{confirmHint}"
-                : $"{status}\nF Toggle | Esc Cancel | Up/Down X | Left/Right Z\n{confirmHint}";
+                : string.IsNullOrEmpty(mountingGuidance)
+                    ? $"{status}\nF Toggle | Esc Cancel | Up/Down X | Left/Right Z\n{confirmHint}"
+                    : $"{status}\n{mountingGuidance}\n{confirmHint} | F Toggle | Esc Cancel | Up/Down X | Left/Right Z";
         }
         if (componentInfoText != null && componentInfoText.text != cachedPlacementHudText)
             componentInfoText.text = cachedPlacementHudText;
@@ -394,6 +430,7 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void Hide()
     {
+        ClearPanelPlacementFeedback();
         EvaluatedTarget = null;
         CurrentTargetHasActionablePrompt = false;
         if (visualRoot != null)
@@ -405,5 +442,51 @@ public class LookingAtComponentUI : MonoBehaviour
         {
             progressCircleHolder.SetActive(false);
         }
+    }
+
+    private void OnDisable() => Hide();
+
+    private void OnDestroy() => ClearPanelPlacementFeedback();
+
+    private void RefreshPanelPlacementFeedback(MonoBehaviour target)
+    {
+        if (playerInput == null || !playerInput.IsLocalGameplayInputActive || playerInteraction == null)
+        {
+            ClearPanelPlacementFeedback();
+            return;
+        }
+
+        BridgeDeckPanelMounting marker = target != null ? target.GetComponentInParent<BridgeDeckPanelMounting>() : null;
+        MountableBridgeComponent panel = null;
+        if (marker != null) marker.TryGetComponent(out panel);
+        if (marker == null || !marker.IsPhysicalPanel || panel == null || panel.IsPickedUp
+            || !BridgeDeckPanelSectionNetworkState.TryGetAssessmentFor(marker, out BridgeDeckPanelReplicatedState state,
+                out BridgeDeckPanelConstructionSite slot)
+            || state.Complete)
+        {
+            ClearPanelPlacementFeedback();
+            return;
+        }
+
+        BridgeDeckPanelSlotOutline nextOutline = slot.GetComponentInChildren<BridgeDeckPanelSlotOutline>(true);
+        if (nextOutline == null)
+        {
+            ClearPanelPlacementFeedback();
+            return;
+        }
+        if (focusedPanelOutline != nextOutline)
+        {
+            ClearPanelPlacementFeedback();
+            focusedPanelOutline = nextOutline;
+        }
+        focusedPanelOutline.SetPlacementFeedback(this,
+            BridgeDeckPanelMounting.IsPlacementCorrect((BridgeDeckPanelPlacementFailure)state.Failure));
+    }
+
+    private void ClearPanelPlacementFeedback()
+    {
+        if (focusedPanelOutline == null) return;
+        focusedPanelOutline.ClearPlacementFeedback(this);
+        focusedPanelOutline = null;
     }
 }

@@ -35,8 +35,19 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
     private ulong lastRequestId;
     private bool enteredInNetworkSession;
     private bool heldSourceOwnershipTracked;
+    private bool hasNetworkSurfaceAnchor;
+    private bool networkSurfaceAnchorRejected;
+    private NetworkObject anchoredSurface;
+    private NetworkObjectReference anchoredSurfaceReference;
+    private Vector3 localPosePosition;
+    private Quaternion localPoseRotation;
+    private Vector3 localSurfacePoint;
+    private Vector3 localSurfaceNormal;
+    private string physicalRootPath;
+    private bool physicalRootHasRigidbody;
     private string placementResultMessage;
     private int worldRenderLayer = -1;
+    private BridgeDeckPanelPlacementGuidance panelPlacementGuidance;
 
     public bool IsActive { get; private set; }
     public bool IsRequestPending => requestPending;
@@ -46,6 +57,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
     public SingleCarryPlacementGeometryStatus LastGeometryStatus { get; private set; }
     public SingleCarryPlacementValidationResult LastValidation { get; private set; }
     public bool IsCurrentPlacementValid => IsActive && LastValidation.IsValid;
+    public string PanelMountingGuidanceLabel => panelPlacementGuidance != null ? panelPlacementGuidance.Label : string.Empty;
     public float PlacementDistance => IsNetworkSessionListening() && networkPreview != null
         ? networkPreview.PlacementDistance : placementDistance;
 
@@ -61,6 +73,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
 
     private void Awake()
     {
+        panelPlacementGuidance = new BridgeDeckPanelPlacementGuidance(this);
         Component[] attachedComponents = GetComponents<Component>();
         foreach (Component attached in attachedComponents)
         {
@@ -117,6 +130,12 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         CinemachineCore.CameraUpdatedEvent.RemoveListener(CinemachineCameraUpdated);
         SceneManager.activeSceneChanged -= ActiveSceneChanged;
         ForceExitPlacement();
+    }
+
+    private void OnDestroy()
+    {
+        if (panelPlacementGuidance != null) panelPlacementGuidance.Dispose();
+        panelPlacementGuidance = null;
     }
 
     private void LateUpdate()
@@ -192,10 +211,15 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             hasLastRenderedPose = false;
             return;
         }
+        // NetworkTransform and carried-object movement can update collider Transforms outside
+        // the physics step. Keep the preview raycast and subsequent penetration check on the
+        // same current pose while placement mode is active.
         ghost.SyncSourceAppearance();
+        Physics.SyncTransforms();
         if (!interaction.TryGetAimRay(out Ray aimRay, out Camera aimCamera, out Quaternion baseYaw))
         {
             hasLastRenderedPose = false;
+            ClearPanelMountingPreview();
             LastValidation = new SingleCarryPlacementValidationResult(SingleCarryPlacementValidationStatus.UnsupportedGeometry);
             ghost.SetPlacementValid(false);
             if (ghost.Root != null)
@@ -217,8 +241,10 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         lastRenderedPose = pose;
         lastRenderedAimRay = aimRay;
         hasLastRenderedPose = true;
+        CaptureNetworkSurfaceAnchor(pose);
         LastValidation = validator.Validate(pose);
         ghost.SetPlacementValid(LastValidation.IsValid);
+        RefreshPanelMountingPreview(pose, aimCamera);
         PublishPreviewState(pose.Position, pose.Rotation, LastValidation.IsValid);
     }
 
@@ -228,10 +254,24 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             || validator == null || ghost == null || ghost.Root == null)
             return;
 
-        // Physics transforms may have changed since the last green preview. Sync only at
-        // confirmation so this query sees current world occupancy without per-frame cost.
+        // Confirmation can arrive between preview refreshes, so recheck the latest world
+        // transforms before validating and submitting the placement.
         Physics.SyncTransforms();
-        LastValidation = validator.Validate(lastRenderedPose);
+        SingleCarryPlacementPose poseToCommit = lastRenderedPose;
+        bool useSurfaceAnchor = IsNetworkSessionListening() && hasNetworkSurfaceAnchor;
+        if (useSurfaceAnchor && !TryRebaseNetworkSurfacePose(out poseToCommit))
+        {
+            LastValidation = new SingleCarryPlacementValidationResult(SingleCarryPlacementValidationStatus.UnsupportedGeometry);
+            ghost.SetPlacementValid(false);
+            return;
+        }
+        if (networkSurfaceAnchorRejected && IsNetworkSessionListening())
+        {
+            LastValidation = new SingleCarryPlacementValidationResult(SingleCarryPlacementValidationStatus.UnsupportedGeometry);
+            ghost.SetPlacementValid(false);
+            return;
+        }
+        LastValidation = validator.Validate(poseToCommit);
         ghost.SetPlacementValid(LastValidation.IsValid);
         if (!LastValidation.IsValid) return;
 
@@ -246,14 +286,21 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             pendingRequestId = lastRequestId;
             requestPending = true;
             placementResultMessage = null;
-            PublishPreviewState(lastRenderedPose.Position, lastRenderedPose.Rotation, LastValidation.IsValid);
-            networkPreview.RequestNetworkPlacement(source, pendingRequestId, lastRenderedPose.Position,
-                lastRenderedPose.Rotation, lastRenderedAimRay);
+            ClearPanelMountingPreview();
+            PublishPreviewState(poseToCommit.Position, poseToCommit.Rotation, LastValidation.IsValid);
+            if (useSurfaceAnchor)
+                networkPreview.RequestNetworkSurfacePlacement(source, pendingRequestId, anchoredSurfaceReference,
+                    localPosePosition, localPoseRotation, localSurfacePoint, localSurfaceNormal,
+                    physicalRootPath, physicalRootHasRigidbody, poseToCommit.Position,
+                    poseToCommit.Rotation, lastRenderedAimRay);
+            else
+                networkPreview.RequestNetworkPlacement(source, pendingRequestId, poseToCommit.Position,
+                    poseToCommit.Rotation, lastRenderedAimRay);
             return;
         }
 
         if (!interaction.TryReleaseSingleCarryPlacement(heldObject, heldPlaceable,
-                lastRenderedPose.Position, lastRenderedPose.Rotation))
+                poseToCommit.Position, poseToCommit.Rotation))
         {
             LastValidation = new SingleCarryPlacementValidationResult(SingleCarryPlacementValidationStatus.UnsupportedGeometry);
             ghost.SetPlacementValid(false);
@@ -262,6 +309,64 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
 
         if (IsActive) ExitPlacement();
     }
+
+    private void CaptureNetworkSurfaceAnchor(SingleCarryPlacementPose pose)
+    {
+        hasNetworkSurfaceAnchor = false;
+        networkSurfaceAnchorRejected = false;
+        anchoredSurface = null;
+        if (!IsNetworkSessionListening() || pose.SurfaceCollider == null) return;
+
+        NetworkObject surfaceObject = pose.SurfaceCollider.GetComponentInParent<NetworkObject>();
+        if (surfaceObject == null) return; // Keep the strict legacy world-pose path for static surfaces.
+
+        networkSurfaceAnchorRejected = true;
+        if (networkPreview == null || !TryGetSourceNetworkObject(out NetworkObject source)
+            || !SingleCarryPlacementSurfaceAnchor.TryCapture(pose.SurfaceCollider, networkPreview.NetworkManager,
+                source, pose.Position, pose.Rotation, pose.SurfacePoint, pose.SurfaceNormal,
+                out anchoredSurface, out anchoredSurfaceReference, out localPosePosition, out localPoseRotation,
+                out localSurfacePoint, out localSurfaceNormal, out physicalRootPath,
+                out physicalRootHasRigidbody)) return;
+        hasNetworkSurfaceAnchor = true;
+        networkSurfaceAnchorRejected = false;
+    }
+
+    private bool TryRebaseNetworkSurfacePose(out SingleCarryPlacementPose rebasedPose)
+    {
+        rebasedPose = default;
+        NetworkManager manager = networkPreview != null ? networkPreview.NetworkManager : null;
+        if (!hasNetworkSurfaceAnchor || anchoredSurface == null || !anchoredSurface.IsSpawned
+            || manager == null || anchoredSurface.NetworkManager != manager
+            || !anchoredSurfaceReference.TryGet(out NetworkObject capturedSurface, manager)
+            || capturedSurface != anchoredSurface
+            || !interaction.TryGetAimRay(out Ray aimRay, out _, out _)) return false;
+
+        if (!SingleCarryPlacementSurfaceAnchor.TryResolveAnchorTransform(anchoredSurface, physicalRootPath,
+                physicalRootHasRigidbody, out Transform anchorTransform)) return false;
+        Vector3 worldPoint = anchorTransform.TransformPoint(localSurfacePoint);
+        Vector3 worldNormal = anchorTransform.TransformDirection(localSurfaceNormal).normalized;
+        Quaternion worldRotation = anchorTransform.rotation * localPoseRotation;
+        Vector3 expectedWorldPosition = anchorTransform.TransformPoint(localPosePosition);
+        if (!IsFinite(worldPoint) || !IsFinite(worldNormal) || !IsFinite(worldRotation)
+            || !IsFinite(expectedWorldPosition)) return false;
+        if (!SingleCarryPlacementSurfaceAnchor.TryResolveContactCollider(anchoredSurface, heldObject.transform,
+                transform, worldPoint, worldNormal, physicalRootPath, physicalRootHasRigidbody,
+                out Collider currentCollider)) return false;
+        if (!SingleCarryPlacementSurfaceAnchor.HasLineOfSightToContact(currentCollider, anchoredSurface,
+                physicalRootPath, physicalRootHasRigidbody, heldObject.transform, transform,
+                aimRay.origin, worldPoint, PlacementDistance)) return false;
+
+        rebasedPose = geometrySolver.CalculateAtSurfaceContact(worldPoint, worldNormal, worldRotation, currentCollider);
+        return rebasedPose.Status == SingleCarryPlacementGeometryStatus.SurfaceSupported
+            && IsFinite(rebasedPose.Position) && IsFinite(rebasedPose.Rotation)
+            && Vector3.Distance(rebasedPose.Position, expectedWorldPosition) <= 0.002f
+            && Quaternion.Angle(rebasedPose.Rotation, worldRotation) <= 0.1f;
+    }
+
+    private static bool IsFinite(Vector3 value) => IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
+    private static bool IsFinite(Quaternion value) => IsFinite(value.x) && IsFinite(value.y)
+        && IsFinite(value.z) && IsFinite(value.w);
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
     private bool IsNetworkSessionListening()
     {
@@ -368,6 +473,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         if (!IsActive || !requestPending || requestId != pendingRequestId) return;
         requestPending = false;
         pendingRequestId = 0;
+        ClearPanelMountingPreview();
         if (result == SingleCarryPlacementNetworkResult.Accepted)
         {
             ExitPlacement();
@@ -421,6 +527,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
 
     private void ExitPlacement()
     {
+        ClearPanelMountingPreview();
         if (networkPreview != null) networkPreview.ClearOwnerPreview();
         if (ghost != null) ghost.Dispose();
         ghost = null;
@@ -437,9 +544,38 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         heldSourceOwnershipTracked = false;
         placementResultMessage = null;
         hasLastRenderedPose = false;
+        hasNetworkSurfaceAnchor = false;
+        networkSurfaceAnchorRejected = false;
+        anchoredSurface = null;
+        physicalRootPath = null;
+        physicalRootHasRigidbody = false;
         LastValidation = new SingleCarryPlacementValidationResult(SingleCarryPlacementValidationStatus.UnsupportedGeometry);
         localRotation = Quaternion.identity;
         worldRenderLayer = -1;
         if (input != null) input.SetSingleCarryPlacementActive(false);
+    }
+
+    private void RefreshPanelMountingPreview(SingleCarryPlacementPose pose, Camera aimCamera)
+    {
+        if (heldObject == null || !heldObject.TryGetComponent(out BridgeDeckPanelMounting marker)
+            || !heldObject.TryGetComponent(out MountableBridgeComponent panel) || !panel.IsPhysicalDeckPanel)
+        {
+            ClearPanelMountingPreview();
+            return;
+        }
+
+        if (!BridgeDeckPanelSectionNetworkState.TryAssessPlacementPreview(panel, pose.Position,
+                pose.Rotation, out BridgeDeckPanelPlacementAssessment assessment))
+        {
+            ClearPanelMountingPreview("Mount: No slot");
+            return;
+        }
+        if (panelPlacementGuidance == null) panelPlacementGuidance = new BridgeDeckPanelPlacementGuidance(this);
+        panelPlacementGuidance.Refresh(assessment, pose.Position, aimCamera, worldRenderLayer);
+    }
+
+    private void ClearPanelMountingPreview(string message = null)
+    {
+        panelPlacementGuidance?.Clear(message);
     }
 }

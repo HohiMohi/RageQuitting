@@ -198,6 +198,7 @@ public class GameplayManager : MonoBehaviour
     private bool bridgeFullyAssembledEventInvoked;
     private bool networkMessagingRegistered;
     private bool hasAppliedInitialNetworkBridgeState;
+    private bool bridgeProgressInitialized;
 
     public EventHandler<BridgeComponentMountableStatusUpdateEventArgs> BridgeComponentMountableStatusUpdate;
     public class BridgeComponentMountableStatusUpdateEventArgs : EventArgs
@@ -301,6 +302,18 @@ public class GameplayManager : MonoBehaviour
         return result;
     }
 
+    public int GetMountedBridgeComponentCount(BridgeComponentSO component)
+    {
+        if (component == null || bridgeComponentDataArray == null) return 0;
+        int count = 0;
+        for (int i = 0; i < bridgeComponentDataArray.Length; i++)
+        {
+            BridgeComponentData data = bridgeComponentDataArray[i];
+            if (data.bridgeComponentSO == component && data.isMounted) count++;
+        }
+        return count;
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -335,7 +348,9 @@ public class GameplayManager : MonoBehaviour
         {
             ApplyConfiguredInitialBridgeState();
             AdvancePastInitiallyCompletedStages();
+            if (!IsNetworkSessionActive()) bridgeProgressInitialized = true;
         }
+        ReconcileInitialPhysicalDeckPanels();
         SeedObservedConstructionStages();
         SubscribeBridgeComponentEvents();
         yield return null;
@@ -346,6 +361,8 @@ public class GameplayManager : MonoBehaviour
             if (NetworkManager.Singleton.IsServer)
             {
                 InitializeServerBridgeState();
+                bridgeProgressInitialized = true;
+                ReconcileInitialPhysicalDeckPanels();
                 UpdateComponentsCanBeMountedProperty();
                 NotifyBridgeRequirementsChanged();
                 BroadcastBridgeState();
@@ -645,25 +662,19 @@ public class GameplayManager : MonoBehaviour
 
     private void CheckCurrentStageMountingProgress()
     {
-        if (isFullyAsembled || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
+        if (isFullyAsembled || bridgeBuildingStages == null || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
         {
             return;
         }
 
-        if (!ValidateStageComponentIndexes(currentBridgeBuildingStageIndex))
+        int previousStageIndex = currentBridgeBuildingStageIndex;
+        while (currentBridgeBuildingStageIndex < bridgeBuildingStages.Length && IsStageFullyCompleted(currentBridgeBuildingStageIndex))
         {
-            return;
+            currentBridgeBuildingStageIndex++;
         }
 
-        foreach (int componentIndex in bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes)
-        {
-            if (!bridgeComponentDataArray[componentIndex].isMounted || !bridgeComponentDataArray[componentIndex].isAssembled)
-            {
-                return;
-            }
-        }
+        if (currentBridgeBuildingStageIndex == previousStageIndex) return;
 
-        currentBridgeBuildingStageIndex++;
         if (currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
         {
             // The caller broadcasts the state after this method returns. Set the
@@ -678,6 +689,130 @@ public class GameplayManager : MonoBehaviour
         {
             BroadcastBridgeState();
         }
+    }
+
+    internal void RecordPhysicalDeckPanelCompletion(
+        BridgeDeckPanelSectionNetworkState sectionState,
+        BridgeDeckPanelConstructionSite site)
+    {
+        if (sectionState == null || site == null || !site.UsesPhysicalPanelPlacement
+            || site.DeckSection == null || site.DeckSection.PhysicalPanelState != sectionState
+            || !sectionState.IsCompletedSlot(site)) return;
+        if (!bridgeProgressInitialized) return;
+
+        NetworkManager activeNetworkManager = NetworkManager.Singleton;
+        bool networkSession = IsNetworkSessionActive();
+        if (networkSession)
+        {
+            if (activeNetworkManager == null || !activeNetworkManager.IsServer || !sectionState.IsSpawned
+                || !sectionState.IsServer || sectionState.NetworkManager != activeNetworkManager) return;
+        }
+        else if (sectionState.IsSpawned) return;
+        BridgeComponent component = site.GetComponent<BridgeComponent>();
+        if (component == null || !TryGetBridgeComponent(component.ComponentID, out BridgeComponent ownedComponent)
+            || ownedComponent != component || !IsMainBridgeDeckSection(site.DeckSection)) return;
+        int componentID = component.ComponentID;
+        if (!IsValidComponentDataIndex(componentID)) return;
+
+        int stateIndex = -1;
+        if (networkSession && !TryGetStateIndex(componentID, out stateIndex)) return;
+
+        BridgeComponentData componentData = bridgeComponentDataArray[componentID];
+        bool componentDataChanged = !componentData.isMounted || !componentData.isAssembled || componentData.CanBeMounted;
+        bool siteChanged = site.CurrentStage != BridgeConstructionStage.Complete;
+        bool networkStateChanged = false;
+        BridgeComponentNetworkState state = new BridgeComponentNetworkState(componentID)
+        {
+            isMounted = true,
+            isAssembled = true,
+            canBeMounted = false,
+            currentAssemblingProgress = component.GetAssemblingProgressNeeded()
+        };
+        if (networkSession)
+        {
+            state = bridgeComponentStates[stateIndex];
+            networkStateChanged = !state.isMounted || !state.isAssembled || state.canBeMounted
+                || state.currentAssemblingProgress < component.GetAssemblingProgressNeeded()
+                || state.constructionStage != (int)BridgeConstructionStage.Complete;
+        }
+        bool stageProgressNeedsReconciliation = !isFullyAsembled && bridgeBuildingStages != null
+            && currentBridgeBuildingStageIndex >= 0 && currentBridgeBuildingStageIndex < bridgeBuildingStages.Length
+            && IsStageFullyCompleted(currentBridgeBuildingStageIndex);
+        bool completionAlreadyApplied = !componentDataChanged && !siteChanged && !networkStateChanged
+            && !stageProgressNeedsReconciliation;
+        if (completionAlreadyApplied) return;
+
+        componentData.isMounted = true;
+        componentData.isAssembled = true;
+        componentData.CanBeMounted = false;
+        bridgeComponentDataArray[componentID] = componentData;
+        site.ApplyPhysicalPanelCompletion();
+
+        if (networkSession)
+        {
+            state.isMounted = true;
+            state.isAssembled = true;
+            state.canBeMounted = false;
+            state.currentAssemblingProgress = component.GetAssemblingProgressNeeded();
+        }
+        site.PopulateNetworkState(ref state);
+        state.isMounted = true;
+        state.isAssembled = true;
+        state.canBeMounted = false;
+
+        if (networkSession)
+        {
+            bridgeComponentStates[stateIndex] = state;
+        }
+        ApplyNetworkState(state, suppressStageEvent: isReconcilingInitialPhysicalDeckPanels);
+        int stageIndexBeforeCompletion = currentBridgeBuildingStageIndex;
+        CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
+        if (networkSession && (currentBridgeBuildingStageIndex == stageIndexBeforeCompletion
+            || bridgeBuildingStages == null || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length))
+        {
+            // CheckCurrentStageMountingProgress broadcasts a nonterminal stage advance itself.
+            // Keep a single snapshot for unchanged progress and for terminal completion.
+            BroadcastBridgeState();
+        }
+    }
+
+    private bool isReconcilingInitialPhysicalDeckPanels;
+
+    private void ReconcileInitialPhysicalDeckPanels()
+    {
+        isReconcilingInitialPhysicalDeckPanels = true;
+        try
+        {
+            BridgeDeckPanelSectionNetworkState.ReconcileAllCompletedSlotsWithGameplayManager();
+        }
+        finally
+        {
+            isReconcilingInitialPhysicalDeckPanels = false;
+        }
+    }
+
+    private bool IsMainBridgeDeckSection(BridgeDeckSection section)
+    {
+        if (bridge == null || section == null || section.MainGirders == null || section.MainGirders.Count == 0)
+            return false;
+
+        CacheBridgeComponents();
+        bool hasMainGirder = false;
+        foreach (BridgeComponent girder in section.MainGirders)
+        {
+            if (girder == null) continue;
+            bool belongsToBridge = false;
+            foreach (BridgeComponent bridgeComponent in bridgeComponents)
+            {
+                if (bridgeComponent != girder) continue;
+                belongsToBridge = true;
+                break;
+            }
+            if (!belongsToBridge) return false;
+            hasMainGirder = true;
+        }
+        return hasMainGirder;
     }
 
     public void RequestMountBridgeComponent(BridgeComponent bridgeComponent, MountableBridgeComponent heldComponent)
@@ -1125,7 +1260,9 @@ public class GameplayManager : MonoBehaviour
 
     private bool CanMountBridgeComponent(BridgeComponent bridgeComponent, MountableBridgeComponent heldComponent)
     {
-        return bridgeComponent.CanBeMounted
+        return !bridgeComponent.UsesPhysicalDeckPanelPlacement
+            && !heldComponent.IsPhysicalDeckPanel
+            && bridgeComponent.CanBeMounted
             && !bridgeComponent.IsMounted
             && heldComponent.GetMountableBridgeComponentSO() != null
             && heldComponent.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponent.GetBridgeComponentSO();
@@ -1605,12 +1742,12 @@ public class GameplayManager : MonoBehaviour
         Dictionary<string, RequirementCounter> remainingStageCounters = new Dictionary<string, RequirementCounter>();
         for (int stageIndex = currentBridgeBuildingStageIndex + 1; stageIndex < bridgeBuildingStages.Length; stageIndex++)
         {
-            AddStageRequirements(stageIndex, remainingStageCounters, includeMountedProgress: false);
+            AddStageRequirements(stageIndex, remainingStageCounters, includeMountedProgress: true);
         }
 
         foreach (KeyValuePair<string, RequirementCounter> pair in remainingStageCounters)
         {
-            remainingStageRequirements.Add(new BridgeRequirementLine(pair.Key, 0, pair.Value.RequiredAmount));
+            remainingStageRequirements.Add(new BridgeRequirementLine(pair.Key, pair.Value.CurrentAmount, pair.Value.RequiredAmount));
         }
         remainingStageRequirements.Sort((first, second) => string.Compare(first.ComponentName, second.ComponentName, StringComparison.Ordinal));
 

@@ -117,17 +117,17 @@ MonoBehaviour:
     title: Wooden Deck Panel
     partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
     steps:
-    - instruction: Deliver and mount the next panel
+    - instruction: Deliver and mount the deck panel.
       requirements: []
-    - instruction: Align the panel
+    - instruction: Use F / E to position the panel by hand over its marked slot on
+        the main girders.
+      requirements: []
+    - instruction: Keep the panel level and correctly oriented within the marked
+        mounting area.
+      requirements: []
+    - instruction: Place a separate Mounting Nail through the panel into a main girder
+        in each of the four quadrants, then strike each nail three times with the
+        Industrial Hammer.
       requirements:
       - displayName: Industrial Hammer
-        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Set an even gap
-      requirements:
-      - displayName: Industrial Hammer
-        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Secure all marked fasteners
-      requirements:
-      - displayName: Wrench
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}

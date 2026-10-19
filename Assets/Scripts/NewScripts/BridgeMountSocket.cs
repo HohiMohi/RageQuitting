@@ -102,6 +102,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
     private MountableBridgeComponent verticalControlCandidate;
     private float verticalControlWeight;
     private bool verticalControlRequested;
+    private bool hasPhysicalDeckPanelMarker;
 
     public BridgeMountAlignmentState CurrentAlignmentState => currentAlignmentState;
     public BridgeMountPoseError CurrentPoseError => currentPoseError;
@@ -126,6 +127,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
         {
             bridgeComponent = GetComponent<BridgeComponent>();
         }
+        hasPhysicalDeckPanelMarker = GetComponent<BridgeDeckPanelMounting>() != null;
 
         if (targetPose == null)
         {
@@ -139,6 +141,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
         ConfigureTrigger(componentCaptureVolume);
         ConfigureTrigger(carrierStagingVolume);
+        if (IsPhysicalDeckPanelTarget) SetSocketVolumesActive(false);
         visualizer = new BridgeMountSocketVisualizer(this, ghostVisualRoot);
     }
 
@@ -164,7 +167,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (IsAuthoritative())
+        if (!IsPhysicalDeckPanelTarget && IsAuthoritative())
         {
             verticalControlRequested = false;
             EvaluateAuthoritativeState();
@@ -174,6 +177,12 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (IsPhysicalDeckPanelTarget)
+        {
+            visualizer?.Refresh(false, BridgeMountAlignmentState.Inactive, default, null);
+            return;
+        }
+
         ResolveVisualCandidate();
         visualizer?.Refresh(ShouldShowFeedback(), currentAlignmentState, currentPoseError, visualCandidate);
     }
@@ -181,7 +190,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
     public bool TryEvaluateCandidate(MountableBridgeComponent candidate, out BridgeMountPoseError poseError)
     {
         poseError = default;
-        if (candidate == null || targetPose == null)
+        if (IsPhysicalDeckPanelTarget || candidate == null || candidate.IsPhysicalDeckPanel || targetPose == null)
         {
             return false;
         }
@@ -223,6 +232,16 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
     public void ApplyNetworkAlignmentState(BridgeComponentNetworkState state)
     {
+        if (IsPhysicalDeckPanelTarget)
+        {
+            currentAlignmentState = BridgeMountAlignmentState.Inactive;
+            synchronizedCandidateId = NoCandidateNetworkObjectId;
+            settleStartedAt = -1d;
+            mountRequested = false;
+            SetSocketVolumesActive(false);
+            return;
+        }
+
         currentAlignmentState = (BridgeMountAlignmentState)state.mountAlignmentState;
         synchronizedCandidateId = state.mountAlignmentCandidateNetworkObjectId;
         settleStartedAt = state.mountAlignmentStartedAt;
@@ -260,8 +279,9 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
     public bool IsAuthoritativeCandidateReady(MountableBridgeComponent candidate)
     {
-        return IsAuthoritative()
-            && candidate != null
+        return !IsPhysicalDeckPanelTarget
+            && candidate != null && !candidate.IsPhysicalDeckPanel
+            && IsAuthoritative()
             && candidate == authoritativeCandidate
             && currentAlignmentState == BridgeMountAlignmentState.Settling
             && settleStartedAt >= 0d
@@ -562,7 +582,9 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
     private bool IsMatchingCarriedComponent(MountableBridgeComponent candidate)
     {
-        return candidate != null
+        return !IsPhysicalDeckPanelTarget
+            && candidate != null
+            && !candidate.IsPhysicalDeckPanel
             && candidate.IsActivelyCarried
             && candidate.GetMountableBridgeComponentSO() != null
             && candidate.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponent.GetBridgeComponentSO();
@@ -860,7 +882,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
     private bool ShouldShowFeedback()
     {
-        if (bridgeComponent == null || bridgeComponent.IsMounted || !bridgeComponent.CanBeMounted || Camera.main == null)
+        if (IsPhysicalDeckPanelTarget || bridgeComponent == null || bridgeComponent.IsMounted || !bridgeComponent.CanBeMounted || Camera.main == null)
         {
             return false;
         }
@@ -872,6 +894,9 @@ public sealed class BridgeMountSocket : MonoBehaviour
     {
         return settleStartedAt < 0d ? 0f : Mathf.Clamp((float)(GetSynchronizedTime() - settleStartedAt), 0f, settleDuration);
     }
+
+    private bool IsPhysicalDeckPanelTarget => hasPhysicalDeckPanelMarker ||
+        bridgeComponent != null && bridgeComponent.UsesPhysicalDeckPanelPlacement;
 
     private double GetSynchronizedTime()
     {
@@ -921,6 +946,7 @@ public sealed class BridgeMountSocket : MonoBehaviour
 
     private void SetSocketVolumesActive(bool active)
     {
+        active &= !IsPhysicalDeckPanelTarget;
         if (componentCaptureVolume != null) componentCaptureVolume.enabled = active;
         if (carrierStagingVolume != null) carrierStagingVolume.enabled = active;
     }

@@ -1,10 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using NUnit.Framework;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -26,6 +28,7 @@ public class SingleCarryPlacementStage6PlayModeTests
     private static readonly Type InventoryType = Type.GetType("PlayerInventory, Assembly-CSharp");
     private static readonly Type EquippableItemProfileType = Type.GetType("EquippableItemSO, Assembly-CSharp");
     private static readonly Type EquippableItemType = Type.GetType("EquippableItem, Assembly-CSharp");
+    private const int SingleCarryContactIsolationPriority = 64;
 
     private NetworkManager priorSingleton;
     private bool capturedSingleton;
@@ -39,6 +42,713 @@ public class SingleCarryPlacementStage6PlayModeTests
     private ScopedInputTestFixture isolatedInput;
     private Action<ulong> disconnectBoundaryObserver;
     private static Vector3 previousGravity;
+
+    [UnityTest]
+    public IEnumerator RemoteControllerPlacementRebasesPoseWhenSameNetworkSurfaceTranslates() =>
+        RunRemoteControllerPlacementRebase(0);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerPlacementRebasesVisibleTargetMovedOffAimRay() =>
+        RunRemoteControllerPlacementRebase(1);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerPlacementRebasesPoseWhenSameNetworkSurfaceRotates() =>
+        RunRemoteControllerPlacementRebase(2);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerPlacementRebasesNetworkCharacterColliderWithoutRigidbody() =>
+        RunRemoteControllerPlacementRebase(9);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerRejectsSameTargetWhenContactIsLostBeforeServerReceipt() =>
+        RunRemoteControllerPlacementRebase(3);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerRejectsSameTargetWhenServerLineOfSightIsBlocked() =>
+        RunRemoteControllerPlacementRebase(4);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerRejectsServerRayOriginInsideSolidObstacle() =>
+        RunRemoteControllerPlacementRebase(5);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerRejectsSameTargetWhenItMovesOutOfRangeBeforeServerReceipt() =>
+        RunRemoteControllerPlacementRebase(6);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerRejectsRespawnedNetworkObjectIdentityForCachedSurface() =>
+        RunRemoteControllerPlacementRebase(7);
+
+    [UnityTest]
+    public IEnumerator RemoteControllerFAndECommitPreparesRealNailExactlyOnce()
+    {
+        return RunRemoteControllerPlacementRebase(0, true);
+    }
+
+    [UnityTest]
+    public IEnumerator RemoteOwnerNailDropUsesServerConfiguredVelocityChange()
+    {
+        return RunRemoteControllerPlacementRebase(0, true, false, true);
+    }
+
+    [UnityTest]
+    public IEnumerator RemoteOwnerHeavyBoardDropUsesServerConfiguredVelocityChange()
+    {
+        return RunRemoteControllerPlacementRebase(0, false, false, true);
+    }
+
+    [UnityTest]
+    public IEnumerator RemoteVerticalNailPreviewRemainsStableOnMovedTiltedWoodenBoard()
+    {
+        return RunRemoteControllerPlacementRebase(1, true, true);
+    }
+
+    [UnityTest]
+    public IEnumerator RemoteControllerRejectsForgedAnchoredRequestFieldsAndCanRetry()
+    {
+        return RunRemoteControllerPlacementRebase(8);
+    }
+
+    [UnityTest]
+    public IEnumerator SurfaceContactGeometryRejectsDisabledSourceColliders()
+    {
+        GameObject source = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        source.name = "Stage 6 disabled-source geometry fixture";
+        runtimeObjects.Add(source);
+        Collider[] sourceColliders = source.GetComponentsInChildren<Collider>(true);
+        Assert.That(sourceColliders.Length, Is.GreaterThan(0));
+        foreach (Collider collider in sourceColliders) collider.enabled = false;
+
+        var surface = new GameObject("Stage 6 disabled-source geometry surface");
+        runtimeObjects.Add(surface);
+        BoxCollider surfaceCollider = surface.AddComponent<BoxCollider>();
+        Type geometryType = Type.GetType("SingleCarryPlacementGeometrySolver, Assembly-CSharp");
+        object geometry = Activator.CreateInstance(geometryType, new object[] { source });
+        object pose = geometryType.GetMethod("CalculateAtSurfaceContact").Invoke(geometry, new object[]
+        {
+            new Vector3(0f, 1f, 0f), Vector3.up, Quaternion.identity, surfaceCollider
+        });
+        Assert.That(pose.GetType().GetProperty("Status").GetValue(pose).ToString(), Is.EqualTo("NoPhysicalColliders"));
+        yield return null;
+    }
+
+    private IEnumerator RunRemoteControllerPlacementRebase(int motion, bool useMountingNail = false,
+        bool probeUnsyncedSurfaceMovement = false, bool testNetworkDropThrow = false)
+    {
+        Assert.That(NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening, Is.True);
+        priorSingleton = NetworkManager.Singleton; capturedSingleton = true;
+        GameObject cameraObject = new GameObject("Stage 6 moving-surface aim camera");
+        runtimeObjects.Add(cameraObject);
+        cameraObject.tag = "MainCamera";
+        Camera camera = cameraObject.AddComponent<Camera>();
+        camera.nearClipPlane = 0.2f;
+
+        UnityEngine.Object resourceProfileObject = ScriptableObject.CreateInstance(BaseResourceProfileType);
+        assets.Add(resourceProfileObject);
+        resourceProfileObject.GetType().GetField("canBeCarried").SetValue(resourceProfileObject, true);
+        resourceProfileObject.GetType().GetField("allowMultipleCarriers").SetValue(resourceProfileObject, false);
+        GameObject playerPrefab = CreatePlayerPrefab();
+        if (testNetworkDropThrow)
+            InteractionType.GetField("singleCarryDropThrowMetersPerSecond", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(playerPrefab.GetComponent(InteractionType), 2.25f);
+        GameObject sourcePrefab;
+        if (useMountingNail)
+        {
+#if UNITY_EDITOR
+            sourcePrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Prefabs/New/Resources/MetalProducts/SingleMountingNail.prefab");
+            Assert.That(sourcePrefab, Is.Not.Null, "The F/E nail integration fixture needs the saved Stage1 nail prefab.");
+            additionalFixturePrefabHashes.Add(GetPrefabHash(sourcePrefab.GetComponent<NetworkObject>()));
+#else
+            Assert.Ignore("The actual mounting-nail fixture requires Unity Editor AssetDatabase access.");
+            yield break;
+#endif
+        }
+        else
+        {
+            sourcePrefab = CreateActualWoodenBoardPrefabForFixture();
+        }
+        bool useNoRigidbodySurface = motion == 9;
+        GameObject surfacePrefab = probeUnsyncedSurfaceMovement
+            ? CreateActualWoodenBoardPrefabForFixture()
+            : useNoRigidbodySurface
+            ? CreateNetworkCharacterSurfacePrefab(0x61A60042u)
+            : CreateSourcePrefab("Stage 6 moving network surface", BaseResourceType,
+                resourceProfileObject, 0x61A60041);
+        if (probeUnsyncedSurfaceMovement) additionalFixturePrefabHashes.Add(0x61A60031u);
+        if (!probeUnsyncedSurfaceMovement)
+            additionalFixturePrefabHashes.Add(useNoRigidbodySurface ? 0x61A60042u : 0x61A60041u);
+        if (!useNoRigidbodySurface && !probeUnsyncedSurfaceMovement)
+            surfacePrefab.transform.localScale = new Vector3(1.5f, 1.5f, 0.12f);
+
+        ushort port = ReservePort();
+        NetworkManager host = CreateManager("Stage 6 moving-surface host", playerPrefab,
+            new[] { sourcePrefab, surfacePrefab }, port);
+        Assert.That(host.StartHost(), Is.True); host.SetSingleton();
+        yield return Until(() => host.LocalClient?.PlayerObject != null, "moving-surface host player");
+        NetworkManager owner = CreateManager("Stage 6 moving-surface owner", playerPrefab,
+            new[] { sourcePrefab, surfacePrefab }, port);
+        Assert.That(owner.StartClient(), Is.True);
+        yield return Until(() => owner.IsConnectedClient && owner.LocalClient?.PlayerObject != null
+            && host.ConnectedClientsIds.Count == 2, "moving-surface remote owner");
+        NetworkObject ownerPlayer = owner.LocalClient.PlayerObject;
+        DisposeFixtureInputMaps(null);
+        foreach (NetworkClient connected in host.ConnectedClientsList)
+            if (connected.ClientId != host.LocalClientId && connected.PlayerObject != null)
+                ((Behaviour)connected.PlayerObject.GetComponent(InteractionType)).enabled = false;
+
+        GameObject source = UnityEngine.Object.Instantiate(sourcePrefab);
+        runtimeObjects.Add(source);
+        source.transform.position = new Vector3(30f, 4f, 30f);
+        NetworkObject sourceObject = source.GetComponent<NetworkObject>();
+        spawnedObjects.Add(sourceObject);
+        sourceObject.Spawn();
+
+        GameObject surface = UnityEngine.Object.Instantiate(surfacePrefab);
+        runtimeObjects.Add(surface);
+        Transform aimAnchor = GetAimAnchor(ownerPlayer);
+        Vector3 initialSurfacePosition = aimAnchor.position + aimAnchor.forward * 1.25f;
+        surface.transform.SetPositionAndRotation(initialSurfacePosition, Quaternion.identity);
+        NetworkObject surfaceObject = surface.GetComponent<NetworkObject>();
+        spawnedObjects.Add(surfaceObject);
+        surfaceObject.Spawn();
+        yield return Until(() => Find(owner, sourceObject.NetworkObjectId) != null
+            && Find(owner, surfaceObject.NetworkObjectId) != null, "source and target network surfaces replicated");
+        DisableControllerFixtureMirrorColliders(host, owner, ownerPlayer, sourceObject.NetworkObjectId);
+
+        Assert.That(InvokePickup(source, owner.LocalClientId), Is.True);
+        ConfirmLocalPickup(owner, sourceObject.NetworkObjectId);
+        yield return Until(() => sourceObject.OwnerClientId == owner.LocalClientId
+            && GetHeld(ownerPlayer) == Find(owner, sourceObject.NetworkObjectId).gameObject,
+            "remote owner holds the real Wooden Board");
+        DisableControllerFixtureMirrorColliders(host, owner, ownerPlayer, sourceObject.NetworkObjectId);
+
+        if (testNetworkDropThrow)
+        {
+            NetworkObject thrownOwnerSource = Find(owner, sourceObject.NetworkObjectId);
+            Rigidbody thrownServerBody = source.GetComponent<Rigidbody>();
+            Rigidbody thrownOwnerBody = thrownOwnerSource.GetComponent<Rigidbody>();
+            Collider[] serverSourceColliders = source.GetComponentsInChildren<Collider>(true);
+            Collider[] ownerSourceColliders = thrownOwnerSource.GetComponentsInChildren<Collider>(true);
+            SetCollidersEnabled(serverSourceColliders, false);
+            SetCollidersEnabled(ownerSourceColliders, false);
+            SetCollidersEnabled(surface.GetComponentsInChildren<Collider>(true), false);
+            SetCollidersEnabled(Find(host, surfaceObject.NetworkObjectId).GetComponentsInChildren<Collider>(true), false);
+            SetCollidersEnabled(Find(owner, surfaceObject.NetworkObjectId).GetComponentsInChildren<Collider>(true), false);
+            float expectedMass = useMountingNail ? 0.1f : 20f;
+            SetFixtureNormalMass(source, expectedMass);
+            SetFixtureNormalMass(thrownOwnerSource.gameObject, expectedMass);
+            Assert.That(thrownServerBody.mass, Is.EqualTo(expectedMass).Within(0.001f),
+                useMountingNail ? "The production mounting nail remains a light item." : "The real Wooden Board is configured heavy in this fixture.");
+
+            NetworkObject serverPlayer = host.ConnectedClientsList
+                .Single(client => client.ClientId == owner.LocalClientId).PlayerObject;
+            Vector3 expectedDropPosition = serverPlayer.transform.position + serverPlayer.transform.forward + Vector3.up * 0.5f;
+            Component ownerInteraction = ownerPlayer.GetComponent(InteractionType);
+            Assert.That((bool)InteractionType.GetMethod("DropObject").Invoke(ownerInteraction, null), Is.True,
+                "The actual remote owner's ordinary drop must dispatch the generated throw ServerRpc.");
+            ulong serverClientId = NetworkManager.ServerClientId;
+            yield return Until(() => !IsPickedUp(Find(host, sourceObject.NetworkObjectId))
+                && Find(host, sourceObject.NetworkObjectId).OwnerClientId == serverClientId
+                && !Find(host, sourceObject.NetworkObjectId).GetComponent<Rigidbody>().isKinematic,
+                "server validates the remote drop, takes ownership, and restores dynamic physics");
+            Vector3 firstObservedHandoffPose = source.transform.position;
+            float firstObservedHandoffFixedTime = Time.fixedTime;
+            SetCollidersEnabled(source.GetComponentsInChildren<Collider>(true), false);
+            SetCollidersEnabled(thrownOwnerSource.GetComponentsInChildren<Collider>(true), false);
+            yield return new WaitForFixedUpdate();
+            Vector3 authoritativeForward = serverPlayer.transform.forward;
+            Assert.That(Vector3.Dot(thrownServerBody.linearVelocity, authoritativeForward), Is.EqualTo(2.25f).Within(0.15f),
+                "The server applies exactly one profile-configured Δv after the remote RPC.");
+            Assert.That(thrownServerBody.mass, Is.EqualTo(expectedMass).Within(0.001f),
+                "The authoritative server body keeps its test-configured mass after carry physics is restored.");
+            Assert.That(thrownOwnerBody.mass, Is.EqualTo(expectedMass).Within(0.001f),
+                "The client mirror retains the matching normal mass after its carry state is restored.");
+            float physicsElapsedAfterHandoff = Time.fixedTime - firstObservedHandoffFixedTime;
+            float expectedForwardTravel = 2.25f * physicsElapsedAfterHandoff;
+            float actualForwardTravel = Vector3.Dot(source.transform.position - firstObservedHandoffPose, authoritativeForward);
+            Assert.That(actualForwardTravel, Is.EqualTo(expectedForwardTravel).Within(0.06f),
+                $"The authoritative pose advances at the configured velocity after handoff; physics elapsed={physicsElapsedAfterHandoff:F3}s.");
+            Assert.That(Vector3.Distance(firstObservedHandoffPose, expectedDropPosition), Is.LessThan(0.4f),
+                "The first observed authoritative pose remains near the ordinary forward drop offset, allowing RPC delivery and intervening physics steps.");
+            Assert.That(Vector3.Distance(source.transform.position, new Vector3(30f, 4f, 30f)), Is.GreaterThan(1f),
+                "Ownership handoff does not snap the object back to its pre-pickup world pose.");
+            Assert.That(thrownOwnerBody.isKinematic, Is.True,
+                "The former owner remains a kinematic mirror after server ownership transfer.");
+
+            Rigidbody lateServerBody = Find(host, sourceObject.NetworkObjectId).GetComponent<Rigidbody>();
+            float forwardSpeedBeforeRejectedThrow = Vector3.Dot(lateServerBody.linearVelocity, authoritativeForward);
+            MethodInfo throwServerRpc = thrownOwnerSource.GetComponent(BaseResourceType).GetType().GetMethod(
+                "RequestSingleCarryThrowServerRpc", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(throwServerRpc, Is.Not.Null, "The production throw RPC is available for an unauthorized repeat attempt.");
+            throwServerRpc.Invoke(thrownOwnerSource.GetComponent(BaseResourceType), new object[] { default(ServerRpcParams) });
+            yield return new WaitForFixedUpdate();
+            yield return null;
+            Assert.That(IsPickedUp(Find(host, sourceObject.NetworkObjectId)), Is.False,
+                "A former holder's repeated RPC cannot reacquire or release the already-dropped object.");
+            Assert.That(Find(host, sourceObject.NetworkObjectId).OwnerClientId, Is.EqualTo(serverClientId),
+                "A rejected repeated throw does not change server ownership.");
+            Assert.That(Vector3.Dot(lateServerBody.linearVelocity, authoritativeForward),
+                Is.EqualTo(forwardSpeedBeforeRejectedThrow).Within(0.15f),
+                "A rejected repeated throw does not apply a second configured Δv.");
+
+            Vector3 kickedSnapshotPose = source.transform.position;
+            lateServerBody.isKinematic = true;
+            lateServerBody.useGravity = false;
+            NetworkManager lateJoin = CreateManager("Stage 6 post-throw late join", playerPrefab,
+                new[] { sourcePrefab, surfacePrefab }, port);
+            Assert.That(lateJoin.StartClient(), Is.True);
+            yield return Until(() => lateJoin.IsConnectedClient && lateJoin.LocalClient?.PlayerObject != null
+                && host.ConnectedClientsIds.Count == 3, "post-throw late-joining client connects");
+            NetworkObject lateSource = null;
+            yield return Until(() => (lateSource = Find(lateJoin, sourceObject.NetworkObjectId)) != null,
+                "late-joining client receives the thrown world object snapshot");
+            foreach (Collider collider in lateSource.GetComponentsInChildren<Collider>(true)) collider.enabled = false;
+            yield return Until(() => Vector3.Distance(lateSource.transform.position, kickedSnapshotPose) < 0.05f,
+                "late-joining client receives the stopped post-throw authoritative pose");
+            Assert.That(lateSource.OwnerClientId, Is.EqualTo(serverClientId));
+            Assert.That(lateSource.GetComponent<Rigidbody>().isKinematic, Is.True,
+                "Late-joining clients keep the server-owned object as a kinematic mirror.");
+
+            Assert.That(InvokePickup(source, host.LocalClientId), Is.True, "Host can pick up the same loose nail for the host path control.");
+            ConfirmLocalPickup(host, sourceObject.NetworkObjectId);
+            SetFixtureNormalMass(source, expectedMass);
+            SetCollidersEnabled(serverSourceColliders, false);
+            SetCollidersEnabled(thrownOwnerSource.GetComponentsInChildren<Collider>(true), false);
+            Component hostInteraction = host.LocalClient.PlayerObject.GetComponent(InteractionType);
+            Assert.That((bool)InteractionType.GetMethod("DropObject").Invoke(hostInteraction, null), Is.True,
+                "The host's ordinary drop uses the same explicit throw path.");
+            SetCollidersEnabled(serverSourceColliders, false);
+            SetCollidersEnabled(thrownOwnerSource.GetComponentsInChildren<Collider>(true), false);
+            yield return new WaitForFixedUpdate();
+            Assert.That(Vector3.Dot(thrownServerBody.linearVelocity, host.LocalClient.PlayerObject.transform.forward),
+                Is.EqualTo(2.25f).Within(0.15f), "The host and remote owner receive the same configured Δv.");
+            Assert.That(thrownServerBody.mass, Is.EqualTo(expectedMass).Within(0.001f),
+                "The host release keeps the fixture's normal body mass after shared-carry physics restoration.");
+            Assert.That(sourceObject.OwnerClientId, Is.EqualTo(serverClientId));
+            yield break;
+        }
+
+        NetworkObject ownerSurface = Find(owner, surfaceObject.NetworkObjectId);
+        NetworkObject serverSurface = Find(host, surfaceObject.NetworkObjectId);
+        Assert.That(ownerSurface.NetworkObjectId, Is.EqualTo(serverSurface.NetworkObjectId));
+        Collider ownerSurfaceCollider = ownerSurface.GetComponent<Collider>();
+        Collider serverSurfaceCollider = serverSurface.GetComponent<Collider>();
+        Collider[] ownerSurfaceColliders = ownerSurface.GetComponentsInChildren<Collider>(true);
+        Collider[] serverSurfaceColliders = serverSurface.GetComponentsInChildren<Collider>(true);
+        Rigidbody ownerSurfaceBody = ownerSurface.GetComponent<Rigidbody>();
+        Rigidbody serverSurfaceBody = serverSurface.GetComponent<Rigidbody>();
+        Assert.That(ownerSurfaceCollider, Is.Not.Null);
+        Assert.That(serverSurfaceCollider, Is.Not.Null);
+        if (useNoRigidbodySurface)
+        {
+            Assert.That(ownerSurfaceBody, Is.Null, "The character-collider target intentionally has no Rigidbody.");
+            Assert.That(serverSurfaceBody, Is.Null, "The character-collider target intentionally has no Rigidbody.");
+        }
+        else
+        {
+            Assert.That(ownerSurfaceBody, Is.Not.Null);
+            Assert.That(serverSurfaceBody, Is.Not.Null);
+            ownerSurfaceBody.useGravity = false;
+            ownerSurfaceBody.isKinematic = true;
+            serverSurfaceBody.useGravity = false;
+            serverSurfaceBody.isKinematic = true;
+        }
+
+        if (probeUnsyncedSurfaceMovement)
+        {
+            cameraObject.transform.SetPositionAndRotation(initialSurfacePosition + Vector3.up * 1.25f,
+                Quaternion.LookRotation(Vector3.down, Vector3.forward));
+        }
+        else cameraObject.transform.SetPositionAndRotation(aimAnchor.position, aimAnchor.rotation);
+        InteractionType.GetMethod("SetAimCamera").Invoke(ownerPlayer.GetComponent(InteractionType), new object[] { camera });
+        Component ownerInput = ownerPlayer.GetComponent(PlayerInputType);
+        ((Behaviour)ownerInput).enabled = true;
+        Component controller = ownerPlayer.GetComponent(PlacementControllerType);
+        Component preview = Preview(ownerPlayer);
+        SetControllerRequestId(controller, 0);
+        syntheticKeyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Only the owner's rendered network copy participates while its cached preview is sampled.
+        SetCollidersEnabled(serverSurfaceColliders, false);
+        SetCollidersEnabled(ownerSurfaceColliders, true);
+        ownerSurface.transform.SetPositionAndRotation(initialSurfacePosition, Quaternion.identity);
+        if (ownerSurfaceBody != null) ownerSurfaceBody.isKinematic = true;
+        if (serverSurfaceBody != null) serverSurfaceBody.isKinematic = true;
+        Physics.SyncTransforms();
+        PressKey(Key.F);
+        yield return Until(() => (bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller),
+            "remote owner enters placement");
+        MethodInfo refresh = PlacementControllerType.GetMethod("RefreshPreview", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (probeUnsyncedSurfaceMovement)
+            PlacementControllerType.GetField("localRotation", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(controller, Quaternion.AngleAxis(90f, Vector3.right));
+        refresh.Invoke(controller, null);
+        Assert.That(PlacementControllerType.GetProperty("LastGeometryStatus").GetValue(controller).ToString(),
+            Is.EqualTo("SurfaceSupported"), "The owner must sample a real contact on the spawned target.");
+        if (probeUnsyncedSurfaceMovement)
+            Assert.That(Vector3.Dot(GetControllerGhost(controller).transform.forward, Vector3.down), Is.GreaterThan(0.99f),
+                "The actual mounting nail tip must point down for this top-down preview regression.");
+        NetworkObject selectedAnchor = (NetworkObject)PlacementControllerType.GetField("anchoredSurface",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        Assert.That(selectedAnchor, Is.EqualTo(ownerSurface));
+        Assert.That(selectedAnchor.NetworkManager, Is.EqualTo(owner),
+            "The preview must anchor to the requesting owner's target copy, not a foreign loopback collider.");
+        Transform ghost = GetControllerGhost(controller).transform;
+        Vector3 renderedPosition = ghost.position;
+        Quaternion renderedRotation = ghost.rotation;
+
+        // The same NetworkObject moves after preview sampling. Keep the owner render copy frozen
+        // and make the authoritative collider the only visible physics target for server receipt.
+        Vector3 movedSurfacePosition = motion == 0 || motion == 9 ? initialSurfacePosition + aimAnchor.forward * 0.05f
+            : motion == 1 ? initialSurfacePosition + aimAnchor.right * 0.05f : initialSurfacePosition;
+        Quaternion movedSurfaceRotation = motion == 2 ? Quaternion.Euler(0f, 12f, 0f) : Quaternion.identity;
+        serverSurface.transform.SetPositionAndRotation(movedSurfacePosition, movedSurfaceRotation);
+        Assert.That(ownerSurface.gameObject, Is.Not.SameAs(serverSurface.gameObject),
+            "Loopback managers must expose separate copies of the same network target.");
+        ownerSurface.transform.SetPositionAndRotation(initialSurfacePosition, Quaternion.identity);
+        Physics.SyncTransforms();
+        if (probeUnsyncedSurfaceMovement)
+        {
+            Quaternion tiltedBoardRotation = Quaternion.AngleAxis(0.25f, aimAnchor.right);
+            int validSamples = 0;
+            int invalidSamples = 0;
+            string firstInvalid = null;
+            bool priorAutoSync = Physics.autoSyncTransforms;
+            Vector3 sourcePositionBeforeSamples = Find(owner, sourceObject.NetworkObjectId).transform.position;
+            Quaternion sourceRotationBeforeSamples = Find(owner, sourceObject.NetworkObjectId).transform.rotation;
+            for (int sample = 0; sample < 8; sample++)
+            {
+                // Before the fix, this could leave the raycast on the prior physics pose while
+                // ComputePenetration received the updated board Transform.
+                ownerSurface.transform.SetPositionAndRotation(initialSurfacePosition + Vector3.up * 0.001f, Quaternion.identity);
+                refresh.Invoke(controller, null);
+                if ((bool)PlacementControllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller)) validSamples++;
+                else invalidSamples++;
+                object towardValidation = PlacementControllerType.GetProperty("LastValidation").GetValue(controller);
+                if (firstInvalid == null && !(bool)PlacementControllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller))
+                    firstInvalid = $"toward geometry={PlacementControllerType.GetProperty("LastGeometryStatus").GetValue(controller)}, validation={towardValidation.GetType().GetProperty("Status").GetValue(towardValidation)}, depth={towardValidation.GetType().GetProperty("PenetrationDepth").GetValue(towardValidation)}, blocker={((Collider)towardValidation.GetType().GetProperty("BlockingCollider").GetValue(towardValidation))?.name}";
+
+                ownerSurface.transform.SetPositionAndRotation(initialSurfacePosition + Vector3.down * 0.001f, tiltedBoardRotation);
+                refresh.Invoke(controller, null);
+                if ((bool)PlacementControllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller)) validSamples++;
+                else invalidSamples++;
+            }
+            Assert.That(Physics.autoSyncTransforms, Is.EqualTo(priorAutoSync), "The regression must not change the global physics setting.");
+
+            ownerSurface.transform.SetPositionAndRotation(initialSurfacePosition + Vector3.up * 0.001f, tiltedBoardRotation);
+            Physics.SyncTransforms();
+            refresh.Invoke(controller, null);
+            Assert.That(PlacementControllerType.GetProperty("LastGeometryStatus").GetValue(controller).ToString(),
+                Is.EqualTo("SurfaceSupported"), "The tilted board remains a valid physical target after transform synchronization.");
+            Assert.That((bool)PlacementControllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller), Is.True,
+                "Synchronizing moved board transforms resolves the preview mismatch.");
+            Assert.That(invalidSamples, Is.Zero,
+                $"Preview should remain stable while the moved-board Transform changes before the next physics step; observed={invalidSamples}/{validSamples + invalidSamples}, first invalid={firstInvalid}.");
+            Assert.That(Find(owner, sourceObject.NetworkObjectId).transform.position, Is.EqualTo(sourcePositionBeforeSamples),
+                "Preview refresh must not move the held nail source.");
+            Assert.That(Quaternion.Angle(Find(owner, sourceObject.NetworkObjectId).transform.rotation, sourceRotationBeforeSamples),
+                Is.LessThan(0.001f), "Preview refresh must not rotate the held nail source.");
+            ownerSurface.transform.SetPositionAndRotation(initialSurfacePosition, Quaternion.identity);
+            Physics.SyncTransforms();
+            refresh.Invoke(controller, null);
+            yield break;
+        }
+        Assert.That(ownerSurface.NetworkObjectId, Is.EqualTo(surfaceObject.NetworkObjectId));
+        if (motion <= 2 || motion == 9)
+            Assert.That(Vector3.Distance(ownerSurface.transform.position, serverSurface.transform.position) > 0.02f
+                || Quaternion.Angle(ownerSurface.transform.rotation, serverSurface.transform.rotation) > 0.1f,
+                Is.True, "The fixture must preserve distinct client-rendered and authoritative target poses.");
+        Vector3 cachedLocalPosition = (Vector3)PlacementControllerType.GetField("localPosePosition",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        Quaternion cachedLocalRotation = (Quaternion)PlacementControllerType.GetField("localPoseRotation",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        Vector3 cachedLocalSurfacePoint = (Vector3)PlacementControllerType.GetField("localSurfacePoint",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        Vector3 cachedLocalSurfaceNormal = (Vector3)PlacementControllerType.GetField("localSurfaceNormal",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        string cachedPhysicalRootPath = (string)PlacementControllerType.GetField("physicalRootPath",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        bool cachedPhysicalRootHasRigidbody = (bool)PlacementControllerType.GetField("physicalRootHasRigidbody",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        Ray renderedAimRay = (Ray)PlacementControllerType.GetField("lastRenderedAimRay",
+            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        Type geometryType = Type.GetType("SingleCarryPlacementGeometrySolver, Assembly-CSharp");
+        object geometry = Activator.CreateInstance(geometryType, new object[] { Find(owner, sourceObject.NetworkObjectId).gameObject });
+        Vector3 serverExpectedPosition = serverSurface.transform.TransformPoint(cachedLocalPosition);
+        if (motion <= 2)
+            Assert.That(Vector3.Distance(renderedPosition, serverExpectedPosition), Is.GreaterThan(0.002f),
+                $"The target motion must change the rebased world pose: rendered={renderedPosition}, moved-target={serverExpectedPosition}.");
+
+        if (motion == 7)
+        {
+            FieldInfo pendingField = PlacementControllerType.GetField("requestPending", BindingFlags.Instance | BindingFlags.NonPublic);
+            pendingField.SetValue(controller, true);
+            ulong previousTargetId = surfaceObject.NetworkObjectId;
+            NetworkObjectReference staleTargetReference = new NetworkObjectReference(surfaceObject);
+            surfaceObject.Despawn(false);
+            surfaceObject.Spawn();
+            Assert.That(surfaceObject.NetworkObjectId, Is.Not.EqualTo(previousTargetId),
+                "Respawning the same GameObject must produce a new NGO object identity.");
+            yield return Until(() => Find(owner, surfaceObject.NetworkObjectId) != null,
+                "replacement spawn of the same GameObject reaches the owner");
+            NetworkObject replacementSurface = Find(owner, surfaceObject.NetworkObjectId);
+            Assert.That(replacementSurface, Is.Not.Null);
+            MethodInfo staleRpc = PreviewType.GetMethod("SubmitSurfacePlacementServerRpc", BindingFlags.Instance | BindingFlags.NonPublic);
+            staleRpc.Invoke(preview, new object[]
+            {
+                new NetworkObjectReference(Find(owner, sourceObject.NetworkObjectId)), staleTargetReference, 1UL,
+                cachedLocalPosition, cachedLocalRotation, cachedLocalSurfacePoint, cachedLocalSurfaceNormal,
+                cachedPhysicalRootPath, cachedPhysicalRootHasRigidbody, renderedPosition, renderedRotation,
+                renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams)
+            });
+            yield return Until(() => LastRequest(preview) == 1, "server rejects the stale captured target reference");
+            Assert.That(ResultName(ownerPlayer), Is.EqualTo("InvalidRequest"),
+                "The server must reject the despawned NetworkObjectReference instead of resolving its replacement.");
+            AssertHeld(owner, sourceObject);
+            pendingField.SetValue(controller, false);
+            object[] rebaseArgs = { null };
+            bool staleReferenceRebased = (bool)PlacementControllerType.GetMethod("TryRebaseNetworkSurfacePose",
+                BindingFlags.Instance | BindingFlags.NonPublic).Invoke(controller, rebaseArgs);
+            Assert.That(staleReferenceRebased, Is.False,
+                "A respawned object with a new NGO identity cannot replace the surface captured at preview time.");
+            PlacementControllerType.GetMethod("ConfirmPlacement", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(controller, new object[] { null, EventArgs.Empty });
+            Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.False,
+                "The stale surface reference must be rejected before a placement RPC is sent.");
+            AssertHeld(owner, sourceObject);
+            yield break;
+        }
+
+        if (motion == 8)
+        {
+            // Exercise the anchored ServerRpc itself with forged payload fields. The failed
+            // attempts consume monotonically increasing request IDs, but must not release or
+            // move the carried source; the real E action then retries with the next ID.
+            SetCollidersEnabled(serverSurfaceColliders, true);
+            SetCollidersEnabled(ownerSurfaceColliders, false);
+            Physics.SyncTransforms();
+            MethodInfo surfaceRpc = PreviewType.GetMethod("SubmitSurfacePlacementServerRpc", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(surfaceRpc, Is.Not.Null);
+            NetworkObject ownerSourceForRequests = Find(owner, sourceObject.NetworkObjectId);
+            NetworkObjectReference ownerSourceReference = new NetworkObjectReference(ownerSourceForRequests);
+            NetworkObjectReference ownerTargetReference = new NetworkObjectReference(ownerSurface);
+            Vector3 requestPosition = serverSurface.transform.TransformPoint(cachedLocalPosition);
+            Quaternion requestRotation = serverSurface.transform.rotation * cachedLocalRotation;
+            FieldInfo pendingField = PlacementControllerType.GetField("requestPending", BindingFlags.Instance | BindingFlags.NonPublic);
+            pendingField.SetValue(controller, true);
+
+            // A real overlapping blocker must be reported as Occupied on the anchored path.
+            GameObject occupied = new GameObject("Stage 6 anchored occupancy blocker");
+            runtimeObjects.Add(occupied);
+            occupied.transform.position = requestPosition + serverSurface.transform.right * 0.15f;
+            occupied.AddComponent<BoxCollider>().size = Vector3.one * 0.12f;
+            Physics.SyncTransforms();
+            Vector3 contactPoint = serverSurface.transform.TransformPoint(cachedLocalSurfacePoint);
+            Vector3 contactNormal = serverSurface.transform.TransformDirection(cachedLocalSurfaceNormal).normalized;
+            Type anchorType = Type.GetType("SingleCarryPlacementSurfaceAnchor, Assembly-CSharp");
+            MethodInfo resolveContact = anchorType.GetMethod("TryResolveContactCollider", BindingFlags.Static | BindingFlags.Public);
+            object[] resolveArgs = { serverSurface, source.transform, ownerPlayer.transform, contactPoint,
+                contactNormal, cachedPhysicalRootPath, cachedPhysicalRootHasRigidbody, null };
+            Assert.That((bool)resolveContact.Invoke(null, resolveArgs), Is.True);
+            Collider authoritativeContact = (Collider)resolveArgs[7];
+            MethodInfo hasLos = anchorType.GetMethod("HasLineOfSightToContact", BindingFlags.Static | BindingFlags.Public);
+            Assert.That((bool)hasLos.Invoke(null, new object[] { authoritativeContact, serverSurface,
+                cachedPhysicalRootPath, cachedPhysicalRootHasRigidbody, source.transform, ownerPlayer.transform,
+                renderedAimRay.origin, contactPoint, 2f }), Is.True,
+                "The occupancy probe must not obscure the selected contact from the trusted aim origin.");
+            Type geometryTypeForOccupancy = Type.GetType("SingleCarryPlacementGeometrySolver, Assembly-CSharp");
+            object occupancyGeometry = Activator.CreateInstance(geometryTypeForOccupancy, new object[] { source.gameObject });
+            object occupancyPose = geometryTypeForOccupancy.GetMethod("CalculateAtSurfaceContact").Invoke(occupancyGeometry,
+                new object[] { contactPoint, contactNormal, requestRotation, authoritativeContact });
+            Type validatorTypeForOccupancy = Type.GetType("SingleCarryPlacementValidator, Assembly-CSharp");
+            object occupancyValidator = Activator.CreateInstance(validatorTypeForOccupancy, new object[] { source.gameObject });
+            object occupancyResult = validatorTypeForOccupancy.GetMethod("Validate").Invoke(occupancyValidator,
+                new[] { occupancyPose, null });
+            Assert.That(occupancyResult.GetType().GetProperty("Status").GetValue(occupancyResult).ToString(),
+                Is.EqualTo("Occupied"), "The anchored fixture must prove real candidate occupancy before the RPC.");
+            surfaceRpc.Invoke(preview, new object[] { ownerSourceReference, ownerTargetReference, 1UL,
+                cachedLocalPosition, cachedLocalRotation, cachedLocalSurfacePoint, cachedLocalSurfaceNormal,
+                cachedPhysicalRootPath, cachedPhysicalRootHasRigidbody, requestPosition, requestRotation,
+                renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams) });
+            yield return Until(() => LastRequest(preview) == 1, "anchored occupancy rejection response");
+            Assert.That(ResultName(ownerPlayer), Is.EqualTo("Occupied"));
+            AssertHeld(owner, sourceObject);
+            UnityEngine.Object.Destroy(occupied);
+            yield return null;
+            Physics.SyncTransforms();
+
+            object[][] forgedArguments =
+            {
+                new object[] { ownerSourceReference, ownerTargetReference, 2UL,
+                    cachedLocalPosition + Vector3.right * 0.01f, cachedLocalRotation,
+                    cachedLocalSurfacePoint, cachedLocalSurfaceNormal, cachedPhysicalRootPath,
+                    cachedPhysicalRootHasRigidbody, requestPosition, requestRotation,
+                    renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams) },
+                new object[] { ownerSourceReference, ownerTargetReference, 3UL,
+                    cachedLocalPosition, new Quaternion(0f, 0f, 0f, 0f),
+                    cachedLocalSurfacePoint, cachedLocalSurfaceNormal, cachedPhysicalRootPath,
+                    cachedPhysicalRootHasRigidbody, requestPosition, requestRotation,
+                    renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams) },
+                new object[] { ownerSourceReference, ownerTargetReference, 4UL,
+                    cachedLocalPosition, cachedLocalRotation,
+                    cachedLocalSurfacePoint, Vector3.zero, cachedPhysicalRootPath,
+                    cachedPhysicalRootHasRigidbody, requestPosition, requestRotation,
+                    renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams) },
+                new object[] { ownerSourceReference, ownerTargetReference, 5UL,
+                    cachedLocalPosition, cachedLocalRotation,
+                    cachedLocalSurfacePoint, cachedLocalSurfaceNormal, "999",
+                    cachedPhysicalRootHasRigidbody, requestPosition, requestRotation,
+                    renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams) },
+                new object[] { ownerSourceReference, new NetworkObjectReference(ownerSourceForRequests), 6UL,
+                    cachedLocalPosition, cachedLocalRotation,
+                    cachedLocalSurfacePoint, cachedLocalSurfaceNormal, cachedPhysicalRootPath,
+                    cachedPhysicalRootHasRigidbody, requestPosition, requestRotation,
+                    renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams) }
+            };
+            string[] expectedForgedResults = { "InvalidPose", "InvalidRequest", "InvalidRequest", "InvalidPose", "InvalidRequest" };
+            for (int i = 0; i < forgedArguments.Length; i++)
+            {
+                surfaceRpc.Invoke(preview, forgedArguments[i]);
+                ulong expectedId = (ulong)(i + 2);
+                yield return Until(() => LastRequest(preview) == expectedId, "forged anchored payload rejection");
+                Assert.That(ResultName(ownerPlayer), Is.EqualTo(expectedForgedResults[i]),
+                    $"Forged anchored payload #{expectedId} must fail closed.");
+                AssertHeld(owner, sourceObject);
+                Assert.That(IsPickedUp(sourceObject), Is.True);
+            }
+            SetControllerRequestId(controller, 6);
+            SetCollidersEnabled(ownerSurfaceColliders, true);
+            SetCollidersEnabled(serverSurfaceColliders, false);
+            Physics.SyncTransforms();
+            pendingField.SetValue(controller, false);
+            refresh.Invoke(controller, null);
+            Assert.That(PlacementControllerType.GetProperty("LastGeometryStatus").GetValue(controller).ToString(),
+                Is.EqualTo("SurfaceSupported"), "After validation probes, the owner's original target contact must be reacquired.");
+            Assert.That(PlacementControllerType.GetField("anchoredSurface", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(controller), Is.EqualTo(ownerSurface), "A foreign mirror may not replace the cached target.");
+        }
+
+        PressKey(Key.E);
+        bool pendingAfterConfirm = (bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller);
+        if (!pendingAfterConfirm)
+        {
+            object[] diagnosticArgs = { null };
+            bool rebaseSucceeded = (bool)PlacementControllerType.GetMethod("TryRebaseNetworkSurfacePose",
+                BindingFlags.Instance | BindingFlags.NonPublic).Invoke(controller, diagnosticArgs);
+            Assert.Fail($"Controller did not submit E. validation={PlacementControllerType.GetProperty("LastValidation").GetValue(controller)}, "
+                + $"hasAnchor={PlacementControllerType.GetField("hasNetworkSurfaceAnchor", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller)}, "
+                + $"anchorRejected={PlacementControllerType.GetField("networkSurfaceAnchorRejected", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller)}, "
+                + $"rebase={rebaseSucceeded}, ray={renderedAimRay.origin}->{renderedAimRay.direction}, "
+                + $"anchorTarget={((NetworkObject)PlacementControllerType.GetField("anchoredSurface", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller))?.name}, "
+                + $"rebasedPose={diagnosticArgs[0]}");
+        }
+        Assert.That(pendingAfterConfirm, Is.True);
+        // Local confirmation must see the owner's selected copy; the server then receives the
+        // same RPC with only its authoritative copy participating in this shared Physics scene.
+        SetCollidersEnabled(ownerSurfaceColliders, false);
+        SetCollidersEnabled(serverSurfaceColliders, true);
+        NetworkObject ownerSourceMirror = Find(owner, sourceObject.NetworkObjectId);
+        Assert.That(ownerSourceMirror, Is.Not.Null, "The owner source mirror must remain available for placement cleanup.");
+        foreach (Collider collider in ownerSourceMirror.GetComponentsInChildren<Collider>(true))
+            collider.enabled = false;
+        GameObject obstruction = null;
+        if (motion == 3)
+            SetCollidersEnabled(serverSurfaceColliders, false);
+        else if (motion == 4 || motion == 5)
+        {
+            obstruction = new GameObject(motion == 4
+                ? "Stage 6 server line-of-sight blocker" : "Stage 6 solid blocker containing aim origin");
+            runtimeObjects.Add(obstruction);
+            obstruction.AddComponent<BoxCollider>().size = motion == 4 ? Vector3.one * 0.15f : Vector3.one * 0.25f;
+            Vector3 anchoredPoint = serverSurface.transform.TransformPoint(cachedLocalSurfacePoint);
+            obstruction.transform.position = motion == 4
+                ? Vector3.Lerp(renderedAimRay.origin, anchoredPoint, 0.5f)
+                : renderedAimRay.origin;
+        }
+        else if (motion == 6)
+            serverSurface.transform.position = initialSurfacePosition + aimAnchor.forward * 1.3f;
+        Physics.SyncTransforms();
+        ulong requestId = GetPendingRequestId(controller);
+        yield return Until(() => LastRequest(preview) == requestId, "server response to moved-surface owner request");
+
+        string expectedResult = motion >= 3 && motion <= 6 && !useMountingNail ? "InvalidPose" : "Accepted";
+        Assert.That(ResultName(ownerPlayer), Is.EqualTo(expectedResult),
+            $"The selected local pose should be rebased after same-NI target motion. Motion={motion}, "
+            + $"serverTarget={serverSurface.transform.position}/{serverSurface.transform.rotation.eulerAngles}, "
+            + $"contactEnabled={serverSurfaceCollider.enabled}, sameNI={serverSurface.NetworkObjectId == surfaceObject.NetworkObjectId}.");
+        if (expectedResult != "Accepted")
+        {
+            AssertHeld(owner, sourceObject);
+            Assert.That(IsPickedUp(sourceObject), Is.True, "A rejected same-target request must preserve the held source.");
+            Assert.That(ownerSurface.NetworkObjectId, Is.EqualTo(surfaceObject.NetworkObjectId));
+            Assert.That(serverSurface.NetworkObjectId, Is.EqualTo(surfaceObject.NetworkObjectId));
+            Assert.That(GetHeld(ownerPlayer), Is.EqualTo(ownerSourceMirror.gameObject));
+            yield break;
+        }
+        yield return Until(() => sourceObject.OwnerClientId == NetworkManager.ServerClientId
+            && !IsPickedUp(sourceObject) && !IsPickedUp(Find(owner, sourceObject.NetworkObjectId)),
+            "accepted placement releases source ownership and pickup state");
+        Vector3 expectedCommittedPosition = serverSurface.transform.TransformPoint(cachedLocalPosition);
+        Quaternion expectedCommittedRotation = serverSurface.transform.rotation * cachedLocalRotation;
+        NetworkObject ownerSource = Find(owner, sourceObject.NetworkObjectId);
+        Rigidbody serverBody = source.GetComponent<Rigidbody>();
+        Rigidbody ownerBody = ownerSource != null ? ownerSource.GetComponent<Rigidbody>() : null;
+        NetworkTransform serverTransform = source.GetComponent<NetworkTransform>();
+        NetworkTransform ownerTransform = ownerSource != null ? ownerSource.GetComponent<NetworkTransform>() : null;
+        string poseDiagnostics = $"serverTransform={source.transform.position}/{source.transform.rotation.eulerAngles}, "
+            + $"serverBody={serverBody.position}/{serverBody.rotation.eulerAngles}, "
+            + $"serverBodyMode={serverBody.isKinematic}/{serverBody.detectCollisions}/{serverBody.interpolation}, "
+            + $"serverVelocity={serverBody.linearVelocity}/{serverBody.angularVelocity}, "
+            + $"serverNT={serverTransform.GetSpaceRelativePosition(true)}/{serverTransform.GetSpaceRelativeRotation(true).eulerAngles}, "
+            + $"ownerTransform={(ownerSource != null ? ownerSource.transform.position.ToString() : "missing")}/"
+            + $"{(ownerSource != null ? ownerSource.transform.rotation.eulerAngles.ToString() : "missing")}, "
+            + $"ownerBody={(ownerBody != null ? ownerBody.position.ToString() : "missing")}/"
+            + $"{(ownerBody != null ? ownerBody.rotation.eulerAngles.ToString() : "missing")}, "
+            + $"ownerBodyMode={(ownerBody != null ? ownerBody.isKinematic.ToString() : "missing")}/"
+            + $"{(ownerBody != null ? ownerBody.interpolation.ToString() : "missing")}, "
+            + $"ownerNT={(ownerTransform != null ? ownerTransform.GetSpaceRelativePosition(true).ToString() : "missing")}/"
+            + $"{(ownerTransform != null ? ownerTransform.GetSpaceRelativeRotation(true).eulerAngles.ToString() : "missing")}, "
+            + $"serverTarget={serverSurface.transform.position}/{serverSurface.transform.rotation.eulerAngles}, "
+            + $"ownerTarget={ownerSurface.transform.position}/{ownerSurface.transform.rotation.eulerAngles}, "
+            + $"heldServer={GetHeld(host.LocalClient.PlayerObject)}, heldOwner={GetHeld(ownerPlayer)}";
+        Assert.That(Vector3.Distance(source.transform.position, expectedCommittedPosition), Is.LessThan(0.002f),
+            $"Placement must preserve the exact previewed local position on the selected target. "
+            + $"actual={source.transform.position}, expected={expectedCommittedPosition}, target={serverSurface.transform.position}/{serverSurface.transform.rotation.eulerAngles}, "
+            + $"local={cachedLocalPosition}, motion={motion}; {poseDiagnostics}.");
+        Assert.That(Quaternion.Angle(source.transform.rotation, expectedCommittedRotation), Is.LessThan(0.1f),
+            "Placement must preserve the exact previewed local orientation on the selected target.");
+        Assert.That(surfaceObject.NetworkObjectId, Is.EqualTo(ownerSurface.NetworkObjectId));
+        if (useMountingNail)
+        {
+            Component serverNail = source.GetComponent(Type.GetType("MountingNail, Assembly-CSharp"));
+            Type nailType = serverNail.GetType();
+            Assert.That(nailType.GetProperty("State").GetValue(serverNail).ToString(), Is.EqualTo("Prepared"),
+                "The real accepted remote F/E placement must invoke the nail commit listener after holder cleanup.");
+            double preparedDeadline = (double)nailType.GetField("preparedDeadline", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(serverNail);
+            NetworkObject ownerNail = Find(owner, sourceObject.NetworkObjectId);
+            yield return Until(() => nailType.GetProperty("State").GetValue(ownerNail.GetComponent(nailType)).ToString() == "Prepared",
+                "owner nail observes accepted Prepared state");
+            MethodInfo surfaceRpc = PreviewType.GetMethod("SubmitSurfacePlacementServerRpc", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(surfaceRpc, Is.Not.Null, "The duplicate-request control must use the actual anchored ServerRpc wrapper.");
+            surfaceRpc.Invoke(preview, new object[]
+            {
+                new NetworkObjectReference(ownerNail), new NetworkObjectReference(ownerSurface), requestId,
+                cachedLocalPosition, cachedLocalRotation,
+                cachedLocalSurfacePoint, cachedLocalSurfaceNormal, cachedPhysicalRootPath,
+                cachedPhysicalRootHasRigidbody,
+                expectedCommittedPosition, expectedCommittedRotation,
+                renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams)
+            });
+            yield return Until(() => ResultName(ownerPlayer) == "StaleRequest",
+                "duplicate anchored request is rejected by the actual owner RPC");
+            Assert.That(nailType.GetProperty("State").GetValue(serverNail).ToString(), Is.EqualTo("Prepared"));
+            Assert.That((double)nailType.GetField("preparedDeadline", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(serverNail), Is.EqualTo(preparedDeadline),
+                "The stale duplicate must not invoke the nail commit listener or reset its timer.");
+        }
+    }
 
     [UnitySetUp]
     public IEnumerator PreservePhysicsSettings()
@@ -93,13 +803,14 @@ public class SingleCarryPlacementStage6PlayModeTests
             shutdownComplete = !managers.Exists(m => m != null && (m.IsListening || m.ShutdownInProgress));
             foreach (GameObject root in roots) if (root != null) UnityEngine.Object.Destroy(root);
             foreach (GameObject networkCopy in networkCopies) if (networkCopy != null) UnityEngine.Object.Destroy(networkCopy);
-            GameObject fixtureCamera = Camera.main != null ? Camera.main.gameObject : null;
+            List<GameObject> ownedFixtureCameras = runtimeObjects.FindAll(obj => obj != null && obj.GetComponent<Camera>() != null);
             foreach (GameObject obj in runtimeObjects)
-                if (obj != null && obj != fixtureCamera) UnityEngine.Object.Destroy(obj);
+                if (obj != null && !ownedFixtureCameras.Contains(obj)) UnityEngine.Object.Destroy(obj);
             yield return null;
             foreach (UnityEngine.Object asset in assets) if (asset != null) UnityEngine.Object.Destroy(asset);
             yield return null;
-            if (fixtureCamera != null) UnityEngine.Object.Destroy(fixtureCamera);
+            foreach (GameObject fixtureCamera in ownedFixtureCameras)
+                if (fixtureCamera != null) UnityEngine.Object.Destroy(fixtureCamera);
             yield return null;
             if (capturedSingleton)
             {
@@ -223,6 +934,10 @@ public class SingleCarryPlacementStage6PlayModeTests
         DisableMirrorColliders(ownerB, resourceNetObj.NetworkObjectId, host);
         DisableMirrorColliders(ownerA, bridgeNetObj.NetworkObjectId, host);
         DisableMirrorColliders(ownerB, bridgeNetObj.NetworkObjectId, host);
+        List<(int excludedLayers, int priority)> resourceOriginalContactSettings = CaptureSolidContactSettings(resourceNetObj);
+        List<(int excludedLayers, int priority)> bridgeOriginalContactSettings = CaptureSolidContactSettings(bridgeNetObj);
+        Assert.That(resourceOriginalContactSettings.Count, Is.GreaterThan(0));
+        Assert.That(bridgeOriginalContactSettings.Count, Is.GreaterThan(0));
 
         Assert.That(InvokePickup(resource, ownerAId), Is.True, "Server must register the resource owner before placement.");
         Assert.That(InvokePickup(bridge, ownerBId), Is.True, "Server must register the bridge owner before placement.");
@@ -234,6 +949,47 @@ public class SingleCarryPlacementStage6PlayModeTests
             && GetHeld(ownerA.LocalClient.PlayerObject) == Find(ownerA, resourceNetObj.NetworkObjectId).gameObject
             && GetHeld(ownerB.LocalClient.PlayerObject) == Find(ownerB, bridgeNetObj.NetworkObjectId).gameObject,
             "server and owners agree on actual held objects");
+        yield return Until(() => IsPickedUp(Find(host, resourceNetObj.NetworkObjectId))
+            && IsPickedUp(Find(ownerA, resourceNetObj.NetworkObjectId))
+            && IsPickedUp(Find(ownerB, resourceNetObj.NetworkObjectId))
+            && IsPickedUp(Find(host, bridgeNetObj.NetworkObjectId))
+            && IsPickedUp(Find(ownerA, bridgeNetObj.NetworkObjectId))
+            && IsPickedUp(Find(ownerB, bridgeNetObj.NetworkObjectId)),
+            "durable held state and contact isolation on server, owner, and observer");
+        AssertSingleCarryContactState(Find(host, resourceNetObj.NetworkObjectId), resourceOriginalContactSettings, true, "server resource");
+        AssertSingleCarryContactState(Find(ownerA, resourceNetObj.NetworkObjectId), resourceOriginalContactSettings, true, "owner resource");
+        AssertSingleCarryContactState(Find(ownerB, resourceNetObj.NetworkObjectId), resourceOriginalContactSettings, true, "observer resource");
+        AssertSingleCarryContactState(Find(host, bridgeNetObj.NetworkObjectId), bridgeOriginalContactSettings, true, "server mountable");
+        AssertSingleCarryContactState(Find(ownerA, bridgeNetObj.NetworkObjectId), bridgeOriginalContactSettings, true, "observer mountable");
+        AssertSingleCarryContactState(Find(ownerB, bridgeNetObj.NetworkObjectId), bridgeOriginalContactSettings, true, "owner mountable");
+
+        // A disable/enable cycle must reconstruct isolation from durable held state.
+        Behaviour serverResourceBehaviour = (Behaviour)resource.GetComponent(BaseResourceType);
+        serverResourceBehaviour.enabled = false;
+        serverResourceBehaviour.enabled = true;
+        Behaviour serverBridgeBehaviour = (Behaviour)bridge.GetComponent(BridgeType);
+        serverBridgeBehaviour.enabled = false;
+        serverBridgeBehaviour.enabled = true;
+        yield return new WaitForFixedUpdate();
+        AssertSingleCarryContactState(Find(host, resourceNetObj.NetworkObjectId), resourceOriginalContactSettings, true, "re-enabled server resource");
+        AssertSingleCarryContactState(Find(host, bridgeNetObj.NetworkObjectId), bridgeOriginalContactSettings, true, "re-enabled server mountable");
+
+        NetworkManager lateJoin = CreateManager("Stage 6 late join while single-carry held", playerPrefab,
+            new[] { resourcePrefab, bridgePrefab }, port);
+        Assert.That(lateJoin.StartClient(), Is.True);
+        yield return Until(() => lateJoin.IsConnectedClient && lateJoin.LocalClient?.PlayerObject != null
+            && host.ConnectedClientsIds.Count == 4
+            && Find(lateJoin, resourceNetObj.NetworkObjectId) != null
+            && Find(lateJoin, bridgeNetObj.NetworkObjectId) != null,
+            "late join receives both already-held sources");
+        DisposeFixtureInputMaps(null);
+        DisableMirrorColliders(lateJoin, resourceNetObj.NetworkObjectId, host);
+        DisableMirrorColliders(lateJoin, bridgeNetObj.NetworkObjectId, host);
+        yield return Until(() => IsPickedUp(Find(lateJoin, resourceNetObj.NetworkObjectId))
+            && IsPickedUp(Find(lateJoin, bridgeNetObj.NetworkObjectId)),
+            "late join receives durable held state for resource and mountable");
+        AssertSingleCarryContactState(Find(lateJoin, resourceNetObj.NetworkObjectId), resourceOriginalContactSettings, true, "late-join resource");
+        AssertSingleCarryContactState(Find(lateJoin, bridgeNetObj.NetworkObjectId), bridgeOriginalContactSettings, true, "late-join mountable");
 
         Vector3 originA = GetAimAnchor(ownerA.LocalClient.PlayerObject).position;
         Vector3 originB = GetAimAnchor(ownerB.LocalClient.PlayerObject).position;
@@ -389,6 +1145,15 @@ public class SingleCarryPlacementStage6PlayModeTests
             && !PreviewActive(Preview(ownerA.LocalClient.PlayerObject))
             && !PreviewActive(Preview(ownerB.LocalClient.PlayerObject)),
             "accepted placement clears replicated previews");
+        foreach (NetworkManager peer in new[] { host, ownerA, ownerB, lateJoin })
+        {
+            AssertSingleCarryContactState(Find(peer, resourceNetObj.NetworkObjectId), resourceOriginalContactSettings, false, peer.name + " placed resource");
+            AssertSingleCarryContactState(Find(peer, bridgeNetObj.NetworkObjectId), bridgeOriginalContactSettings, false, peer.name + " placed mountable");
+        }
+        Assert.That(GetBody(resourceNetObj.gameObject).isKinematic, Is.False, "Server resource resumes dynamic physics after F/E placement.");
+        Assert.That(GetBody(resourceNetObj.gameObject).useGravity, Is.True, "Server resource restores gravity after F/E placement.");
+        Assert.That(GetBody(bridgeNetObj.gameObject).isKinematic, Is.False, "Server mountable resumes dynamic physics after F/E placement.");
+        Assert.That(GetBody(bridgeNetObj.gameObject).useGravity, Is.True, "Server mountable restores gravity after F/E placement.");
         NetworkObject[] committedObjects = { winner, loser };
         Vector3[] committedPoses = { sharedPose, secondPose };
         Vector3[] previousHeldPoses = resultA == "Accepted"
@@ -501,6 +1266,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         // Keep the asset's genuine NGO prefab identity; this fixture must not invent
         // source-hash metadata for an imported prefab.
         additionalFixturePrefabHashes.Add(GetPrefabHash(sharedLogNetworkPrefab));
+        sharedLogNetworkPrefab.SetSceneObjectStatus(false);
 
         UnityEngine.Object resourceProfile = ScriptableObject.CreateInstance(BaseResourceProfileType);
         assets.Add(resourceProfile);
@@ -530,6 +1296,10 @@ public class SingleCarryPlacementStage6PlayModeTests
             new[] { resourcePrefab, bridgePrefab, sharedLogPrefab, toolPrefab, axePrefab, pickaxePrefab }, port);
         Assert.That(host.StartHost(), Is.True);
         host.SetSingleton();
+        Assert.That(sharedLogNetworkPrefab.IsSpawned, Is.False,
+            $"The shared Wooden Log registration template must not be auto-spawned by StartHost. id={sharedLogNetworkPrefab.NetworkObjectId}, sceneObject={sharedLogNetworkPrefab.IsSceneObject}, active={sharedLogPrefab.activeInHierarchy}, colliderStates={DescribeColliderStates(sharedLogPrefab)}");
+        Assert.That(CountEnabledColliders(sharedLogPrefab), Is.EqualTo(0),
+            $"The shared Wooden Log template must stay non-physical after host startup. spawned={sharedLogNetworkPrefab.IsSpawned}, active={sharedLogPrefab.activeInHierarchy}, colliderStates={DescribeColliderStates(sharedLogPrefab)}");
         yield return Until(() => host.LocalClient?.PlayerObject != null, "disconnect host player");
         NetworkManager owner = CreateManager("Disconnect cleanup owner", playerPrefab,
             new[] { resourcePrefab, bridgePrefab, sharedLogPrefab, toolPrefab, axePrefab, pickaxePrefab }, port);
@@ -565,11 +1335,19 @@ public class SingleCarryPlacementStage6PlayModeTests
         sourceNetworkObject.Spawn();
         yield return Until(() => Find(owner, sourceNetworkObject.NetworkObjectId) != null
             && Find(observer, sourceNetworkObject.NetworkObjectId) != null, "held source replication");
+        List<(int excludedLayers, int priority)> disconnectResourceOriginalSettings = CaptureSolidContactSettings(sourceNetworkObject);
         Assert.That(InvokePickup(source, owner.LocalClientId), Is.True);
         ConfirmLocalPickup(owner, sourceNetworkObject.NetworkObjectId);
         yield return Until(() => sourceNetworkObject.OwnerClientId == owner.LocalClientId
             && GetHeld(owner.LocalClient.PlayerObject) == Find(owner, sourceNetworkObject.NetworkObjectId).gameObject,
             "server and owner agree on held resource");
+        yield return Until(() => IsPickedUp(Find(host, sourceNetworkObject.NetworkObjectId))
+            && IsPickedUp(Find(owner, sourceNetworkObject.NetworkObjectId))
+            && IsPickedUp(Find(observer, sourceNetworkObject.NetworkObjectId)),
+            "held resource isolation replicates to disconnect observer");
+        AssertSingleCarryContactState(Find(host, sourceNetworkObject.NetworkObjectId), disconnectResourceOriginalSettings, true, "disconnect server resource");
+        AssertSingleCarryContactState(Find(owner, sourceNetworkObject.NetworkObjectId), disconnectResourceOriginalSettings, true, "disconnect owner resource");
+        AssertSingleCarryContactState(Find(observer, sourceNetworkObject.NetworkObjectId), disconnectResourceOriginalSettings, true, "disconnect observer resource");
         DisableDisconnectFixtureMirrorColliders(new[] { owner, observer, sharedOwner, inventoryOwner }, sourceNetworkObject.NetworkObjectId);
 
         GameObject bridge = UnityEngine.Object.Instantiate(bridgePrefab);
@@ -580,13 +1358,27 @@ public class SingleCarryPlacementStage6PlayModeTests
         bridgeNetworkObject.Spawn();
         yield return Until(() => Find(owner, bridgeNetworkObject.NetworkObjectId) != null
             && Find(observer, bridgeNetworkObject.NetworkObjectId) != null, "held mountable replication");
+        List<(int excludedLayers, int priority)> disconnectBridgeOriginalSettings = CaptureSolidContactSettings(bridgeNetworkObject);
         Assert.That(InvokePickup(bridge, owner.LocalClientId), Is.True);
         ConfirmLocalPickup(owner, bridgeNetworkObject.NetworkObjectId);
         yield return Until(() => bridgeNetworkObject.OwnerClientId == owner.LocalClientId,
             "server and owner agree on held mountable");
+        yield return Until(() => IsPickedUp(Find(host, bridgeNetworkObject.NetworkObjectId))
+            && IsPickedUp(Find(owner, bridgeNetworkObject.NetworkObjectId))
+            && IsPickedUp(Find(observer, bridgeNetworkObject.NetworkObjectId)),
+            "held mountable isolation replicates to disconnect observer");
+        AssertSingleCarryContactState(Find(host, bridgeNetworkObject.NetworkObjectId), disconnectBridgeOriginalSettings, true, "disconnect server mountable");
+        AssertSingleCarryContactState(Find(owner, bridgeNetworkObject.NetworkObjectId), disconnectBridgeOriginalSettings, true, "disconnect owner mountable");
+        AssertSingleCarryContactState(Find(observer, bridgeNetworkObject.NetworkObjectId), disconnectBridgeOriginalSettings, true, "disconnect observer mountable");
         DisableDisconnectFixtureMirrorColliders(new[] { owner, observer, sharedOwner, inventoryOwner }, bridgeNetworkObject.NetworkObjectId);
-        Vector3 bridgeHeldPosition = bridge.transform.position;
-        Quaternion bridgeHeldRotation = bridge.transform.rotation;
+        Vector3 bridgeCallbackPosition = Vector3.one * float.NaN;
+        Quaternion bridgeCallbackRotation = new Quaternion(float.NaN, float.NaN, float.NaN, float.NaN);
+        ulong bridgeCallbackOwnerClientId = ulong.MaxValue;
+        bool bridgeCallbackIsPickedUp = true;
+        bool bridgeCallbackIsKinematic = true;
+        bool bridgeCallbackUseGravity = false;
+        Rigidbody bridgeBodyFrozenAtDisconnectBoundary = null;
+        RigidbodyConstraints bridgeOriginalConstraints = RigidbodyConstraints.None;
 
         Component serverInventory = host.ConnectedClients[owner.LocalClientId].PlayerObject.GetComponent(InventoryType);
         Component ownerInventory = owner.LocalClient.PlayerObject.GetComponent(InventoryType);
@@ -619,12 +1411,29 @@ public class SingleCarryPlacementStage6PlayModeTests
             if (releasedSource != null) initialResourceVelocity = GetBody(releasedSource.gameObject).linearVelocity;
             if (releasedMountable != null)
             {
+                bridgeCallbackPosition = releasedMountable.transform.position;
+                bridgeCallbackRotation = releasedMountable.transform.rotation;
                 Rigidbody mountableBody = GetBody(releasedMountable.gameObject);
                 initialMountableVelocity = mountableBody.linearVelocity;
                 initialMountableAngularVelocity = mountableBody.angularVelocity;
+                bridgeCallbackOwnerClientId = releasedMountable.OwnerClientId;
+                bridgeCallbackIsPickedUp = IsPickedUp(releasedMountable);
+                bridgeCallbackIsKinematic = mountableBody.isKinematic;
+                bridgeCallbackUseGravity = mountableBody.useGravity;
+                if (bridgeCallbackOwnerClientId == NetworkManager.ServerClientId
+                    && !bridgeCallbackIsPickedUp && !bridgeCallbackIsKinematic && bridgeCallbackUseGravity
+                    && initialMountableVelocity.sqrMagnitude < 0.000001f
+                    && initialMountableAngularVelocity.sqrMagnitude < 0.000001f)
+                {
+                    bridgeBodyFrozenAtDisconnectBoundary = mountableBody;
+                    bridgeOriginalConstraints = mountableBody.constraints;
+                    mountableBody.constraints = RigidbodyConstraints.FreezeAll;
+                }
             }
         };
         host.OnClientDisconnectCallback += disconnectBoundaryObserver;
+        Vector3 bridgeHeldPosition = bridge.transform.position;
+        Quaternion bridgeHeldRotation = bridge.transform.rotation;
         host.DisconnectClient(ownerClientId);
         yield return Until(() => host.ConnectedClientsIds.Count == 4, "actual NGO owner disconnect cleanup");
         yield return Until(() => Find(host, sourceId) != null
@@ -658,6 +1467,8 @@ public class SingleCarryPlacementStage6PlayModeTests
             NetworkObject observerSource = Find(observer, sourceId);
             Assert.That(observerSource, Is.Not.Null, "Surviving observer keeps the released resource replica.");
             Assert.That((bool)BaseResourceType.GetProperty("IsPickedUp").GetValue(observerSource.GetComponent(BaseResourceType)), Is.False);
+            AssertSingleCarryContactState(remainingSource, disconnectResourceOriginalSettings, false, "disconnect-restored server resource");
+            AssertSingleCarryContactState(observerSource, disconnectResourceOriginalSettings, false, "disconnect-restored observer resource");
         }
 
         ulong bridgeId = bridgeNetworkObject.NetworkObjectId;
@@ -671,25 +1482,41 @@ public class SingleCarryPlacementStage6PlayModeTests
             "The mountable has zero linear velocity in the same-frame disconnect callback after recovery.");
         Assert.That(initialMountableAngularVelocity.sqrMagnitude, Is.LessThan(0.000001f),
             "The mountable has zero angular velocity in the same-frame disconnect callback after recovery.");
-        Assert.That(Vector3.Distance(releasedBridge.transform.position, bridgeHeldPosition), Is.LessThan(0.02f),
-            "The mountable must resume from the server's last held pose without an ordinary-drop nudge.");
-        Assert.That(Quaternion.Angle(releasedBridge.transform.rotation, bridgeHeldRotation), Is.LessThan(0.1f));
+        Assert.That(bridgeCallbackOwnerClientId, Is.EqualTo(NetworkManager.ServerClientId));
+        Assert.That(bridgeCallbackIsPickedUp, Is.False);
+        Assert.That(bridgeCallbackIsKinematic, Is.False);
+        Assert.That(bridgeCallbackUseGravity, Is.True);
+        Assert.That(Vector3.Distance(bridgeCallbackPosition, bridgeHeldPosition), Is.LessThan(0.02f),
+            "Disconnect recovery must release the mountable at the server's immediately pre-disconnect pose.");
+        Assert.That(Quaternion.Angle(bridgeCallbackRotation, bridgeHeldRotation), Is.LessThan(0.1f));
         NetworkObject observerBridge = Find(observer, bridgeId);
         Assert.That(observerBridge, Is.Not.Null);
         Assert.That(IsPickedUp(observerBridge), Is.False);
+        AssertSingleCarryContactState(releasedBridge, disconnectBridgeOriginalSettings, false, "disconnect-restored server mountable");
+        AssertSingleCarryContactState(observerBridge, disconnectBridgeOriginalSettings, false, "disconnect-restored observer mountable");
 
-        // Verify the authoritative disconnect drop stays at the approved server pose over multiple ticks.
-        Vector3 releasedBridgePosition = releasedBridge.transform.position;
-        Quaternion releasedBridgeRotation = releasedBridge.transform.rotation;
-        for (int sample = 0; sample < 8; sample++)
+        // Keep ordinary body physics from obscuring the separate queued NetworkTransform snapback check.
+        // Release-state and velocity samples were captured before freezing; assertions validate those captured values.
+        Rigidbody releasedBridgeBody = releasedBridge.GetComponent<Rigidbody>();
+        Assert.That(bridgeBodyFrozenAtDisconnectBoundary, Is.SameAs(releasedBridgeBody),
+            "Only a verified, zero-velocity disconnect release may enter the queued-transform isolation check.");
+        try
         {
-            yield return null;
-            Assert.That(Vector3.Distance(releasedBridge.transform.position, releasedBridgePosition), Is.LessThan(0.02f),
-                "The mountable's server pose must not snap back to its former owner's queued transform.");
-            observerBridge = Find(observer, bridgeId);
-            Assert.That(observerBridge, Is.Not.Null);
-            Assert.That(Vector3.Distance(observerBridge.transform.position, releasedBridgePosition), Is.LessThan(0.08f));
-            Assert.That(Quaternion.Angle(observerBridge.transform.rotation, releasedBridgeRotation), Is.LessThan(0.5f));
+            for (int sample = 0; sample < 8; sample++)
+            {
+                yield return null;
+                Assert.That(Vector3.Distance(releasedBridge.transform.position, bridgeCallbackPosition), Is.LessThan(0.02f),
+                    "The mountable's server pose must not snap back to its former owner's queued transform.");
+                observerBridge = Find(observer, bridgeId);
+                Assert.That(observerBridge, Is.Not.Null);
+                Assert.That(Vector3.Distance(observerBridge.transform.position, bridgeCallbackPosition), Is.LessThan(0.08f));
+                Assert.That(Quaternion.Angle(observerBridge.transform.rotation, bridgeCallbackRotation), Is.LessThan(0.5f));
+            }
+        }
+        finally
+        {
+            if (bridgeBodyFrozenAtDisconnectBoundary != null)
+                bridgeBodyFrozenAtDisconnectBoundary.constraints = bridgeOriginalConstraints;
         }
 
         // The actual shared WoodenLog profile only permits another pickup after the prior owner's
@@ -706,9 +1533,15 @@ public class SingleCarryPlacementStage6PlayModeTests
         host.LocalClient.PlayerObject.transform.position = hostRootPosition;
         GameObject sharedLog = UnityEngine.Object.Instantiate(sharedLogPrefab);
         runtimeObjects.Add(sharedLog);
+        sharedLog.SetActive(true);
         sharedLog.transform.position = new Vector3(24f, 1f, 11f);
         RestoreDisconnectFixturePhysics(sharedLog, sharedLogColliderEnabled, sharedLogIsKinematic, sharedLogUseGravity);
         NetworkObject sharedLogNetworkObject = sharedLog.GetComponent<NetworkObject>();
+        sharedLogNetworkObject.SetSceneObjectStatus(false);
+        Assert.That(sharedLogNetworkObject.IsSceneObject, Is.False,
+            "The runtime shared-carry instance must be explicitly marked runtime-spawned, never scene-placed.");
+        Assert.That(sharedLogNetworkPrefab.IsSpawned, Is.False,
+            $"The separate registration template must remain unspawned before the runtime shared-carry instance is spawned. sceneObject={sharedLogNetworkPrefab.IsSceneObject}, runtimeInstance={sharedLogNetworkObject.name}");
         spawnedObjects.Add(sharedLogNetworkObject);
         sharedLogNetworkObject.Spawn();
         yield return Until(() => Find(sharedOwner, sharedLogNetworkObject.NetworkObjectId) != null
@@ -1074,6 +1907,20 @@ public class SingleCarryPlacementStage6PlayModeTests
         return prefab;
     }
 
+    private GameObject CreateNetworkCharacterSurfacePrefab(uint hash)
+    {
+        GameObject prefab = new GameObject("Stage 6 character surface without Rigidbody");
+        assets.Add(prefab);
+        prefab.AddComponent<CapsuleCollider>().height = 1.6f;
+        prefab.GetComponent<CapsuleCollider>().radius = 0.32f;
+        prefab.AddComponent<CharacterController>().height = 1.6f;
+        SetPrefabHash(prefab.AddComponent<NetworkObject>(), hash);
+        Type transformType = Type.GetType("ClientNetworkTransform, Assembly-CSharp");
+        if (transformType != null) prefab.AddComponent(transformType);
+        prefab.transform.position = Vector3.one * 10000f;
+        return prefab;
+    }
+
     private GameObject CreateActualWoodenBoardPrefabForFixture()
     {
         GameObject boardAsset = null;
@@ -1223,6 +2070,20 @@ public class SingleCarryPlacementStage6PlayModeTests
         body.useGravity = useGravity;
     }
 
+    private static int CountEnabledColliders(GameObject source)
+    {
+        int count = 0;
+        foreach (Collider collider in source.GetComponentsInChildren<Collider>(true))
+            if (collider != null && collider.enabled) count++;
+        return count;
+    }
+
+    private static string DescribeColliderStates(GameObject source)
+    {
+        return string.Join(",", source.GetComponentsInChildren<Collider>(true)
+            .Select(collider => collider != null ? $"{collider.name}:{collider.enabled}" : "<destroyed>"));
+    }
+
     private static void DisableDisconnectFixtureRemotePlayerPhysics(NetworkManager server, NetworkManager[] clientManagers)
     {
         foreach (NetworkManager clientManager in clientManagers)
@@ -1329,6 +2190,41 @@ public class SingleCarryPlacementStage6PlayModeTests
         foreach (Collider collider in mirror.GetComponentsInChildren<Collider>(true)) collider.enabled = false;
     }
 
+    private static List<(int excludedLayers, int priority)> CaptureSolidContactSettings(NetworkObject source)
+    {
+        var settings = new List<(int excludedLayers, int priority)>();
+        foreach (Collider collider in source.GetComponentsInChildren<Collider>(true))
+            if (collider != null && !collider.isTrigger)
+                settings.Add((collider.excludeLayers.value, collider.layerOverridePriority));
+        return settings;
+    }
+
+    private static void AssertSingleCarryContactState(NetworkObject source,
+        List<(int excludedLayers, int priority)> originalSettings, bool held, string label)
+    {
+        Assert.That(source, Is.Not.Null, label + " network object must exist.");
+        Assert.That(IsPickedUp(source), Is.EqualTo(held), label + " replicated held state.");
+        List<Collider> colliders = new List<Collider>();
+        foreach (Collider collider in source.GetComponentsInChildren<Collider>(true))
+            if (collider != null && !collider.isTrigger) colliders.Add(collider);
+        Assert.That(colliders.Count, Is.EqualTo(originalSettings.Count), label + " solid collider count.");
+        for (int i = 0; i < colliders.Count; i++)
+        {
+            Assert.That(colliders[i].excludeLayers.value,
+                Is.EqualTo(held ? Physics.AllLayers : originalSettings[i].excludedLayers), label + " per-collider exclude mask.");
+            Assert.That(colliders[i].layerOverridePriority,
+                Is.EqualTo(held ? SingleCarryContactIsolationPriority : originalSettings[i].priority), label + " per-collider override priority.");
+        }
+
+        Rigidbody body = GetBody(source.gameObject);
+        Assert.That(body, Is.Not.Null, label + " Rigidbody must exist.");
+        if (held)
+        {
+            Assert.That(body.isKinematic, Is.True, label + " held Rigidbody must stay kinematic.");
+            Assert.That(body.useGravity, Is.False, label + " held Rigidbody must suppress gravity.");
+        }
+    }
+
     private static void DisableControllerFixtureMirrorColliders(NetworkManager server, NetworkManager owner,
         NetworkObject ownerPlayer, ulong sourceId)
     {
@@ -1342,6 +2238,23 @@ public class SingleCarryPlacementStage6PlayModeTests
             foreach (Collider collider in mirror.GetComponentsInChildren<Collider>(true))
                 collider.enabled = enableForLocalGeometry;
         }
+    }
+
+    private static void SetCollidersEnabled(Collider[] colliders, bool enabled)
+    {
+        foreach (Collider collider in colliders)
+            if (collider != null) collider.enabled = enabled;
+    }
+
+    private static void SetFixtureNormalMass(GameObject target, float mass)
+    {
+        Rigidbody body = target.GetComponent<Rigidbody>();
+        Assert.That(body, Is.Not.Null);
+        body.mass = mass;
+        Component sharedCarryPhysics = target.GetComponent(Type.GetType("SharedCarryPhysicsBody, Assembly-CSharp"));
+        if (sharedCarryPhysics == null) return;
+        sharedCarryPhysics.GetType().GetField("normalMass", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(sharedCarryPhysics, mass);
     }
 
     private void DisposeFixtureInputMaps(NetworkObject controlledPlayer)

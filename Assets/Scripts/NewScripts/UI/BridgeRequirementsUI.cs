@@ -316,7 +316,8 @@ public class BridgeRequirementsUI : MonoBehaviour
         {
             foreach (BridgeRequirementLine requirement in snapshot.RemainingStageRequirements)
             {
-                remainingBuilder.AppendLine().Append(requirement.ComponentName).Append(" x ").Append(requirement.RequiredAmount);
+                remainingBuilder.AppendLine().Append(requirement.ComponentName).Append(" - ")
+                    .Append(requirement.CurrentAmount).Append(" / ").Append(requirement.RequiredAmount);
             }
         }
 

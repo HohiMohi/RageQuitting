@@ -277,7 +277,7 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
         blocker.transform.localScale = Vector3.one * 0.25f;
         // Deliberately do not call Physics.SyncTransforms here: the confirmation path owns synchronization.
         QueueKeys("E");
-        yield return null;
+        InputSystem.Update();
         Assert.That((bool)controller.GetType().GetProperty("IsActive").GetValue(controller), Is.True);
         Assert.That((bool)controller.GetType().GetProperty("IsCurrentPlacementValid").GetValue(controller), Is.False);
         Assert.That(interaction.GetType().GetMethod("GetPickedUpGameObject").Invoke(interaction, null), Is.SameAs(item));
@@ -328,7 +328,7 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
     }
 
     [UnityTest]
-    public IEnumerator WrongHolderAndMissingPlaceableCannotCommit_ButOrdinaryDropStillUsesItsNudge()
+    public IEnumerator WrongHolderAndMissingPlaceableCannotCommit_ButOrdinaryDropUsesConfiguredVelocityChange()
     {
         if (IsNetworkListening()) Assert.Ignore("This release integration test requires an offline session.");
         yield return CreateLocalPlayerAndKeyboard();
@@ -403,6 +403,8 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
 
         CreateResourceItem();
         Component validResource = item.GetComponent(TypeByName("BaseResourceNew, Assembly-CSharp"));
+        Rigidbody lightBody = item.GetComponent<Rigidbody>();
+        lightBody.mass = 0.1f;
         validResource.GetType().GetMethod("PickedUp").Invoke(validResource, new object[] { player.transform });
         Vector3 playerPosition = player.transform.position;
         Assert.That((bool)interactionType.GetMethod("DropObject").Invoke(interaction, null), Is.True);
@@ -412,8 +414,36 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
         yield return null;
         Assert.That(Vector3.Dot(item.transform.position - ordinaryDropPosition, player.transform.forward), Is.GreaterThan(0f),
             "The ordinary drop advances after the next physics step.");
-        Assert.That(item.GetComponent<Rigidbody>().linearVelocity.magnitude, Is.GreaterThan(0f),
-            "Ordinary drop retains its established impulse behavior.");
+        Assert.That(Vector3.Dot(lightBody.linearVelocity, player.transform.forward), Is.EqualTo(1.5f).Within(0.1f),
+            "An ordinary drop applies the configured forward velocity change independently of item mass.");
+        UnityEngine.Object.Destroy(item);
+        yield return null;
+
+        CreateResourceItem();
+        Component heavyResource = item.GetComponent(TypeByName("BaseResourceNew, Assembly-CSharp"));
+        Rigidbody heavyBody = item.GetComponent<Rigidbody>();
+        heavyBody.mass = 20f;
+        heavyResource.GetType().GetMethod("PickedUp").Invoke(heavyResource, new object[] { player.transform });
+        Assert.That((bool)interactionType.GetMethod("DropObject").Invoke(interaction, null), Is.True);
+        yield return new WaitForFixedUpdate();
+        Assert.That(Vector3.Dot(heavyBody.linearVelocity, player.transform.forward), Is.EqualTo(1.5f).Within(0.1f),
+            "A heavy ordinary drop receives the same configured velocity change as a light one.");
+        UnityEngine.Object.Destroy(item);
+        yield return null;
+
+        CreateResourceItem();
+        Component stateDropResource = item.GetComponent(TypeByName("BaseResourceNew, Assembly-CSharp"));
+        Rigidbody stateDropBody = item.GetComponent<Rigidbody>();
+        stateDropBody.linearVelocity = Vector3.zero;
+        stateDropBody.angularVelocity = Vector3.zero;
+        stateDropResource.GetType().GetMethod("PickedUp").Invoke(stateDropResource, new object[] { player.transform });
+        interactionType.GetMethod("DropHeldObjectForStateChange").Invoke(interaction, null);
+        float stateDropForwardVelocityAtRelease = Vector3.Dot(stateDropBody.linearVelocity, player.transform.forward);
+        foreach (Collider collider in item.GetComponentsInChildren<Collider>(true)) collider.enabled = false;
+        yield return new WaitForFixedUpdate();
+        Assert.That(Vector3.Dot(stateDropBody.linearVelocity, player.transform.forward),
+            Is.EqualTo(stateDropForwardVelocityAtRelease).Within(0.1f),
+            "State-change release adds no configured forward velocity change to its pre-release velocity.");
     }
 
     [TearDown]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public enum SingleCarryPlacementGeometryStatus
@@ -18,16 +19,204 @@ public struct SingleCarryPlacementPose
     public SingleCarryPlacementGeometryStatus Status { get; }
     public Collider SurfaceCollider { get; }
     public Vector3 SurfaceNormal { get; }
+    public Vector3 SurfacePoint { get; }
 
     public SingleCarryPlacementPose(Vector3 position, Quaternion rotation,
         SingleCarryPlacementGeometryStatus status, Collider surfaceCollider, Vector3 surfaceNormal)
+        : this(position, rotation, status, surfaceCollider, surfaceNormal, Vector3.zero)
+    {
+    }
+
+    public SingleCarryPlacementPose(Vector3 position, Quaternion rotation,
+        SingleCarryPlacementGeometryStatus status, Collider surfaceCollider, Vector3 surfaceNormal, Vector3 surfacePoint)
     {
         Position = position;
         Rotation = rotation;
         Status = status;
         SurfaceCollider = surfaceCollider;
         SurfaceNormal = surfaceNormal;
+        SurfacePoint = surfacePoint;
     }
+}
+
+/// <summary>Captures and revalidates a placement surface using stable network and physical-root identity.</summary>
+public static class SingleCarryPlacementSurfaceAnchor
+{
+    private const float ContactProbeHalfLength = 0.06f;
+    private const float ContactProbeOffset = 0.03f;
+    private const float ContactPointTolerance = 0.003f;
+    private const int MaximumPhysicalRootPathLength = 256;
+    private const int MaximumPhysicalRootPathDepth = 16;
+
+    public static bool TryCapture(Collider collider, NetworkManager manager, NetworkObject source,
+        Vector3 posePosition, Quaternion poseRotation, Vector3 surfacePoint, Vector3 surfaceNormal,
+        out NetworkObject target, out NetworkObjectReference targetReference,
+        out Vector3 localPosePosition, out Quaternion localPoseRotation,
+        out Vector3 localSurfacePoint, out Vector3 localSurfaceNormal,
+        out string physicalRootPath, out bool physicalRootHasRigidbody)
+    {
+        target = null;
+        targetReference = default;
+        localPosePosition = default;
+        localPoseRotation = Quaternion.identity;
+        localSurfacePoint = default;
+        localSurfaceNormal = default;
+        physicalRootPath = null;
+        physicalRootHasRigidbody = false;
+        if (collider == null || collider.isTrigger || manager == null || !manager.IsListening
+            || !IsFinite(posePosition) || !IsFinite(poseRotation) || !IsFinite(surfacePoint)
+            || !IsUnitDirection(surfaceNormal)) return false;
+
+        target = collider.GetComponentInParent<NetworkObject>();
+        if (target == null || !target.IsSpawned || target.NetworkManager != manager
+            || source != null && target == source) return false;
+
+        Transform root = ResolvePhysicalRoot(collider);
+        if (root == null || !TryGetStableRootPath(target.transform, root, out physicalRootPath)) return false;
+        physicalRootHasRigidbody = collider.attachedRigidbody != null;
+        targetReference = new NetworkObjectReference(target);
+        localPosePosition = root.InverseTransformPoint(posePosition);
+        localPoseRotation = Quaternion.Inverse(root.rotation) * poseRotation;
+        localSurfacePoint = root.InverseTransformPoint(surfacePoint);
+        localSurfaceNormal = root.InverseTransformDirection(surfaceNormal).normalized;
+        return IsFinite(localPosePosition) && IsFinite(localPoseRotation) && IsFinite(localSurfacePoint)
+            && IsUnitDirection(localSurfaceNormal);
+    }
+
+    public static bool IsColliderOnPhysicalRoot(Collider collider, NetworkObject target,
+        string physicalRootPath, bool physicalRootHasRigidbody)
+    {
+        if (collider == null || collider.isTrigger || target == null || !collider.enabled
+            || !collider.gameObject.activeInHierarchy || collider.GetComponentInParent<NetworkObject>() != target)
+            return false;
+        Transform root = ResolvePhysicalRoot(collider);
+        return root != null && (collider.attachedRigidbody != null) == physicalRootHasRigidbody
+            && TryGetStableRootPath(target.transform, root, out string currentPath)
+            && string.Equals(currentPath, physicalRootPath, System.StringComparison.Ordinal);
+    }
+
+    public static bool TryResolveContactCollider(NetworkObject target, Transform ignoredRootA,
+        Transform ignoredRootB, Vector3 surfacePoint, Vector3 surfaceNormal,
+        string physicalRootPath, bool physicalRootHasRigidbody, out Collider surfaceCollider)
+    {
+        surfaceCollider = null;
+        if (target == null || !target.IsSpawned || !target.gameObject.activeInHierarchy
+            || !IsFinite(surfacePoint) || !IsUnitDirection(surfaceNormal)) return false;
+
+        Vector3 normal = surfaceNormal.normalized;
+        Vector3 origin = surfacePoint + normal * ContactProbeOffset;
+        RaycastHit[] hits = Physics.RaycastAll(origin, -normal, ContactProbeHalfLength,
+            Physics.AllLayers, QueryTriggerInteraction.Ignore);
+        Array.Sort(hits, (left, right) => left.distance.CompareTo(right.distance));
+        foreach (RaycastHit hit in hits)
+        {
+            Collider candidate = hit.collider;
+            if (candidate == null || !candidate.enabled || !candidate.gameObject.activeInHierarchy
+                || candidate.isTrigger || IsInHierarchy(candidate.transform, ignoredRootA)
+                || IsInHierarchy(candidate.transform, ignoredRootB)) continue;
+
+            NetworkObject candidateTarget = candidate.GetComponentInParent<NetworkObject>();
+            if (candidateTarget != target || candidateTarget.NetworkManager != target.NetworkManager)
+                return false;
+            if (!IsColliderOnPhysicalRoot(candidate, target, physicalRootPath, physicalRootHasRigidbody))
+                return false;
+            if (Vector3.Distance(hit.point, surfacePoint) > ContactPointTolerance) return false;
+            surfaceCollider = candidate;
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsSameTargetAndPhysicalRoot(Collider collider, NetworkObject target,
+        string physicalRootPath, bool physicalRootHasRigidbody) =>
+        collider != null && collider.GetComponentInParent<NetworkObject>() == target
+        && target != null && collider.GetComponentInParent<NetworkObject>().NetworkManager == target.NetworkManager
+        && IsColliderOnPhysicalRoot(collider, target, physicalRootPath, physicalRootHasRigidbody);
+
+    public static bool TryResolveAnchorTransform(NetworkObject target, string physicalRootPath,
+        bool physicalRootHasRigidbody, out Transform anchorTransform)
+    {
+        anchorTransform = null;
+        if (target == null || !target.IsSpawned || string.IsNullOrEmpty(physicalRootPath)
+            || physicalRootPath.Length > MaximumPhysicalRootPathLength) return false;
+        string[] parts = physicalRootPath == "." ? System.Array.Empty<string>() : physicalRootPath.Split('/');
+        if (parts.Length > MaximumPhysicalRootPathDepth) return false;
+        Transform current = target.transform;
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (!int.TryParse(parts[i], out int index) || index < 0 || index >= current.childCount) return false;
+            current = current.GetChild(index);
+        }
+        Rigidbody body = current.GetComponent<Rigidbody>();
+        if ((body != null) != physicalRootHasRigidbody) return false;
+        anchorTransform = current;
+        return true;
+    }
+
+    public static bool HasLineOfSightToContact(Collider surfaceCollider, NetworkObject target,
+        string physicalRootPath, bool physicalRootHasRigidbody, Transform sourceRoot, Transform ignoredOwner,
+        Vector3 rayOrigin, Vector3 surfacePoint, float maxDistance)
+    {
+        if (surfaceCollider == null || target == null || !target.IsSpawned || !IsFinite(rayOrigin)
+            || !IsFinite(surfacePoint) || maxDistance <= 0f) return false;
+        Vector3 offset = surfacePoint - rayOrigin;
+        float distance = offset.magnitude;
+        if (distance <= 0.0001f || distance > maxDistance) return false;
+        Collider[] containing = Physics.OverlapSphere(rayOrigin, 0.001f, Physics.AllLayers,
+            QueryTriggerInteraction.Ignore);
+        foreach (Collider collider in containing)
+        {
+            if (collider == null || IsInHierarchy(collider.transform, sourceRoot)
+                || IsInHierarchy(collider.transform, ignoredOwner)) continue;
+            if ((collider.ClosestPoint(rayOrigin) - rayOrigin).sqrMagnitude <= 0.000001f) return false;
+        }
+        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, offset / distance, distance + ContactPointTolerance,
+            Physics.AllLayers, QueryTriggerInteraction.Ignore);
+        Array.Sort(hits, (left, right) => left.distance.CompareTo(right.distance));
+        foreach (RaycastHit hit in hits)
+        {
+            Collider candidate = hit.collider;
+            if (candidate == null || IsInHierarchy(candidate.transform, sourceRoot)
+                || IsInHierarchy(candidate.transform, ignoredOwner)) continue;
+            NetworkObject hitTarget = candidate.GetComponentInParent<NetworkObject>();
+            return hitTarget == target && IsColliderOnPhysicalRoot(candidate, target,
+                physicalRootPath, physicalRootHasRigidbody)
+                && Vector3.Distance(hit.point, surfacePoint) <= ContactPointTolerance;
+        }
+        return false;
+    }
+
+    private static Transform ResolvePhysicalRoot(Collider collider) =>
+        collider != null && collider.attachedRigidbody != null
+            ? collider.attachedRigidbody.transform
+            : collider != null && collider.GetComponentInParent<NetworkObject>() != null
+                ? collider.GetComponentInParent<NetworkObject>().transform
+                : collider != null ? collider.transform : null;
+
+    private static bool TryGetStableRootPath(Transform target, Transform root, out string path)
+    {
+        path = null;
+        if (target == null || root == null || (root != target && !root.IsChildOf(target))) return false;
+        var indices = new List<int>();
+        for (Transform cursor = root; cursor != target; cursor = cursor.parent)
+        {
+            if (cursor == null || indices.Count >= MaximumPhysicalRootPathDepth) return false;
+            indices.Add(cursor.GetSiblingIndex());
+        }
+        indices.Reverse();
+        path = indices.Count == 0 ? "." : string.Join("/", indices);
+        return path.Length <= MaximumPhysicalRootPathLength;
+    }
+
+    private static bool IsInHierarchy(Transform candidate, Transform root) =>
+        root != null && (candidate == root || candidate.IsChildOf(root));
+
+    private static bool IsFinite(Vector3 value) => IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
+    private static bool IsFinite(Quaternion value) => IsFinite(value.x) && IsFinite(value.y)
+        && IsFinite(value.z) && IsFinite(value.w);
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+    private static bool IsUnitDirection(Vector3 value) => IsFinite(value)
+        && Mathf.Abs(value.sqrMagnitude - 1f) <= 0.02f;
 }
 
 /// <summary>Computes a surface-supported pose from cached physical shapes and a center-camera aim ray.</summary>
@@ -119,23 +308,44 @@ public sealed class SingleCarryPlacementGeometrySolver
             return new SingleCarryPlacementPose(aimPoint, rotation, rayStatus, null, Vector3.zero);
 
         Vector3 normal = hit.normal.sqrMagnitude > 0.000001f ? hit.normal.normalized : Vector3.up;
-        Matrix4x4 candidateRootMatrix = Matrix4x4.TRS(hit.point, rotation, sourceRoot.lossyScale);
+        return CalculateAtSurfaceContact(hit.point, normal, rotation, hit.collider);
+    }
+
+    public SingleCarryPlacementPose CalculateAtSurfaceContact(Vector3 surfacePoint, Vector3 surfaceNormal,
+        Quaternion rotation, Collider surfaceCollider)
+    {
+        if (sourceRoot == null || surfaceCollider == null || !surfaceCollider.enabled
+            || !surfaceCollider.gameObject.activeInHierarchy || surfaceCollider.isTrigger)
+            return new SingleCarryPlacementPose(surfacePoint, rotation,
+                SingleCarryPlacementGeometryStatus.NoPhysicalColliders, surfaceCollider, surfaceNormal, surfacePoint);
+
+        Vector3 normal = surfaceNormal.sqrMagnitude > 0.000001f ? surfaceNormal.normalized : Vector3.up;
+        Matrix4x4 candidateRootMatrix = Matrix4x4.TRS(surfacePoint, rotation, sourceRoot.lossyScale);
         float minimumProjection = float.PositiveInfinity;
+        int physicalShapeCount = 0;
         foreach (Shape shape in shapes)
         {
             Collider collider = shape.Collider;
             if (collider == null || !collider.enabled || !collider.gameObject.activeInHierarchy || collider.isTrigger) continue;
+            physicalShapeCount++;
             Matrix4x4 localToWorld = candidateRootMatrix * sourceRoot.worldToLocalMatrix * collider.transform.localToWorldMatrix;
-            if (!TryGetMinimumProjection(shape, localToWorld, normal, out float projection))
-                return new SingleCarryPlacementPose(aimPoint, rotation,
-                    SingleCarryPlacementGeometryStatus.UnsupportedCollider, hit.collider, normal);
+            if (!TryGetMinimumProjection(shape, localToWorld, normal, out float projection) || !IsFinite(projection))
+                return new SingleCarryPlacementPose(surfacePoint, rotation,
+                    SingleCarryPlacementGeometryStatus.UnsupportedCollider, surfaceCollider, normal, surfacePoint);
             minimumProjection = Mathf.Min(minimumProjection, projection);
         }
 
-        float shiftAlongNormal = Vector3.Dot(hit.point, normal) - minimumProjection;
-        Vector3 position = hit.point + normal * shiftAlongNormal;
+        if (physicalShapeCount == 0)
+            return new SingleCarryPlacementPose(surfacePoint, rotation,
+                SingleCarryPlacementGeometryStatus.NoPhysicalColliders, surfaceCollider, normal, surfacePoint);
+
+        float shiftAlongNormal = Vector3.Dot(surfacePoint, normal) - minimumProjection;
+        Vector3 position = surfacePoint + normal * shiftAlongNormal;
+        if (!IsFinite(position) || !IsFinite(rotation))
+            return new SingleCarryPlacementPose(surfacePoint, rotation,
+                SingleCarryPlacementGeometryStatus.UnsupportedCollider, surfaceCollider, normal, surfacePoint);
         return new SingleCarryPlacementPose(position, rotation,
-            SingleCarryPlacementGeometryStatus.SurfaceSupported, hit.collider, normal);
+            SingleCarryPlacementGeometryStatus.SurfaceSupported, surfaceCollider, normal, surfacePoint);
     }
 
     private bool TryFindFirstSurface(Ray ray, float maxDistance, Transform ignoredOwner, out RaycastHit nearest,
@@ -252,4 +462,9 @@ public sealed class SingleCarryPlacementGeometrySolver
     {
         return candidate != null && root != null && (candidate == root || candidate.IsChildOf(root));
     }
+
+    private static bool IsFinite(Vector3 value) => IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
+    private static bool IsFinite(Quaternion value) => IsFinite(value.x) && IsFinite(value.y)
+        && IsFinite(value.z) && IsFinite(value.w);
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 }

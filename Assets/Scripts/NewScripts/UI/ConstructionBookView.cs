@@ -54,6 +54,16 @@ public sealed class ConstructionBookView : MonoBehaviour
 
     public void Render(ConstructionBookCatalogSO.Entry entry, int count, int pageIndex, int pageCount, IReadOnlyList<ConstructionBookMaterialLine> materials, bool materialsAvailable, IReadOnlyList<ConstructionBookRosterMember> roster, ulong localClientId, Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment, Func<bool> isPageTransitioning, bool worldView)
     {
+        RenderWithCompletionSummary(entry, count, pageIndex, pageCount, materials, materialsAvailable, roster, localClientId,
+            isAssigned, requestAssignment, isPageTransitioning, worldView, string.Empty);
+    }
+
+    public void RenderWithCompletionSummary(ConstructionBookCatalogSO.Entry entry, int count, int pageIndex, int pageCount,
+        IReadOnlyList<ConstructionBookMaterialLine> materials, bool materialsAvailable,
+        IReadOnlyList<ConstructionBookRosterMember> roster, ulong localClientId,
+        Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment,
+        Func<bool> isPageTransitioning, bool worldView, string completionSummary)
+    {
         Clear(materialsRoot);
         Clear(stepsRoot);
         title.text = entry != null ? $"{entry.title}  x{count}\n<size=60%>Page {pageIndex + 1} / {pageCount}</size>" : "Data unavailable";
@@ -69,6 +79,8 @@ public sealed class ConstructionBookView : MonoBehaviour
         }
 
         Text("STEPS", stepsRoot, StepsHeadingSize, Ink(), TextAlignmentOptions.Center, 34f);
+        if (!string.IsNullOrWhiteSpace(completionSummary))
+            Text(completionSummary, stepsRoot, 18f, Ink(), TextAlignmentOptions.Center, 24f);
         if (entry == null || entry.steps == null || entry.steps.Length == 0)
         {
             Text("Data unavailable", stepsRoot, 30f, Ink(), TextAlignmentOptions.Left, 40f);

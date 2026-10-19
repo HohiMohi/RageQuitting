@@ -48,6 +48,7 @@ flowchart LR
 | [Agent-Validation-Harness](Agent-Validation-Harness.md) | lokalny preflight, tiery walidacji, uruchamianie i interpretacja raportów |
 | [UnityProjectContext](UnityProjectContext.md) | zwięzły kontekst projektu i środowiska dla agentów |
 | [Lighting-And-Post-Processing-Research](Lighting-And-Post-Processing-Research.md) | stan renderingu, rekomendacje URP, lighting, probes i post-processing |
+| [Mounting-Nails](Mounting-Nails.md) | Etapy 1–2 gwoździa montażowego: placement, wbijanie w pojedynczy obiekt, sieć, parametry i ręczny odbiór |
 
 ## Statusy
 

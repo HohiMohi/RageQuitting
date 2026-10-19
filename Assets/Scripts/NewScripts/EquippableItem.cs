@@ -17,7 +17,8 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
 
     public void Interact(Transform interactor)
     {
-        if ((TryGetComponent(out EquippableWorldPhysics worldPhysics) && worldPhysics.IsReturning)
+        if (MountingNailSceneState.IsTargetConnected(transform)
+            || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && worldPhysics.IsReturning)
             || !interactor.TryGetComponent(out PlayerInventory playerInventory)
             || !playerInventory.CanAddItem(equippableItemSO))
         {
@@ -111,7 +112,8 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
 
     private void CompletePickup(Transform interactor)
     {
-        if ((!TryGetComponent(out EquippableWorldPhysics worldPhysics) || !worldPhysics.IsReturning)
+        if (!MountingNailSceneState.IsTargetConnected(transform)
+            && (!TryGetComponent(out EquippableWorldPhysics worldPhysics) || !worldPhysics.IsReturning)
             && interactor.TryGetComponent(out PlayerInventory playerInventory)
             && playerInventory.AddItem(equippableItemSO))
         {
@@ -141,6 +143,7 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
 
         if (interactorNetworkObject.OwnerClientId != serverRpcParams.Receive.SenderClientId
             || Vector3.Distance(interactorNetworkObject.transform.position, transform.position) > 3f
+            || MountingNailSceneState.IsTargetConnected(transform)
             || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && worldPhysics.IsReturning)
             || !interactorNetworkObject.TryGetComponent(out PlayerInventory playerInventory)
             || !playerInventory.CanAddItem(equippableItemSO))

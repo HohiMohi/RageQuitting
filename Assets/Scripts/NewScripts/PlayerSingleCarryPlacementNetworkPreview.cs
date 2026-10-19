@@ -181,6 +181,32 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
             aimRay.origin, aimRay.direction);
     }
 
+    /// <summary>Submits a placement captured relative to one spawned target NetworkObject.</summary>
+    public void RequestNetworkSurfacePlacement(NetworkObject source, ulong requestId, NetworkObjectReference targetReference,
+        Vector3 localPosition, Quaternion localRotation, Vector3 localSurfacePoint, Vector3 localSurfaceNormal,
+        string physicalRootPath, bool physicalRootHasRigidbody,
+        Vector3 position, Quaternion rotation, Ray aimRay)
+    {
+        if (!IsSpawned || !IsOwner || NetworkManager == null || !NetworkManager.IsListening
+            || source == null || !source.IsSpawned || requestId == 0
+            || !targetReference.TryGet(out NetworkObject target, NetworkManager)
+            || target == null || !target.IsSpawned || target.NetworkManager != NetworkManager) return;
+
+        var sourceReference = new NetworkObjectReference(source);
+        if (IsServer)
+        {
+            SingleCarryPlacementNetworkResult result = ValidateAndCommitSurfacePlacement(sourceReference,
+                targetReference, requestId, localPosition, localRotation, localSurfacePoint, localSurfaceNormal,
+                physicalRootPath, physicalRootHasRigidbody, position, rotation, aimRay, OwnerClientId);
+            ReportPlacementResult(requestId, result);
+            return;
+        }
+
+        SubmitSurfacePlacementServerRpc(sourceReference, targetReference, requestId, localPosition,
+            localRotation, localSurfacePoint, localSurfaceNormal, physicalRootPath,
+            physicalRootHasRigidbody, position, rotation, aimRay.origin, aimRay.direction);
+    }
+
     private void Update()
     {
         if (!IsSpawned || NetworkManager == null || !NetworkManager.IsListening) return;
@@ -222,6 +248,20 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
         PlacementResultClientRpc(requestId, result, CreateTargetClientRpcParams(rpc.Receive.SenderClientId));
     }
 
+    [ServerRpc(RequireOwnership = true)]
+    private void SubmitSurfacePlacementServerRpc(NetworkObjectReference sourceReference,
+        NetworkObjectReference targetReference, ulong requestId, Vector3 localPosition, Quaternion localRotation,
+        Vector3 localSurfacePoint, Vector3 localSurfaceNormal, string physicalRootPath,
+        bool physicalRootHasRigidbody, Vector3 position, Quaternion rotation,
+        Vector3 rayOrigin, Vector3 rayDirection, ServerRpcParams rpc = default)
+    {
+        SingleCarryPlacementNetworkResult result = ValidateAndCommitSurfacePlacement(sourceReference,
+            targetReference, requestId, localPosition, localRotation, localSurfacePoint, localSurfaceNormal,
+            physicalRootPath, physicalRootHasRigidbody, position, rotation,
+            new Ray(rayOrigin, rayDirection), rpc.Receive.SenderClientId);
+        PlacementResultClientRpc(requestId, result, CreateTargetClientRpcParams(rpc.Receive.SenderClientId));
+    }
+
     [ClientRpc]
     private void PlacementResultClientRpc(ulong requestId, SingleCarryPlacementNetworkResult result,
         ClientRpcParams rpc = default)
@@ -238,6 +278,22 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
 
     private SingleCarryPlacementNetworkResult ValidateAndCommitPlacement(NetworkObjectReference sourceReference,
         ulong requestId, Vector3 position, Quaternion rotation, Ray aimRay, ulong senderClientId)
+        => ValidateAndCommitPlacementCore(sourceReference, default, false, requestId, default, Quaternion.identity,
+            default, default, null, false, position, rotation, aimRay, senderClientId);
+
+    private SingleCarryPlacementNetworkResult ValidateAndCommitSurfacePlacement(NetworkObjectReference sourceReference,
+        NetworkObjectReference targetReference, ulong requestId, Vector3 localPosition, Quaternion localRotation,
+        Vector3 localSurfacePoint, Vector3 localSurfaceNormal, string physicalRootPath,
+        bool physicalRootHasRigidbody, Vector3 position, Quaternion rotation, Ray aimRay, ulong senderClientId)
+        => ValidateAndCommitPlacementCore(sourceReference, targetReference, true, requestId, localPosition,
+            localRotation, localSurfacePoint, localSurfaceNormal, physicalRootPath,
+            physicalRootHasRigidbody, position, rotation, aimRay, senderClientId);
+
+    private SingleCarryPlacementNetworkResult ValidateAndCommitPlacementCore(NetworkObjectReference sourceReference,
+        NetworkObjectReference targetReference, bool hasSurfaceAnchor, ulong requestId, Vector3 localPosition,
+        Quaternion localRotation, Vector3 localSurfacePoint, Vector3 localSurfaceNormal,
+        string physicalRootPath, bool physicalRootHasRigidbody,
+        Vector3 position, Quaternion rotation, Ray aimRay, ulong senderClientId)
     {
         NetworkManager manager = NetworkManager;
         if (!IsServer || manager == null || !manager.IsListening || requestId == 0)
@@ -297,16 +353,58 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
 
         Physics.SyncTransforms();
         var geometry = new SingleCarryPlacementGeometrySolver(source.gameObject);
-        SingleCarryPlacementPose expectedPose = geometry.Calculate(aimRay, PlacementDistance,
-            rotation.normalized, Quaternion.identity, holder.transform);
+        SingleCarryPlacementPose expectedPose;
+        NetworkObject anchoredTarget = null;
+        if (hasSurfaceAnchor)
+        {
+            if (!targetReference.TryGet(out anchoredTarget, manager) || anchoredTarget == null
+                || !anchoredTarget.IsSpawned || !anchoredTarget.gameObject.activeInHierarchy
+                || anchoredTarget.NetworkManager != manager || anchoredTarget == source
+                || !IsFinite(localPosition) || !IsUnitQuaternion(localRotation)
+                || !IsFinite(localSurfacePoint) || !IsUnitDirection(localSurfaceNormal)
+                || string.IsNullOrEmpty(physicalRootPath)
+                || !IsFinite(position) || !IsUnitQuaternion(rotation))
+                return SingleCarryPlacementNetworkResult.InvalidRequest;
+
+            if (!SingleCarryPlacementSurfaceAnchor.TryResolveAnchorTransform(anchoredTarget, physicalRootPath,
+                    physicalRootHasRigidbody, out Transform anchorTransform))
+                return SingleCarryPlacementNetworkResult.InvalidPose;
+            Quaternion rebasedRotation = anchorTransform.rotation * localRotation;
+            Vector3 worldPoint = anchorTransform.TransformPoint(localSurfacePoint);
+            Vector3 worldNormal = anchorTransform.TransformDirection(localSurfaceNormal).normalized;
+            Vector3 rebasedPosition = anchorTransform.TransformPoint(localPosition);
+            if (!IsFinite(rebasedPosition) || !IsUnitQuaternion(rebasedRotation)
+                || !IsFinite(worldPoint) || !IsUnitDirection(worldNormal))
+                return SingleCarryPlacementNetworkResult.InvalidPose;
+            if (!SingleCarryPlacementSurfaceAnchor.TryResolveContactCollider(anchoredTarget, source.transform,
+                    holder.transform, worldPoint, worldNormal, physicalRootPath,
+                    physicalRootHasRigidbody, out Collider contactCollider)
+                || !SingleCarryPlacementSurfaceAnchor.HasLineOfSightToContact(contactCollider, anchoredTarget,
+                    physicalRootPath, physicalRootHasRigidbody, source.transform, holder.transform,
+                    aimRay.origin, worldPoint, PlacementDistance))
+                return SingleCarryPlacementNetworkResult.InvalidPose;
+
+            expectedPose = geometry.CalculateAtSurfaceContact(worldPoint, worldNormal, rebasedRotation, contactCollider);
+            if (expectedPose.Status != SingleCarryPlacementGeometryStatus.SurfaceSupported
+                || Vector3.Distance(expectedPose.Position, rebasedPosition) > 0.002f
+                || Quaternion.Angle(expectedPose.Rotation, rebasedRotation) > 0.1f)
+                return SingleCarryPlacementNetworkResult.InvalidPose;
+        }
+        else
+        {
+            expectedPose = geometry.Calculate(aimRay, PlacementDistance,
+                rotation.normalized, Quaternion.identity, holder.transform);
+        }
         if (expectedPose.Status == SingleCarryPlacementGeometryStatus.UnsupportedCollider
             || expectedPose.Status == SingleCarryPlacementGeometryStatus.NoPhysicalColliders
             || expectedPose.Status == SingleCarryPlacementGeometryStatus.RaycastBufferSaturated)
             return SingleCarryPlacementNetworkResult.UnsupportedGeometry;
+        if (!IsFinite(expectedPose.Position) || !IsUnitQuaternion(expectedPose.Rotation))
+            return SingleCarryPlacementNetworkResult.InvalidPose;
         const float positionTolerance = 0.002f;
         const float rotationToleranceDegrees = 0.1f;
-        if (Vector3.Distance(expectedPose.Position, position) > positionTolerance
-            || Quaternion.Angle(expectedPose.Rotation, rotation.normalized) > rotationToleranceDegrees)
+        if (!hasSurfaceAnchor && (Vector3.Distance(expectedPose.Position, position) > positionTolerance
+            || Quaternion.Angle(expectedPose.Rotation, rotation.normalized) > rotationToleranceDegrees))
             return SingleCarryPlacementNetworkResult.InvalidPose;
 
         var validator = new SingleCarryPlacementValidator(source.gameObject);
@@ -318,11 +416,26 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
         if (!new SingleCarryPlacementValidator(source.gameObject).Validate(expectedPose).IsValid)
             return SingleCarryPlacementNetworkResult.Occupied;
 
+        if (hasSurfaceAnchor)
+        {
+            if (anchoredTarget == null || !anchoredTarget.IsSpawned
+                || !SingleCarryPlacementSurfaceAnchor.TryResolveAnchorTransform(anchoredTarget, physicalRootPath,
+                    physicalRootHasRigidbody, out Transform finalAnchorTransform)
+                || !SingleCarryPlacementSurfaceAnchor.TryResolveContactCollider(anchoredTarget, source.transform,
+                    holder.transform, finalAnchorTransform.TransformPoint(localSurfacePoint),
+                    finalAnchorTransform.TransformDirection(localSurfaceNormal).normalized,
+                    physicalRootPath, physicalRootHasRigidbody, out Collider finalContact)
+                || finalContact.GetComponentInParent<NetworkObject>() != anchoredTarget)
+                return SingleCarryPlacementNetworkResult.InvalidPose;
+        }
+
         if (!placeable.TryCompleteNetworkSingleCarryPlacement(senderClientId, holder,
                 expectedPose.Position, expectedPose.Rotation))
             return SingleCarryPlacementNetworkResult.IneligibleHolder;
 
         state.Value = default;
+        if (source.TryGetComponent(out ISingleCarryPlacementCommitListener commitListener))
+            commitListener.OnSingleCarryPlacementCommitted(holder);
         return SingleCarryPlacementNetworkResult.Accepted;
     }
 

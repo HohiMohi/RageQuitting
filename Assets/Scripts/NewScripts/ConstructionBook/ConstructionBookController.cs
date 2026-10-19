@@ -31,6 +31,7 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     private string leftPageCache = string.Empty;
     private string rightPageCache = string.Empty;
     private ConstructionBookView worldView;
+    private GameplayManager subscribedRequirementsManager;
     private ConstructionBookCatalogSO.Entry currentEntry;
     private List<ConstructionBookMaterialLine> currentMaterials = new List<ConstructionBookMaterialLine>();
     private bool currentMaterialsAvailable;
@@ -155,12 +156,19 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
 
     private void TryRegisterWithGameplayManager()
     {
-        if (GameplayManager.Instance != null) GameplayManager.Instance.RegisterConstructionBook(this);
+        GameplayManager manager = GameplayManager.Instance;
+        if (manager != null)
+        {
+            SubscribeToRequirementsChanged(manager);
+            manager.RegisterConstructionBook(this);
+        }
         InitializeData();
     }
 
     public void NotifyGameplayManagerAvailable()
     {
+        GameplayManager manager = GameplayManager.Instance;
+        if (manager != null) SubscribeToRequirementsChanged(manager);
         InitializeData();
         RefreshRoster();
         if (initialized) SnapTo(IsSpawned ? currentIndex.Value : 0);
@@ -168,7 +176,30 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
 
     private void UnregisterFromGameplayManager()
     {
-        if (GameplayManager.Instance != null) GameplayManager.Instance.UnregisterConstructionBook(this);
+        if (subscribedRequirementsManager != null)
+        {
+            subscribedRequirementsManager.OnBridgeRequirementsChanged -= GameplayManager_OnBridgeRequirementsChanged;
+            subscribedRequirementsManager = null;
+        }
+        GameplayManager manager = GameplayManager.Instance;
+        if (manager != null) manager.UnregisterConstructionBook(this);
+    }
+
+    private void SubscribeToRequirementsChanged(GameplayManager manager)
+    {
+        if (subscribedRequirementsManager == manager) return;
+        if (subscribedRequirementsManager != null)
+            subscribedRequirementsManager.OnBridgeRequirementsChanged -= GameplayManager_OnBridgeRequirementsChanged;
+        subscribedRequirementsManager = manager;
+        subscribedRequirementsManager.OnBridgeRequirementsChanged += GameplayManager_OnBridgeRequirementsChanged;
+    }
+
+    private void GameplayManager_OnBridgeRequirementsChanged(object sender, EventArgs args)
+    {
+        InitializeData();
+        if (!initialized || spreads.Count == 0) return;
+        Render(displayedIndex, true, false);
+        PresentationChanged?.Invoke();
     }
 
     private void NotifyUnavailable()
@@ -369,10 +400,22 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     {
         if (view == null) return;
         int count = spreads.Count > 0 ? spreads[Mathf.Clamp(displayedIndex, 0, spreads.Count - 1)].RequiredCount : 0;
+        string completionSummary = string.Empty;
+        if (spreads.Count > 0)
+        {
+            OrderedBridgeComponentRequirement spread = spreads[Mathf.Clamp(displayedIndex, 0, spreads.Count - 1)];
+            GameplayManager progressManager = GameplayManager.Instance;
+            if (spread.Component != null && spread.Component.deckPanelConstructionWorkflow != null
+                && spread.Component.deckPanelConstructionWorkflow.UsesPhysicalPanelPlacement && progressManager != null)
+            {
+                completionSummary = $"Secured panels: {progressManager.GetMountedBridgeComponentCount(spread.Component)} / {spread.RequiredCount}";
+            }
+        }
         NetworkManager manager = Unity.Netcode.NetworkManager.Singleton;
         ulong localId = manager != null && manager.IsListening ? manager.LocalClientId : 0;
-        view.Render(currentEntry, count, Mathf.Max(0, displayedIndex), spreads.Count, currentMaterials, currentMaterialsAvailable, roster, localId, IsAssigned,
-            RequestAssignment, () => IsPageTransitioning || additionalInteractionBlock != null && additionalInteractionBlock(), view == worldView);
+        view.RenderWithCompletionSummary(currentEntry, count, Mathf.Max(0, displayedIndex), spreads.Count, currentMaterials, currentMaterialsAvailable, roster, localId, IsAssigned,
+            RequestAssignment, () => IsPageTransitioning || additionalInteractionBlock != null && additionalInteractionBlock(), view == worldView,
+            completionSummary);
     }
 
     public bool IsPageTransitioning => turnRoutine != null || pendingAnimatedIndices.Count > 0;

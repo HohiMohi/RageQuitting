@@ -2,9 +2,8 @@
 
 ## Status
 
-**Gotowe dla głównego tutorialowego ciągu, z placeholderowym contentem.**
-Fundament, przyczółek, dźwigar, belka poprzeczna, stężenie ukośne i panele
-mają dedykowane workflow.
+**Główne części mostu mają workflow; fizyczne płyty obejmują Etapy 1–4.**
+Etapy 1–3 fizycznych płyt zostały ręcznie zaakceptowane; Etap 4 integracji z globalnym progresem i księgą jest wdrożony i technicznie zwalidowany. Użytkownik potwierdził działanie poprawki paneli; późniejsze porządkowanie sceny zostało wykonane na jego prośbę i nie ma osobnej akceptacji wizualnej. Checklisty Etapu 4 nie są dowodem osobnego sprawdzenia każdego scenariusza. Pozostałe elementy mostu zachowują opisane niżej workflow.
 
 ## Dane części
 
@@ -70,8 +69,9 @@ części są wyłączone. Dedykowane workflow może opóźnić collider aż do
 
 ## Precyzyjne dostarczanie części
 
-Sześć aktualnych części tutorialowego mostu używa `BridgeMountSocket`. Samo
-wejście carriera w zasięg interakcji nie montuje już części. Serwer wymaga
+Pozostałe precyzyjnie dostarczane części tutorialowego mostu używają
+`BridgeMountSocket`; fizyczne płyty (`physicalPanelPlacement=true`) są wyjątkiem
+i nie korzystają z tego workflow. Samo wejście carriera w zasięg interakcji nie montuje już części. Serwer wymaga
 jednocześnie poprawnego typu, aktywnego carry, obecności holderów w staging
 volume, właściwej pozycji i rotacji oraz odpowiednio małej prędkości. Poprawny
 stan musi utrzymać się przez `settleDuration`, domyślnie `1 s`.
@@ -296,7 +296,27 @@ wyłącznie finalny `bracingVisualRoot` podczas etapu `Aligning`. Finalne
 połączenia mają ścisłą kolejność krzyżową; aktywny punkt powinien pulsować i
 zmieniać kolor.
 
-### Panel pomostu
+### Panel pomostu — fizyczny produkt, Etap 1
+
+`WoodenDeckPanelMountable` jest osobnym single-carry produktem dla jednego carriera. Flaga `physicalPanelPlacement` jawnie wybiera workflow; model/collider mają stałe wymiary `2.16 × 0.20 × 2.40 m`, a spoczynkowa masa Rigidbody wynosi `1 kg`. Sloty są pasywne i niezależne od prerequisite, kolejności oraz `CanBeMounted`; nie wykonują automatycznego montażu, assist, snap/capture ani fastenerów. Zwykłe E szuka wolnego miejsca przed graczem w zasięgu interakcji (domyślnie `2.5 m`), z uwzględnieniem gabarytu, holdera i przeszkód; przy braku miejsca płyta pozostaje w rękach bez zmiany ownership. F/E/Esc uruchamia osobny tryb precyzyjnego ustawiania o domyślnym zasięgu `2 m`. Host/klient są server-authoritative, a klient czeka na akceptację serwera przed lokalnym zwolnieniem. F/E/Esc i obrót nie dodają impulsu zwykłego E.
+
+Historyczny układ fixture sprzed przeniesienia (migawka): w `NailTestArea` sceny `Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity`, w `Stage1TestFixture` przy world `(-6,0,7.2)`, znajdowały się 3 płyty, 2 gotowe dźwigary, 3 miejsca na rozpiętości 6.56 m (szczeliny 4 cm) na dźwigarach 8 m oraz 36 dodatkowych gwoździ, 48 gwoździ łącznie w obszarze. Fixture leżał poza Bridge/global progress. Aktualny układ i jego testowe odpowiedniki opisuje follow-up „Porządkowanie sceny fixture gwoździ i płyt”.
+
+### Ocena ustawienia i mocowanie — Etap 2
+
+Każda sekcja `BridgeDeckSection` dostarcza jawne referencje głównych dźwigarów. Aktualny profil `WoodenDeckPanelWorkflow` ocenia niezależnie lokalne przesunięcie wzdłuż slotu (`0.05 m`) i w poprzek slotu (`0.10 m`); profile bez włączonych oddzielnych tolerancji zachowują starszą radialną tolerancję `0.05 m`. Wysokość pozostaje `0.03 m`, a kąt względem bazowej rotacji slotu lub obrotu `Y=180°` wynosi maksymalnie `3°`. Pas osi środkowej o szerokości `±0.005 m` nie należy do żadnej ćwiartki. Zaliczenie każdej ćwiartki wymaga gwoździa w stanie `EmbeddedPair`, którego pierwszy cel jest dokładnie tą płytą, a drugi jest jawnie wskazanym głównym dźwigarem tej samej sekcji. Pojedynczy, częściowy, odwrócony, pod spodem, w belce poprzecznej lub w niewłaściwym dźwigarze nie zalicza ćwiartki. Duplikat nie zastępuje brakującej ćwiartki.
+
+Pierwszy w pełni wbity gwóźdź łączący parę tworzy sztywne połączenie i blokuje pickup obu celów, niezależnie od tego, czy zalicza progres panelu; kolejne gwoździe tej samej pary współdzielą to połączenie. Gwóźdź `Partial` zachowuje dotychczasowe reguły przenoszenia. Ukończenie lokalne wymaga poprawnej pozy, czterech różnych ćwiartek, wolnego slotu i braku nadmiernego przenikania (do `1 mm`). Płyta zostaje ukończona lokalnie i nie jest przesuwana, skalowana, zużywana ani zastępowana. Serwer atomowo przypisuje jedną płytę do jednego slotu; stan per płyta (0/4, brakujące ćwiartki, przyczyna i ukończenie) replikuje się także late join. Ramka slotu pozostaje osobnym obrysem `LineRenderer`; nie ma wypełnienia, solidnych colliderów ani cieni. Przestrzenny obrys płyty ma dwa pierścienie na `Y=0.008/0.208 m` oraz dolną/górną szerokość `0.0195/0.015 m` (szczegóły follow-upu niżej). Wejściowy punkt gwoździa ocenia się w lokalnych osiach płyty.
+
+Panel jest centrowany na faktycznym trafionym punkcie F z przesunięciem tylko po normalnej. Pusta przestrzeń między dźwigarami nie podpiera płyty; środek placementu musi mieć fizyczny kontakt z podłożem. E/drop pozostaje dostępne, także gdy ogólna ocena placementu jest wolna, lecz pozycja nie jest wyrównana do slotu. Błędne gwoździowanie można obecnie zresetować młotem zgodnie z sekcją Etapu 3 w [Mounting-Nails](Mounting-Nails.md#fizyczne-płyty--etap-3).
+
+Plan obejmuje cztery etapy: Etap 1 (single-carry, geometria i sloty), Etap 2 (ocena pozy i cztery ćwiartki), Etap 3 (reset młotem i ochrona ukończonej płyty) oraz Etap 4 (global progress i book). Etap 1 został ręcznie zaakceptowany 17.10.2026, Etap 2 wraz z prowadzeniem perspektywicznym F/E 18.10.2026, a Etap 3 wraz z poprawką grawitacji 18.10.2026. Użytkownik potwierdził działanie poprawki fizycznych paneli. Następnie zlecił porządkowanie fixture, które zostało wykonane i technicznie zwalidowane; osobnej wizualnej akceptacji tej zmiany nie odnotowano. Nie zgłaszał osobnej weryfikacji każdego scenariusza z checklist Etapu 4; ograniczenia sieciowe i historyczny charakter checklisty opisano niżej. Historyczny zakres Etapu 3 i aktualny status Etapu 4 opisują sekcje [Mounting-Nails](Mounting-Nails.md#fizyczne-płyty--etap-3) i Etapu 4 poniżej.
+
+Historyczna walidacja sprzed tej poprawki — strict unfiltered Gameplay 2026-10-18: [raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T094710Z-709011d5/summary.json), `passed`, exit 0, wszystkie 14 kroków passed; EditMode 113/113, PlayMode 117/117, analyzer 921/316 wobec chronionego 925/316, bez nowych diagnostyk. Testy transport/state NGO użyły hosta i late client w jednym procesie z kontrolowanymi obiektami-markerami i zapisem stanu; nie stanowią pełnego zdalnego młot → ocena. Ogólny network-smoke pozostaje host-only; mogła się w nim rozpocząć inicjalizacja Unity Services przed wejściem do ciała testu. Nie ma dowodu osobnego procesu klienta, buildu multiplayer, WAN ani Relay. Ręczny odbiór wizualny i checklisty pozostawały wymagane w stanie opisanym przez ten historyczny raport. Najnowszy wynik i ograniczenia dotyczące resetu panelu znajdują się w sekcji „Fizyczne płyty — Etap 3: reset młotem” na końcu dokumentu.
+
+Historyczny strict unfiltered Gameplay Etapu 1: [raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261017T180307Z-54056cce/summary.json), passed, exit 0, 14/14 kroków; EditMode 104/104, PlayMode 115/115, analyzer 921/316 grup, zero nowych diagnostyk. Testy F/E offline i NGO jawnie ustawiały `placementDistance=5f`, więc potwierdzają produkcyjną ścieżkę przy tej konfiguracji, ale nie domyślny zasięg ustawiania `2 m`. Zasięg interakcji używany przez zwykłe E wynosi domyślnie `2.5 m`. Host i zdalny owner działali w jednym procesie loopback UTP, bez osobnego procesu/WAN/Relay.
+
+#### Legacy workflow paneli: WaitingForPrevious i montaż etapowy
 
 `WaitingForPrevious -> ReadyForMount -> Aligning -> GapSetting -> Fastening
 -> Complete`
@@ -311,8 +331,7 @@ zmieniać kolor.
 | `gapStepDistance` | Metry na krok szczeliny |
 | `fastenerProgressNeeded` | Progress jednego fastenera |
 
-Pierwszy i ostatni panel używają czterech fastenerów, środkowe dwóch. Markery
-punktów pracy muszą znajdować się nad visualem panelu.
+Opisany workflow pozostaje wariantem legacy paneli: pierwszy i ostatni używają czterech fastenerów, środkowe dwóch. Markery punktów pracy muszą znajdować się nad visualem panelu. Nowy produkt fizyczny (`physicalPanelPlacement=true`) omija Aligning, GapSetting i Fastening; jego pasywne sloty nie wykonują snapu ani capture. Ten opis dotyczy legacy workflow i nie obejmuje fizycznego workflow Etapów 3–4.
 
 ## `BridgeDeckSection`
 
@@ -328,9 +347,7 @@ Długość panelu:
 
 `(sectionLength - panelGap * (panelCount - 1)) / panelCount`
 
-Sloty nie są generowane podczas gry. Projektant tworzy je w edytorze, nadaje
-unikalne IDs i zachowuje kolejność. Sekcja skaluje layout, ghost, final visual,
-collider i punkty pracy.
+Sloty nie są generowane podczas gry. Projektant tworzy je w edytorze, nadaje unikalne IDs i zachowuje kolejność. Legacy layout może skalować layout, ghost, final visual, collider i punkty pracy. Dla fizycznych paneli sloty są wyłącznie niezależnymi pasywnymi miejscami; ignorują prerequisite, sekwencję oraz `CanBeMounted`, nie mają solidnych colliderów i nie wykonują assist/snap/capture. `mainGirders` są jawnymi referencjami używanymi przez fizyczny Etap 2 do walidacji par gwoździ.
 
 ## Prompty i stage info
 
@@ -511,3 +528,165 @@ wizualna pozostaje po stronie użytkownika.
   workflow; łatwo wprowadzić kolizję przy nowym typie.
 - Filary, oczepy, łożyska, bariery i connectory nie mają pełnej integracji
   aktywnego poziomu.
+
+## Etap 2 — informacja zwrotna po odłożeniu płyty (18.10.2026)
+
+Po odłożeniu fizycznej płyty HUD osobno pokazuje `Placement correct` albo
+`Placement: <powód>` oraz `Fastenings: n/4 - missing ...`. Ocena pozycji i
+zajętości poprzedza sprawdzenie gwoździ; nie zmienia tolerancji, mechaniki
+wbijania ani przenoszenia. Nie ma snapowania ani blokady wcześniejszego
+wbijania. Brakujące ćwiartki mogą oznaczać poprawny układ, który nie jest
+jeszcze zamocowany. Lokalne zaliczenie płyty wymaga poprawnego położenia i czterech prawidłowych mocowań. Integracja z globalnym postępem mostu należy do Etapu 4.
+
+Ramka lokalnie wskazanej, odłożonej płyty jest zielona dla poprawnej pozycji
+(RGB `.18,.95,.25`) lub pomarańczowa dla błędnej (`1,.55,.1`); pozostałe ramki
+zachowują skonfigurowany neutralny biały kolor. Ocena pochodzi z replikowanego
+stanu serwera, wskazanie jest lokalne i nie dodaje RPC ani pól sieciowych.
+HUD i ramka czyszczą się przy utracie/zmianie celu, podniesieniu, F, ukryciu UI,
+powaleniu i despawnie; wyłączone ramki nie przyjmują nowego wskazania.
+Zakończona płyta nadal pokazuje `Deck panel secured` i ukrywa ramkę. Przy
+konkurujących rekordach ukończone przypisanie/original slot ma pierwszeństwo
+przed bliższym nieukończonym. Priorytety pojemników, składowania, dostawy i
+powalenia pozostają zachowane. Historyczny zakres poprzedniej zmiany HUD nie
+obejmował podglądu kandydata F; follow-up opisany niżej dodaje do niego ocenę
+i prowadzenie. Ograniczenie trafienia w środek jako fizycznego podparcia
+pozostaje.
+
+Historyczny opis sprzed poprawki mówił, że geometria ramki pozostała bez zmian;
+to stwierdzenie zostało zastąpione przez poniższe prowadzenie perspektywiczne.
+Materiał URP/Lit nadal otrzymuje kolor przez `MaterialPropertyBlock`
+(`_BaseColor`/`_Color`) z zachowaniem alfa; współdzielony materiał i assety nie
+są modyfikowane.
+
+Końcowy ścisły, nieprzefiltrowany Gameplay: PASSED, exit 0, wszystkie 14 kroków;
+EditMode 114/114, PlayMode 117/117, 0 pominięć. Raport:
+`D:\Programy\UnityProjects\RageQuitting\Artifacts\Validation\20261018T103932Z-24c08959\summary.json`.
+Testy ukierunkowane: EditMode 7/7 i PlayMode 2/2. Rozwojowy przebieg
+PlayMode `20261018T103622Z-2c7d9924` nie przeszedł, bo asercja testu
+porównywała zwrócony komponent sekcji z GameObject; po korekcie testu
+przebiegi ukierunkowane i strict Gameplay przeszły. Plik Console przed zmianą
+był pustym, jawnie niepoprawnym placeholderem
+(`Before/console-errors-warnings.note.txt`), więc nie ma wiarygodnego
+porównania przed/po. Po strict przechwycono 0 błędów i 0 ostrzeżeń:
+`Artifacts/DeckPanelPlacementFeedback_20261018/After/post-strict-console-response.json`.
+Weryfikacja transportu loopback host/late-client sprawdziła kontrolowany
+snapshot 0/4, poprawny stan 0/4 i odrzucenie zapisu klienta; nie była pełnym
+zdalnym przebiegiem młot→ocena→UI. Ogólny smoke sieciowy pozostał host-only.
+Automatyczne testy objęły rzeczywiste prefaby i przejścia gwoździ. W chwili sporządzenia tego historycznego raportu bazowy Etap 2, HUD/ramka i prowadzenie F/E czekały na ręczny odbiór; użytkownik zaakceptował je 18.10.2026.
+
+### Follow-up prowadzenia perspektywicznego F/E (18.10.2026; zaakceptowany)
+
+Jedna autorska linia `LineRenderer` rysuje przestrzenny, pusty obrys płyty:
+dwa pierścienie i cztery pionowe krawędzie, 12 unikalnych krawędzi zapisanych
+17-punktowym przejściem. Nie dodaje wypełnienia, collidera ani klonu materiału.
+Dolna krawędź jest na lokalnym `Y=0.008 m`, górna na `Y=0.208 m`; szerokość
+dolna wynosi `0.0195 m`, górna `0.015 m`.
+
+Podczas F ramka ocenia tę samą pozę kandydata, reguły pozy i zajętości oraz
+penetrację rzeczywistych colliderów dzieci co ocena odłożonej płyty. Zielony oznacza
+pozycję wyrównaną, pomarańczowy nieprawidłową; ogólny status `free/blocked`
+pozostaje oddzielny. HUD pokazuje `Mount: Aligned`, korektę ze znakiem `+/-`
+Along/Across/Height w cm oraz kąt w stopniach, albo `Slot occupied`,
+`Adjacent overlap` lub `No slot`. Krótka lokalna strzałka świata (0.2–0.8 m)
+wskazuje korektę; znika dla poprawnej pozy, korekty wyłącznie kątowej lub braku
+slotu. Po E strzałka znika; HUD i ramka oceny odłożonej płyty są widoczne tylko,
+gdy gracz wskazuje tę płytę. Pomarańczowa ocena mocowania nie blokuje zwykłego E,
+jeśli ogólna pozycja jest wolna.
+
+Esc, wyjście z trybu, zmiana źródła i czyszczenie pending usuwają podgląd F i
+strzałkę. HUD i ramka po E podlegają cyklowi życia wskazania odłożonej płyty.
+Nie dodano RPC, uprawnień ani zapisu ukończenia. Naprawa `Physics.SyncTransforms`
+dla ruszonego celu klienta pozostaje aktywna. Solver podparcia jest bez zmian:
+punkt środkowy musi dotykać podłoża, a pusta przestrzeń między dźwigarami nadal
+nie podpiera płyty. Nie ma snapu, auto-rotacji, przyciągania ani przesuwania
+płyty podczas oceny. Zasady ćwiartek, autorytetu i late join pozostają bez zmian.
+
+Końcowy strict, nieprzefiltrowany Gameplay: `passed`, exit 0, 14/14 kroków;
+EditMode 116/116, PlayMode 118/118, bez pominięć. Analyzer 921 wystąpień/316
+grup wobec chronionego baseline 925/316, bez nowych. Raport:
+`D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T115728Z-a48c6d2a/summary.json`.
+Ukierunkowane F 2/2:
+`D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/UnityPlayMode/20261018T115355Z-3eeffd75/unity-playmode-tests-report.json`;
+Bridge 2/2:
+`D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/UnityPlayMode/20261018T115616Z-5ab4d6c7/unity-playmode-tests-report.json`.
+Testy NGO late join używają loopback w jednym procesie, a network-smoke jest
+host-only. Nie potwierdzono osobnego procesu, WAN/Relay, buildu ani pełnego
+zdalnego F→serwer→HUD; inicjalizacja Unity Services w smoke nie jest
+gwarantowanie izolowana. Walidacja wizualna należy do ręcznego checklistu.
+
+Zmiana prowadzenia perspektywicznego została zaakceptowana 18.10.2026; poniższa lista opisuje zakres odbioru: perspektywiczna
+widoczność obrysu i kontaktu z referencją; zielone wyrównanie i pomarańczowa
+korekta podczas F oraz po E przy wskazaniu odłożonej płyty; przesunięcie w poprzek 10 cm wobec wzdłuż 5 cm,
+wysokość 3 cm i kąt 3°; obrót Y=180°; penetracja sąsiednia 1 mm; możliwość E
+przy wolnym, lecz niewyrównanym miejscu; czyszczenie ramki/strzałki po Esc i
+zmianie slotu; zgodność hosta i klienta. Poprzednia informacja zwrotna HUD i
+kolorowa ramka oraz follow-up prowadzenia perspektywicznego zostały zaakceptowane;
+Etap 3 resetu panelu został ręcznie zaakceptowany 18.10.2026; bieżący odbiór Etapu 4 opisuje końcowy wpis poniżej.
+
+Ograniczenia i ślady końcowej weryfikacji: po Gameplay przechwycono 0 błędów i
+11 ostrzeżeń NGO; nie zakładamy, że te ostrzeżenia są wyłącznie wcześniejsze.
+Początkowa Console zawierała 1 błąd AI relay i 20 ostrzeżeń. Są to osobne
+przechwycenia `Artifacts/DeckPanelGuidance_20261018/Before/console-error.json`
+i `console-warning.json`. Worker state po strict Gameplay odnotował 0 błędów i
+11 ostrzeżeń NGO; późniejszy surowy odczyt przez CLI zwrócił 0 błędów i 12
+ostrzeżeń. Podsumowanie końcowego worker state:
+`Artifacts/Validation/20261018T115728Z-a48c6d2a/worker-final-state-and-source-hashes.json`;
+surowy późniejszy odczyt CLI:
+`Artifacts/DeckPanelGuidance_20261018/After/post-gameplay-console.json`.
+Nie zakładamy, że ostrzeżenia są wyłącznie wcześniejsze. Pusty późniejszy wynik
+Console nie dowodzi naprawy AI relay. Wcześniejsze nieudane próby zachowano w
+`Artifacts/Validation/UnityPlayMode/20261018T115249Z-48dfc91e` (pickup),
+`.../20261018T114542Z-b610650a` (near clip) i
+`.../20261018T115434Z-c797b29b` (root collider assertion).
+W ich trakcie poprawiono cykl życia renderera/fixture, ustawienie kamery near clip
+i test odbierał przedmiot przez produkcyjne `Mountable.PickedUp`; Pipeline
+przywrócono przez publiczny `RestartServer`. Scenę Multistart zapisano dopiero
+po sprawdzeniu byte-identical kopii, potwierdzając brak zmian. Nadal nie mają
+osobnych asercji wszystkie ścieżki cleanup przy utracie ownership, disconnect,
+zniszczeniu źródła i odrzuceniu/pending. Test F 2/2 obejmuje zmianę slotu.
+Testy NGO late join
+działają w jednym procesie loopback; network-smoke jest host-only, inicjalizacja
+Unity Services nie jest gwarantowanie izolowana. Nie potwierdzono osobnego
+procesu klienta, WAN/Relay, buildu ani pełnego zdalnego F→serwer→HUD.
+
+### Fizyczne płyty — Etap 3: reset młotem (18.10.2026)
+
+Trafienie młotem przemysłowym w nieukończoną fizyczną płytę usuwa bez odzysku gwoździe osadzone w niej jako pierwszy cel (`Partial`, `EmbeddedSingle`, `EmbeddedPair`) oraz rzeczywiste połączenie `EmbeddedPair`, w którym płyta jest drugim celem. `Partial` osadzony w innym obiekcie, który dopiero zamierza połączyć się z płytą, nie jest połączeniem z płytą i pozostaje. Gwoździe `Prepared` nie są usuwane; ruch powierzchni nadal anuluje ich przygotowanie według dotychczasowych reguł. Reset zwalnia dotknięte wspólne połączenia i blokady pickup, zachowując niezależne połączenia.
+
+Po usunięciu połączeń serwer dodaje płycie zmianę prędkości niezależną od masy: `2 m/s` w górę oraz `0.5 m/s` poziomo od gracza. Wartości domyślne można konfigurować w `BridgeDeckPanelConstructionWorkflowSO` (z ograniczeniem zakresu). Zmiana prędkości następuje po odroczonym usunięciu jointów i po sprawdzeniu autorytetu oraz cyklu życia. Serwer jest właścicielem symulacji fizyki; trzymana płyta gracza lub NPC nie jest celem resetu. Płyta poprawnie ukończona jest chroniona, także gdy ukończenie nastąpiło wcześniej; błędna poza z czterema ćwiartkami nie stanowi ukończenia i można ją zresetować. Trafienie gwoździa zachowuje priorytet nad panelem, nawet jeśli samo nie może postąpić stanu gwoździa.
+
+Użytkownik zgłosił, że początkowe, nigdy niepodnoszone płyty odlatywały po uderzeniu u hosta i klienta; sprawdzane pozostałe mechaniki działały. Przyczyną było ustawianie fizyki w `MountableBridgeComponent.OnNetworkSpawn` przed inicjalizacją authority późniejszego sibling `ClientNetworkTransform`, co mogło pozostawić płytę serwerową z `useGravity=false`/`isKinematic=true`. `OnNetworkPostSpawn` odświeża teraz fizykę zrzuconych, niepodniesionych płyt, a zaakceptowany reset jawnie przywraca `useGravity=true` po kontroli stanu trzymania. Masa, tłumienie, impuls `2 m/s` w górę i `0.5 m/s` od gracza oraz reguły gwoździ i ukończenia są bez zmian; sceny, prefaby i assety nie były zmieniane.
+
+Końcowy strict, nieprzefiltrowany Gameplay preflight po poprawce: `passed`, exit 0, 14/14 kroków; EditMode 117/117, PlayMode 121/121, zero pominięć/inconclusive. Analyzer 921 wystąpień wobec chronionego baseline 925/316, bez nowych diagnostyk i bez zmiany baseline. [Najnowszy raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T172716Z-cc135b9e/summary.json). Network filter przeszedł 9/9: [raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/UnityPlayMode/20261018T172606Z-f2029bc4/unity-playmode-tests-report.json). Smoke rzeczywistej sceny addytywnie wczytywało TutorialTerrainStage02 i sprawdzało wyłącznie start/spawn hosta z niepodniesioną płytą; nie uderzało w tę instancję. Zdalny RPC młota, owner/observer/late join i rzeczywista grawitacja/spadanie sprawdzono na runtime instancji authored prefabu w jednoproc. UTP. Brak walidacji osobnych procesów, WAN/Relay, player build i pełnego zdalnego cyklu animacji. Console po Gameplay: 0 błędów, 11 ostrzeżeń; wszystkie teksty ostrzeżeń występowały w baseline (porównywano treść komunikatu, nie stack/origin): [snapshot](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3Gravity_20261018/Validation/post-gameplay-console.json), [porównanie](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3Gravity_20261018/Validation/post-gameplay-console-comparison.json). Wcześniejszy błąd AI Relay nieobecny w nowszym snapshotcie nie jest uznany za naprawiony. Szczegóły iteracji i ograniczenia: [checkpoint](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3Gravity_20261018/Validation/final-worker-checkpoint.txt). Poprzednia próba strict z timeoutem PlayMode i wynik `120/120` z raportem 15:23 są historyczne; powyższy raport `121/121` jest aktualnym wynikiem po poprawce.
+
+Historyczna walidacja Etapu 3 przed poprawką grawitacji: ścisły Gameplay przeszedł 14/14 kroków, EditMode 117/117 i PlayMode 120/120; analyzer 921 wobec baseline 925/316. [Raport historyczny](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T152306Z-c16f3daa/summary.json), [checkpoint](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3_20261018/Validation/final-worker-checkpoint.txt), [Console po tamtym przebiegu](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3_20261018/Validation/post-gameplay-console.json). Aktualną poprawkę i wynik 117/121 opisuje powyższy raport po poprawce.
+
+Użytkownik ręcznie zaakceptował poprawkę grawitacji i reset Etapu 3 na hoście oraz kliencie. Wcześniejszy zakres ręcznego odbioru resetu i ochrony ukończenia pozostaje opisany w [Mounting-Nails](Mounting-Nails.md#fizyczne-płyty--etap-3). Etap 4 oraz jego techniczny zakres i historyczna checklista opisano w końcowej sekcji poniżej.
+
+### Follow-up geometrii płyt i prześwitu przy przyczółkach (19.10.2026)
+
+Skrócono fizyczny panel wzdłuż mostu z historycznych `2.64 m` do `2.16 m` (wymiary X/Y/Z: `2.16 × 0.20 × 2.40 m`; masa `1 kg`). Model, profil, obrys i collider są zgodne; skala korzenia wynosi `1` i runtime nie skaluje produktu. Główne sloty i fixture mają środki lokalnego X `-2.20/0/+2.20 m`, rozpiętość `6.56 m` i nominalne szczeliny `4 cm`. W głównym moście sloty przesunięto po `48 cm` do środka, co daje nominalnie `12 cm` prześwitu do wewnętrznych krawędzi rzeczywistych przyczółków przy X `±3.4 m` (zewnętrzne krawędzie paneli przy `±3.28 m`). Główne sloty mają local Y `0.095` (światowe `1.425 m`) zgodnie z rzeczywistą wysokością podparcia collidera; widoczny wierzch siatki belki jest na `1.400 m`. Fixture używa innych, ogólnych dźwigarów i zachowuje local Y `0.275`. Fizyczne dźwigary długości `8 m`, ich collidery, ogólny prefab sekcji `14 m` z siedmioma slotami, przyczółki oraz reguły tolerancji, ćwiartek, gwoździ, carry, resetu, sieci i receptur pozostały bez zmian. Istniejące panele zachowują pozycje i dziedziczą nowy rozmiar.
+
+Strict unfiltered Gameplay z 19.10.2026: `passed`, exit 0, 14/14 kroków; EditMode 123/123 i PlayMode 125/125, bez błędów, pominięć ani inconclusive. Oba nowe testy prześwitu przy przyczółku przeszły dla orientacji `0°/180°` oraz podparcia fixture. Analyzer: 921 wystąpień/316 grup wobec niezmienionego baseline 925/316, bez nowych diagnostyk; source hash guard wykrył 0 mutacji. Console po przebiegu: 0 błędów i 11 ostrzeżeń; porównanie wyłącznie po tekście komunikatu znalazło wszystkie ostrzeżenia w Console sprzed zmiany. Console nie była jawnie czyszczona, a zwykły cykl Play może resetować log. [Raport Gameplay](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261019T140756Z-64ae9443/summary.json), [checkpoint i zakres ręcznej akceptacji](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelAbutmentClearance_20261018/Validation/Resume_20261019/review-checkpoint.json), [audyt geometrii sceny](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelAbutmentClearance_20261018/Validation/Resume_20261019/review-layout.json), [porównanie Console](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelAbutmentClearance_20261018/Validation/Resume_20261019/console-comparison.json).
+
+Ukierunkowane wywołanie Pipeline run_tests z 18.10.2026 zakończyło się timeoutem narzędzia po 240000 ms i kodem CLI 1 bez zapisanego surowego wyniku; nie było zaliczonym testem. Zastępuje je powyższy pełny przebieg z 19.10.2026. Nie wykonano osobnego procesu klienta, WAN/Relay ani player buildu; istniejące testy NGO używały lokalnych peerów w jednym procesie, a network smoke jest host-only. Użytkownik potwierdził działanie poprawki fizycznych paneli. Porządkowanie sceny wykonałem na jego prośbę; zmiana przeszła walidację techniczną, ale nie ma osobnej wizualnej akceptacji. Nie zgłaszał osobnej weryfikacji każdego scenariusza Etapu 4.
+
+### Porządkowanie sceny fixture gwoździ i płyt (19.10.2026)
+
+Użytkownik potwierdził, że poprawka fizycznych paneli działa, po czym poprosił o usunięcie dodanych rekwizytów scenicznych poza nowymi gwoździami i panelami, z zachowaniem potrzeb testów. Porządkowanie zostało wykonane i przeszło walidację techniczną; nie odnotowano osobnej wizualnej akceptacji tej zmiany. W scenie gameplay `Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity` pod `BridgeAssemblySupplies` zachowano 48 gwoździ i 3 fizyczne panele z dawnego obszaru testowego; te liczby opisują retained fixture, nie wszystkie supplies/panele w scenie. Poza tym zestawem istniejące supplies i panele sceny pozostały nietknięte. Zachowano tożsamości GlobalObjectId i prefaby oraz pozycje XZ, obroty i skale; jedyna korekta pozy to `FixtureNail_28`, podniesiony o `0.029617 m` (Y `0.040000` → `0.069617`) po wykryciu nakładania kapsuły z terenem. Test kapsuł potwierdził zero pozostałych penetracji gwoździ w zewnętrzne bryły. Pozostałe testowe plansze, dźwigary, powierzchnie, młot, markery i sondy przeniesiono do `Assets/Tests/Fixtures/MountingNailTestScene.unity` (korzeń `NailTestArea`), poza Build Settings. `MountingNailTestAreaAuthoring` i `BridgeDeckPanelTestAreaAuthoring` kierują authoring do tej dedykowanej sceny; zależne EditMode testy wczytują disposable preview scenes i tymczasowe fixture clones. Produkcyjny validator nadal sprawdza główny most i nie wymaga fixture w gameplay. Scena archiwalna służy testom/authoringowi, nie została zweryfikowana jako samodzielna scena gry ani network bootstrap. Główne sloty, dźwigary, manager/runtime records, receptury i mechaniki pozostały bez zmian.
+
+Końcowy strict, nieprzefiltrowany Gameplay preflight z 19.10.2026: `passed`, exit 0, 14/14 kroków; EditMode 124/124 i PlayMode 125/125, bez błędów, pominięć ani inconclusive. Analyzer 921 wystąpień/316 grup wobec niezmienionego baseline 925/316, bez nowych diagnostyk; source hash guard 0 mutacji. Console po przebiegu: 0 błędów i 11 ostrzeżeń, wszystkie teksty ostrzeżeń wystąpiły w stanie sprzed porządkowania (porównanie po treści komunikatu). Przed cleanup Console miała 1 znany błąd procesu Unity AI Assistant Relay i 14 ostrzeżeń; po przebiegu błąd nie wystąpił, ale Console nie była jawnie czyszczona ani pakiet naprawiany, więc nie uznajemy tego za naprawę Relay. Wcześniejsze niepowodzenia EditMode pochodziły ze stale skompilowanej DLL; wymuszony import/kompilacja i świeża DLL poprzedziły wynik 124/124 — szczegóły w [checkpoint](D:/Programy/UnityProjects/RageQuitting/Artifacts/SceneCleanup_20261019/Validation/worker-checkpoint.md). [Raport Gameplay](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261019T170036Z-f1193b3e/summary.json), [audyt zachowanych rekordów sceny](D:/Programy/UnityProjects/RageQuitting/Artifacts/SceneCleanup_20261019/Validation/scene-record-review.json), [porównanie Console](D:/Programy/UnityProjects/RageQuitting/Artifacts/SceneCleanup_20261019/Validation/console-comparison.json), [audyt korekty gwoździa](D:/Programy/UnityProjects/RageQuitting/Artifacts/SceneCleanup_20261019/Before/nail-correction-audit.txt), [audyt archiwum fixture](D:/Programy/UnityProjects/RageQuitting/Artifacts/SceneCleanup_20261019/Before/archive-audit.txt). Walidacja fixture objęła prefab links, identities, NetworkObject hashes i wykluczenie z Build Settings, lecz nie samodzielne uruchomienie tej sceny ani osobny proces klienta, WAN/Relay lub player build.
+
+
+
+### Fizyczne płyty — Etap 4: globalny progress i księga (18.10.2026)
+
+Trzy miejsca montażowe właściwego mostu są powiązane z `GameplayManager`. Każde miejsce liczy ukończoną płytę przypisaną do niego; fixture `NailTestArea` jest wykluczone przez dokładne referencje zarejestrowanego komponentu i dźwigara. Ukończona płyta pozostaje w świecie w swojej fizycznej pozycji, bez snapu, skalowania, despawnu ani podmiany. Można ją ukończyć przed odblokowaniem globalnego etapu: manager zapisuje montaż, assembly i ukończenie od razu, chroni płytę przed resetem, a po spełnieniu wcześniejszych wymagań automatycznie pomija już ukończony etap. Zdarzenie ukończenia występuje raz przy zduplikowanych żądaniach; zapisany progress pozostaje po rozłączeniu wykonującego gracza. Receptury i ilości materiałów pozostają bez zmian; produkcyjne gwoździe i demontaż są poza zakresem.
+
+Oba katalogi startowe oraz `sceneStageInfo` i prompty opisują fizyczne ustawienie F/E, a potem osobny gwóźdź przez panel do właściwego głównego dźwigara w każdej z czterech ćwiartek; domyślnie każdy gwóźdź wymaga trzech uderzeń. Księga lokalna i światowa pokazuje `Secured panels: n / 3`; otwarta strona odświeża licznik po zdarzeniu progresu bez zmiany strony. HUD pokazuje bieżące i wymagane liczby także dla przyszłych etapów.
+
+Końcowy strict, nieprzefiltrowany Gameplay przeszedł: exit 0, 14/14 kroków, EditMode 121/121 i PlayMode 125/125, bez pominięć ani inconclusive. Analyzer: 921 wystąpień wobec niezmienionego baseline 925/316, bez nowych diagnostyk. Console po przebiegu miała 0 błędów i 11 ostrzeżeń; wszystkie teksty ostrzeżeń wystąpiły w baseline. Brak wcześniejszego AIRelay error w bieżącym snapshotcie nie oznacza naprawy; Console nie była jawnie czyszczona. [Raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T191253Z-45e2085c/summary.json), [snapshot Console](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage4_20261018/Validation/post-gameplay-console.json), [porównanie](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage4_20261018/Validation/post-gameplay-console-comparison.json), [kontekst sceny](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage4_20261018/Validation/post-gameplay-context.json). Ukierunkowane testy Etapu 4: EditMode 4/4 ([raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/UnityEditMode/20261018T190109Z-d467b765/unity-editmode-tests-report.json)), PlayMode 4/4 ([raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/UnityPlayMode/20261018T191220Z-04d5fe2a/unity-playmode-tests-report.json)); regresja ConstructionBook przeszła ([raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/UnityPlayMode/20261018T191145Z-2544bbb4/unity-playmode-tests-report.json)).
+
+Testy NGO obejmowały hosta, zdalnego klienta i late join w jednym procesie z kontrolowanymi payloadami i tabelami ukończeń; sprawdzały snapshoty managera, klienta startującego przed/po ukończeniu, pojedyncze zdarzenie przy duplikatach oraz zachowanie progressu po rozłączeniu wykonującego gracza. Test uprawnień odczytuje `CanClientWrite` dla serwera i klienta; nie wykonuje celowo odrzuconej mutacji. Nie wykonano pełnego uderzenia młotem w autorskiej scenie z obserwacją globalnego snapshotu w osobnym procesie klienta, WAN/Relay ani player buildu. Network-smoke pozostaje host-only. Nie przeprowadzono ręcznej walidacji wizualnej Etapu 4. Wcześniejsze błędy są historyczne i zostały zastąpione końcowym wynikiem `passed` z raportu 19:12; baseline nie był aktualizowany. Raporty prób: [175751-988a5ed0](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T175751Z-988a5ed0/summary.json) — brak dostępu sandboxu do deskryptora i walidacji kompilacji/analyzerów; [180014-b1919e0e](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T180014Z-b1919e0e/summary.json) — istniejący błąd AIRelay w Console; [190549-747c1818](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T190549Z-747c1818/summary.json) — celowy test negatywny zapisał błąd uprawnień w Console, poprawiono test do sprawdzenia uprawnień; [190837-fca54f14](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T190837Z-fca54f14/summary.json) — niejednoznaczny reflection overload w dawnym Render, rozwiązany przez zachowanie unikalnego legacy Render i osobny RenderWithCompletionSummary. Wynik końcowy: [191253-45e2085c](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T191253Z-45e2085c/summary.json). Szczegóły prób i checkpoint: [BatchB-worker-checkpoint.md](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage4_20261018/Validation/BatchB-worker-checkpoint.md).
+
+**Historyczna checklista odbioru Etapu 4:** obejmuje sprawdzenie trzech paneli w dowolnej kolejności, także równolegle z dwoma graczami, oraz wykluczenia `NailTestArea`; wczesnego ukończenia i automatycznego pominięcia po spełnieniu wcześniejszych wymagań; pojedynczego zdarzenia i licznika księgi/HUD, także na już otwartej stronie; braku podwójnego visuala/collidera, late join, rozłączenia wykonującego gracza i restartu sceny.

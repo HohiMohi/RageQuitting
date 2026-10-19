@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 498699256287044743}
   - component: {fileID: 9214975559166259720}
   - component: {fileID: 7351474272707072919}
+  - component: {fileID: 12883897428749173}
   m_Layer: 0
   m_Name: LevelGameplayManager_Base
   m_TagString: Untagged
@@ -51,6 +52,8 @@ MonoBehaviour:
   bridgeBuildingStages: []
   currentBridgeBuildingStageIndex: 0
   isFullyAsembled: 0
+  enableRiverBedResourceRemoval: 1
+  enableUnsupportedWaterDowning: 1
 --- !u!114 &9214975559166259720
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91,3 +94,16 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &12883897428749173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7913614653696252930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e59b0c8b5e15a8d44a3bb71fbf1bea5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MountingNailSceneState
+  ShowTopMostFoldoutHeaderGroup: 1

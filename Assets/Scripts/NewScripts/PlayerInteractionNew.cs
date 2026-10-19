@@ -4,6 +4,11 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public interface IPlayerSingleCarryThrowRequest
+{
+    bool RequestSingleCarryThrow();
+}
+
 public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 {
     private PlayerInputNew _playerInputNew;
@@ -19,6 +24,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     
     
     [Header("PickUp Parameters")]
+    [SerializeField, Min(0f)] private float singleCarryDropThrowMetersPerSecond = 1.5f;
     public bool temp;
     [SerializeField] private IPIckableNew pickedUpObject = null;
     [SerializeField] private Transform pickUpHoldPositionHolder;
@@ -68,6 +74,10 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     public int CurrentSharedCarryPlayerCount => sharedCarryPlayerHolderCount;
     public int RequiredSharedCarryPlayerCount => sharedCarryRequiredPlayerCount;
     public Vector3 CarryBodyAnchorLocalOffset => defaultCarryBodyAnchorLocalPosition;
+    public float SingleCarryDropThrowMetersPerSecond => float.IsNaN(singleCarryDropThrowMetersPerSecond)
+        || float.IsInfinity(singleCarryDropThrowMetersPerSecond) ? 0f : Mathf.Max(0f, singleCarryDropThrowMetersPerSecond);
+    public float SingleCarryDropSearchDistance => float.IsNaN(interactDistance) || float.IsInfinity(interactDistance)
+        ? 0f : Mathf.Max(0f, interactDistance);
     public bool IsFlexibleSaplingInteractionActive => activeFlexibleSapling != null;
     public FlexibleSaplingController ActiveFlexibleSapling => activeFlexibleSapling;
     public FlexibleSaplingGripSide ActiveFlexibleSaplingSide => activeFlexibleSaplingSide;
@@ -372,7 +382,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         {
             if (_pickedUpGameObject == null)
             {
-                if (pickableObject is BaseResourceNew baseResource && !baseResource.CanBeCarried)
+                if (MountingNailSceneState.IsTargetConnected(target.transform)
+                    || pickableObject is BaseResourceNew baseResource && !baseResource.CanBePickedUp)
                 {
                     return;
                 }
@@ -418,6 +429,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void PickUpObject(GameObject pickUpObject, IPIckableNew pIckableObject, bool followHoldPosition, bool useSharedCarryMovement, Vector3 attachLocalPoint, bool selfPositioned)
     {
+        if (pickUpObject == null || MountingNailSceneState.IsTargetConnected(pickUpObject.transform)) return;
         _pickedUpGameObject = pickUpObject;
         pickedUpObjectFollowsHoldPosition = followHoldPosition;
         pickedUpObjectSelfPositioned = selfPositioned;
@@ -494,11 +506,41 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     public bool DropObject()
     {
+        return DropObjectInternal(true);
+    }
+
+    private bool DropObjectInternal(bool allowThrow)
+    {
         if (_pickedUpGameObject != null)
         {
             GameObject droppedGo = _pickedUpGameObject;
             bool wasSharedCarryMovementActive = sharedCarryMovementActive;
             bool wasSelfPositioned = pickedUpObjectSelfPositioned;
+            bool ordinaryThrow = allowThrow && !wasSharedCarryMovementActive && !wasSelfPositioned;
+            bool physicalPanelThrow = ordinaryThrow
+                && droppedGo.TryGetComponent(out MountableBridgeComponent physicalMountable)
+                && physicalMountable.IsPhysicalDeckPanel;
+            Vector3 resolvedPanelDropPosition = default;
+            NetworkObject sourceNetworkObject = droppedGo.GetComponent<NetworkObject>();
+            NetworkManager manager = sourceNetworkObject != null && sourceNetworkObject.IsSpawned
+                ? sourceNetworkObject.NetworkManager : null;
+
+            if (physicalPanelThrow)
+            {
+                // The server validates the pose and performs the release atomically.
+                if (manager != null && manager.IsListening)
+                {
+                    if (droppedGo.GetComponent(typeof(IPlayerSingleCarryThrowRequest))
+                        is IPlayerSingleCarryThrowRequest physicalThrowRequest && physicalThrowRequest.RequestSingleCarryThrow())
+                        return true;
+                    return false;
+                }
+
+                if (!SingleCarryDropPoseResolver.TryResolvePhysicalPanel(droppedGo, transform,
+                        SingleCarryDropSearchDistance, out resolvedPanelDropPosition))
+                    return false;
+            }
+
             _pickedUpGameObject = null;
 
             if (pickedUpObjectParented)
@@ -515,20 +557,36 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             ClearSharedCarryStaminaLoad();
 
             // Position it slightly in front of the player to avoid physics clipping/stuck
-            Vector3 dropPosition = transform.position + transform.forward * 1.0f + Vector3.up * 0.5f;
+            Vector3 dropPosition = physicalPanelThrow
+                ? resolvedPanelDropPosition
+                : transform.position + transform.forward * 1.0f + Vector3.up * 0.5f;
             if (!wasSharedCarryMovementActive && !wasSelfPositioned)
             {
                 droppedGo.transform.position = dropPosition;
             }
 
-            pickedUpObject.DroppedDown();
-
-            // Add a gentle forward nudge
-            if (!wasSharedCarryMovementActive && !wasSelfPositioned && droppedGo.TryGetComponent<Rigidbody>(out Rigidbody rb))
+            bool networkThrowRequested = false;
+            if (ordinaryThrow && manager != null && manager.IsListening
+                && droppedGo.GetComponent(typeof(IPlayerSingleCarryThrowRequest)) is IPlayerSingleCarryThrowRequest throwRequest)
             {
-                rb.linearVelocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-                rb.AddForce(transform.forward * 1.5f, ForceMode.Impulse);
+                networkThrowRequested = throwRequest.RequestSingleCarryThrow();
+            }
+            if (!networkThrowRequested)
+            {
+                pickedUpObject.DroppedDown();
+            }
+
+            // Offline physics is local. Online throws are applied only after the server has
+            // validated the holder and transferred physics authority.
+            if (ordinaryThrow && (manager == null || !manager.IsListening)
+                && droppedGo.TryGetComponent<Rigidbody>(out Rigidbody rb))
+            {
+                if (!rb.isKinematic)
+                {
+                    rb.linearVelocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.AddForce(transform.forward * SingleCarryDropThrowMetersPerSecond, ForceMode.VelocityChange);
+                }
             }
 
             SetHoldedItemProperties(null);
@@ -541,7 +599,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     public void DropHeldObjectForStateChange()
     {
         ReleaseFlexibleSaplingForStateChange();
-        if (DropObject())
+        if (DropObjectInternal(false))
         {
             OnHeldObjectForcedRelease?.Invoke(this, EventArgs.Empty);
         }
@@ -821,9 +879,20 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             return;
         }
 
-        MonoBehaviour newTarget = FindTarget(
-            Physics.RaycastAll(aimRay, interactDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide),
-            out bool exactRayBlocked);
+        MonoBehaviour newTarget = null;
+        if (MountingNailAimResolver.TryFindCandidate(aimRay, interactDistance, transform,
+                out MountingNail aimedNail, out _, out _))
+        {
+            newTarget = aimedNail.GetComponent<BaseResourceNew>();
+        }
+
+        bool exactRayBlocked = false;
+        if (newTarget == null)
+        {
+            newTarget = FindTarget(
+                Physics.RaycastAll(aimRay, interactDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide),
+                out exactRayBlocked);
+        }
 
         if (newTarget == null && !exactRayBlocked && aimAssistRadius > 0f)
         {
@@ -979,6 +1048,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         SetHoldedItemProperties(null);
         OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
         OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+        if (expectedObject.TryGetComponent(out ISingleCarryPlacementCommitListener commitListener))
+            commitListener.OnSingleCarryPlacementCommitted(this);
         return true;
     }
 

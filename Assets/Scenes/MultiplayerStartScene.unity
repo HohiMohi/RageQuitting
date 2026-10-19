@@ -5050,8 +5050,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2134115990}
-  - component: {fileID: 2134115989}
   - component: {fileID: 2134115991}
+  - component: {fileID: 2134115989}
   m_Layer: 0
   m_Name: MultiplayerRoomManager
   m_TagString: Untagged
