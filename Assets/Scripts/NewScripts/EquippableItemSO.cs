@@ -38,5 +38,6 @@ public enum EquippableItemType
     None, // for object-object and object-NPC interaction
     Wrench, // Tightening bridge construction connections
     Rope,
-    SpiritLevel
+    SpiritLevel,
+    Crowbar
 }

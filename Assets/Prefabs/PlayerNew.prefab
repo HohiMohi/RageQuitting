@@ -761,6 +761,7 @@ MonoBehaviour:
   interactionOrigin: {fileID: 0}
   interactDistance: 2.5
   aimAssistRadius: 0.04
+  singleCarryDropThrowMetersPerSecond: 1.5
   temp: 0
   pickUpHoldPositionHolder: {fileID: 8494466475874479498}
   carryBodyAnchor: {fileID: 0}
@@ -791,6 +792,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3727fc9a9cf5efa478ce9c3ef4ca37da, type: 2}
   - {fileID: 11400000, guid: c5d4b23af0b101b49b6a69db7d20d4ef, type: 2}
   - {fileID: 11400000, guid: b33c0b6ac7ee79d4da639b0df10359bd, type: 2}
+  - {fileID: 11400000, guid: e28c3d4974a16c944ab98a9e85d48419, type: 2}
   _selectedItemIndex: 0
   _inventorySlots: 2
   _currentInventoryOccupiedSlots: 0
@@ -1025,6 +1027,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSingleCarryPlacementNetworkPreview
   ShowTopMostFoldoutHeaderGroup: 1
+  placementDistance: 2
 --- !u!114 &3720368351117420130
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -10,6 +10,7 @@ public class PlayerInputNew : NetworkBehaviour
     private InputAction singleCarryPlacementRotationAction;
     private bool inputInitialized;
     private bool singleCarryPlacementActive;
+    private bool actionAltHeld;
     private PlayerSingleCarryPlacementController placementController;
 
     public EventHandler<OnSprintArgs> OnSprint;
@@ -149,6 +150,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void DisposeInput()
     {
+        CancelActionAltHold();
         if (singleCarryPlacementActive)
             OnForcedSingleCarryPlacementExit?.Invoke(this, EventArgs.Empty);
         singleCarryPlacementActive = false;
@@ -288,7 +290,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void ActionAlt_canceled(InputAction.CallbackContext context)
     {
-        OnActionAltCanceled?.Invoke(this, EventArgs.Empty);
+        CancelActionAltHold();
     }
 
     private void ActionAlt_performed(InputAction.CallbackContext context)
@@ -298,7 +300,15 @@ public class PlayerInputNew : NetworkBehaviour
             return;
         }
 
+        actionAltHeld = true;
         OnActionAlt?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void CancelActionAltHold()
+    {
+        if (!actionAltHeld) return;
+        actionAltHeld = false;
+        OnActionAltCanceled?.Invoke(this, EventArgs.Empty);
     }
 
     private void Action_performed(InputAction.CallbackContext context)
@@ -376,7 +386,7 @@ public class PlayerInputNew : NetworkBehaviour
         {
             OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
             OnActionCanceled?.Invoke(this, EventArgs.Empty);
-            OnActionAltCanceled?.Invoke(this, EventArgs.Empty);
+            CancelActionAltHold();
         }
 
         SetCursorState(cursorLocked && !isOpen);
@@ -394,7 +404,7 @@ public class PlayerInputNew : NetworkBehaviour
         if (!active) return;
         OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
         OnActionCanceled?.Invoke(this, EventArgs.Empty);
-        OnActionAltCanceled?.Invoke(this, EventArgs.Empty);
+        CancelActionAltHold();
         OnInteractCanceled?.Invoke(this, EventArgs.Empty);
     }
 

@@ -18,14 +18,16 @@ public class PlayerTargetHighlightController : MonoBehaviour
 
     private readonly List<OutlineTarget> targets = new List<OutlineTarget>();
     private MonoBehaviour currentTarget;
+    private PlayerInputNew playerInput;
     private MonoBehaviour unavailableFlashTarget;
     private float unavailableFlashEndsAt;
 
     private void Awake()
     {
-        playerInteraction ??= GetComponent<PlayerInteractionNew>();
-        playerHealth ??= GetComponent<PlayerHealth>();
-        lookingAtUi ??= GetComponentInChildren<LookingAtComponentUI>(true);
+        if (playerInteraction == null) TryGetComponent(out playerInteraction);
+        if (playerInput == null) TryGetComponent(out playerInput);
+        if (playerHealth == null) TryGetComponent(out playerHealth);
+        if (lookingAtUi == null) lookingAtUi = GetComponentInChildren<LookingAtComponentUI>(true);
     }
 
     private void OnEnable()
@@ -44,7 +46,8 @@ public class PlayerTargetHighlightController : MonoBehaviour
         }
 
         MonoBehaviour desiredTarget = GetDesiredTarget();
-        if (desiredTarget != currentTarget)
+        bool destroyedCurrentTarget = desiredTarget == null && !System.Object.ReferenceEquals(currentTarget, null);
+        if (desiredTarget != currentTarget || destroyedCurrentTarget)
         {
             ChangeTarget(desiredTarget);
         }
@@ -71,7 +74,8 @@ public class PlayerTargetHighlightController : MonoBehaviour
 
     private MonoBehaviour GetDesiredTarget()
     {
-        if (!isActiveAndEnabled || outlineMaterial == null || playerInteraction == null ||
+        if (!isActiveAndEnabled || outlineMaterial == null || playerInteraction == null
+            || (playerInput != null && !playerInput.IsLocalGameplayInputActive) ||
             (playerHealth != null && playerHealth.IsDowned))
         {
             return null;
@@ -86,7 +90,8 @@ public class PlayerTargetHighlightController : MonoBehaviour
         return target != null &&
                lookingAtUi != null &&
                lookingAtUi.EvaluatedTarget == target &&
-               lookingAtUi.CurrentTargetHasActionablePrompt
+               (lookingAtUi.CurrentTargetHasActionablePrompt
+                || lookingAtUi.CurrentTargetHasCrowbarNailHighlight)
             ? target
             : null;
     }

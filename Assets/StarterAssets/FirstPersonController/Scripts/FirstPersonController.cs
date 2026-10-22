@@ -160,7 +160,8 @@ namespace StarterAssets
 		public bool IsSprinting => _isSprinting
 			&& _currentStamina > 0f
 			&& !IsDowned()
-			&& (_playerActionController == null || !_playerActionController.IsActionInProgress);
+			&& (_playerActionController == null || (!_playerActionController.IsActionInProgress
+				&& !_playerActionController.IsCrowbarExtractionActiveOrPending));
 		public float CurrentStamina => _staminaController != null ? _staminaController.CurrentStamina : _currentStamina;
 		public bool IsSharedCarryExhaustionWarningActive => !IsDowned()
 			&& (_isSharedCarryExhaustionWarningActive
@@ -294,6 +295,11 @@ namespace StarterAssets
 
         private void PlayerInputNew_OnSprint(object sender, PlayerInputNew.OnSprintArgs e)
         {
+			if (_playerActionController != null && _playerActionController.IsCrowbarExtractionActiveOrPending)
+			{
+				_isSprinting = false;
+				return;
+			}
 			if (IsDowned())
 			{
 				_isSprinting = false;
@@ -384,6 +390,8 @@ namespace StarterAssets
 
         private void Update()
 		{
+			if (_playerActionController != null && _playerActionController.IsCrowbarExtractionActiveOrPending)
+				_isSprinting = false;
 			JumpAndGravity();
 			GroundedCheck();
 			Move();

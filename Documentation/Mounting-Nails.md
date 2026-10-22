@@ -1,8 +1,8 @@
-# Gwoździe montażowe — Etapy 1–4
+# Gwoździe montażowe i ekstrakcja łomem — postęp do 2026-10-22
 
-## Status
+## Status etapów montażu i carry
 
-Etap 1 został ręcznie sprawdzony i zaakceptowany 11.10.2026. Etap 2 wraz z poprawkami placementu F/E na poruszanym celu i izolacji kontaktu single-carry został ponownie ręcznie sprawdzony; użytkownik potwierdził „Okej, poprawki działają” i zezwolił na etap 3. Etapy 3 i 4 są wdrożone i przeszły opisane niżej testy automatyczne. Użytkownik ręcznie zaakceptował Etap 3 dnia 15.10.2026. Użytkownik potwierdził, że wymienione punkty checklisty Etapu 4 oraz poprawki podglądu F/E na poruszanym celu i zwykłego rzutu E działają („Okej, poprawki działają”). Etapy 1–4 są ręcznie zaakceptowane.
+Etapy 1–4 dotychczasowego planu montażu gwoździ i carry są wdrożone i opisane w sekcjach poniżej. Użytkownik ręcznie zaakceptował Etap 3 dnia 15.10.2026 oraz potwierdził działanie checklisty Etapu 4 i późniejszych poprawek placementu/throw 18.10.2026. **Numeracja ekstrakcji gwoździ łomem jest odrębnym planem:** etapy 1–3 zaakceptowane historycznie (w tym etap 3 zaakceptowany 21.10.2026), etap 4 technicznie wdrożony i zaakceptowany ręcznie 2026-10-22 po retestach hosta i osobnego klienta; etap 5 technicznie ukończony, gotowy do końcowego ręcznego odbioru. Aktualny zapis ekstrakcji i checklistę zawiera [osobny dokument](Crowbar-Nail-Extraction.md#etap-5--współbieżne-próby-i-cykl-życia-technicznie-ukończony-końcowy-ręczny-odbiór-oczekuje).
 
 ## Status fizycznych płyt
 
@@ -251,3 +251,23 @@ Trzy główne sloty paneli są zintegrowane z `GameplayManager`. `NailTestArea` 
 Testy NGO użyły hosta, zdalnego klienta i late join w jednym procesie z kontrolowanymi payloadami/tabelami ukończeń. Nie sprawdzono pełnego młot → globalny snapshot w osobnym procesie klienta, odrzuconej mutacji uprawnień, WAN/Relay ani player buildu; network-smoke jest host-only. Raporty i ograniczenia opisuje [Bridge-Construction](Bridge-Construction.md#fizyczne-płyty--etap-4-globalny-progress-i-księga-18102026).
 
 Historyczna checklista scenariuszy ręcznych: przetestuj trzy panele w dowolnej kolejności i równolegle z dwoma graczami; sprawdź wykluczenie fixture, wczesne ukończenie i automatyczne pominięcie bez ponownego gwoździowania, pojedyncze zdarzenie, licznik księgi/HUD z otwartą stroną, brak podwójnego visuala/collidera, late join, disconnect wykonującego gracza i restart sceny.
+
+## Wyciąganie gwoździ łomem — etap 1 (2026-10-20)
+
+Stan zapisany przy odbiorze etapu 1: etap 1 technicznie wdrożono i użytkownik zaakceptował go ręcznie 2026-10-20: „Okej, sprawdziłem, wszystko co napisałeś działa jak wcześniej”. Wówczas etap 2 był planowany. Bieżący status wdrożenia i walidację etapów 1–3 opisuje [Wyciąganie gwoździ łomem](Crowbar-Nail-Extraction.md).
+
+
+## Wyciąganie gwoździ łomem — etap 2 (2026-10-20)
+
+Etap 2 technicznie wdrożono i użytkownik zaakceptował go 2026-10-20 w zakresie ręcznych regresji montażu gwoździ: „Sprawdziłem regresje montażu gwoździ i wszystko wydaje się działać poprawnie - możemy przejść do kolejnego etapu”. W chwili sporządzenia tego wpisu etap 3 był rozpoczynany, a implementacja nie była jeszcze gotowa; aktualny status techniczny i odbiór opisuje [Wyciąganie gwoździ łomem](Crowbar-Nail-Extraction.md). API, walidację i ograniczenia opisuje [Wyciąganie gwoździ łomem](Crowbar-Nail-Extraction.md#etap-2--sesja-ekstrakcji-rezerwacja-i-api). Etap 1 również pozostaje ręcznie zaakceptowany.
+## Wyciąganie gwoździ łomem — etap 3 (stan historyczny z 2026-10-20)
+
+**Historyczny stan etapu 3:** łom był dwuslotowym narzędziem z powtarzanym LPM bez impulsu; wówczas PPM nie wyciągał jeszcze gwoździ. Użytkownik zaakceptował etap 3 21.10.2026. Aktualny stan PPM i ręczny odbiór etapu 4 opisuje [Wyciąganie gwoździ łomem](Crowbar-Nail-Extraction.md#etap-4--ekstrakcja-gwoździa-przytrzymaniem-ppm-technicznie-gotowe-zaakceptowany-ręcznie-2026-10-22).
+
+## Wyciąganie gwoździ łomem — etap 4 (historyczny wpis 2026-10-21; osobna numeracja)
+
+Etap 4 wdraża ekstrakcję pojedynczego namierzonego gwoździa przez przytrzymanie PPM przez domyślne 1,5 s, ruch 65% bez sprintu, autorytatywną sesję i UI stanów dostępny/zajęty/trwale chroniony. Zwolnienie, utrata celu/LOS/zasięgu, narzędzia lub kontroli anuluje próbę; nowa próba wymaga nowego naciśnięcia. LPM pozostaje dotychczasowym atakiem bez impulsu. Po zgłoszeniu błędu klienta poprawiono aktywność `PlayerActionController` na serwerowej kopii zdalnego gracza; serwer zachowuje kontroler do walidacji i lease, obserwatorzy nadal go nie aktywują, a input/interakcje/ruch tej kopii pozostają wyłączone. Szczegóły poprawki, czerwony repro, końcowy raport Gameplay, ograniczenia network smoke i retest ręczny znajdują się w [dokumencie ekstrakcji](Crowbar-Nail-Extraction.md#poprawka-kopii-serwerowej-zdalnego-gracza-2026-10-21-historycznie-oczekujący-odbiór-klienta). Stan historyczny na 2026-10-21: etap 4 oczekiwał ręcznego retestu hosta i klienta. Użytkownik zaakceptował Etap 4 i poprawkę klienta 2026-10-22 („Okej, teraz wszystko wygląda okej, możemy iść dalej”). Etap 5 jest technicznie ukończony i oczekuje na końcowy ręczny odbiór; [aktualny status i checklista Etap 5](Crowbar-Nail-Extraction.md#etap-5--współbieżne-próby-i-cykl-życia-technicznie-ukończony-końcowy-ręczny-odbiór-oczekuje).
+
+## Wyciąganie gwoździ łomem — etap 5 (2026-10-22; osobna numeracja)
+
+Etap 4 i poprawka zdalnej kopii klienta zostały ręcznie zaakceptowane przez użytkownika. Etap 5 jest technicznie ukończony; końcowy ścisły Gameplay preflight przeszedł (`passed`, exit 0, 14/14 kroków; EditMode 125/125, PlayMode 174/174) [raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261022T165441Z-e32d8041/summary.json). Ręczne testy współbieżności hosta i osobnego klienta nadal są bramką odbioru. Testy automatyczne obejmują konkurencję rezerwacji, świeże naciśnięcie przegranego, ekstrakcję pary, ochronę po ukończeniu panelu, anulowanie po resecie, stabilność przy ruchu celu, API NPC, late join i disconnect. Szczegóły wraz z pełną traceability, walidacją i ograniczeniami: [dokument ekstrakcji łomem — Etap 5](Crowbar-Nail-Extraction.md#etap-5--współbieżne-próby-i-cykl-życia-technicznie-ukończony-końcowy-ręczny-odbiór-oczekuje). Numeracja ta nie zmienia statusu osobnych etapów montażu i carry.

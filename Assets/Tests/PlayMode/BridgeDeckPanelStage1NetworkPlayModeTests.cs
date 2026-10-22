@@ -358,7 +358,9 @@ public sealed class BridgeDeckPanelStage1NetworkPlayModeTests
         Assert.That(testKeyboard.fKey.isPressed, Is.False, "The fresh loopback test keyboard must begin with F released.");
         InputSystem.QueueStateEvent(testKeyboard, new KeyboardState(Key.F));
         InputSystem.Update();
-        yield return null;
+        yield return WaitFor(() => (bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller)
+            && (bool)controllerType.GetProperty("CanConfirmPlacement").GetValue(controller),
+            "the actual F-triggered panel preview becomes valid and confirmable");
         Assert.That((bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller), Is.True,
             $"The remote client's production geometry preview finds the world support. Active={controllerType.GetProperty("IsActive").GetValue(controller)}; geometry={controllerType.GetProperty("LastGeometryStatus").GetValue(controller)}; validation={controllerType.GetProperty("LastValidation").GetValue(controller)}; player={remotePlayer.position}; aim={aimObject.transform.position}/{aimObject.transform.forward}; supportTop={supportCenter + Vector3.up * 0.5f}.");
         Assert.That((bool)controllerType.GetProperty("CanConfirmPlacement").GetValue(controller), Is.True,

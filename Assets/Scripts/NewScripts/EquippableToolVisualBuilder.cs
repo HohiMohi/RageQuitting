@@ -107,6 +107,9 @@ public class EquippableToolVisualBuilder : MonoBehaviour
             case EquippableItemType.SpiritLevel:
                 BuildSpiritLevel(generatedRoot.transform, materials);
                 break;
+            case EquippableItemType.Crowbar:
+                BuildCrowbar(generatedRoot.transform, materials);
+                break;
             default:
                 DestroyVisualObject(generatedRoot);
                 return null;
@@ -269,6 +272,28 @@ public class EquippableToolVisualBuilder : MonoBehaviour
 
         CreateCapsule("Handle", root, new Vector3(0f, -0.08f, 0f), Quaternion.identity, new Vector3(0.09f, 0.62f, 0.09f), handle);
         CreateCube("HammerHead", root, new Vector3(0f, 0.5f, 0f), Quaternion.identity, new Vector3(0.62f, 0.24f, 0.24f), metal);
+        CreateSecondaryGrip(root, new Vector3(0f, 0.12f, 0f));
+    }
+
+    private static void BuildCrowbar(Transform root, ToolVisualMaterials materials)
+    {
+        Material metal = GetMaterial(materials.pickaxeMaterial, new Color(0.34f, 0.37f, 0.4f, 1f));
+        Material grip = GetMaterial(materials.handleMaterial, new Color(0.22f, 0.12f, 0.08f, 1f));
+
+        CreateCapsule("Shaft", root, new Vector3(0f, -0.02f, 0f), Quaternion.identity,
+            new Vector3(0.065f, 0.72f, 0.065f), metal);
+        CreateCube("GripSleeve", root, new Vector3(0f, -0.36f, 0f), Quaternion.identity,
+            new Vector3(0.16f, 0.25f, 0.13f), grip);
+        CreateCapsule("BentNeck", root, new Vector3(0.025f, 0.56f, 0f), Quaternion.Euler(0f, 0f, -42f),
+            new Vector3(0.06f, 0.28f, 0.06f), metal);
+        CreateCapsule("ForkRoot", root, new Vector3(0.17f, 0.68f, 0f), Quaternion.Euler(0f, 0f, 34f),
+            new Vector3(0.055f, 0.2f, 0.055f), metal);
+        CreateCube("HookForkLeft", root, new Vector3(0.27f, 0.75f, -0.055f), Quaternion.Euler(0f, 0f, 72f),
+            new Vector3(0.21f, 0.055f, 0.045f), metal);
+        CreateCube("HookForkRight", root, new Vector3(0.27f, 0.75f, 0.055f), Quaternion.Euler(0f, 0f, 72f),
+            new Vector3(0.21f, 0.055f, 0.045f), metal);
+        CreateCube("StrikingEnd", root, new Vector3(0f, -0.54f, 0f), Quaternion.Euler(0f, 0f, 90f),
+            new Vector3(0.19f, 0.09f, 0.11f), metal);
         CreateSecondaryGrip(root, new Vector3(0f, 0.12f, 0f));
     }
 

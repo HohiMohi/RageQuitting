@@ -545,6 +545,34 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
         return false;
     }
 
+    internal static bool IsPanelProtectedFromExtraction(Transform target)
+    {
+        if (target == null) return false;
+        BridgeDeckPanelMounting marker = target.GetComponentInParent<BridgeDeckPanelMounting>();
+        MountableBridgeComponent panel = marker != null ? marker.GetComponent<MountableBridgeComponent>() : null;
+        if (marker == null || panel == null || !panel.IsPhysicalDeckPanel) return false;
+
+        // Completion is a durable slot claim, so movement or later section reconfiguration
+        // must not make an already completed panel eligible for extraction.
+        for (int i = 0; i < ActiveSections.Count; i++)
+        {
+            BridgeDeckPanelSectionNetworkState candidate = ActiveSections[i];
+            if (candidate != null && IsCompatibleNetworkScope(candidate, marker)
+                && candidate.TryGetPanelState(marker, out BridgeDeckPanelReplicatedState state) && state.Complete)
+                return true;
+        }
+
+        BridgeDeckPanelSectionNetworkState owner = FindOwningSection(marker);
+        if (owner == null || !owner.HasEvaluationAuthority() || owner.section == null || owner.workflow == null)
+            return false;
+
+        // A cached incomplete assessment can be stale within the frame that the final nail lands.
+        // Reassess now so extraction cannot erase the quarter that completes and claims this panel.
+        MountingNail.CopyActiveNails(owner.gameObject.scene, owner.NetworkManager, owner.activeNails);
+        owner.EvaluatePanel(marker, panel);
+        return owner.HasDurableCompletionClaim(marker);
+    }
+
     private static bool IsFinite(Vector3 value) => IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
     private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 

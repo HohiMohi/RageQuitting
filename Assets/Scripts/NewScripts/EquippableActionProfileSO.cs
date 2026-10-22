@@ -34,6 +34,9 @@ public class EquippableActionProfileSO : ScriptableObject
     [Min(0.01f)] public float cameraKickRecoveryDuration = 0.12f;
     [Min(0f)] public float impactFeedbackStrength = 1f;
 
+    [Header("Crowbar extraction")]
+    [Min(0.01f)] public float crowbarExtractionDuration = 1.5f;
+
     [Header("Audio")]
     public AudioClip swingClip;
     [Range(0f, 1f)] public float swingVolume = 0.6f;

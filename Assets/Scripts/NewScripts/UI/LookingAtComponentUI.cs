@@ -14,6 +14,7 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private PlayerInputNew playerInput;
     private PlayerHealth playerHealth;
+    private PlayerInventory playerInventory;
     private PlayerActionController playerActionController;
     private PlayerSingleCarryPlacementController placementController;
     private BridgeDeckPanelSlotOutline focusedPanelOutline;
@@ -22,9 +23,14 @@ public class LookingAtComponentUI : MonoBehaviour
     private string cachedPlacementHudConfirmHint;
     private string cachedPlacementHudMounting;
     private bool cachedPlacementHudPending;
+    private MountingNail currentCrowbarPresentationNail;
+    private bool currentTargetHasCrowbarNailHighlight;
+    private bool currentCrowbarExtractionAwaitingServer;
+    private float currentCrowbarExtractionProgress;
     private readonly List<InteractionPrompt> prompts = new List<InteractionPrompt>();
     public MonoBehaviour EvaluatedTarget { get; private set; }
     public bool CurrentTargetHasActionablePrompt { get; private set; }
+    public bool CurrentTargetHasCrowbarNailHighlight => currentTargetHasCrowbarNailHighlight;
 
     private void Start()
     {
@@ -35,6 +41,7 @@ public class LookingAtComponentUI : MonoBehaviour
 
         playerInput = GetComponentInParent<PlayerInputNew>();
         playerHealth = GetComponentInParent<PlayerHealth>();
+        playerInventory = GetComponentInParent<PlayerInventory>();
         playerActionController = GetComponentInParent<PlayerActionController>();
         placementController = GetComponentInParent<PlayerSingleCarryPlacementController>();
         Hide();
@@ -74,8 +81,31 @@ public class LookingAtComponentUI : MonoBehaviour
         }
 
         prompts.Clear();
-        AddPromptsForCurrentState(currentTarget);
-        FilterUnavailableActionPrompts(currentTarget);
+        ResetCrowbarPresentation();
+        if (TryGetCrowbarNailTarget(currentTarget, out _))
+        {
+            if (playerInput == null || !playerInput.IsLocalGameplayInputActive
+                || playerActionController == null
+                || !playerActionController.TryGetCrowbarNailPresentation(currentTarget,
+                    out currentCrowbarPresentationNail, out MountingNailExtractionAvailability availability,
+                    out currentCrowbarExtractionProgress, out bool ownAcceptedAttempt,
+                    out currentCrowbarExtractionAwaitingServer, out bool withinExtractionRange))
+            {
+                Hide();
+                return;
+            }
+
+            currentTargetHasCrowbarNailHighlight = true;
+            AddCrowbarNailPresentationPrompt(availability, ownAcceptedAttempt, withinExtractionRange);
+        }
+        else
+        {
+            AddPromptsForCurrentState(currentTarget);
+            FilterUnavailableActionPrompts(currentTarget);
+            if (playerInventory != null && playerInventory.GetCurrentSelectedItem() != null
+                && playerInventory.GetCurrentSelectedItem().itemType == EquippableItemType.Crowbar)
+                RemoveConsumedCrowbarAltPrompts();
+        }
         RefreshPanelPlacementFeedback(currentTarget);
         EvaluatedTarget = currentTarget;
         CurrentTargetHasActionablePrompt = prompts.Exists(
@@ -239,6 +269,64 @@ public class LookingAtComponentUI : MonoBehaviour
         AddAttackPromptIfValid(target);
     }
 
+    private bool TryGetCrowbarNailTarget(MonoBehaviour target, out MountingNail nail)
+    {
+        nail = null;
+        EquippableItemSO selected = playerInventory != null ? playerInventory.GetCurrentSelectedItem() : null;
+        if (selected == null || selected.itemType != EquippableItemType.Crowbar || target == null) return false;
+        nail = target as MountingNail;
+        if (nail == null) nail = target.GetComponentInParent<MountingNail>();
+        return nail != null && (nail.State == MountingNailState.Partial
+            || nail.State == MountingNailState.EmbeddedSingle
+            || nail.State == MountingNailState.EmbeddedPair);
+    }
+
+    private void AddCrowbarNailPresentationPrompt(MountingNailExtractionAvailability availability,
+        bool ownAcceptedAttempt, bool withinExtractionRange)
+    {
+        if (currentCrowbarExtractionAwaitingServer)
+        {
+            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information, "Awaiting server"));
+            return;
+        }
+
+        switch (availability)
+        {
+            case MountingNailExtractionAvailability.Available:
+                prompts.Add(withinExtractionRange
+                    ? new InteractionPrompt(PlayerInputActionKind.ActionAlt, "Hold to extract nail")
+                    : new InteractionPrompt(PlayerInputActionKind.Information, "Move closer - Extract nail"));
+                break;
+            case MountingNailExtractionAvailability.Reserved:
+                if (ownAcceptedAttempt)
+                {
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                        $"Extracting nail: {Mathf.RoundToInt(currentCrowbarExtractionProgress * 100f)}%"));
+                }
+                else
+                {
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                        "Nail is being extracted by another player"));
+                }
+                break;
+            case MountingNailExtractionAvailability.PermanentlyMounted:
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information, "Nail permanently mounted"));
+                break;
+            default:
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information, "Nail unavailable"));
+                break;
+        }
+    }
+
+    private void RemoveConsumedCrowbarAltPrompts()
+    {
+        for (int i = prompts.Count - 1; i >= 0; i--)
+        {
+            if (prompts[i].ActionKind == PlayerInputActionKind.ActionAlt)
+                prompts.RemoveAt(i);
+        }
+    }
+
     private bool TryAddDownedPlayerPrompts(MonoBehaviour target)
     {
         PlayerHealth targetHealth = target.GetComponentInParent<PlayerHealth>();
@@ -320,7 +408,8 @@ public class LookingAtComponentUI : MonoBehaviour
     {
         MountingNail mountingNail = currentTarget as MountingNail;
         if (mountingNail == null && currentTarget != null) mountingNail = currentTarget.GetComponentInParent<MountingNail>();
-        bool showNailProgress = mountingNail != null && mountingNail.BlocksPickup;
+        bool showNailProgress = mountingNail != null && mountingNail.BlocksPickup
+            && !(currentCrowbarPresentationNail != null && currentCrowbarPresentationNail == mountingNail);
         BridgeConstructionSite constructionSite = currentTarget as BridgeConstructionSite;
         if (constructionSite == null && currentTarget is BridgeComponent constructionBridge)
         {
@@ -335,7 +424,8 @@ public class LookingAtComponentUI : MonoBehaviour
                                     !bridgeComponent.IsAssembled &&
                                     bridgeComponent.NeedAssembling;
         bool showBucketHoldProgress = playerInteraction.IsBucketActionHoldActive;
-        bool showProgress = showNailProgress || showBucketHoldProgress || showConstructionProgress || showAssemblyProgress;
+        bool showProgress = currentCrowbarPresentationNail == null
+            && (showNailProgress || showBucketHoldProgress || showConstructionProgress || showAssemblyProgress);
 
         if (progressCircleHolder != null)
         {
@@ -362,6 +452,10 @@ public class LookingAtComponentUI : MonoBehaviour
             {
                 assemblingProgressBar.fillAmount = progressBridgeComponent.GetAssemblingProgressNormalized();
             }
+        }
+        else if (assemblingProgressBar != null)
+        {
+            assemblingProgressBar.fillAmount = 0f;
         }
     }
 
@@ -394,6 +488,7 @@ public class LookingAtComponentUI : MonoBehaviour
     private void ShowPlacementStatus()
     {
         ClearPanelPlacementFeedback();
+        ResetCrowbarPresentation();
         EvaluatedTarget = null;
         CurrentTargetHasActionablePrompt = false;
         if (progressCircleHolder != null) progressCircleHolder.SetActive(false);
@@ -431,8 +526,10 @@ public class LookingAtComponentUI : MonoBehaviour
     private void Hide()
     {
         ClearPanelPlacementFeedback();
+        ResetCrowbarPresentation();
         EvaluatedTarget = null;
         CurrentTargetHasActionablePrompt = false;
+        if (componentInfoText != null) componentInfoText.text = string.Empty;
         if (visualRoot != null)
         {
             visualRoot.SetActive(false);
@@ -442,6 +539,15 @@ public class LookingAtComponentUI : MonoBehaviour
         {
             progressCircleHolder.SetActive(false);
         }
+        if (assemblingProgressBar != null) assemblingProgressBar.fillAmount = 0f;
+    }
+
+    private void ResetCrowbarPresentation()
+    {
+        currentCrowbarPresentationNail = null;
+        currentTargetHasCrowbarNailHighlight = false;
+        currentCrowbarExtractionAwaitingServer = false;
+        currentCrowbarExtractionProgress = 0f;
     }
 
     private void OnDisable() => Hide();

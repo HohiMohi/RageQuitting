@@ -1495,6 +1495,22 @@ public class SingleCarryPlacementStage6PlayModeTests
         AssertSingleCarryContactState(releasedBridge, disconnectBridgeOriginalSettings, false, "disconnect-restored server mountable");
         AssertSingleCarryContactState(observerBridge, disconnectBridgeOriginalSettings, false, "disconnect-restored observer mountable");
 
+        yield return Until(() =>
+        {
+            Assert.That(releasedBridge, Is.Not.Null,
+                "The server release object must remain present while the observer receives its final pose.");
+            Assert.That(Vector3.Distance(releasedBridge.transform.position, bridgeCallbackPosition), Is.LessThan(0.02f),
+                "The server release position must remain stable while waiting for observer replication.");
+            Assert.That(Quaternion.Angle(releasedBridge.transform.rotation, bridgeCallbackRotation), Is.LessThan(0.1f),
+                "The server release rotation must remain stable while waiting for observer replication.");
+            observerBridge = Find(observer, bridgeId);
+            if (observerBridge == null) return false;
+            NetworkTransform observerTransform = observerBridge.GetComponent<NetworkTransform>();
+            return observerTransform != null
+                && Vector3.Distance(observerTransform.GetSpaceRelativePosition(true), bridgeCallbackPosition) < 0.08f
+                && Vector3.Distance(observerBridge.transform.position, bridgeCallbackPosition) < 0.08f;
+        }, "disconnect release pose replication and observer interpolation");
+
         // Keep ordinary body physics from obscuring the separate queued NetworkTransform snapback check.
         // Release-state and velocity samples were captured before freezing; assertions validate those captured values.
         Rigidbody releasedBridgeBody = releasedBridge.GetComponent<Rigidbody>();

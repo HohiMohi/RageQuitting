@@ -244,7 +244,8 @@ public class PlayerNetworkSetup : NetworkBehaviour
         SetComponentEnabled<FirstPersonController>(false);
         SetComponentEnabled<PlayerInputNew>(false);
         SetComponentEnabled<PlayerInteractionNew>(false);
-        SetComponentEnabled<PlayerActionController>(false);
+        // The server needs the remote owner's controller for authoritative RPC validation; this replica has no local input.
+        SetComponentEnabled<PlayerActionController>(IsServer);
         SetComponentEnabled<PlayerInventory>(false);
         SetComponentEnabled<PlayerMovementFeedback>(false);
         SetComponentEnabled<PlayerTargetHighlightController>(false);

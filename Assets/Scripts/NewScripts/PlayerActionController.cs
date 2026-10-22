@@ -4,7 +4,7 @@ using Unity.Netcode;
 using Unity.Netcode.Components;
 using UnityEngine;
 
-public class PlayerActionController : NetworkBehaviour
+public partial class PlayerActionController : NetworkBehaviour
 {
     public sealed class ToolActionEventArgs : EventArgs
     {
@@ -91,15 +91,18 @@ public class PlayerActionController : NetworkBehaviour
     public float CurrentActionPhaseNormalized => currentActionPhaseDuration > 0f
         ? Mathf.Clamp01(1f - currentActionPhaseTimer / currentActionPhaseDuration)
         : 1f;
-    public float ActionMovementMultiplier => IsActionInProgress && actionItem != null && actionItem.actionProfile != null
-        ? Mathf.Clamp01(actionItem.actionProfile.movementMultiplierDuringAction)
-        : 1f;
+    public float ActionMovementMultiplier => IsCrowbarExtractionActiveOrPending
+        ? GetCrowbarExtractionMovementMultiplier()
+        : IsActionInProgress && actionItem != null && actionItem.actionProfile != null
+            ? Mathf.Clamp01(actionItem.actionProfile.movementMultiplierDuringAction)
+            : 1f;
+    public bool IsCrowbarExtractionActiveOrPending => IsCrowbarExtractionHeldOrPending;
     public EquippableItemSO CurrentActionItem => actionItem;
     
 
     private void Awake()
     {
-        _inventory = GetComponent<PlayerInventory>();
+        TryGetComponent(out _inventory);
         _playerInputNew = GetComponent<PlayerInputNew>();
         _networkObject = GetComponent<NetworkObject>();
         _playerHealth = GetComponent<PlayerHealth>();
@@ -108,6 +111,7 @@ public class PlayerActionController : NetworkBehaviour
         _impactEffectSpawner = GetComponent<ActionImpactEffectSpawner>();
         _playerInputNew.OnAction += HandleAction;
         _playerInputNew.OnActionAlt += HandleActionAlt;
+        _playerInputNew.OnActionAltCanceled += HandleActionAltCanceled;
         _playerInputNew.OnActionCanceled += HandleActionCanceled;
         SetActionParameters(null);
     }
@@ -120,12 +124,28 @@ public class PlayerActionController : NetworkBehaviour
     private void OnDisable()
     {
         performAction = false;
+        CancelCrowbarExtractionImmediately();
         CancelCurrentAction();
+    }
+
+    public override void OnDestroy()
+    {
+        if (_playerInputNew != null)
+        {
+            _playerInputNew.OnAction -= HandleAction;
+            _playerInputNew.OnActionAlt -= HandleActionAlt;
+            _playerInputNew.OnActionAltCanceled -= HandleActionAltCanceled;
+            _playerInputNew.OnActionCanceled -= HandleActionCanceled;
+        }
+        if (_inventory != null) _inventory.OnSelectedItemChanged -= Inventory_OnSelectedItemChanged;
+        CancelCrowbarExtractionImmediately();
+        base.OnDestroy();
     }
 
     private void Inventory_OnSelectedItemChanged(object sender, PlayerInventory.OnSelectedItemChangedEventArgs e)
     {
         Debug.Log("Action parameters changed");
+        CancelCrowbarExtractionImmediately();
         CancelCurrentAction();
         SetActionParameters(e.selectedItem);
     }
@@ -141,6 +161,11 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (IsCrowbarSelected())
+        {
+            BeginCrowbarExtractionOnFreshPress();
+            return;
+        }
         if (_playerInteraction != null && _playerInteraction.HasContextActionConsumer)
         {
             performAction = false;
@@ -164,6 +189,7 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleAction(object sender, EventArgs e)
     {
+        if (IsCrowbarExtractionActiveOrPending) return;
         if (_playerInteraction != null && _playerInteraction.TryConsumeContextAction(ContextActionKind.Primary))
         {
             performAction = false;
@@ -193,6 +219,7 @@ public class PlayerActionController : NetworkBehaviour
 
     public bool PerformAction()
     {
+        if (IsCrowbarExtractionActiveOrPending) return false;
         EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
         if (TryConsumeAimedMountingNail(selectedItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
         {
@@ -580,6 +607,12 @@ public class PlayerActionController : NetworkBehaviour
             nextServerCombatImpactTime = 0d;
         }
         submittedMountingNailImpactSequence = 0;
+        ResetCrowbarExtractionNetworkState();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        HandleCrowbarExtractionNetworkDespawn();
     }
 
     private static bool IsFinite(Vector3 value) => IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
@@ -738,6 +771,7 @@ public class PlayerActionController : NetworkBehaviour
         if (panelNetworkObject == null || !panelNetworkObject.IsSpawned || panelNetworkObject == NetworkObject
             || panelNetworkObject.NetworkManager != manager || _inventory == null || _playerInteraction == null
             || _concreteTrap != null && _concreteTrap.IsTrapped || IsDowned()
+            || serverCrowbarNail != null
             || !IsFinite(aimOrigin) || !IsFinite(aimDirection)) return false;
         float directionLength = aimDirection.magnitude;
         if (directionLength < 0.95f || directionLength > 1.05f
@@ -784,6 +818,7 @@ public class PlayerActionController : NetworkBehaviour
         if (nailNetworkObject == null || !nailNetworkObject.IsSpawned || nailNetworkObject == NetworkObject
             || _inventory == null || _playerInteraction == null
             || _concreteTrap != null && _concreteTrap.IsTrapped || IsDowned()
+            || serverCrowbarNail != null
             || !IsFinite(aimOrigin) || !IsFinite(aimDirection)) return false;
         float directionLength = aimDirection.magnitude;
         if (directionLength < 0.95f || directionLength > 1.05f
@@ -846,7 +881,8 @@ public class PlayerActionController : NetworkBehaviour
     {
         if (targetNetworkObject == null ||
             targetNetworkObject == NetworkObject ||
-            _inventory == null || _concreteTrap != null && _concreteTrap.IsTrapped)
+            _inventory == null || _concreteTrap != null && _concreteTrap.IsTrapped
+            || serverCrowbarNail != null)
         {
             return false;
         }

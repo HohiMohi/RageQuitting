@@ -294,7 +294,8 @@ public class PlayerEquippableItemVisuals : NetworkBehaviour
                itemType == EquippableItemType.IndustrialHammer ||
                itemType == EquippableItemType.Wrench ||
                itemType == EquippableItemType.Rope ||
-               itemType == EquippableItemType.SpiritLevel;
+               itemType == EquippableItemType.SpiritLevel ||
+               itemType == EquippableItemType.Crowbar;
     }
 
     private static void ClearVisual(ref GameObject visual)

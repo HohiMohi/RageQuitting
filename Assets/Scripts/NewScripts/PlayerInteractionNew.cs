@@ -13,6 +13,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 {
     private PlayerInputNew _playerInputNew;
     private PlayerHealth _playerHealth;
+    private PlayerInventory _playerInventory;
 
     [Header("Interaction Parameters")]
     private IInteractableNew _currentInteractable = null;
@@ -142,6 +143,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private void Awake()
     {
         _playerInputNew = GetComponent<PlayerInputNew>();
+        TryGetComponent(out _playerInventory);
         _playerInputNew.OnInteract += HandleInteract;
         _playerInputNew.OnActionAlt += HandleActionAlt;
         _playerInputNew.OnActionAltCanceled += HandleActionAltCanceled;
@@ -173,6 +175,10 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        // Alternate input is reserved for the Crowbar extraction controller while the tool is selected.
+        EquippableItemSO selected = _playerInventory != null ? _playerInventory.GetCurrentSelectedItem() : null;
+        if (selected != null && selected.itemType == EquippableItemType.Crowbar)
+            return;
         if (TryConsumeContextAction(ContextActionKind.Secondary)) return;
         if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         if (_playerHealth != null && _playerHealth.IsDowned)

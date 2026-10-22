@@ -67,7 +67,7 @@ public readonly struct MountingNailAttachmentInfo
 [DefaultExecutionOrder(100)]
 [RequireComponent(typeof(Rigidbody), typeof(BaseResourceNew), typeof(NetworkObject))]
 [RequireComponent(typeof(CapsuleCollider))]
-public sealed class MountingNail : NetworkBehaviour, ISingleCarryPlacementCommitListener, IInteractionPromptProvider
+public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlacementCommitListener, IInteractionPromptProvider
 {
     private static readonly List<MountingNail> ActiveNails = new();
     private const float RemainingSyncInterval = 0.1f;
@@ -125,6 +125,8 @@ public sealed class MountingNail : NetworkBehaviour, ISingleCarryPlacementCommit
     private Quaternion embeddedRotationLocal;
     private Vector3 embeddedAxisLocal;
     private Vector3 tipPositionLocal;
+
+    // Extraction owns no target connection until commit; the reservation is managed separately.
 
     public MountingNailState State => IsNetworkSessionActive() ? replicatedState.Value : offlineState;
     public event Action<MountingNail> StateOrAttachmentChanged;
@@ -200,6 +202,7 @@ public sealed class MountingNail : NetworkBehaviour, ISingleCarryPlacementCommit
     private void OnDisable()
     {
         ActiveNails.Remove(this);
+        OnExtractionLifecycleEnded();
         StateOrAttachmentChanged?.Invoke(this);
     }
 
@@ -242,6 +245,8 @@ public sealed class MountingNail : NetworkBehaviour, ISingleCarryPlacementCommit
     {
         if (IsServer)
         {
+            extractionSnapshot.Value = default;
+            offlineExtractionSnapshot = default;
             ClearEmbeddedTarget();
             replicatedHitCount.Value = 0;
             replicatedRequiredHitCount.Value = 0;
@@ -260,6 +265,7 @@ public sealed class MountingNail : NetworkBehaviour, ISingleCarryPlacementCommit
 
     public override void OnNetworkDespawn()
     {
+        OnExtractionLifecycleEnded();
         ReleaseFirstTargetFollow();
         ReleasePairConnection();
         Unsubscribe();
@@ -268,6 +274,7 @@ public sealed class MountingNail : NetworkBehaviour, ISingleCarryPlacementCommit
 
     public override void OnDestroy()
     {
+        OnExtractionLifecycleEnded();
         ReleaseFirstTargetFollow();
         ReleasePairConnection();
         Unsubscribe();
@@ -986,6 +993,32 @@ public sealed class MountingNail : NetworkBehaviour, ISingleCarryPlacementCommit
     {
         if (removalPending || !IsEmbeddedState(State)
             || NetworkManager != null && NetworkManager.IsListening && !IsServer) return null;
+        return RemoveEmbeddedNail(deferOwnershipRestoreFor);
+    }
+
+    /// <summary>Removes an embedded nail without recovery when an authorized extraction operation succeeds.</summary>
+    internal bool TryExtractForCrowbar()
+    {
+        if (removalPending || !isActiveAndEnabled || !gameObject.activeInHierarchy || !IsEmbeddedState(State)
+            || !IsConnectionTargetAlive(true)
+            || State == MountingNailState.EmbeddedPair
+                && !IsConnectionTargetAlive(false)) return false;
+
+        bool networkSessionActive = IsNetworkSessionActive();
+        if (NetworkManager != null && NetworkManager.IsListening && (!networkSessionActive || !IsSpawned || !IsServer))
+            return false;
+        if (!networkSessionActive && IsSpawned) return false;
+
+        if (BridgeDeckPanelSectionNetworkState.IsPanelProtectedFromExtraction(embeddedTarget)
+            || State == MountingNailState.EmbeddedPair
+                && BridgeDeckPanelSectionNetworkState.IsPanelProtectedFromExtraction(embeddedSecondTarget)) return false;
+
+        RemoveEmbeddedNail(null);
+        return removalPending;
+    }
+
+    private MountingNailConnectionRegistry RemoveEmbeddedNail(NetworkObject deferOwnershipRestoreFor)
+    {
         removalPending = true;
         MountingNailConnectionRegistry registry = connectionRegistry;
         ClearEmbeddedTarget(deferOwnershipRestoreFor);

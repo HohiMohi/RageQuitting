@@ -1017,7 +1017,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
                itemType == EquippableItemType.IndustrialHammer ||
                itemType == EquippableItemType.Wrench ||
                itemType == EquippableItemType.Rope ||
-               itemType == EquippableItemType.SpiritLevel;
+               itemType == EquippableItemType.SpiritLevel ||
+               itemType == EquippableItemType.Crowbar;
     }
 
     private void ClearToolVisual()
@@ -1179,6 +1180,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         int sampleCount = Mathf.CeilToInt(sampleRate * duration);
         float[] samples = new float[sampleCount];
         float weight = itemType == EquippableItemType.IndustrialHammer ||
+                       itemType == EquippableItemType.Crowbar ||
                        itemType == EquippableItemType.Pickaxe
             ? 0.75f
             : 1f;
