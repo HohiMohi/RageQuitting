@@ -1018,7 +1018,8 @@ public class PlayerFirstPersonArms : NetworkBehaviour
                itemType == EquippableItemType.Wrench ||
                itemType == EquippableItemType.Rope ||
                itemType == EquippableItemType.SpiritLevel ||
-               itemType == EquippableItemType.Crowbar;
+               itemType == EquippableItemType.Crowbar ||
+               itemType == EquippableItemType.Saw;
     }
 
     private void ClearToolVisual()

@@ -28,6 +28,7 @@ public class SingleCarryPlacementStage6PlayModeTests
     private static readonly Type InventoryType = Type.GetType("PlayerInventory, Assembly-CSharp");
     private static readonly Type EquippableItemProfileType = Type.GetType("EquippableItemSO, Assembly-CSharp");
     private static readonly Type EquippableItemType = Type.GetType("EquippableItem, Assembly-CSharp");
+    private static readonly Type CarryPlacementOrientationType = Type.GetType("CarryPlacementOrientation, Assembly-CSharp");
     private const int SingleCarryContactIsolationPriority = 64;
 
     private NetworkManager priorSingleton;
@@ -104,6 +105,12 @@ public class SingleCarryPlacementStage6PlayModeTests
     }
 
     [UnityTest]
+    public IEnumerator RemoteOwnerRotationStepsSnapWorldYawAndCommitTheExactPreviewRotation()
+    {
+        return RunRemoteControllerPlacementRebase(0, false, false, false, true);
+    }
+
+    [UnityTest]
     public IEnumerator RemoteControllerRejectsForgedAnchoredRequestFieldsAndCanRetry()
     {
         return RunRemoteControllerPlacementRebase(8);
@@ -133,7 +140,7 @@ public class SingleCarryPlacementStage6PlayModeTests
     }
 
     private IEnumerator RunRemoteControllerPlacementRebase(int motion, bool useMountingNail = false,
-        bool probeUnsyncedSurfaceMovement = false, bool testNetworkDropThrow = false)
+        bool probeUnsyncedSurfaceMovement = false, bool testNetworkDropThrow = false, bool probeSteppedRotation = false)
     {
         Assert.That(NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening, Is.True);
         priorSingleton = NetworkManager.Singleton; capturedSingleton = true;
@@ -168,26 +175,36 @@ public class SingleCarryPlacementStage6PlayModeTests
         {
             sourcePrefab = CreateActualWoodenBoardPrefabForFixture();
         }
+        if (probeSteppedRotation)
+        {
+            Component orientation = sourcePrefab.GetComponent(CarryPlacementOrientationType)
+                ?? sourcePrefab.AddComponent(CarryPlacementOrientationType);
+            CarryPlacementOrientationType.GetField("offsetEulerDegrees", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(orientation, new Vector3(0f, 90f, 0f));
+        }
         bool useNoRigidbodySurface = motion == 9;
-        GameObject surfacePrefab = probeUnsyncedSurfaceMovement
-            ? CreateActualWoodenBoardPrefabForFixture()
+        GameObject surfacePrefab = probeUnsyncedSurfaceMovement || probeSteppedRotation
+            ? sourcePrefab
             : useNoRigidbodySurface
             ? CreateNetworkCharacterSurfacePrefab(0x61A60042u)
             : CreateSourcePrefab("Stage 6 moving network surface", BaseResourceType,
                 resourceProfileObject, 0x61A60041);
-        if (probeUnsyncedSurfaceMovement) additionalFixturePrefabHashes.Add(0x61A60031u);
-        if (!probeUnsyncedSurfaceMovement)
+        if (probeUnsyncedSurfaceMovement || probeSteppedRotation) additionalFixturePrefabHashes.Add(0x61A60031u);
+        if (!probeUnsyncedSurfaceMovement && !probeSteppedRotation)
             additionalFixturePrefabHashes.Add(useNoRigidbodySurface ? 0x61A60042u : 0x61A60041u);
-        if (!useNoRigidbodySurface && !probeUnsyncedSurfaceMovement)
+        if (!useNoRigidbodySurface && !probeUnsyncedSurfaceMovement && !probeSteppedRotation)
             surfacePrefab.transform.localScale = new Vector3(1.5f, 1.5f, 0.12f);
+        GameObject[] fixtureNetworkPrefabs = sourcePrefab == surfacePrefab
+            ? new[] { sourcePrefab }
+            : new[] { sourcePrefab, surfacePrefab };
 
         ushort port = ReservePort();
         NetworkManager host = CreateManager("Stage 6 moving-surface host", playerPrefab,
-            new[] { sourcePrefab, surfacePrefab }, port);
+            fixtureNetworkPrefabs, port);
         Assert.That(host.StartHost(), Is.True); host.SetSingleton();
         yield return Until(() => host.LocalClient?.PlayerObject != null, "moving-surface host player");
         NetworkManager owner = CreateManager("Stage 6 moving-surface owner", playerPrefab,
-            new[] { sourcePrefab, surfacePrefab }, port);
+            fixtureNetworkPrefabs, port);
         Assert.That(owner.StartClient(), Is.True);
         yield return Until(() => owner.IsConnectedClient && owner.LocalClient?.PlayerObject != null
             && host.ConnectedClientsIds.Count == 2, "moving-surface remote owner");
@@ -296,7 +313,7 @@ public class SingleCarryPlacementStage6PlayModeTests
             lateServerBody.isKinematic = true;
             lateServerBody.useGravity = false;
             NetworkManager lateJoin = CreateManager("Stage 6 post-throw late join", playerPrefab,
-                new[] { sourcePrefab, surfacePrefab }, port);
+                fixtureNetworkPrefabs, port);
             Assert.That(lateJoin.StartClient(), Is.True);
             yield return Until(() => lateJoin.IsConnectedClient && lateJoin.LocalClient?.PlayerObject != null
                 && host.ConnectedClientsIds.Count == 3, "post-throw late-joining client connects");
@@ -355,10 +372,12 @@ public class SingleCarryPlacementStage6PlayModeTests
             serverSurfaceBody.isKinematic = true;
         }
 
-        if (probeUnsyncedSurfaceMovement)
+        if (probeUnsyncedSurfaceMovement || probeSteppedRotation)
         {
-            cameraObject.transform.SetPositionAndRotation(initialSurfacePosition + Vector3.up * 1.25f,
-                Quaternion.LookRotation(Vector3.down, Vector3.forward));
+            cameraObject.transform.SetPositionAndRotation(
+                probeSteppedRotation ? aimAnchor.position : initialSurfacePosition + Vector3.up * 1.25f,
+                probeSteppedRotation ? Quaternion.Euler(0f, 12.4f, 0f)
+                    : Quaternion.LookRotation(Vector3.down, Vector3.forward));
         }
         else cameraObject.transform.SetPositionAndRotation(aimAnchor.position, aimAnchor.rotation);
         InteractionType.GetMethod("SetAimCamera").Invoke(ownerPlayer.GetComponent(InteractionType), new object[] { camera });
@@ -380,9 +399,34 @@ public class SingleCarryPlacementStage6PlayModeTests
         yield return Until(() => (bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller),
             "remote owner enters placement");
         MethodInfo refresh = PlacementControllerType.GetMethod("RefreshPreview", BindingFlags.Instance | BindingFlags.NonPublic);
+        Quaternion expectedStepRotationForRemote = Quaternion.identity;
+        if (probeSteppedRotation)
+        {
+            InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.UpArrow));
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.UpArrow, Key.LeftCtrl, Key.RightArrow));
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState());
+            InputSystem.Update();
+            object[] aimArgs = { default(Ray), null, Quaternion.identity };
+            MethodInfo getAimRay = InteractionType.GetMethod("TryGetAimRay", new[]
+            {
+                typeof(Ray).MakeByRefType(), typeof(Camera).MakeByRefType(), typeof(Quaternion).MakeByRefType()
+            });
+            Assert.That((bool)getAimRay.Invoke(ownerPlayer.GetComponent(InteractionType), aimArgs), Is.True);
+            Quaternion baseYaw = (Quaternion)aimArgs[2];
+            float yawDegrees = Mathf.Repeat(Mathf.Atan2((baseYaw * Vector3.forward).x,
+                (baseYaw * Vector3.forward).z) * Mathf.Rad2Deg, 360f);
+            expectedStepRotationForRemote = Quaternion.AngleAxis(1f, Vector3.up)
+                * Quaternion.AngleAxis(1f, Vector3.right)
+                * Quaternion.Euler(0f, Mathf.FloorToInt(yawDegrees + .5f) % 360, 0f)
+                * Quaternion.Euler(0f, 90f, 0f);
+            refresh.Invoke(controller, null);
+            Assert.That(Quaternion.Angle(GetControllerGhost(controller).transform.rotation, expectedStepRotationForRemote), Is.LessThan(.1f),
+                "The spawned non-server owner applies X and Ctrl+Right Y world-degree steps on integer camera yaw, without Z.");
+        }
         if (probeUnsyncedSurfaceMovement)
-            PlacementControllerType.GetField("localRotation", BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(controller, Quaternion.AngleAxis(90f, Vector3.right));
+            SetRotationCounter(controller, "worldXDegrees", 90);
         refresh.Invoke(controller, null);
         Assert.That(PlacementControllerType.GetProperty("LastGeometryStatus").GetValue(controller).ToString(),
             Is.EqualTo("SurfaceSupported"), "The owner must sample a real contact on the spawned target.");
@@ -691,6 +735,9 @@ public class SingleCarryPlacementStage6PlayModeTests
             "accepted placement releases source ownership and pickup state");
         Vector3 expectedCommittedPosition = serverSurface.transform.TransformPoint(cachedLocalPosition);
         Quaternion expectedCommittedRotation = serverSurface.transform.rotation * cachedLocalRotation;
+        if (probeSteppedRotation)
+            Assert.That(Quaternion.Angle(expectedCommittedRotation, expectedStepRotationForRemote), Is.LessThan(.1f),
+                "The captured owner preview quaternion sent through E is the same integer-grid yaw and world-axis step.");
         NetworkObject ownerSource = Find(owner, sourceObject.NetworkObjectId);
         Rigidbody serverBody = source.GetComponent<Rigidbody>();
         Rigidbody ownerBody = ownerSource != null ? ownerSource.GetComponent<Rigidbody>() : null;
@@ -892,6 +939,8 @@ public class SingleCarryPlacementStage6PlayModeTests
         GameObject playerPrefab = CreatePlayerPrefab();
         GameObject resourcePrefab = CreateSourcePrefab("Stage 6 resource", BaseResourceType, resourceProfileObject, 0x61A60011);
         GameObject bridgePrefab = CreateSourcePrefab("Stage 6 bridge", BridgeType, bridgeProfile, 0x61A60012);
+        SetCarryOrientationOffset(resourcePrefab, new Vector3(0f, 90f, 0f));
+        SetCarryOrientationOffset(bridgePrefab, new Vector3(0f, 90f, 0f));
         Assert.That(GetPrefabHash(playerPrefab.GetComponent<NetworkObject>()), Is.EqualTo(0x61A60001u));
         ushort port = ReservePort();
         NetworkManager host = CreateManager("Stage 6 host", playerPrefab, new[] { resourcePrefab, bridgePrefab }, port);
@@ -993,12 +1042,13 @@ public class SingleCarryPlacementStage6PlayModeTests
 
         Vector3 originA = GetAimAnchor(ownerA.LocalClient.PlayerObject).position;
         Vector3 originB = GetAimAnchor(ownerB.LocalClient.PlayerObject).position;
-        Quaternion rotation = Quaternion.Euler(0f, 37f, 0f);
+        Quaternion rotation = Quaternion.Euler(0f, 37f, 0f) * ResolveCarryOrientationOffset(resourcePrefab);
+        Quaternion bridgeRotation = Quaternion.Euler(0f, 37f, 0f) * ResolveCarryOrientationOffset(bridgePrefab);
         Vector3 sharedPose = originA + Vector3.forward * 2f;
         PreviewType.GetMethod("SetOwnerPreview").Invoke(Preview(ownerA.LocalClient.PlayerObject),
             new object[] { Find(ownerA, resourceNetObj.NetworkObjectId).gameObject, sharedPose, rotation, true });
         PreviewType.GetMethod("SetOwnerPreview").Invoke(Preview(ownerB.LocalClient.PlayerObject),
-            new object[] { Find(ownerB, bridgeNetObj.NetworkObjectId).gameObject, sharedPose, rotation, true });
+            new object[] { Find(ownerB, bridgeNetObj.NetworkObjectId).gameObject, sharedPose, bridgeRotation, true });
         yield return Until(() => PreviewActive(Preview(host.ConnectedClients[ownerAId].PlayerObject))
             && PreviewActive(Preview(host.ConnectedClients[ownerBId].PlayerObject)), "both replicated placement previews");
 
@@ -1087,7 +1137,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         Vector3 bridgeHeldPoseBeforePlacement = bridgeNetObj.transform.position;
         Send(ownerA, Preview(ownerA.LocalClient.PlayerObject), resourceNetObj, 8, sharedPose, rotation,
             new Ray(originA, Vector3.forward));
-        Send(ownerB, Preview(ownerB.LocalClient.PlayerObject), bridgeNetObj, 2, sharedPose, rotation,
+        Send(ownerB, Preview(ownerB.LocalClient.PlayerObject), bridgeNetObj, 2, sharedPose, bridgeRotation,
             new Ray(originB, Vector3.forward));
         yield return Until(() => LastRequest(Preview(ownerA.LocalClient.PlayerObject)) == 8
             && LastRequest(Preview(ownerB.LocalClient.PlayerObject)) == 2, "both contending placement responses");
@@ -1103,7 +1153,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         Assert.That(GetBody(winner.gameObject).linearVelocity.sqrMagnitude, Is.LessThan(0.000001f));
         Assert.That(GetBody(winner.gameObject).angularVelocity.sqrMagnitude, Is.LessThan(0.000001f));
         Assert.That(GetBody(winner.gameObject).useGravity, Is.True);
-        Assert.That(Quaternion.Angle(winner.transform.rotation, rotation), Is.LessThan(0.1f));
+        Assert.That(Quaternion.Angle(winner.transform.rotation, resultA == "Accepted" ? rotation : bridgeRotation), Is.LessThan(0.1f));
 
         // The loser remains held and can choose another valid point. This also exercises both backends.
         NetworkManager loserOwner = resultA == "Accepted" ? ownerB : ownerA;
@@ -1111,14 +1161,15 @@ public class SingleCarryPlacementStage6PlayModeTests
         Vector3 loserOrigin = GetAimAnchor(loserOwner.LocalClient.PlayerObject).position;
         Vector3 secondPose = loserOrigin + Vector3.right * 2f;
         ulong retryId = LastRequest(Preview(loserOwner.LocalClient.PlayerObject)) + 1;
-        Send(loserOwner, Preview(loserOwner.LocalClient.PlayerObject), loser, retryId, secondPose, rotation,
+        Quaternion loserRotation = loser == resourceNetObj ? rotation : bridgeRotation;
+        Send(loserOwner, Preview(loserOwner.LocalClient.PlayerObject), loser, retryId, secondPose, loserRotation,
             new Ray(loserOrigin, Vector3.right));
         yield return Until(() => LastRequest(Preview(loserOwner.LocalClient.PlayerObject)) == retryId,
             "loser retry response");
         AssertResult(loserOwner.LocalClient.PlayerObject, "Accepted");
         Assert.That(loser.OwnerClientId, Is.EqualTo(NetworkManager.ServerClientId));
         Assert.That(Vector3.Distance(loser.transform.position, secondPose), Is.LessThan(0.003f));
-        Assert.That(Quaternion.Angle(loser.transform.rotation, rotation), Is.LessThan(0.1f));
+        Assert.That(Quaternion.Angle(loser.transform.rotation, loserRotation), Is.LessThan(0.1f));
 
         yield return Until(() => Find(ownerA, resourceNetObj.NetworkObjectId).OwnerClientId == NetworkManager.ServerClientId
             && Find(ownerB, resourceNetObj.NetworkObjectId).OwnerClientId == NetworkManager.ServerClientId
@@ -1130,8 +1181,8 @@ public class SingleCarryPlacementStage6PlayModeTests
             && Vector3.Distance(Find(ownerB, loser.NetworkObjectId).transform.position, secondPose) < 0.02f
             && Quaternion.Angle(Find(ownerA, resourceNetObj.NetworkObjectId).transform.rotation, rotation) < 0.1f
             && Quaternion.Angle(Find(ownerB, resourceNetObj.NetworkObjectId).transform.rotation, rotation) < 0.1f
-            && Quaternion.Angle(Find(ownerA, bridgeNetObj.NetworkObjectId).transform.rotation, rotation) < 0.1f
-            && Quaternion.Angle(Find(ownerB, bridgeNetObj.NetworkObjectId).transform.rotation, rotation) < 0.1f,
+            && Quaternion.Angle(Find(ownerA, bridgeNetObj.NetworkObjectId).transform.rotation, bridgeRotation) < 0.1f
+            && Quaternion.Angle(Find(ownerB, bridgeNetObj.NetworkObjectId).transform.rotation, bridgeRotation) < 0.1f,
             "all peers receive exact server pose and rotation");
         yield return Until(() => !IsPickedUp(Find(host, resourceNetObj.NetworkObjectId))
             && !IsPickedUp(Find(host, bridgeNetObj.NetworkObjectId))
@@ -1174,7 +1225,8 @@ public class SingleCarryPlacementStage6PlayModeTests
                     NetworkObject observed = Find(observer, committedObjects[i].NetworkObjectId);
                     Assert.That(Vector3.Distance(observed.transform.position, committedPoses[i]), Is.LessThan(0.02f),
                         $"Released pose changed on peer {observer.name} at sample {observedTicks}; a queued previous-owner update may have snapped it back.");
-                    Assert.That(Quaternion.Angle(observed.transform.rotation, rotation), Is.LessThan(0.1f),
+                    Quaternion expectedRotation = committedObjects[i] == resourceNetObj ? rotation : bridgeRotation;
+                    Assert.That(Quaternion.Angle(observed.transform.rotation, expectedRotation), Is.LessThan(0.1f),
                         $"Released rotation changed on peer {observer.name} at sample {observedTicks}.");
                     if (Vector3.Distance(previousHeldPoses[i], committedPoses[i]) > 0.1f)
                         Assert.That(Vector3.Distance(observed.transform.position, previousHeldPoses[i]), Is.GreaterThan(0.1f),
@@ -1186,6 +1238,28 @@ public class SingleCarryPlacementStage6PlayModeTests
         Assert.That(GetHeld(loserOwner.LocalClient.PlayerObject), Is.Null, "Accepted release clears local holder bookkeeping.");
         Assert.That(Find(ownerA, winner.NetworkObjectId).transform.parent, Is.Null, "Owner-side held-object parenting must be detached.");
         Assert.That(Find(ownerA, loser.NetworkObjectId).transform.parent, Is.Null, "Loser-side held-object parenting must be detached after retry.");
+
+        NetworkManager placedLateJoin = CreateManager("Stage 6 late join after placement", playerPrefab,
+            new[] { resourcePrefab, bridgePrefab }, port);
+        Assert.That(placedLateJoin.StartClient(), Is.True);
+        yield return Until(() => placedLateJoin.IsConnectedClient && placedLateJoin.LocalClient?.PlayerObject != null
+            && host.ConnectedClientsIds.Count == 5
+            && Find(placedLateJoin, resourceNetObj.NetworkObjectId) != null
+            && Find(placedLateJoin, bridgeNetObj.NetworkObjectId) != null,
+            "late join receives both already-placed sources");
+        DisableDisconnectFixtureRemotePlayerPhysics(host, new[] { placedLateJoin });
+        DisableMirrorColliders(placedLateJoin, resourceNetObj.NetworkObjectId, host);
+        DisableMirrorColliders(placedLateJoin, bridgeNetObj.NetworkObjectId, host);
+        DisposeFixtureInputMaps(null);
+        yield return Until(() => Quaternion.Angle(Find(placedLateJoin, resourceNetObj.NetworkObjectId).transform.rotation, rotation) < 0.1f
+            && Quaternion.Angle(Find(placedLateJoin, bridgeNetObj.NetworkObjectId).transform.rotation, bridgeRotation) < 0.1f,
+            "post-placement late join receives the already-composed rotations");
+        Assert.That(Vector3.Distance(Find(placedLateJoin, resourceNetObj.NetworkObjectId).transform.position,
+            resultA == "Accepted" ? sharedPose : secondPose), Is.LessThan(0.02f));
+        Assert.That(Vector3.Distance(Find(placedLateJoin, bridgeNetObj.NetworkObjectId).transform.position,
+            resultA == "Accepted" ? secondPose : sharedPose), Is.LessThan(0.02f));
+        Assert.That(Quaternion.Angle(Find(placedLateJoin, resourceNetObj.NetworkObjectId).transform.rotation, rotation), Is.LessThan(0.1f));
+        Assert.That(Quaternion.Angle(Find(placedLateJoin, bridgeNetObj.NetworkObjectId).transform.rotation, bridgeRotation), Is.LessThan(0.1f));
 
         // Stale duplicate IDs are rejected without a second mutation.
         Send(ownerA, Preview(ownerA.LocalClient.PlayerObject), resourceNetObj, 5, sharedPose, rotation,
@@ -1642,6 +1716,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         camera.nearClipPlane = 0.2f;
         GameObject playerPrefab = CreatePlayerPrefab();
         GameObject resourcePrefab = CreateActualWoodenBoardPrefabForFixture();
+        SetCarryOrientationOffset(resourcePrefab, new Vector3(0f, 90f, 0f));
         ushort port = ReservePort();
         NetworkManager host = CreateManager("Stage 6 controller host", playerPrefab, new[] { resourcePrefab }, port);
         Assert.That(host.StartHost(), Is.True); host.SetSingleton();
@@ -1712,13 +1787,16 @@ public class SingleCarryPlacementStage6PlayModeTests
         Transform ghost = GetControllerGhost(controller).transform;
         Vector3 frozenPosition = ghost.position;
         Quaternion frozenRotation = ghost.rotation;
-        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.UpArrow));
-        InputSystem.Update();
-        cameraObject.transform.position += Vector3.right;
-        PlacementControllerType.GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(controller, null);
         PressKey(Key.F);
         PressKey(Key.Escape);
         PressKey(Key.E);
+        Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.True,
+            "F, Escape, and E do not bypass an in-flight placement request.");
+
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.UpArrow, Key.LeftCtrl, Key.RightArrow));
+        InputSystem.Update();
+        cameraObject.transform.position += Vector3.right;
+        PlacementControllerType.GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(controller, null);
         Assert.That((bool)BaseResourceType.GetMethod("CanCompleteNetworkSingleCarryPlacement").Invoke(
             serverSourcePlaceable, new[] { (object)owner.LocalClientId, serverHolder }), Is.True,
             "Server eligibility changed before the first placement request: "
@@ -1734,6 +1812,29 @@ public class SingleCarryPlacementStage6PlayModeTests
         Assert.That((string)PlacementControllerType.GetProperty("PlacementStatusLabel").GetValue(controller),
             Is.EqualTo("Aim out of sync; try again"));
         AssertHeld(owner, sourceNetworkObject);
+
+        // The request's neutral gate survives its refusal. Modifier changes and the held arrow do
+        // not rotate or catch up until the physical arrow is released; a fresh chord then steps once.
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+        Quaternion blockedRotation = ghost.rotation;
+        float neutralGateDeadline = Time.realtimeSinceStartup + .6f;
+        while (Time.realtimeSinceStartup < neutralGateDeadline) yield return null;
+        Assert.That(Quaternion.Angle(blockedRotation, ghost.rotation), Is.LessThan(.001f),
+            "Releasing Ctrl while Right remains held cannot bypass the pending-request neutral gate or replay repeats.");
+
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState());
+        InputSystem.Update();
+        yield return null;
+        Quaternion beforeFreshChord = ghost.rotation;
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.LeftCtrl, Key.RightArrow));
+        InputSystem.Update();
+        yield return null;
+        Assert.That(Quaternion.Angle(Quaternion.AngleAxis(1f, Vector3.up) * beforeFreshChord, ghost.rotation),
+            Is.LessThan(.1f), "After a real neutral release, a fresh Ctrl+Right chord applies exactly one Y step.");
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState());
+        InputSystem.Update();
+        yield return null;
 
         // Escape exits after refusal. A later forced disable must also exit while a second request is pending;
         // its eventual response must not revive the placement session.
@@ -1955,6 +2056,20 @@ public class SingleCarryPlacementStage6PlayModeTests
         return prefab;
     }
 
+    private static void SetCarryOrientationOffset(GameObject root, Vector3 eulerDegrees)
+    {
+        Component orientation = root.GetComponent(CarryPlacementOrientationType)
+            ?? root.AddComponent(CarryPlacementOrientationType);
+        CarryPlacementOrientationType.GetField("offsetEulerDegrees", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(orientation, eulerDegrees);
+    }
+
+    private static Quaternion ResolveCarryOrientationOffset(GameObject root)
+    {
+        MethodInfo resolve = CarryPlacementOrientationType.GetMethod("ResolveOffset", BindingFlags.Public | BindingFlags.Static);
+        return (Quaternion)resolve.Invoke(null, new object[] { root });
+    }
+
     private NetworkManager CreateManager(string name, GameObject playerPrefab, GameObject[] sourcePrefabs, ushort port)
     {
         GameObject root = new GameObject(name); roots.Add(root);
@@ -2013,6 +2128,12 @@ public class SingleCarryPlacementStage6PlayModeTests
     }
 
     private static Component Preview(NetworkObject player) => player.GetComponent(PreviewType);
+
+    private static void SetRotationCounter(Component controller, string counterName, int value)
+    {
+        object state = PlacementControllerType.GetField("rotationState", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        state.GetType().GetField(counterName, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(state, value);
+    }
     private static GameObject GetControllerGhost(Component controller)
     {
         object ghost = PlacementControllerType.GetField("ghost", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);

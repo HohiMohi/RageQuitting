@@ -991,7 +991,11 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
 
     internal MountingNailConnectionRegistry RemoveForPanelReset(NetworkObject deferOwnershipRestoreFor)
     {
+        BridgeDeckAreaRequirement.RefreshPanelBeforeNailRemoval(embeddedTarget);
+        BridgeDeckAreaRequirement.RefreshPanelBeforeNailRemoval(embeddedSecondTarget);
         if (removalPending || !IsEmbeddedState(State)
+            || BridgeDeckAreaRequirement.IsAreaPanelLocked(embeddedTarget)
+            || State == MountingNailState.EmbeddedPair && BridgeDeckAreaRequirement.IsAreaPanelLocked(embeddedSecondTarget)
             || NetworkManager != null && NetworkManager.IsListening && !IsServer) return null;
         return RemoveEmbeddedNail(deferOwnershipRestoreFor);
     }
@@ -1011,7 +1015,10 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
 
         if (BridgeDeckPanelSectionNetworkState.IsPanelProtectedFromExtraction(embeddedTarget)
             || State == MountingNailState.EmbeddedPair
-                && BridgeDeckPanelSectionNetworkState.IsPanelProtectedFromExtraction(embeddedSecondTarget)) return false;
+                && BridgeDeckPanelSectionNetworkState.IsPanelProtectedFromExtraction(embeddedSecondTarget)
+            || BridgeDeckAreaRequirement.RefreshPanelBeforeNailRemoval(embeddedTarget)
+            || State == MountingNailState.EmbeddedPair
+                && BridgeDeckAreaRequirement.RefreshPanelBeforeNailRemoval(embeddedSecondTarget)) return false;
 
         RemoveEmbeddedNail(null);
         return removalPending;

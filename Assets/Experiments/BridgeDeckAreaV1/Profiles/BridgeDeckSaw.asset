@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6022b08370b0baa42b8b2acf2ce498eb, type: 3}
+  m_Name: BridgeDeckSaw
+  m_EditorClassIdentifier: Assembly-CSharp::EquippableItemSO
+  itemName: Deck Saw
+  uiSprite: {fileID: 8712388102062912063, guid: 1c01b0bb2618f2b4889212ec0169e3e7, type: 2}
+  equippableItemPrefab: {fileID: 4193596069229657792, guid: 3eff26ab0efcf424e94f7a4f6e6faecc, type: 3}
+  inventorySlotsRequired: 2
+  actionRange: 2.5
+  actionCooldown: 0.2
+  damage: 0
+  resourceDamage: 0
+  constructionWorkPower: 0
+  movementSpeedPenalty: 0.2
+  actionRepeatability: 0
+  itemType: 1
+  actionProfile: {fileID: 11400000, guid: 5ab94b8ad1116c743a99b1751f8fef38, type: 2}
+  impactImpulseProfile: {fileID: 0}
+  worldPhysicsProfile: {fileID: 11400000, guid: d1900acf711d1874eab605151d1fd2bf, type: 2}
+  ropeProfile: {fileID: 0}
+  spiritLevelProfile: {fileID: 0}
+  sawCutProfile: {fileID: 11400000, guid: 774d7758a1969614d9e9beab70a40cc1, type: 2}

@@ -84,7 +84,10 @@ public sealed class BridgeDeckPanelMounting : MonoBehaviour, IInteractionPromptP
         {
             BridgeDeckPanelMounting panel = ActivePanels[i];
             if (panel == null) { ActivePanels.RemoveAt(i); continue; }
-            if (panel.isActiveAndEnabled && panel.IsPhysicalPanel && panel.gameObject.scene == scene) results.Add(panel);
+            // New area plates opt into a separate continuous assessment and must never
+            // acquire an adjacent legacy four-slot claim, even if both markers coexist.
+            if (panel.isActiveAndEnabled && panel.IsPhysicalPanel && panel.gameObject.scene == scene
+                && !panel.TryGetComponent(out BridgeDeckAreaPanel _)) results.Add(panel);
         }
     }
 
@@ -93,6 +96,11 @@ public sealed class BridgeDeckPanelMounting : MonoBehaviour, IInteractionPromptP
     public void GetInteractionPrompts(Transform interactor, List<InteractionPrompt> prompts)
     {
         if (!IsPhysicalPanel || prompts == null) return;
+        if (TryGetComponent(out BridgeDeckAreaPanel areaPanel))
+        {
+            areaPanel.GetInteractionPrompts(interactor, prompts);
+            return;
+        }
         if (TryGetComponent(out MountableBridgeComponent mountable)
             && mountable.CanBePickedUp && !mountable.IsPickedUp)
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Pick up"));
@@ -104,6 +112,11 @@ public sealed class BridgeDeckPanelMounting : MonoBehaviour, IInteractionPromptP
     internal void AddPlacementInformationPrompts(List<InteractionPrompt> prompts)
     {
         if (!IsPhysicalPanel || prompts == null) return;
+        if (TryGetComponent(out BridgeDeckAreaPanel areaPanel))
+        {
+            areaPanel.AddAreaInformationPrompts(prompts);
+            return;
+        }
         bool hasAssessment = BridgeDeckPanelSectionNetworkState.TryGetAssessmentFor(this, out BridgeDeckPanelReplicatedState state);
         if (hasAssessment && state.Complete)
         {

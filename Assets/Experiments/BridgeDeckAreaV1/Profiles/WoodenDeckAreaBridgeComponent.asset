@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4965c4cc9079854eb92bdd08e57d5f5, type: 3}
+  m_Name: WoodenDeckAreaBridgeComponent
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeComponentSO
+  componentName: Wooden Deck Area
+  componentSprite: {fileID: 0}
+  componentPrefab: {fileID: 3045501216062563860, guid: a05143bab2df71a40b3c97c671564cd2, type: 3}
+  bridgeComponentType: 2
+  componentAdvancementLevel: 0
+  supportedEquippableItemTypeList: 08000000
+  assemblingProgressNeeded: 40
+  needAssembling: 1
+  constructionWorkflow: {fileID: 0}
+  abutmentConstructionWorkflow: {fileID: 0}
+  girderConstructionWorkflow: {fileID: 0}
+  crossBeamConstructionWorkflow: {fileID: 0}
+  diagonalBracingConstructionWorkflow: {fileID: 0}
+  deckPanelConstructionWorkflow: {fileID: 11400000, guid: 42398ce5e6838dd41a65b00e7ff049e4, type: 2}

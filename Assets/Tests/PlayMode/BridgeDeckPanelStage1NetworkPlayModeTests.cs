@@ -358,9 +358,17 @@ public sealed class BridgeDeckPanelStage1NetworkPlayModeTests
         Assert.That(testKeyboard.fKey.isPressed, Is.False, "The fresh loopback test keyboard must begin with F released.");
         InputSystem.QueueStateEvent(testKeyboard, new KeyboardState(Key.F));
         InputSystem.Update();
-        yield return WaitFor(() => (bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller)
-            && (bool)controllerType.GetProperty("CanConfirmPlacement").GetValue(controller),
-            "the actual F-triggered panel preview becomes valid and confirmable");
+        float previewDeadline = Time.realtimeSinceStartup + 15f;
+        while ((!((bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller)
+            && (bool)controllerType.GetProperty("CanConfirmPlacement").GetValue(controller)))
+            && Time.realtimeSinceStartup < previewDeadline)
+            yield return null;
+        bool previewValid = (bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller);
+        bool canConfirmPreview = (bool)controllerType.GetProperty("CanConfirmPlacement").GetValue(controller);
+        Assert.That(previewValid && canConfirmPreview, Is.True,
+            "Timed out waiting for the actual F-triggered panel preview to become valid and confirmable. "
+            + DescribePlacementWaitState(controller, client.LocalClient.PlayerObject, remotePanel, aimCamera,
+                testKeyboard, supportCenter));
         Assert.That((bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller), Is.True,
             $"The remote client's production geometry preview finds the world support. Active={controllerType.GetProperty("IsActive").GetValue(controller)}; geometry={controllerType.GetProperty("LastGeometryStatus").GetValue(controller)}; validation={controllerType.GetProperty("LastValidation").GetValue(controller)}; player={remotePlayer.position}; aim={aimObject.transform.position}/{aimObject.transform.forward}; supportTop={supportCenter + Vector3.up * 0.5f}.");
         Assert.That((bool)controllerType.GetProperty("CanConfirmPlacement").GetValue(controller), Is.True,
@@ -578,6 +586,74 @@ public sealed class BridgeDeckPanelStage1NetworkPlayModeTests
         float deadline = Time.realtimeSinceStartup + 15f;
         while (!condition() && Time.realtimeSinceStartup < deadline) yield return null;
         Assert.That(condition(), Is.True, "Timed out while waiting for " + operation + ".");
+    }
+
+    private static string DescribePlacementWaitState(Component controller, NetworkObject player,
+        NetworkObject panel, Camera aimCamera, Keyboard keyboard, Vector3 supportCenter)
+    {
+        if (controller == null || player == null || panel == null)
+            return $"Fixture references controller={controller != null}, player={player != null}, panel={panel != null}.";
+
+        System.Type controllerType = controller.GetType();
+        object Read(string propertyName) => controllerType.GetProperty(propertyName)?.GetValue(controller) ?? "<missing>";
+
+        PlayerInput playerInput = player.GetComponent<PlayerInput>();
+        System.Type playerInputNewType = System.Type.GetType("PlayerInputNew, Assembly-CSharp");
+        Component playerInputNew = playerInputNewType != null ? player.GetComponent(playerInputNewType) : null;
+        object generatedActions = playerInputNew != null
+            ? playerInputNewType.GetField("playerGameInputActions", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.GetValue(playerInputNew)
+            : null;
+        InputActionAsset gameActions = generatedActions != null
+            ? generatedActions.GetType().GetProperty("asset")?.GetValue(generatedActions) as InputActionAsset
+            : null;
+        System.Text.StringBuilder fActions = new System.Text.StringBuilder();
+        if (gameActions != null)
+        {
+            foreach (InputActionMap map in gameActions.actionMaps)
+            foreach (InputAction action in map.actions)
+            {
+                bool hasFBinding = false;
+                foreach (InputBinding binding in action.bindings)
+                    if (!string.IsNullOrEmpty(binding.path) && binding.path.EndsWith("/f", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasFBinding = true;
+                        break;
+                    }
+                if (hasFBinding)
+                    fActions.Append($"{map.name}/{action.name}:enabled={action.enabled},phase={action.phase},pressed={action.IsPressed()}; ");
+            }
+        }
+
+        string raySummary = "<unavailable>";
+        System.Type interactionType = System.Type.GetType("PlayerInteractionNew, Assembly-CSharp");
+        Component interaction = interactionType != null ? player.GetComponent(interactionType) : null;
+        if (interaction != null)
+        {
+            object[] rayArgs = { default(Ray) };
+            System.Reflection.MethodInfo tryGetAimRay = interactionType.GetMethod("TryGetAimRay",
+                new[] { typeof(Ray).MakeByRefType() });
+            if (tryGetAimRay != null && (bool)tryGetAimRay.Invoke(interaction, rayArgs))
+            {
+                Ray ray = (Ray)rayArgs[0];
+                bool hit = Physics.Raycast(ray, out RaycastHit hitInfo, 8f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+                raySummary = hit ? $"{ray}; hit={hitInfo.collider.name}@{hitInfo.point} d={hitInfo.distance:F3}"
+                    : $"{ray}; hit=<none within 8m>";
+            }
+        }
+
+        Component mountable = panel.GetComponent(System.Type.GetType("MountableBridgeComponent, Assembly-CSharp"));
+        object pickedUp = mountable != null
+            ? mountable.GetType().GetProperty("IsPickedUp")?.GetValue(mountable) ?? "<missing>" : "<missing>";
+        object gameplayInputActive = playerInputNew != null
+            ? playerInputNewType.GetProperty("IsSingleCarryPlacementActive")?.GetValue(playerInputNew) ?? "<missing>"
+            : "<missing>";
+        return $"active={Read("IsActive")}; valid={Read("IsCurrentPlacementValid")}; confirm={Read("CanConfirmPlacement")}; "
+            + $"pending={Read("IsRequestPending")}; geometry={Read("LastGeometryStatus")}; validation={Read("LastValidation")}; "
+            + $"F={keyboard.fKey.isPressed}; playerInputActive={playerInput != null && playerInput.inputIsActive}; placementInputActive={gameplayInputActive}; "
+            + $"F actions=[{fActions}]; panelSpawned={panel.IsSpawned}; panelOwner={panel.OwnerClientId}; pickedUp={pickedUp}; "
+            + $"player={player.transform.position}/{player.transform.rotation}; aim={aimCamera.transform.position}/{aimCamera.transform.forward}; "
+            + $"ray={raySummary}; supportTop={supportCenter + Vector3.up * 0.5f}.";
     }
 
     private static ushort ReservePort()

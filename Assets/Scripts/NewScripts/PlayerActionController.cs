@@ -124,6 +124,7 @@ public partial class PlayerActionController : NetworkBehaviour
     private void OnDisable()
     {
         performAction = false;
+        CancelSawCuttingImmediately();
         CancelCrowbarExtractionImmediately();
         CancelCurrentAction();
     }
@@ -138,6 +139,8 @@ public partial class PlayerActionController : NetworkBehaviour
             _playerInputNew.OnActionCanceled -= HandleActionCanceled;
         }
         if (_inventory != null) _inventory.OnSelectedItemChanged -= Inventory_OnSelectedItemChanged;
+        CancelSawCuttingImmediately();
+        CleanupSawCuttingVisuals();
         CancelCrowbarExtractionImmediately();
         base.OnDestroy();
     }
@@ -145,6 +148,7 @@ public partial class PlayerActionController : NetworkBehaviour
     private void Inventory_OnSelectedItemChanged(object sender, PlayerInventory.OnSelectedItemChangedEventArgs e)
     {
         Debug.Log("Action parameters changed");
+        CancelSawCuttingImmediately();
         CancelCrowbarExtractionImmediately();
         CancelCurrentAction();
         SetActionParameters(e.selectedItem);
@@ -157,10 +161,12 @@ public partial class PlayerActionController : NetworkBehaviour
     private void HandleActionCanceled(object sender, EventArgs e)
     {
         performAction = false;
+        CancelSawCuttingImmediately();
     }
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (IsSawSelected()) return;
         if (IsCrowbarSelected())
         {
             BeginCrowbarExtractionOnFreshPress();
@@ -189,6 +195,17 @@ public partial class PlayerActionController : NetworkBehaviour
 
     private void HandleAction(object sender, EventArgs e)
     {
+        if (IsSawSelected())
+        {
+            performAction = false;
+            if (_playerInteraction != null && _playerInteraction.TryConsumeContextAction(ContextActionKind.Primary))
+            {
+                CancelSawCuttingImmediately();
+                return;
+            }
+            BeginSawCutOnFreshPress();
+            return;
+        }
         if (IsCrowbarExtractionActiveOrPending) return;
         if (_playerInteraction != null && _playerInteraction.TryConsumeContextAction(ContextActionKind.Primary))
         {
@@ -219,6 +236,7 @@ public partial class PlayerActionController : NetworkBehaviour
 
     public bool PerformAction()
     {
+        if (IsSawSelected()) return false;
         if (IsCrowbarExtractionActiveOrPending) return false;
         EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
         if (TryConsumeAimedMountingNail(selectedItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
@@ -612,6 +630,7 @@ public partial class PlayerActionController : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        CancelSawCuttingImmediately();
         HandleCrowbarExtractionNetworkDespawn();
     }
 
@@ -1044,6 +1063,12 @@ public partial class PlayerActionController : NetworkBehaviour
 
     public void TryPerformAction()
     {
+        if (IsSawSelected())
+        {
+            performAction = false;
+            CancelCurrentAction();
+            return;
+        }
         if (_concreteTrap != null && _concreteTrap.BlocksGameplayInput)
         {
             performAction = false;

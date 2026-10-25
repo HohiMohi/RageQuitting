@@ -717,7 +717,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3077029876
+  GlobalObjectIdHash: 4249334050
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -793,6 +793,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c5d4b23af0b101b49b6a69db7d20d4ef, type: 2}
   - {fileID: 11400000, guid: b33c0b6ac7ee79d4da639b0df10359bd, type: 2}
   - {fileID: 11400000, guid: e28c3d4974a16c944ab98a9e85d48419, type: 2}
+  - {fileID: 11400000, guid: a40e0956e12373c4096fa003cff6a182, type: 2}
   _selectedItemIndex: 0
   _inventorySlots: 2
   _currentInventoryOccupiedSlots: 0
@@ -972,6 +973,7 @@ MonoBehaviour:
     handleMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
     axeModelPrefab: {fileID: 2796881867761008965, guid: 72436a0b4cd526a42b270c5b52a3e025, type: 3}
     pickaxeModelPrefab: {fileID: 100000, guid: 040401f82f26aae4c8b7877a7aef06d6, type: 3}
+    sawModelPrefab: {fileID: 0}
   toolLocalPosition: {x: 0.02, y: -0.06, z: 0.38}
   toolLocalEulerAngles: {x: 0, y: 270, z: 0}
   toolLocalScale: {x: 0.5, y: 0.5, z: 0.5}
@@ -1000,6 +1002,7 @@ MonoBehaviour:
     handleMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
     axeModelPrefab: {fileID: 2796881867761008965, guid: 72436a0b4cd526a42b270c5b52a3e025, type: 3}
     pickaxeModelPrefab: {fileID: 100000, guid: 040401f82f26aae4c8b7877a7aef06d6, type: 3}
+    sawModelPrefab: {fileID: 4303147952206579606, guid: 198b500e9b0236146953ca9768464dd1, type: 3}
   rightHandBoneName: R_Hand
   backBoneName: Spine02
   backBoneFallbackName: Spine01

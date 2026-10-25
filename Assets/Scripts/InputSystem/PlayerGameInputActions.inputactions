@@ -131,6 +131,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "SingleCarryPlacementControlModifier",
+                    "type": "Button",
+                    "id": "118b8869-cef8-47f8-8766-15a813ba1f3a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -375,6 +384,17 @@
                     "action": "SingleCarryPlacementRotation",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "13806bc4-be3f-49fe-9460-5acc157003ec",
+                    "path": "<Keyboard>/ctrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SingleCarryPlacementControlModifier",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },

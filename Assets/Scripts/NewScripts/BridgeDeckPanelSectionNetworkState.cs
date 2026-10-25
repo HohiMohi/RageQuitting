@@ -241,6 +241,8 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
 
     internal static bool TryGetAssessmentFor(BridgeDeckPanelMounting marker, out BridgeDeckPanelReplicatedState state)
     {
+        if (marker != null && marker.TryGetComponent(out BridgeDeckAreaPanel _))
+        { state = default; return false; }
         for (int i = 0; i < ActiveSections.Count; i++)
         {
             BridgeDeckPanelSectionNetworkState completedSection = ActiveSections[i];
@@ -256,6 +258,8 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
     internal static bool TryGetAssessmentFor(BridgeDeckPanelMounting marker, out BridgeDeckPanelReplicatedState state,
         out BridgeDeckPanelConstructionSite site)
     {
+        if (marker != null && marker.TryGetComponent(out BridgeDeckAreaPanel _))
+        { state = default; site = null; return false; }
         if (marker != null)
         {
             // Completed panels retain their original claim even after moving away from their section.
@@ -387,6 +391,7 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
 
     private void EvaluatePanel(BridgeDeckPanelMounting marker, MountableBridgeComponent panel)
     {
+        if (marker == null || panel == null || marker.TryGetComponent(out BridgeDeckAreaPanel _)) return;
         int slotIndex = FindNearestSlot(panel.transform.position);
         BridgeDeckPanelReplicatedState previous;
         bool hasPrevious = TryGetPanelState(marker, out previous);
@@ -437,7 +442,8 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
 
     internal bool TryResetIncompletePanelWithHammer(BridgeDeckPanelMounting marker, Vector3 awayDirection)
     {
-        if (marker == null || !marker.isActiveAndEnabled || !marker.gameObject.activeInHierarchy
+        if (marker == null || marker.TryGetComponent(out BridgeDeckAreaPanel _)
+            || !marker.isActiveAndEnabled || !marker.gameObject.activeInHierarchy
             || !marker.IsPhysicalPanel || !HasEvaluationAuthority()
             || marker.ResetImpulsePending) return false;
         EnsureInitialized();
@@ -447,6 +453,9 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
             || !panel.IsPhysicalDeckPanel || panel.IsPickedUp
             || !panel.isActiveAndEnabled || !body.gameObject.activeInHierarchy
             || !IsFinite(awayDirection)) return false;
+        if (panel.TryGetComponent(out BridgeDeckAreaPanel areaPanel)
+            && (areaPanel.IsLockedForCompletedArea
+                || BridgeDeckAreaRequirement.RefreshPanelBeforeNailRemoval(areaPanel.transform))) return false;
 
         // Completed claims stay durable even after moving the panel away from its original slot.
         if (HasDurableCompletionClaim(marker)) return false;
@@ -548,6 +557,9 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
     internal static bool IsPanelProtectedFromExtraction(Transform target)
     {
         if (target == null) return false;
+        BridgeDeckAreaPanel areaPanel = target.GetComponentInParent<BridgeDeckAreaPanel>();
+        if (areaPanel != null)
+            return areaPanel.IsLockedForCompletedArea;
         BridgeDeckPanelMounting marker = target.GetComponentInParent<BridgeDeckPanelMounting>();
         MountableBridgeComponent panel = marker != null ? marker.GetComponent<MountableBridgeComponent>() : null;
         if (marker == null || panel == null || !panel.IsPhysicalDeckPanel) return false;
@@ -785,6 +797,7 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
 
     private static BridgeDeckPanelSectionNetworkState FindOwningSection(BridgeDeckPanelMounting panel)
     {
+        if (panel == null || panel.TryGetComponent(out BridgeDeckAreaPanel _)) return null;
         BridgeDeckPanelSectionNetworkState best = null;
         float closest = float.PositiveInfinity;
         for (int s = 0; s < ActiveSections.Count; s++)
@@ -804,7 +817,8 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
 
     private static bool IsCompatibleNetworkScope(BridgeDeckPanelSectionNetworkState candidate, BridgeDeckPanelMounting panel)
     {
-        if (candidate == null || panel == null || candidate.gameObject.scene != panel.gameObject.scene) return false;
+        if (candidate == null || panel == null || panel.TryGetComponent(out BridgeDeckAreaPanel _)
+            || candidate.gameObject.scene != panel.gameObject.scene) return false;
         MountableBridgeComponent mountable = panel.GetComponent<MountableBridgeComponent>();
         NetworkManager panelManager = mountable != null ? mountable.NetworkManager : null;
         NetworkManager sectionManager = candidate.NetworkManager;

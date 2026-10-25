@@ -55,27 +55,27 @@ public sealed class ConstructionBookView : MonoBehaviour
     public void Render(ConstructionBookCatalogSO.Entry entry, int count, int pageIndex, int pageCount, IReadOnlyList<ConstructionBookMaterialLine> materials, bool materialsAvailable, IReadOnlyList<ConstructionBookRosterMember> roster, ulong localClientId, Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment, Func<bool> isPageTransitioning, bool worldView)
     {
         RenderWithCompletionSummary(entry, count, pageIndex, pageCount, materials, materialsAvailable, roster, localClientId,
-            isAssigned, requestAssignment, isPageTransitioning, worldView, string.Empty);
+            isAssigned, requestAssignment, isPageTransitioning, worldView, string.Empty, false);
     }
 
     public void RenderWithCompletionSummary(ConstructionBookCatalogSO.Entry entry, int count, int pageIndex, int pageCount,
         IReadOnlyList<ConstructionBookMaterialLine> materials, bool materialsAvailable,
         IReadOnlyList<ConstructionBookRosterMember> roster, ulong localClientId,
         Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment,
-        Func<bool> isPageTransitioning, bool worldView, string completionSummary)
+        Func<bool> isPageTransitioning, bool worldView, string completionSummary, bool perStockPlate = false)
     {
         Clear(materialsRoot);
         Clear(stepsRoot);
-        title.text = entry != null ? $"{entry.title}  x{count}\n<size=60%>Page {pageIndex + 1} / {pageCount}</size>" : "Data unavailable";
+        title.text = entry != null ? $"{entry.title}{(perStockPlate ? string.Empty : $"  x{count}")}\n<size=60%>Page {pageIndex + 1} / {pageCount}</size>" : "Data unavailable";
         partImage.sprite = entry != null ? entry.partSprite : null;
         partImage.enabled = partImage.sprite != null;
-        Text("MATERIALS", materialsRoot, 34f, Ink(), TextAlignmentOptions.Left, 44f);
+        Text(perStockPlate ? "COST PER STOCK PLATE" : "MATERIALS", materialsRoot, 34f, Ink(), TextAlignmentOptions.Left, 44f);
         if (!materialsAvailable) Text("Data unavailable", materialsRoot, 30f, Ink(), TextAlignmentOptions.Left, 40f);
         else foreach (ConstructionBookMaterialLine line in materials)
         {
             RectTransform row = Horizontal("MaterialRow", materialsRoot, 54f, 7f, TextAnchor.MiddleLeft);
             AddIcon(row, line.Resource != null ? line.Resource.icon : null, 48f);
-            Text(line.Resource != null ? $"{line.Resource.resourceName}: {line.PerUnit} each · {line.Total} total" : "Data unavailable", row, 27f, Ink(), TextAlignmentOptions.Left, 40f, true);
+            Text(line.Resource != null ? perStockPlate ? $"{line.Resource.resourceName}: {line.PerUnit} each" : $"{line.Resource.resourceName}: {line.PerUnit} each · {line.Total} total" : "Data unavailable", row, 27f, Ink(), TextAlignmentOptions.Left, 40f, true);
         }
 
         Text("STEPS", stepsRoot, StepsHeadingSize, Ink(), TextAlignmentOptions.Center, 34f);

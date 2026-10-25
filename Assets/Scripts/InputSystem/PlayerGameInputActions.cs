@@ -217,6 +217,15 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""SingleCarryPlacementControlModifier"",
+                    ""type"": ""Button"",
+                    ""id"": ""118b8869-cef8-47f8-8766-15a813ba1f3a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -461,6 +470,17 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
                     ""action"": ""SingleCarryPlacementRotation"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""13806bc4-be3f-49fe-9460-5acc157003ec"",
+                    ""path"": ""<Keyboard>/ctrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SingleCarryPlacementControlModifier"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -608,6 +628,7 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         m_Game_ToggleSingleCarryPlacement = m_Game.FindAction("ToggleSingleCarryPlacement", throwIfNotFound: true);
         m_Game_BridgeRequirementsScroll = m_Game.FindAction("BridgeRequirementsScroll", throwIfNotFound: true);
         m_Game_SingleCarryPlacementRotation = m_Game.FindAction("SingleCarryPlacementRotation", throwIfNotFound: true);
+        m_Game_SingleCarryPlacementControlModifier = m_Game.FindAction("SingleCarryPlacementControlModifier", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Up = m_UI.FindAction("Up", throwIfNotFound: true);
@@ -710,6 +731,7 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
     private readonly InputAction m_Game_ToggleSingleCarryPlacement;
     private readonly InputAction m_Game_BridgeRequirementsScroll;
     private readonly InputAction m_Game_SingleCarryPlacementRotation;
+    private readonly InputAction m_Game_SingleCarryPlacementControlModifier;
     /// <summary>
     /// Provides access to input actions defined in input action map "Game".
     /// </summary>
@@ -778,6 +800,10 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// </summary>
         public InputAction @SingleCarryPlacementRotation => m_Wrapper.m_Game_SingleCarryPlacementRotation;
         /// <summary>
+        /// Provides access to the underlying input action "Game/SingleCarryPlacementControlModifier".
+        /// </summary>
+        public InputAction @SingleCarryPlacementControlModifier => m_Wrapper.m_Game_SingleCarryPlacementControlModifier;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Game; }
@@ -845,6 +871,9 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @SingleCarryPlacementRotation.started += instance.OnSingleCarryPlacementRotation;
             @SingleCarryPlacementRotation.performed += instance.OnSingleCarryPlacementRotation;
             @SingleCarryPlacementRotation.canceled += instance.OnSingleCarryPlacementRotation;
+            @SingleCarryPlacementControlModifier.started += instance.OnSingleCarryPlacementControlModifier;
+            @SingleCarryPlacementControlModifier.performed += instance.OnSingleCarryPlacementControlModifier;
+            @SingleCarryPlacementControlModifier.canceled += instance.OnSingleCarryPlacementControlModifier;
         }
 
         /// <summary>
@@ -898,6 +927,9 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
             @SingleCarryPlacementRotation.started -= instance.OnSingleCarryPlacementRotation;
             @SingleCarryPlacementRotation.performed -= instance.OnSingleCarryPlacementRotation;
             @SingleCarryPlacementRotation.canceled -= instance.OnSingleCarryPlacementRotation;
+            @SingleCarryPlacementControlModifier.started -= instance.OnSingleCarryPlacementControlModifier;
+            @SingleCarryPlacementControlModifier.performed -= instance.OnSingleCarryPlacementControlModifier;
+            @SingleCarryPlacementControlModifier.canceled -= instance.OnSingleCarryPlacementControlModifier;
         }
 
         /// <summary>
@@ -1189,6 +1221,13 @@ public partial class @PlayerGameInputActions: IInputActionCollection2, IDisposab
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSingleCarryPlacementRotation(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SingleCarryPlacementControlModifier" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSingleCarryPlacementControlModifier(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

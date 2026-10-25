@@ -267,7 +267,9 @@ public class BridgeRequirementsUI : MonoBehaviour
             foreach (BridgeRequirementLine requirement in snapshot.CurrentStageRequirements)
             {
                 currentBuilder.AppendLine().Append(requirement.ComponentName).Append(" - ")
-                    .Append(requirement.CurrentAmount).Append(" / ").Append(requirement.RequiredAmount);
+                    .Append(requirement.IsPercentage ? requirement.CurrentAmount + "%" : requirement.CurrentAmount + " / " + requirement.RequiredAmount);
+                if (!string.IsNullOrWhiteSpace(requirement.Details))
+                    currentBuilder.AppendLine().Append("  ").Append(requirement.Details);
             }
         }
 

@@ -13,6 +13,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         public Material handleMaterial;
         public GameObject axeModelPrefab;
         public GameObject pickaxeModelPrefab;
+        public GameObject sawModelPrefab;
     }
 
     [SerializeField] private Transform visualRoot;
@@ -21,6 +22,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
     [SerializeField] private Material handleMaterial;
     [SerializeField] private GameObject axeModelPrefab;
     [SerializeField] private GameObject pickaxeModelPrefab;
+    [SerializeField] private GameObject sawModelPrefab;
     [SerializeField] private bool rebuildOnAwake = true;
 
     public const string GeneratedRootName = "GeneratedToolModel";
@@ -91,6 +93,10 @@ public class EquippableToolVisualBuilder : MonoBehaviour
                 }
 
                 BuildPickaxe(generatedRoot.transform, materials);
+                break;
+            case EquippableItemType.Saw:
+                if (TryBuildPrefabVisual(generatedRoot.transform, materials.sawModelPrefab, false)) break;
+                BuildSaw(generatedRoot.transform, materials);
                 break;
             case EquippableItemType.Shovel:
                 BuildShovel(generatedRoot.transform, materials);
@@ -177,11 +183,12 @@ public class EquippableToolVisualBuilder : MonoBehaviour
             pickaxeMaterial = pickaxeMaterial,
             handleMaterial = handleMaterial,
             axeModelPrefab = axeModelPrefab,
-            pickaxeModelPrefab = pickaxeModelPrefab
+            pickaxeModelPrefab = pickaxeModelPrefab,
+            sawModelPrefab = sawModelPrefab
         };
     }
 
-    private static bool TryBuildPrefabVisual(Transform root, GameObject modelPrefab)
+    private static bool TryBuildPrefabVisual(Transform root, GameObject modelPrefab, bool importedRotation = true)
     {
         if (root == null || modelPrefab == null)
         {
@@ -191,7 +198,7 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         GameObject model = Instantiate(modelPrefab, root, false);
         model.name = modelPrefab.name;
         model.transform.localPosition = Vector3.zero;
-        model.transform.localRotation = ImportedModelLocalRotation;
+        model.transform.localRotation = importedRotation ? ImportedModelLocalRotation : Quaternion.identity;
         model.transform.localScale = Vector3.one;
 
         foreach (Collider collider in model.GetComponentsInChildren<Collider>())
@@ -252,6 +259,19 @@ public class EquippableToolVisualBuilder : MonoBehaviour
         CreateCube("HeadCenter", root, new Vector3(0f, 0.42f, 0f), Quaternion.identity, new Vector3(0.2f, 0.12f, 0.1f), metal);
         CreateCube("LeftPick", root, new Vector3(-0.31f, 0.43f, 0f), Quaternion.Euler(0f, 0f, -18f), new Vector3(0.48f, 0.07f, 0.055f), metal);
         CreateCube("RightPick", root, new Vector3(0.31f, 0.43f, 0f), Quaternion.Euler(0f, 0f, 18f), new Vector3(0.48f, 0.07f, 0.055f), metal);
+    }
+
+    private static void BuildSaw(Transform root, ToolVisualMaterials materials)
+    {
+        Material metal = GetMaterial(materials.pickaxeMaterial, new Color(0.62f, 0.65f, 0.68f, 1f));
+        Material handle = GetMaterial(materials.handleMaterial, new Color(0.42f, 0.22f, 0.09f, 1f));
+        CreateCube("SawHandle", root, new Vector3(0f, 0f, -0.02f), Quaternion.identity,
+            new Vector3(0.045f, 0.21f, 0.07f), handle);
+        CreateCube("SawBlade", root, new Vector3(0f, 0.14f, 0.15f), Quaternion.identity,
+            new Vector3(0.018f, 0.28f, 0.42f), metal);
+        CreateCube("SawSpine", root, new Vector3(0f, 0.29f, 0.15f), Quaternion.identity,
+            new Vector3(0.03f, 0.018f, 0.42f), handle);
+        CreateSecondaryGrip(root, new Vector3(0f, 0.035f, -0.02f));
     }
 
     private static void BuildShovel(Transform root, ToolVisualMaterials materials)

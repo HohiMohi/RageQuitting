@@ -99,12 +99,16 @@ public readonly struct BridgeRequirementLine
     public readonly string ComponentName;
     public readonly int CurrentAmount;
     public readonly int RequiredAmount;
+    public readonly string Details;
+    public readonly bool IsPercentage;
 
-    public BridgeRequirementLine(string componentName, int currentAmount, int requiredAmount)
+    public BridgeRequirementLine(string componentName, int currentAmount, int requiredAmount, string details = null, bool isPercentage = false)
     {
         ComponentName = componentName;
         CurrentAmount = currentAmount;
         RequiredAmount = requiredAmount;
+        Details = details ?? string.Empty;
+        IsPercentage = isPercentage;
     }
 }
 
@@ -312,6 +316,16 @@ public class GameplayManager : MonoBehaviour
             if (data.bridgeComponentSO == component && data.isMounted) count++;
         }
         return count;
+    }
+
+    public BridgeDeckAreaRequirement GetAreaRequirement(BridgeComponentSO componentType)
+    {
+        if (componentType == null) return null;
+        CacheBridgeComponents();
+        for (int i = 0; i < bridgeComponents.Length; i++)
+            if (bridgeComponents[i] != null && bridgeComponents[i].GetBridgeComponentSO() == componentType
+                && bridgeComponents[i].TryGetComponent(out BridgeDeckAreaRequirement area)) return area;
+        return null;
     }
 
     private void Awake()
@@ -556,6 +570,7 @@ public class GameplayManager : MonoBehaviour
                currentBridgeBuildingStageIndex < bridgeBuildingStages.Length &&
                IsStageFullyCompleted(currentBridgeBuildingStageIndex))
         {
+            if (!FinalizeAreaRequirementsForStage(currentBridgeBuildingStageIndex)) break;
             currentBridgeBuildingStageIndex++;
         }
 
@@ -582,13 +597,145 @@ public class GameplayManager : MonoBehaviour
         foreach (int componentIndex in componentIndexes)
         {
             BridgeComponentData componentData = bridgeComponentDataArray[componentIndex];
-            if (!componentData.isMounted || !componentData.isAssembled)
+            BridgeDeckAreaRequirement area = FindAreaRequirement(componentIndex);
+            if (area != null)
             {
-                return false;
+                if (!area.Reassess().IsComplete) return false;
             }
+            else if (!componentData.isMounted || !componentData.isAssembled) return false;
         }
 
         return true;
+    }
+
+    private BridgeDeckAreaRequirement FindAreaRequirement(int componentId)
+    {
+        CacheBridgeComponents();
+        for (int i = 0; i < bridgeComponents.Length; i++)
+        {
+            BridgeComponent component = bridgeComponents[i];
+            if (component != null && component.ComponentID == componentId
+                && component.TryGetComponent(out BridgeDeckAreaRequirement requirement)) return requirement;
+        }
+        return null;
+    }
+
+    private bool FinalizeAreaRequirementsForStage(int stageIndex)
+    {
+        if (!ValidateStageComponentIndexes(stageIndex)) return false;
+        int[] indexes = bridgeBuildingStages[stageIndex].bridgeComponentDataIndexes;
+        if (indexes == null) return true;
+        List<BridgeDeckAreaRequirement> requirements = new();
+        for (int i = 0; i < indexes.Length; i++)
+        {
+            BridgeDeckAreaRequirement area = FindAreaRequirement(indexes[i]);
+            if (area == null) continue;
+            if (!area.TryPrepareFinalization()) return false;
+            requirements.Add(area);
+        }
+        int committedRequirements = 0;
+        for (int i = 0; i < requirements.Count; i++)
+        {
+            if (!requirements[i].CommitFinalization())
+            {
+                for (int rollback = 0; rollback < committedRequirements; rollback++) requirements[rollback].RollbackFinalization();
+                return false;
+            }
+            committedRequirements++;
+        }
+        for (int i = 0; i < indexes.Length; i++)
+        {
+            BridgeDeckAreaRequirement area = FindAreaRequirement(indexes[i]);
+            if (area == null) continue;
+            BridgeComponentData data = bridgeComponentDataArray[indexes[i]];
+            data.isMounted = true;
+            data.isAssembled = true;
+            data.CanBeMounted = false;
+            bridgeComponentDataArray[indexes[i]] = data;
+            if (!IsNetworkSessionActive())
+            {
+                // The adapter represents logical stage completion but has no delivered stock
+                // component to mount. Apply the event-free completed state so offline observers
+                // see the same logical result without recursively advancing the active stage.
+                BridgeComponent adapter = area.GetComponent<BridgeComponent>();
+                if (adapter != null) adapter.ApplyInitialCompletedState();
+            }
+            if (IsNetworkSessionActive() && NetworkManager.Singleton.IsServer && TryGetStateIndex(indexes[i], out int stateIndex))
+            {
+                BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
+                state.isMounted = true; state.isAssembled = true; state.canBeMounted = false;
+                bridgeComponentStates[stateIndex] = state;
+                ApplyNetworkState(state);
+            }
+        }
+        return true;
+    }
+
+    public bool IsAreaRequirementActive(BridgeDeckAreaRequirement requirement)
+    {
+        if (requirement == null || isFullyAsembled || bridgeBuildingStages == null
+            || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length) return false;
+        if (!bridgeProgressInitialized && !hasAppliedInitialNetworkBridgeState) return false;
+        BridgeComponent component = requirement.GetComponent<BridgeComponent>();
+        if (component == null || !TryGetBridgeComponent(component.ComponentID, out BridgeComponent owned) || owned != component) return false;
+        int[] indexes = bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes;
+        if (indexes == null) return false;
+        for (int i = 0; i < indexes.Length; i++) if (indexes[i] == component.ComponentID) return true;
+        return false;
+    }
+
+    public bool IsAreaRequirementFuture(BridgeDeckAreaRequirement requirement)
+    {
+        if (requirement == null || bridgeBuildingStages == null) return false;
+        BridgeComponent component = requirement.GetComponent<BridgeComponent>();
+        if (component == null) return false;
+        int current = currentBridgeBuildingStageIndex;
+        for (int stage = Math.Max(0, current); stage < bridgeBuildingStages.Length; stage++)
+        {
+            int[] indexes = bridgeBuildingStages[stage].bridgeComponentDataIndexes;
+            if (indexes == null) continue;
+            for (int i = 0; i < indexes.Length; i++) if (indexes[i] == component.ComponentID) return stage > current;
+        }
+        return false;
+    }
+
+    public bool IsAreaRequirementPresented(BridgeDeckAreaRequirement requirement)
+        => IsAreaRequirementActive(requirement) || IsAreaRequirementPast(requirement);
+
+    public bool IsAreaRequirementPast(BridgeDeckAreaRequirement requirement)
+    {
+        if (requirement == null || bridgeBuildingStages == null) return false;
+        BridgeComponent component = requirement.GetComponent<BridgeComponent>();
+        if (component == null) return false;
+        int upper = Math.Min(currentBridgeBuildingStageIndex, bridgeBuildingStages.Length);
+        for (int stage = 0; stage < upper; stage++)
+        {
+            int[] indexes = bridgeBuildingStages[stage].bridgeComponentDataIndexes;
+            if (indexes == null) continue;
+            for (int i = 0; i < indexes.Length; i++) if (indexes[i] == component.ComponentID) return true;
+        }
+        return false;
+    }
+
+    internal void NotifyAreaRequirementChanged(BridgeDeckAreaRequirement requirement)
+    {
+        if (requirement == null || !bridgeProgressInitialized) return;
+        NetworkManager manager = NetworkManager.Singleton;
+        if (manager != null && manager.IsListening && !manager.IsServer) return;
+        BridgeComponent component = requirement.GetComponent<BridgeComponent>();
+        if (component == null || !TryGetBridgeComponent(component.ComponentID, out BridgeComponent owned)
+            || owned != component || requirement.DeckSection == null || !IsMainBridgeDeckSection(requirement.DeckSection)) return;
+        int before = currentBridgeBuildingStageIndex;
+        CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
+        if (manager != null && manager.IsListening && manager.IsServer
+            && (before == currentBridgeBuildingStageIndex || isFullyAsembled))
+            BroadcastBridgeState();
+    }
+
+    public void NotifyLocalAreaPresentationChanged()
+    {
+        OnBridgeRequirementsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void Bridge_OnComponentAssembled(object sender, Bridge.ComponentAssembledEventArgs e)
@@ -670,6 +817,7 @@ public class GameplayManager : MonoBehaviour
         int previousStageIndex = currentBridgeBuildingStageIndex;
         while (currentBridgeBuildingStageIndex < bridgeBuildingStages.Length && IsStageFullyCompleted(currentBridgeBuildingStageIndex))
         {
+            if (!FinalizeAreaRequirementsForStage(currentBridgeBuildingStageIndex)) break;
             currentBridgeBuildingStageIndex++;
         }
 
@@ -1360,6 +1508,7 @@ public class GameplayManager : MonoBehaviour
     {
         if (!NetworkManager.Singleton.IsServer ||
             !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent) ||
+            bridgeComponent.GetComponent<BridgeDeckAreaRequirement>() != null ||
             !TryGetValidatedPlayerTool(senderClientId, bridgeComponent, equippableItemType, out EquippableItemSO selectedTool))
         {
             return;
@@ -1735,7 +1884,7 @@ public class GameplayManager : MonoBehaviour
         AddStageRequirements(currentBridgeBuildingStageIndex, currentStageCounters, includeMountedProgress: true);
         foreach (KeyValuePair<string, RequirementCounter> pair in currentStageCounters)
         {
-            currentStageRequirements.Add(new BridgeRequirementLine(pair.Key, pair.Value.CurrentAmount, pair.Value.RequiredAmount));
+            currentStageRequirements.Add(new BridgeRequirementLine(pair.Key, pair.Value.CurrentAmount, pair.Value.RequiredAmount, pair.Value.Details, pair.Value.IsPercentage));
         }
         currentStageRequirements.Sort((first, second) => string.Compare(first.ComponentName, second.ComponentName, StringComparison.Ordinal));
 
@@ -1774,6 +1923,31 @@ public class GameplayManager : MonoBehaviour
                 : $"Bridge Component {componentIndex}";
 
             counters.TryGetValue(componentName, out RequirementCounter counter);
+            BridgeDeckAreaRequirement areaRequirement = FindAreaRequirement(componentIndex);
+            if (areaRequirement != null)
+            {
+                // Do not expose future area work as global progress before its stage is unlocked.
+                if (stageIndex > currentBridgeBuildingStageIndex) continue;
+                if (stageIndex == currentBridgeBuildingStageIndex && IsAreaRequirementActive(areaRequirement))
+                {
+                    BridgeDeckAreaStageResult area = areaRequirement.Reassess();
+                    float total = areaRequirement.Profile != null ? areaRequirement.Profile.areaLengthMeters : 6.56f;
+                    counter.RequiredAmount = 100;
+                    counter.IsPercentage = true;
+                    counter.CurrentAmount = area.IsComplete ? 100
+                        : Mathf.Clamp(Mathf.RoundToInt(area.SecuredLengthMeters / total * 100f), 0, 100);
+                    counter.Details = $"Covered {area.CoveredLengthMeters:0.00} m; secured {area.SecuredLengthMeters:0.00} m; {BridgeDeckAreaRequirement.FormatGapGuidance(area)}";
+                }
+                else
+                {
+                    counter.RequiredAmount++;
+                    // Physical progress is deliberately hidden until this stage activates.
+                    counter.CurrentAmount = 0;
+                    counter.Details = string.Empty;
+                }
+                counters[componentName] = counter;
+                continue;
+            }
             counter.RequiredAmount++;
             if (includeMountedProgress && componentData.isMounted)
             {
@@ -1833,6 +2007,8 @@ public class GameplayManager : MonoBehaviour
     {
         public int CurrentAmount;
         public int RequiredAmount;
+        public string Details;
+        public bool IsPercentage;
     }
 
     private bool TryGetStateIndex(int componentID, out int stateIndex)

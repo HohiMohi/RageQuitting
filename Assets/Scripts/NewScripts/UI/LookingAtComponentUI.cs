@@ -27,6 +27,19 @@ public class LookingAtComponentUI : MonoBehaviour
     private bool currentTargetHasCrowbarNailHighlight;
     private bool currentCrowbarExtractionAwaitingServer;
     private float currentCrowbarExtractionProgress;
+    private bool currentSawPresentation;
+    private bool currentSawCutActive;
+    private float currentSawCutProgress;
+    private RectTransform promptLayoutRootRect;
+    private RectTransform promptVisualRect;
+    private RectTransform promptTextRect;
+    private Vector2 originalPromptRootSize;
+    private Vector2 originalPromptVisualSize;
+    private Vector2 originalPromptTextSize;
+    private string lastRenderedPromptText;
+    private bool lastRenderedPromptUsesAreaLayout;
+    private bool promptLayoutCaptured;
+    private static readonly RaycastHit[] DeckOcclusionHits = new RaycastHit[16];
     private readonly List<InteractionPrompt> prompts = new List<InteractionPrompt>();
     public MonoBehaviour EvaluatedTarget { get; private set; }
     public bool CurrentTargetHasActionablePrompt { get; private set; }
@@ -74,15 +87,37 @@ public class LookingAtComponentUI : MonoBehaviour
         }
 
         MonoBehaviour currentTarget = playerInteraction.CurrentTarget;
-        if (currentTarget == null)
-        {
-            Hide();
-            return;
-        }
-
         prompts.Clear();
         ResetCrowbarPresentation();
-        if (TryGetCrowbarNailTarget(currentTarget, out _))
+        ResetSawPresentation();
+        string sawPrompt = null;
+        bool sawPresented = playerActionController != null
+            && playerActionController.TryGetSawCutPresentation(currentTarget, out sawPrompt,
+                out currentSawCutProgress, out currentSawCutActive);
+        if (sawPresented) currentSawPresentation = true;
+
+        string aimedGapPrompt = null;
+        Camera aimCamera = playerInteraction.GetComponentInChildren<Camera>();
+        if (aimCamera == null) aimCamera = Camera.main;
+        Unity.Netcode.NetworkObject actorNetworkObject = playerInteraction.GetComponentInParent<Unity.Netcode.NetworkObject>();
+        Unity.Netcode.NetworkManager actorNetworkManager = actorNetworkObject != null
+            ? actorNetworkObject.NetworkManager : Unity.Netcode.NetworkManager.Singleton;
+        Ray aimedGapRay = aimCamera != null ? new Ray(aimCamera.transform.position, aimCamera.transform.forward) : default;
+        if (aimCamera != null
+            && BridgeDeckAreaRequirement.TryGetPresentedInScene(gameObject.scene, actorNetworkManager, out BridgeDeckAreaRequirement areaRequirement)
+            && areaRequirement.TryGetAimedGap(aimedGapRay,
+                out BridgeDeckAreaNeighborGap aimedGap, out _, out _, out _)
+            && IsDeckOpeningVisible(areaRequirement, aimedGapRay, actorNetworkObject)
+            && (currentTarget == null || currentTarget.GetComponentInParent<BridgeDeckAreaPanel>() == null))
+        {
+            aimedGapPrompt = areaRequirement.GetAimedGapGuidance(playerInteraction.transform);
+        }
+
+        if (currentTarget == null)
+        {
+            if (!sawPresented && string.IsNullOrEmpty(aimedGapPrompt)) { Hide(); return; }
+        }
+        else if (TryGetCrowbarNailTarget(currentTarget, out _))
         {
             if (playerInput == null || !playerInput.IsLocalGameplayInputActive
                 || playerActionController == null
@@ -106,7 +141,18 @@ public class LookingAtComponentUI : MonoBehaviour
                 && playerInventory.GetCurrentSelectedItem().itemType == EquippableItemType.Crowbar)
                 RemoveConsumedCrowbarAltPrompts();
         }
-        RefreshPanelPlacementFeedback(currentTarget);
+        bool targetIsAreaPanel = currentTarget != null && currentTarget.GetComponentInParent<BridgeDeckAreaPanel>() != null;
+        bool showGapGuidance = !targetIsAreaPanel && !string.IsNullOrEmpty(aimedGapPrompt);
+        if (sawPresented)
+        {
+            PlayerInputActionKind kind = sawPrompt.StartsWith("Saw: cut unavailable", System.StringComparison.Ordinal)
+                ? PlayerInputActionKind.Information : PlayerInputActionKind.Action;
+            prompts.Insert(0, new InteractionPrompt(kind,
+                showGapGuidance ? $"{sawPrompt}\n{aimedGapPrompt}" : sawPrompt));
+        }
+        if (!sawPresented && showGapGuidance)
+            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information, aimedGapPrompt));
+        if (currentTarget != null) RefreshPanelPlacementFeedback(currentTarget);
         EvaluatedTarget = currentTarget;
         CurrentTargetHasActionablePrompt = prompts.Exists(
             prompt => prompt.ActionKind != PlayerInputActionKind.Information);
@@ -117,9 +163,27 @@ public class LookingAtComponentUI : MonoBehaviour
             return;
         }
 
-        componentInfoText.text = FormatPrompts();
+        SetPromptText(FormatPrompts(), targetIsAreaPanel || showGapGuidance);
         UpdateProgressVisual(currentTarget);
         Show();
+    }
+
+    private static bool IsDeckOpeningVisible(BridgeDeckAreaRequirement requirement, Ray ray,
+        Unity.Netcode.NetworkObject actor)
+    {
+        if (requirement == null || requirement.DeckFrame == null) return false;
+        Plane plane = new(requirement.DeckFrame.up, requirement.DeckFrame.position);
+        if (!plane.Raycast(ray, out float distance) || distance < 0f) return false;
+        int hitCount = Physics.RaycastNonAlloc(ray, DeckOcclusionHits, Mathf.Max(0f, distance - .01f),
+            ~0, QueryTriggerInteraction.Ignore);
+        if (hitCount == DeckOcclusionHits.Length) return false;
+        for (int i = 0; i < hitCount; i++)
+        {
+            Transform hit = DeckOcclusionHits[i].collider != null ? DeckOcclusionHits[i].collider.transform : null;
+            if (actor != null && hit != null && hit.IsChildOf(actor.transform)) continue;
+            return false;
+        }
+        return true;
     }
 
     private void FilterUnavailableActionPrompts(MonoBehaviour target)
@@ -205,6 +269,21 @@ public class LookingAtComponentUI : MonoBehaviour
             }
 
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Drop"));
+            MountingNail aimedNail = target as MountingNail;
+            if (aimedNail == null && target != null) aimedNail = target.GetComponentInParent<MountingNail>();
+            if (aimedNail != null && (aimedNail.State == MountingNailState.Prepared || aimedNail.BlocksPickup))
+            {
+                aimedNail.GetInteractionPrompts(playerInteraction.transform, prompts);
+                return;
+            }
+            BridgeDeckAreaPanel areaPanel = target != null ? target.GetComponentInParent<BridgeDeckAreaPanel>() : null;
+            bool areaSurfaceTarget = target == areaPanel || target is BridgeDeckPanelMounting || target is MountableBridgeComponent;
+            if (areaPanel != null && areaSurfaceTarget
+                && (!areaPanel.TryGetComponent(out MountableBridgeComponent areaMountable) || !areaMountable.IsPickedUp))
+            {
+                areaPanel.GetInteractionPrompts(playerInteraction.transform, prompts);
+                return;
+            }
             BridgeDeckPanelMounting panelMarker = target != null ? target.GetComponentInParent<BridgeDeckPanelMounting>() : null;
             if (panelMarker != null && panelMarker.TryGetComponent(out MountableBridgeComponent lookedAtPanel)
                 && !lookedAtPanel.IsPickedUp)
@@ -217,11 +296,20 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void AddPromptsForTarget(MonoBehaviour target)
     {
+        BridgeDeckAreaPanel areaPanel = target != null ? target.GetComponentInParent<BridgeDeckAreaPanel>() : null;
         MountingNail mountingNail = target as MountingNail;
         if (mountingNail == null && target != null) mountingNail = target.GetComponentInParent<MountingNail>();
         if (mountingNail != null && (mountingNail.State == MountingNailState.Prepared || mountingNail.BlocksPickup))
         {
             mountingNail.GetInteractionPrompts(playerInteraction.transform, prompts);
+            return;
+        }
+
+        bool areaSurfaceTarget = target != null && (target == areaPanel
+            || target is BridgeDeckPanelMounting || target is MountableBridgeComponent);
+        if (areaPanel != null && areaSurfaceTarget)
+        {
+            areaPanel.GetInteractionPrompts(playerInteraction.transform, prompts);
             return;
         }
 
@@ -374,7 +462,9 @@ public class LookingAtComponentUI : MonoBehaviour
             return;
         }
 
-        if (storage is MainStorageNew && heldObject.TryGetComponent(out MountableBridgeComponent _))
+        if (storage is MainStorageNew &&
+            heldObject.TryGetComponent(out MountableBridgeComponent _) &&
+            !heldObject.TryGetComponent(out BridgeDeckAreaPanel _))
         {
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Interact, "Store"));
             return;
@@ -424,7 +514,8 @@ public class LookingAtComponentUI : MonoBehaviour
                                     !bridgeComponent.IsAssembled &&
                                     bridgeComponent.NeedAssembling;
         bool showBucketHoldProgress = playerInteraction.IsBucketActionHoldActive;
-        bool showProgress = currentCrowbarPresentationNail == null
+        bool showSawProgress = currentSawPresentation && currentSawCutActive;
+        bool showProgress = showSawProgress || currentCrowbarPresentationNail == null
             && (showNailProgress || showBucketHoldProgress || showConstructionProgress || showAssemblyProgress);
 
         if (progressCircleHolder != null)
@@ -434,7 +525,11 @@ public class LookingAtComponentUI : MonoBehaviour
 
         if (showProgress && assemblingProgressBar != null)
         {
-            if (showNailProgress)
+            if (showSawProgress)
+            {
+                assemblingProgressBar.fillAmount = currentSawCutProgress;
+            }
+            else if (showNailProgress)
             {
                 assemblingProgressBar.fillAmount = mountingNail.PenetrationProgressNormalized;
             }
@@ -507,12 +602,57 @@ public class LookingAtComponentUI : MonoBehaviour
             cachedPlacementHudText = waitingForServer
                 ? $"{status}\nAwaiting server response\n{confirmHint}"
                 : string.IsNullOrEmpty(mountingGuidance)
-                    ? $"{status}\nF Toggle | Esc Cancel | Up/Down X | Left/Right Z\n{confirmHint}"
-                    : $"{status}\n{mountingGuidance}\n{confirmHint} | F Toggle | Esc Cancel | Up/Down X | Left/Right Z";
+                    ? $"{status}\nF Toggle | Esc Cancel | Up/Down X | Left/Right Z (1°) | Ctrl + Left/Right Y\n{confirmHint}"
+                    : $"{status}\n{mountingGuidance}\n{confirmHint} | F Toggle | Esc Cancel\nUp/Down X | Left/Right Z (1°) | Ctrl + Left/Right Y";
         }
-        if (componentInfoText != null && componentInfoText.text != cachedPlacementHudText)
-            componentInfoText.text = cachedPlacementHudText;
+        SetPromptText(cachedPlacementHudText, true);
         Show();
+    }
+
+    private void SetPromptText(string text, bool areaLayout)
+    {
+        if (componentInfoText == null) return;
+        CapturePromptLayoutBaseline();
+        if (!areaLayout) RestorePromptLayout();
+        if (lastRenderedPromptUsesAreaLayout == areaLayout && lastRenderedPromptText == text
+            && componentInfoText.text == text) return;
+        if (areaLayout && lastRenderedPromptUsesAreaLayout) RestorePromptLayout();
+
+        componentInfoText.text = text;
+        if (areaLayout && promptTextRect != null)
+        {
+            componentInfoText.ForceMeshUpdate();
+            float width = promptTextRect.rect.width;
+            float preferredHeight = componentInfoText.GetPreferredValues(text, width, 0f).y;
+            float originalTextHeight = promptTextRect.rect.height;
+            float growth = Mathf.Max(0f, preferredHeight + 8f - originalTextHeight);
+            if (promptLayoutRootRect != null && growth > 0f)
+                promptLayoutRootRect.sizeDelta = new Vector2(originalPromptRootSize.x, originalPromptRootSize.y + growth);
+            componentInfoText.ForceMeshUpdate();
+        }
+        lastRenderedPromptText = text;
+        lastRenderedPromptUsesAreaLayout = areaLayout;
+    }
+
+    private void CapturePromptLayoutBaseline()
+    {
+        if (promptLayoutCaptured || componentInfoText == null) return;
+        promptTextRect = componentInfoText.rectTransform;
+        promptLayoutRootRect = transform as RectTransform;
+        promptVisualRect = visualRoot != null ? visualRoot.GetComponent<RectTransform>() : null;
+        if (promptLayoutRootRect != null) originalPromptRootSize = promptLayoutRootRect.sizeDelta;
+        if (promptVisualRect != null) originalPromptVisualSize = promptVisualRect.sizeDelta;
+        if (promptTextRect != null) originalPromptTextSize = promptTextRect.sizeDelta;
+        promptLayoutCaptured = true;
+    }
+
+    private void RestorePromptLayout()
+    {
+        if (!promptLayoutCaptured || !lastRenderedPromptUsesAreaLayout) return;
+        if (promptTextRect != null) promptTextRect.sizeDelta = originalPromptTextSize;
+        if (promptLayoutRootRect != null) promptLayoutRootRect.sizeDelta = originalPromptRootSize;
+        if (promptVisualRect != null) promptVisualRect.sizeDelta = originalPromptVisualSize;
+        lastRenderedPromptUsesAreaLayout = false;
     }
 
     private void Show()
@@ -527,9 +667,10 @@ public class LookingAtComponentUI : MonoBehaviour
     {
         ClearPanelPlacementFeedback();
         ResetCrowbarPresentation();
+        ResetSawPresentation();
         EvaluatedTarget = null;
         CurrentTargetHasActionablePrompt = false;
-        if (componentInfoText != null) componentInfoText.text = string.Empty;
+        SetPromptText(string.Empty, false);
         if (visualRoot != null)
         {
             visualRoot.SetActive(false);
@@ -550,6 +691,13 @@ public class LookingAtComponentUI : MonoBehaviour
         currentCrowbarExtractionProgress = 0f;
     }
 
+    private void ResetSawPresentation()
+    {
+        currentSawPresentation = false;
+        currentSawCutActive = false;
+        currentSawCutProgress = 0f;
+    }
+
     private void OnDisable() => Hide();
 
     private void OnDestroy() => ClearPanelPlacementFeedback();
@@ -562,6 +710,12 @@ public class LookingAtComponentUI : MonoBehaviour
             return;
         }
 
+        BridgeDeckAreaPanel areaPanel = target != null ? target.GetComponentInParent<BridgeDeckAreaPanel>() : null;
+        if (areaPanel != null)
+        {
+            ClearPanelPlacementFeedback();
+            return;
+        }
         BridgeDeckPanelMounting marker = target != null ? target.GetComponentInParent<BridgeDeckPanelMounting>() : null;
         MountableBridgeComponent panel = null;
         if (marker != null) marker.TryGetComponent(out panel);

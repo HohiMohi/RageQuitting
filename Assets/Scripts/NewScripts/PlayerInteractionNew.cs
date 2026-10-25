@@ -35,6 +35,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     [SerializeField] private Vector3 defaultCarriedPlayerAnchorLocalPosition = new Vector3(0f, 1f, 1f);
     [SerializeField] private GameObject _pickedUpGameObject = null;
     private bool pickedUpObjectParented = false;
+    private Quaternion pickedUpPlacementOffset = Quaternion.identity;
     private bool pickedUpObjectFollowsHoldPosition = true;
     private bool pickedUpObjectSelfPositioned = false;
     private bool sharedCarryMovementActive = false;
@@ -445,6 +446,9 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         sharedCarryPredictedOrbitAngle = 0f;
         sharedCarryAuthoritativeOrbitAngle = 0f;
         sharedCarryPhysicsBody = useSharedCarryMovement ? pickUpObject.GetComponent<SharedCarryPhysicsBody>() : null;
+        pickedUpPlacementOffset = !useSharedCarryMovement && !selfPositioned
+            ? CarryPlacementOrientation.ResolveOffset(pickUpObject)
+            : Quaternion.identity;
         sharedCarryOrbitPivotLocalPoint = useSharedCarryMovement
             ? SharedCarryAttachmentUtility.GetLocalColliderBounds(pickUpObject.transform).center
             : Vector3.zero;
@@ -455,7 +459,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         {
             _pickedUpGameObject.transform.SetParent(pickUpHoldPositionHolder);
             _pickedUpGameObject.transform.localPosition = Vector3.zero;
-            _pickedUpGameObject.transform.localRotation = Quaternion.identity;
+            _pickedUpGameObject.transform.localRotation = pickedUpPlacementOffset;
             pickedUpObjectParented = true;
         }
         else
@@ -498,6 +502,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         }
 
         _pickedUpGameObject = null;
+        pickedUpPlacementOffset = Quaternion.identity;
         pickedUpObjectParented = false;
         pickedUpObjectFollowsHoldPosition = true;
         pickedUpObjectSelfPositioned = false;
@@ -548,6 +553,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             }
 
             _pickedUpGameObject = null;
+            pickedUpPlacementOffset = Quaternion.identity;
 
             if (pickedUpObjectParented)
             {
@@ -629,6 +635,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             }
 
             _pickedUpGameObject = null;
+            pickedUpPlacementOffset = Quaternion.identity;
             pickedUpObjectParented = false;
             pickedUpObjectFollowsHoldPosition = true;
             pickedUpObjectSelfPositioned = false;
@@ -864,6 +871,10 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     public bool TryStoreObject(MainStorageNew storage)
     {
+        // Area plates carry per-instance dimensions, mass, cut offset and progress; reducing one
+        // to the legacy SO inventory count would discard that physical state.
+        if (_pickedUpGameObject != null && _pickedUpGameObject.TryGetComponent<BridgeDeckAreaPanel>(out _))
+            return false;
         MountableBridgeComponent mountableBridgeComponent;
         _pickedUpGameObject.TryGetComponent<MountableBridgeComponent>(out mountableBridgeComponent);
         if (mountableBridgeComponent != null)
@@ -1044,6 +1055,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         }
 
         _pickedUpGameObject = null;
+        pickedUpPlacementOffset = Quaternion.identity;
         pickedUpObjectParented = false;
         pickedUpObjectFollowsHoldPosition = true;
         pickedUpObjectSelfPositioned = false;
@@ -1220,7 +1232,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             return;
         }
 
-        _pickedUpGameObject.transform.SetPositionAndRotation(pickUpHoldPositionHolder.position, pickUpHoldPositionHolder.rotation);
+        Quaternion heldRotation = CarryPlacementOrientation.Compose(pickUpHoldPositionHolder.rotation, pickedUpPlacementOffset);
+        _pickedUpGameObject.transform.SetPositionAndRotation(pickUpHoldPositionHolder.position, heldRotation);
     }
 
     private void EnsureCarryBodyAnchor()

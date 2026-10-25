@@ -14,6 +14,7 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
     private Vector3 turnEulerOffset;
     private Vector3 actionPositionOffset;
     private Vector3 actionEulerOffset;
+    private bool placementModeSuppressed;
 
     public Transform OutputTarget
     {
@@ -22,6 +23,21 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
             EnsureOutputTarget();
             return outputTarget != null ? outputTarget : baseCameraTarget;
         }
+    }
+
+    public bool IsPlacementModeSuppressed => placementModeSuppressed;
+
+    public void SetPlacementModeSuppressed(bool suppressed)
+    {
+        if (placementModeSuppressed == suppressed) return;
+        placementModeSuppressed = suppressed;
+        if (!suppressed)
+        {
+            ClearMovementFeedback();
+            ClearTurnFeedback();
+            ClearActionFeedback();
+        }
+        ApplyOffsets();
     }
 
     private void Awake()
@@ -133,8 +149,9 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
             return;
         }
 
-        outputTarget.localPosition = movementPositionOffset + damagePositionOffset + turnPositionOffset + actionPositionOffset;
-        outputTarget.localRotation = Quaternion.Euler(
-            movementEulerOffset + damageEulerOffset + turnEulerOffset + actionEulerOffset);
+        outputTarget.localPosition = damagePositionOffset + (placementModeSuppressed
+            ? Vector3.zero : movementPositionOffset + turnPositionOffset + actionPositionOffset);
+        outputTarget.localRotation = Quaternion.Euler(damageEulerOffset + (placementModeSuppressed
+            ? Vector3.zero : movementEulerOffset + turnEulerOffset + actionEulerOffset));
     }
 }

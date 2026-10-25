@@ -69,6 +69,13 @@ internal sealed class BridgeDeckPanelPlacementGuidance
             aimCamera.transform.forward);
     }
 
+    public void SetMessage(string message)
+    {
+        ClearOutlineRequest();
+        HideArrow();
+        label = message ?? string.Empty;
+    }
+
     public void Clear(string message = null)
     {
         ClearOutlineRequest();

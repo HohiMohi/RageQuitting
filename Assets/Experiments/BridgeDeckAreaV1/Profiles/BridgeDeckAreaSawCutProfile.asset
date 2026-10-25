@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a323663a55369934ba63467c68826522, type: 3}
+  m_Name: BridgeDeckAreaSawCutProfile
+  m_EditorClassIdentifier: Assembly-CSharp::SawCutProfileSO
+  geometryProfile: {fileID: 11400000, guid: aa1b79809c884e74382f8fd343dfad7f, type: 2}
+  activeCutSeconds: 4
+  maximumRangeMeters: 2.5
+  stableSeconds: 0.35
+  maximumLinearSpeed: 0.05
+  maximumAngularSpeedDegrees: 3
+  previewLineMaterial: {fileID: 2100000, guid: 0d1f64f6ab4e9034da4e51e324b219e3, type: 2}
+  fragmentNetworkPrefab: {fileID: 4142331829999909174, guid: 5b9a1c9d756bed644af14b483966ab5a, type: 3}

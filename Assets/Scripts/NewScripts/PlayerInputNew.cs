@@ -2,12 +2,14 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class PlayerInputNew : NetworkBehaviour
 {
     private PlayerGameInputActions playerGameInputActions;
     private InputAction singleCarryPlacementToggleAction;
     private InputAction singleCarryPlacementRotationAction;
+    private InputAction singleCarryPlacementControlModifierAction;
     private bool inputInitialized;
     private bool singleCarryPlacementActive;
     private bool actionAltHeld;
@@ -44,6 +46,7 @@ public class PlayerInputNew : NetworkBehaviour
     public event EventHandler OnConfirmSingleCarryPlacement;
     public event EventHandler OnGameplayMenuRequested;
     public event EventHandler OnForcedSingleCarryPlacementExit;
+    public event Action<Vector2, bool, double> OnSingleCarryPlacementRotationChanged;
 
     public bool IsSingleCarryPlacementActive => singleCarryPlacementActive;
     public bool IsLocalGameplayInputActive => IsInputActive() && !IsUIOpened;
@@ -136,6 +139,13 @@ public class PlayerInputNew : NetworkBehaviour
         singleCarryPlacementToggleAction = playerGameInputActions.Game.ToggleSingleCarryPlacement;
         singleCarryPlacementToggleAction.performed += SingleCarryPlacementToggle_performed;
         singleCarryPlacementRotationAction = playerGameInputActions.Game.SingleCarryPlacementRotation;
+        singleCarryPlacementRotationAction.started += SingleCarryPlacementRotation_started;
+        singleCarryPlacementRotationAction.performed += SingleCarryPlacementRotation_performed;
+        singleCarryPlacementRotationAction.canceled += SingleCarryPlacementRotation_canceled;
+        singleCarryPlacementControlModifierAction = playerGameInputActions.Game.SingleCarryPlacementControlModifier;
+        singleCarryPlacementControlModifierAction.started += SingleCarryPlacementControlModifier_changed;
+        singleCarryPlacementControlModifierAction.performed += SingleCarryPlacementControlModifier_changed;
+        singleCarryPlacementControlModifierAction.canceled += SingleCarryPlacementControlModifier_changed;
         placementController = null;
         foreach (Component attached in GetComponents<Component>())
         {
@@ -165,7 +175,20 @@ public class PlayerInputNew : NetworkBehaviour
             singleCarryPlacementToggleAction.performed -= SingleCarryPlacementToggle_performed;
             singleCarryPlacementToggleAction = null;
         }
+        if (singleCarryPlacementRotationAction != null)
+        {
+            singleCarryPlacementRotationAction.started -= SingleCarryPlacementRotation_started;
+            singleCarryPlacementRotationAction.performed -= SingleCarryPlacementRotation_performed;
+            singleCarryPlacementRotationAction.canceled -= SingleCarryPlacementRotation_canceled;
+        }
         singleCarryPlacementRotationAction = null;
+        if (singleCarryPlacementControlModifierAction != null)
+        {
+            singleCarryPlacementControlModifierAction.started -= SingleCarryPlacementControlModifier_changed;
+            singleCarryPlacementControlModifierAction.performed -= SingleCarryPlacementControlModifier_changed;
+            singleCarryPlacementControlModifierAction.canceled -= SingleCarryPlacementControlModifier_changed;
+        }
+        singleCarryPlacementControlModifierAction = null;
         playerGameInputActions.Dispose();
         playerGameInputActions = null;
         inputInitialized = false;
@@ -398,6 +421,49 @@ public class PlayerInputNew : NetworkBehaviour
         OnToggleSingleCarryPlacement?.Invoke(this, EventArgs.Empty);
     }
 
+    private void SingleCarryPlacementRotation_performed(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive()) return;
+        RaisePlacementRotationChanged();
+    }
+
+    private void SingleCarryPlacementRotation_started(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive()) return;
+        RaisePlacementRotationChanged();
+    }
+
+    private void SingleCarryPlacementRotation_canceled(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive()) return;
+        RaisePlacementRotationChanged();
+    }
+
+    private void SingleCarryPlacementControlModifier_changed(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive()) return;
+        RaisePlacementRotationChanged();
+    }
+
+    private void RaisePlacementRotationChanged()
+    {
+        if (!singleCarryPlacementActive || singleCarryPlacementRotationAction == null) return;
+        bool controlModifier = IsPlacementControlModifierControlPressed();
+        OnSingleCarryPlacementRotationChanged?.Invoke(singleCarryPlacementRotationAction.ReadValue<Vector2>(),
+            controlModifier, Time.realtimeSinceStartupAsDouble);
+    }
+
+    private bool IsPlacementControlModifierControlPressed()
+    {
+        if (singleCarryPlacementControlModifierAction == null) return false;
+        var controls = singleCarryPlacementControlModifierAction.controls;
+        for (int i = 0; i < controls.Count; i++)
+        {
+            if (controls[i] is ButtonControl button && button.isPressed) return true;
+        }
+        return false;
+    }
+
     public void SetSingleCarryPlacementActive(bool active)
     {
         singleCarryPlacementActive = active;
@@ -428,6 +494,12 @@ public class PlayerInputNew : NetworkBehaviour
     {
         return singleCarryPlacementActive && singleCarryPlacementRotationAction != null
             ? singleCarryPlacementRotationAction.ReadValue<Vector2>() : Vector2.zero;
+    }
+
+    public bool IsSingleCarryPlacementControlModifierPressed()
+    {
+        return singleCarryPlacementActive && singleCarryPlacementControlModifierAction != null
+            && IsPlacementControlModifierControlPressed();
     }
 
     public Vector2 GetLookDeltaValueForMinigames()

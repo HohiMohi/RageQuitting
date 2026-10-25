@@ -27,8 +27,11 @@ public sealed class CrowbarStage4NetworkPlayModeTests
     private NetworkManager previousSingleton, host, client, lateJoin;
     private GameObject actorPrefab, statePrefab, nailPrefab, clientCameraObject, blocker;
     private ScriptableObject crowbarAsset;
+    private ScriptableObject authoredCrowbarAsset, fixtureCrowbar, fixtureProfile;
     private ScriptableObject longDurationCrowbar, longDurationProfile;
     private string originalCrowbarJson, originalProfileJson, originalCrowbarGuid, originalProfileGuid;
+    private string originalCrowbarHash;
+    private string originalProfileHash;
     private GameObject isolatedPlayerPrefabRoot;
     private InputActionAsset isolatedPlayerActions;
     private bool usingProductionPlayerPrefab;
@@ -68,10 +71,25 @@ public sealed class CrowbarStage4NetworkPlayModeTests
             Has.None.Null);
 #if UNITY_EDITOR
         crowbarAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<ScriptableObject>("Assets/ScriptableObjectAssets/New/Crowbar.asset");
+        authoredCrowbarAsset = crowbarAsset;
         nailPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/New/Resources/MetalProducts/SingleMountingNail.prefab");
 #endif
         Assert.That(crowbarAsset, Is.Not.Null); Assert.That(nailPrefab, Is.Not.Null);
+        ScriptableObject authoredProfile = (ScriptableObject)Read(authoredCrowbarAsset, "actionProfile");
+        originalCrowbarJson = UnityEditor.EditorJsonUtility.ToJson(authoredCrowbarAsset);
+        originalProfileJson = UnityEditor.EditorJsonUtility.ToJson(authoredProfile);
+        originalCrowbarGuid = UnityEditor.AssetDatabase.AssetPathToGUID(UnityEditor.AssetDatabase.GetAssetPath(authoredCrowbarAsset));
+        originalProfileGuid = UnityEditor.AssetDatabase.AssetPathToGUID(UnityEditor.AssetDatabase.GetAssetPath(authoredProfile));
+        originalCrowbarHash = HashCrowbarAsset();
+        originalProfileHash = HashAsset(authoredProfile);
+        fixtureCrowbar = Object.Instantiate(authoredCrowbarAsset); fixtureCrowbar.name = "Crowbar Stage4 transient fixture copy";
+        fixtureProfile = Object.Instantiate(authoredProfile); fixtureProfile.name = "Crowbar Stage4 transient timing profile";
+        FieldInfo fixtureDuration = fixtureProfile.GetType().GetField("crowbarExtractionDuration", PublicInstance);
+        Assert.That(fixtureDuration, Is.Not.Null); fixtureDuration.SetValue(fixtureProfile, 1.5f);
+        fixtureCrowbar.GetType().GetField("actionProfile", PublicInstance).SetValue(fixtureCrowbar, fixtureProfile);
+        crowbarAsset = fixtureCrowbar;
         BuildStatePrefab(); BuildActorPrefab();
+        ReplaceCrowbarInInventoryCatalog(actorPrefab.GetComponent(inventoryType), fixtureCrowbar);
         if (usingProductionPlayerPrefab)
         {
             playerCollisionLayer = actorPrefab.layer;
@@ -108,6 +126,7 @@ public sealed class CrowbarStage4NetworkPlayModeTests
         clientAction = clientActor.GetComponent(actorActionType);
         clientInteraction = clientActor.GetComponent(interactionType);
         clientInventory = clientActor.GetComponent(inventoryType);
+        ReplaceCrowbarInInventoryCatalog(clientInventory, fixtureCrowbar);
         Component clientPlayerInput = clientActor.GetComponent(playerInputType);
         if (usingProductionPlayerPrefab)
         {
@@ -119,6 +138,7 @@ public sealed class CrowbarStage4NetworkPlayModeTests
         }
         Assert.That(clientInventory.GetType().GetMethod("AddItem", PublicInstance).Invoke(clientInventory, new object[] { crowbarAsset }), Is.True);
         Component serverInventory = serverActor.GetComponent(inventoryType);
+        ReplaceCrowbarInInventoryCatalog(serverInventory, fixtureCrowbar);
         yield return Until(() => serverInventory.GetType().GetMethod("GetSelectedItemForServerValidation", PublicInstance).Invoke(serverInventory, null) == crowbarAsset,
             "server selected Crowbar replication");
 
@@ -213,7 +233,7 @@ public sealed class CrowbarStage4NetworkPlayModeTests
             yield return null;
             try
             {
-                if (longDurationCrowbar != null && longDurationProfile != null) AssertSourceCrowbarRemainedUnchanged();
+                if (fixtureCrowbar != null) AssertSourceCrowbarRemainedUnchanged();
             }
             finally
             {
@@ -221,6 +241,8 @@ public sealed class CrowbarStage4NetworkPlayModeTests
                 isolatedPlayerActions = null;
                 if (longDurationCrowbar != null) Object.Destroy(longDurationCrowbar);
                 if (longDurationProfile != null) Object.Destroy(longDurationProfile);
+                if (fixtureCrowbar != null) Object.Destroy(fixtureCrowbar);
+                if (fixtureProfile != null) Object.Destroy(fixtureProfile);
                 if (previousSingleton != null) previousSingleton.SetSingleton();
                 else typeof(NetworkManager).GetMethod("ResetSingleton", StaticPrivate)?.Invoke(null, null);
                 roots.Clear(); managers.Clear();
@@ -264,6 +286,7 @@ public sealed class CrowbarStage4NetworkPlayModeTests
         ((Behaviour)clientActor.GetComponent(playerInputType)).enabled = false;
         NetworkObject hostActor = SpawnAsPlayer(actorPrefab, NetworkManager.ServerClientId, new Vector3(200f, 10f, 198.95f));
         Component hostInventory = hostActor.GetComponent(inventoryType);
+        ReplaceCrowbarInInventoryCatalog(hostInventory, fixtureCrowbar);
         Assert.That(hostInventory.GetType().GetMethod("AddItem", PublicInstance).Invoke(hostInventory, new object[] { crowbarAsset }), Is.True);
         Component hostInteraction = hostActor.GetComponent(interactionType);
         Transform hostAnchor = hostActor.transform.Find("AimAnchor");
@@ -294,6 +317,7 @@ public sealed class CrowbarStage4NetworkPlayModeTests
         NetworkObject hostActor = SpawnAsPlayer(actorPrefab, NetworkManager.ServerClientId,
             new Vector3(200f, 10f, 198.95f));
         Component hostInventory = hostActor.GetComponent(inventoryType);
+        ReplaceCrowbarInInventoryCatalog(hostInventory, fixtureCrowbar);
         Assert.That(hostInventory.GetType().GetMethod("AddItem", PublicInstance).Invoke(hostInventory,
             new object[] { crowbarAsset }), Is.True);
         Component hostAction = hostActor.GetComponent(actorActionType);
@@ -423,6 +447,17 @@ public sealed class CrowbarStage4NetworkPlayModeTests
         Assert.That(Register(lateSceneState, lateTarget.gameObject), Is.True);
         yield return Until(() => ReadField(lateNail, "embeddedTarget") == lateTarget
             && ReadAvailability(lateNail) == "Reserved", "late-joining target identity resolves with the active reservation");
+        object initialLateSnapshot = Read(lateNail, "CrowbarExtractionReadState");
+        float initialLateProgress = ReadFloat(initialLateSnapshot, "ProgressNormalized");
+        double lateJoinServerTime = lateJoin.ServerTime.Time;
+        if (initialLateProgress <= 0f)
+        {
+            Debug.Log($"[Crowbar Stage4 late-join clock diagnostic] received reservation at client server-time={lateJoinServerTime:F6}, started-at={Read(ownerState, "StartedAtServerTime"):F6}; progress has not advanced yet.");
+        }
+        yield return Until(() => ReadAvailability(lateNail) == "Reserved"
+            && Read(Read(lateNail, "CrowbarExtractionReadState"), "Handle").Equals(handle)
+            && ReadFloat(Read(lateNail, "CrowbarExtractionReadState"), "ProgressNormalized") > 0f,
+            "late-joining server clock advances the same reservation beyond its first snapshot tick");
         object lateState = Read(lateNail, "CrowbarExtractionReadState");
         Assert.That(Read(lateState, "Handle"), Is.EqualTo(handle));
         Assert.That(Read(lateState, "ExecutorNetworkObjectId"), Is.EqualTo(executorId));
@@ -834,10 +869,6 @@ public sealed class CrowbarStage4NetworkPlayModeTests
     private void UseLongDurationCrowbarForThisFixture()
     {
         ScriptableObject authoredProfile = (ScriptableObject)Read(crowbarAsset, "actionProfile");
-        originalCrowbarJson = UnityEditor.EditorJsonUtility.ToJson(crowbarAsset);
-        originalProfileJson = UnityEditor.EditorJsonUtility.ToJson(authoredProfile);
-        originalCrowbarGuid = UnityEditor.AssetDatabase.AssetPathToGUID(UnityEditor.AssetDatabase.GetAssetPath(crowbarAsset));
-        originalProfileGuid = UnityEditor.AssetDatabase.AssetPathToGUID(UnityEditor.AssetDatabase.GetAssetPath(authoredProfile));
         longDurationCrowbar = Object.Instantiate(crowbarAsset);
         longDurationCrowbar.name = "Crowbar Stage5 fixture-only duration copy";
         longDurationProfile = Object.Instantiate(authoredProfile);
@@ -846,19 +877,20 @@ public sealed class CrowbarStage4NetworkPlayModeTests
         Assert.That(duration, Is.Not.Null);
         duration.SetValue(longDurationProfile, 5f);
         longDurationCrowbar.GetType().GetField("actionProfile", PublicInstance).SetValue(longDurationCrowbar, longDurationProfile);
-        ReplaceCrowbarInInventoryCatalog(clientInventory);
-        ReplaceCrowbarInInventoryCatalog(serverActor.GetComponent(inventoryType));
+        ReplaceCrowbarInInventoryCatalog(clientInventory, longDurationCrowbar);
+        ReplaceCrowbarInInventoryCatalog(serverActor.GetComponent(inventoryType), longDurationCrowbar);
         ReplaceCrowbarInventorySlot(clientInventory);
     }
 
-    private void ReplaceCrowbarInInventoryCatalog(Component inventory)
+    private void ReplaceCrowbarInInventoryCatalog(Component inventory, ScriptableObject replacement)
     {
         FieldInfo catalogField = inventoryType.GetField("equippableItemCatalog", PrivateInstance);
         Assert.That(catalogField, Is.Not.Null);
         Array catalog = (Array)catalogField.GetValue(inventory);
         bool replaced = false;
         for (int i = 0; i < catalog.Length; i++)
-            if (catalog.GetValue(i) == crowbarAsset) { catalog.SetValue(longDurationCrowbar, i); replaced = true; }
+            if (catalog.GetValue(i) == crowbarAsset || catalog.GetValue(i) == authoredCrowbarAsset)
+            { catalog.SetValue(replacement, i); replaced = true; }
         Assert.That(replaced, Is.True, "The temporary item clone replaces only this fixture inventory catalog entry.");
         catalogField.SetValue(inventory, catalog);
     }
@@ -876,15 +908,35 @@ public sealed class CrowbarStage4NetworkPlayModeTests
 
     private void AssertSourceCrowbarRemainedUnchanged()
     {
-        ScriptableObject authoredProfile = (ScriptableObject)Read(crowbarAsset, "actionProfile");
-        Assert.That(UnityEditor.EditorJsonUtility.ToJson(crowbarAsset), Is.EqualTo(originalCrowbarJson));
+        ScriptableObject authoredProfile = (ScriptableObject)Read(authoredCrowbarAsset, "actionProfile");
+        Assert.That(UnityEditor.EditorJsonUtility.ToJson(authoredCrowbarAsset), Is.EqualTo(originalCrowbarJson));
+        Assert.That(HashCrowbarAsset(), Is.EqualTo(originalCrowbarHash));
+        Assert.That(HashAsset(authoredProfile), Is.EqualTo(originalProfileHash));
         Assert.That(UnityEditor.EditorJsonUtility.ToJson(authoredProfile), Is.EqualTo(originalProfileJson));
-        Assert.That(UnityEditor.AssetDatabase.AssetPathToGUID(UnityEditor.AssetDatabase.GetAssetPath(crowbarAsset)),
+        Assert.That(UnityEditor.AssetDatabase.AssetPathToGUID(UnityEditor.AssetDatabase.GetAssetPath(authoredCrowbarAsset)),
             Is.EqualTo(originalCrowbarGuid));
         Assert.That(UnityEditor.AssetDatabase.AssetPathToGUID(UnityEditor.AssetDatabase.GetAssetPath(authoredProfile)),
             Is.EqualTo(originalProfileGuid));
-        Assert.That(authoredProfile, Is.Not.SameAs(longDurationProfile));
-        Assert.That(Read(longDurationCrowbar, "actionProfile"), Is.SameAs(longDurationProfile));
+        Assert.That(Read(fixtureCrowbar, "actionProfile"), Is.SameAs(fixtureProfile));
+        Assert.That(ReadFloat(fixtureProfile, "crowbarExtractionDuration"), Is.EqualTo(1.5f).Within(0.001f));
+        if (longDurationCrowbar != null)
+        {
+            Assert.That(authoredProfile, Is.Not.SameAs(longDurationProfile));
+            Assert.That(Read(longDurationCrowbar, "actionProfile"), Is.SameAs(longDurationProfile));
+            Assert.That(ReadFloat(longDurationProfile, "crowbarExtractionDuration"), Is.EqualTo(5f).Within(0.001f));
+        }
+    }
+
+    private string HashCrowbarAsset()
+    {
+        return HashAsset(authoredCrowbarAsset);
+    }
+
+    private static string HashAsset(ScriptableObject asset)
+    {
+        string path = UnityEditor.AssetDatabase.GetAssetPath(asset);
+        using (var sha = System.Security.Cryptography.SHA256.Create())
+            return BitConverter.ToString(sha.ComputeHash(System.IO.File.ReadAllBytes(path))).Replace("-", string.Empty);
     }
 
     private void ResetOwnedInputDevices()

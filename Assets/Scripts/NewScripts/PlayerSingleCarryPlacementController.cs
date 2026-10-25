@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>Local-only single-carry placement preview and continuous local X/Z rotation.</summary>
+/// <summary>Local-only single-carry placement preview with discrete one-degree world-axis rotation and F-mode camera stabilization.</summary>
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(1100)]
 public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
@@ -19,6 +19,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
     private PlayerRopeConstraintController ropeConstraint;
     private PlayerActionController actionController;
     private FirstPersonController firstPersonController;
+    private PlayerCameraFeedbackComposer cameraFeedbackComposer;
     private PlayerSingleCarryPlacementNetworkPreview networkPreview;
     private SingleCarryPlacementGhost ghost;
     private SingleCarryPlacementGeometrySolver geometrySolver;
@@ -26,11 +27,15 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
     private SingleCarryPlacementHeldVisual heldVisual;
     private GameObject heldObject;
     private ISingleCarryPlaceable heldPlaceable;
-    private Quaternion localRotation = Quaternion.identity;
+    private readonly SingleCarryPlacementRotationState rotationState = new();
+    private Quaternion placementOffset = Quaternion.identity;
+    private CinemachineBasicMultiChannelPerlin mutedCameraNoise;
+    private float originalCameraNoiseAmplitude;
     private SingleCarryPlacementPose lastRenderedPose;
     private Ray lastRenderedAimRay;
     private bool hasLastRenderedPose;
     private bool requestPending;
+    private bool rotationBlockedUntilNeutral;
     private ulong pendingRequestId;
     private ulong lastRequestId;
     private bool enteredInNetworkSession;
@@ -58,6 +63,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
     public SingleCarryPlacementValidationResult LastValidation { get; private set; }
     public bool IsCurrentPlacementValid => IsActive && LastValidation.IsValid;
     public string PanelMountingGuidanceLabel => panelPlacementGuidance != null ? panelPlacementGuidance.Label : string.Empty;
+    public bool IsHoldingAreaPanel => heldObject != null && heldObject.TryGetComponent(out BridgeDeckAreaPanel _);
     public float PlacementDistance => IsNetworkSessionListening() && networkPreview != null
         ? networkPreview.PlacementDistance : placementDistance;
 
@@ -85,6 +91,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             else if (attached is PlayerRopeConstraintController rope) ropeConstraint = rope;
             else if (attached is PlayerActionController action) actionController = action;
             else if (attached is FirstPersonController firstPerson) firstPersonController = firstPerson;
+            else if (attached is PlayerCameraFeedbackComposer composer) cameraFeedbackComposer = composer;
             else if (attached is PlayerSingleCarryPlacementNetworkPreview preview) networkPreview = preview;
         }
     }
@@ -98,6 +105,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             input.OnConfirmSingleCarryPlacement += ConfirmPlacement;
             input.OnGameplayMenuRequested += ForceExitPlacement;
             input.OnForcedSingleCarryPlacementExit += ForceExitPlacement;
+            input.OnSingleCarryPlacementRotationChanged += PlacementRotationInputChanged;
         }
         if (networkPreview != null)
         {
@@ -119,6 +127,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             input.OnConfirmSingleCarryPlacement -= ConfirmPlacement;
             input.OnGameplayMenuRequested -= ForceExitPlacement;
             input.OnForcedSingleCarryPlacementExit -= ForceExitPlacement;
+            input.OnSingleCarryPlacementRotationChanged -= PlacementRotationInputChanged;
         }
         if (networkPreview != null)
         {
@@ -134,6 +143,8 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
 
     private void OnDestroy()
     {
+        RestorePlacementCameraNoise();
+        if (cameraFeedbackComposer != null) cameraFeedbackComposer.SetPlacementModeSuppressed(false);
         if (panelPlacementGuidance != null) panelPlacementGuidance.Dispose();
         panelPlacementGuidance = null;
     }
@@ -149,17 +160,24 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             return;
         }
 
-        if (requestPending) return;
+        UpdatePlacementCameraNoiseMute();
 
-        ApplyRotationInput(Time.deltaTime);
+        Vector2 rotationInput = input.GetSingleCarryPlacementRotationInput();
+        bool controlModifier = input.IsSingleCarryPlacementControlModifierPressed();
+        if (rotationInput.sqrMagnitude < 0.0001f) rotationBlockedUntilNeutral = false;
+        if (requestPending) return;
+        if (!rotationBlockedUntilNeutral)
+            rotationState.Advance(rotationInput, controlModifier, Time.realtimeSinceStartupAsDouble, rotationDegreesPerSecond);
         RefreshPreview();
     }
 
     private void CinemachineCameraUpdated(CinemachineBrain brain)
     {
-        if (!IsActive || requestPending || brain == null || !CanContinue()
-            || !interaction.TryGetAimRay(out _, out Camera aimCamera, out _) || aimCamera == null
+        if (!IsActive || !CanContinue()) return;
+        if (brain == null || !interaction.TryGetAimRay(out _, out Camera aimCamera, out _) || aimCamera == null
             || brain.OutputCamera != aimCamera) return;
+        UpdatePlacementCameraNoiseMute(brain);
+        if (requestPending) return;
         RefreshPreview();
     }
 
@@ -170,12 +188,14 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         if (!CanEnter()) return;
 
         heldObject = interaction.GetPickedUpGameObject();
+        placementOffset = CarryPlacementOrientation.ResolveOffset(heldObject);
         heldPlaceable = ResolvePlaceable(heldObject);
         ghost = new SingleCarryPlacementGhost(heldObject);
         geometrySolver = new SingleCarryPlacementGeometrySolver(heldObject);
         validator = new SingleCarryPlacementValidator(heldObject);
         heldVisual = new SingleCarryPlacementHeldVisual(heldObject);
-        localRotation = Quaternion.identity;
+        rotationState.Reset();
+        rotationBlockedUntilNeutral = false;
         worldRenderLayer = -1;
         LastGeometryStatus = SingleCarryPlacementGeometryStatus.NoObstacle;
         LastValidation = new SingleCarryPlacementValidationResult(SingleCarryPlacementValidationStatus.UnsupportedGeometry);
@@ -186,6 +206,8 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         enteredInNetworkSession = IsNetworkSessionListening();
         heldSourceOwnershipTracked = false;
         IsActive = true;
+        if (cameraFeedbackComposer != null) cameraFeedbackComposer.SetPlacementModeSuppressed(true);
+        UpdatePlacementCameraNoiseMute();
         interaction.CancelBucketActionHoldForPlacement();
         if (actionController != null) actionController.CancelActionForStateChange();
         if (firstPersonController != null) firstPersonController.StopHorizontalMovementForPlacement();
@@ -193,15 +215,20 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         RefreshPreview();
     }
 
-    private void ApplyRotationInput(float deltaTime)
+    private void PlacementRotationInputChanged(Vector2 direction, bool controlModifier, double timestamp)
     {
-        if (requestPending) return;
-        Vector2 direction = input.GetSingleCarryPlacementRotationInput();
-        if (direction.sqrMagnitude < 0.000001f || rotationDegreesPerSecond <= 0f) return;
-        float degrees = rotationDegreesPerSecond * deltaTime;
-        Quaternion localX = Quaternion.AngleAxis(direction.y * degrees, Vector3.right);
-        Quaternion localZ = Quaternion.AngleAxis(-direction.x * degrees, Vector3.forward);
-        localRotation = (localRotation * localX * localZ).normalized;
+        if (!IsActive) return;
+        if (requestPending)
+        {
+            rotationBlockedUntilNeutral = direction.sqrMagnitude >= 0.0001f;
+            return;
+        }
+        if (rotationBlockedUntilNeutral)
+        {
+            if (direction.sqrMagnitude < 0.0001f) rotationBlockedUntilNeutral = false;
+            return;
+        }
+        rotationState.SetInput(direction, controlModifier, timestamp);
     }
 
     private void RefreshPreview()
@@ -231,7 +258,8 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             worldRenderLayer = ResolveWorldRenderLayer(aimCamera.cullingMask, heldObject.layer);
             ghost.SetWorldRenderLayer(worldRenderLayer);
         }
-        SingleCarryPlacementPose pose = geometrySolver.Calculate(aimRay, PlacementDistance, baseYaw, localRotation, transform);
+        Quaternion itemRotation = CarryPlacementOrientation.Compose(rotationState.BuildWorldRotation(baseYaw), placementOffset);
+        SingleCarryPlacementPose pose = geometrySolver.Calculate(aimRay, PlacementDistance, itemRotation, Quaternion.identity, transform);
         bool renderedPoseChanged = !hasLastRenderedPose
             || Vector3.Distance(lastRenderedPose.Position, pose.Position) > 0.001f
             || Quaternion.Angle(lastRenderedPose.Rotation, pose.Rotation) > 0.05f;
@@ -285,6 +313,8 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             lastRequestId = lastRequestId == ulong.MaxValue ? 1 : lastRequestId + 1;
             pendingRequestId = lastRequestId;
             requestPending = true;
+            rotationBlockedUntilNeutral = true;
+            rotationState.ResetRepeatState();
             placementResultMessage = null;
             ClearPanelMountingPreview();
             PublishPreviewState(poseToCommit.Position, poseToCommit.Rotation, LastValidation.IsValid);
@@ -527,6 +557,8 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
 
     private void ExitPlacement()
     {
+        RestorePlacementCameraNoise();
+        if (cameraFeedbackComposer != null) cameraFeedbackComposer.SetPlacementModeSuppressed(false);
         ClearPanelMountingPreview();
         if (networkPreview != null) networkPreview.ClearOwnerPreview();
         if (ghost != null) ghost.Dispose();
@@ -536,6 +568,7 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         geometrySolver = null;
         validator = null;
         heldObject = null;
+        placementOffset = Quaternion.identity;
         heldPlaceable = null;
         IsActive = false;
         requestPending = false;
@@ -550,19 +583,100 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         physicalRootPath = null;
         physicalRootHasRigidbody = false;
         LastValidation = new SingleCarryPlacementValidationResult(SingleCarryPlacementValidationStatus.UnsupportedGeometry);
-        localRotation = Quaternion.identity;
+        rotationState.Reset();
+        rotationBlockedUntilNeutral = false;
         worldRenderLayer = -1;
         if (input != null) input.SetSingleCarryPlacementActive(false);
     }
 
+    internal void OnLocalVirtualCameraBindingChanged(CinemachineVirtualCamera virtualCamera)
+    {
+        if (!IsActive || !IsLocalPlayer())
+        {
+            RestorePlacementCameraNoise();
+            return;
+        }
+        MutePlacementCameraNoise(virtualCamera);
+    }
+
+    private void UpdatePlacementCameraNoiseMute(CinemachineBrain preferredBrain = null)
+    {
+        if (!IsActive || !IsLocalPlayer())
+        {
+            RestorePlacementCameraNoise();
+            return;
+        }
+
+        CinemachineBrain brain = preferredBrain;
+        if (brain == null && interaction != null
+            && interaction.TryGetAimRay(out _, out Camera camera, out _) && camera != null)
+            brain = camera.GetComponent<CinemachineBrain>();
+        if (brain == null || brain.OutputCamera == null)
+        {
+            RestorePlacementCameraNoise();
+            return;
+        }
+        MutePlacementCameraNoise(brain.ActiveVirtualCamera as CinemachineVirtualCamera);
+    }
+
+    private void MutePlacementCameraNoise(CinemachineVirtualCamera virtualCamera)
+    {
+        Transform expectedTarget = cameraFeedbackComposer != null ? cameraFeedbackComposer.OutputTarget
+            : firstPersonController != null && firstPersonController.CinemachineCameraTarget != null
+                ? firstPersonController.CinemachineCameraTarget.transform : null;
+        if (virtualCamera == null || expectedTarget == null || virtualCamera.Follow != expectedTarget)
+        {
+            RestorePlacementCameraNoise();
+            return;
+        }
+
+        CinemachineBasicMultiChannelPerlin noise = virtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+        if (noise == null)
+        {
+            RestorePlacementCameraNoise();
+            return;
+        }
+        if (noise != mutedCameraNoise)
+        {
+            RestorePlacementCameraNoise();
+            mutedCameraNoise = noise;
+            originalCameraNoiseAmplitude = noise.m_AmplitudeGain;
+        }
+        mutedCameraNoise.m_AmplitudeGain = 0f;
+    }
+
+    private void RestorePlacementCameraNoise()
+    {
+        if (mutedCameraNoise != null) mutedCameraNoise.m_AmplitudeGain = originalCameraNoiseAmplitude;
+        mutedCameraNoise = null;
+        originalCameraNoiseAmplitude = 0f;
+    }
+
     private void RefreshPanelMountingPreview(SingleCarryPlacementPose pose, Camera aimCamera)
     {
-        if (heldObject == null || !heldObject.TryGetComponent(out BridgeDeckPanelMounting marker)
-            || !heldObject.TryGetComponent(out MountableBridgeComponent panel) || !panel.IsPhysicalDeckPanel)
+        if (heldObject == null || !heldObject.TryGetComponent(out MountableBridgeComponent panel) || !panel.IsPhysicalDeckPanel)
         {
             ClearPanelMountingPreview();
             return;
         }
+
+        if (heldObject.TryGetComponent(out BridgeDeckAreaPanel areaPanel))
+        {
+            string message = BridgeDeckAreaRequirement.GetPlacementCandidateMessage(areaPanel,
+                pose.Position, pose.Rotation, out bool areaScope, out bool stageActive);
+            if (areaScope)
+            {
+                if (!stageActive) { ClearPanelMountingPreview(); return; }
+                if (panelPlacementGuidance == null) panelPlacementGuidance = new BridgeDeckPanelPlacementGuidance(this);
+                panelPlacementGuidance.SetMessage(message);
+                return;
+            }
+            ClearPanelMountingPreview();
+            return;
+        }
+
+        if (!heldObject.TryGetComponent(out BridgeDeckPanelMounting marker))
+        { ClearPanelMountingPreview(); return; }
 
         if (!BridgeDeckPanelSectionNetworkState.TryAssessPlacementPreview(panel, pose.Position,
                 pose.Rotation, out BridgeDeckPanelPlacementAssessment assessment))
@@ -576,6 +690,6 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
 
     private void ClearPanelMountingPreview(string message = null)
     {
-        panelPlacementGuidance?.Clear(message);
+        if (panelPlacementGuidance != null) panelPlacementGuidance.Clear(message);
     }
 }

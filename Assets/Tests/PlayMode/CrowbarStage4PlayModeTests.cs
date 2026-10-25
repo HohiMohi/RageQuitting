@@ -34,6 +34,8 @@ public sealed class CrowbarStage4PlayModeTests
     private GameObject hudProgressHolder;
     private Material outlineMaterial;
     private ScriptableObject crowbar;
+    private ScriptableObject authoredCrowbar, fixtureCrowbar, fixtureProfile;
+    private string authoredCrowbarJson, authoredProfileJson, authoredCrowbarHash, authoredProfileHash;
 
     [UnitySetUp]
     public IEnumerator SetUpFixture()
@@ -44,9 +46,23 @@ public sealed class CrowbarStage4PlayModeTests
         Assert.That(Unity.Netcode.NetworkManager.Singleton == null || !Unity.Netcode.NetworkManager.Singleton.IsListening,
             Is.True, "The local input fixture must not run alongside a live NGO session.");
 #if UNITY_EDITOR
-        crowbar = UnityEditor.AssetDatabase.LoadAssetAtPath<ScriptableObject>("Assets/ScriptableObjectAssets/New/Crowbar.asset");
+        authoredCrowbar = UnityEditor.AssetDatabase.LoadAssetAtPath<ScriptableObject>("Assets/ScriptableObjectAssets/New/Crowbar.asset");
 #endif
-        Assert.That(crowbar, Is.Not.Null);
+        Assert.That(authoredCrowbar, Is.Not.Null);
+        ScriptableObject authoredProfile = (ScriptableObject)Read(authoredCrowbar, "actionProfile");
+        authoredCrowbarJson = UnityEditor.EditorJsonUtility.ToJson(authoredCrowbar);
+        authoredProfileJson = UnityEditor.EditorJsonUtility.ToJson(authoredProfile);
+        authoredCrowbarHash = HashCrowbarAsset();
+        authoredProfileHash = HashAsset(authoredProfile);
+        fixtureCrowbar = UnityEngine.Object.Instantiate(authoredCrowbar);
+        fixtureCrowbar.name = "Crowbar Stage4 transient 1.5 second fixture";
+        fixtureProfile = UnityEngine.Object.Instantiate(authoredProfile);
+        fixtureProfile.name = "Crowbar Stage4 transient timing profile";
+        FieldInfo durationField = fixtureProfile.GetType().GetField("crowbarExtractionDuration", PublicInstance);
+        Assert.That(durationField, Is.Not.Null);
+        durationField.SetValue(fixtureProfile, 1.5f);
+        fixtureCrowbar.GetType().GetField("actionProfile", PublicInstance).SetValue(fixtureCrowbar, fixtureProfile);
+        crowbar = fixtureCrowbar;
         player = new GameObject("Crowbar Stage 4 local input player");
         player.AddComponent(PlayerInputType);
         inventory = player.AddComponent(InventoryType);
@@ -93,6 +109,12 @@ public sealed class CrowbarStage4PlayModeTests
             if (cameraObject != null) UnityEngine.Object.Destroy(cameraObject);
             foreach (GameObject extra in extras) if (extra != null) UnityEngine.Object.Destroy(extra);
             if (outlineMaterial != null) UnityEngine.Object.Destroy(outlineMaterial);
+            if (fixtureCrowbar != null) UnityEngine.Object.Destroy(fixtureCrowbar);
+            if (fixtureProfile != null) UnityEngine.Object.Destroy(fixtureProfile);
+            Assert.That(UnityEditor.EditorJsonUtility.ToJson(authoredCrowbar), Is.EqualTo(authoredCrowbarJson));
+            Assert.That(UnityEditor.EditorJsonUtility.ToJson(Read(authoredCrowbar, "actionProfile")), Is.EqualTo(authoredProfileJson));
+            Assert.That(HashCrowbarAsset(), Is.EqualTo(authoredCrowbarHash));
+            Assert.That(HashAsset(Read(authoredCrowbar, "actionProfile") as ScriptableObject), Is.EqualTo(authoredProfileHash));
             extras.Clear();
             yield return null;
         }
@@ -544,9 +566,11 @@ public sealed class CrowbarStage4PlayModeTests
     [Test]
     public void CrowbarProfileOwnsPositiveIndependentExtractionDuration()
     {
-        object profile = Read(crowbar, "actionProfile");
-        Assert.That(Read(profile, "crowbarExtractionDuration"), Is.EqualTo(1.5f).Within(0.001f));
+        object profile = Read(authoredCrowbar, "actionProfile");
+        Assert.That((float)Read(profile, "crowbarExtractionDuration"), Is.GreaterThan(0f));
+        Assert.That(Read(fixtureProfile, "crowbarExtractionDuration"), Is.EqualTo(1.5f).Within(0.001f));
         Assert.That(Read(profile, "movementMultiplierDuringAction"), Is.EqualTo(0.65f).Within(0.001f));
+        Assert.That(Read(fixtureCrowbar, "actionProfile"), Is.SameAs(fixtureProfile));
     }
 
     [UnityTest]
@@ -975,6 +999,21 @@ public sealed class CrowbarStage4PlayModeTests
         object[] args = { Vector3.zero, Vector3.zero };
         Assert.That((bool)component.GetType().GetMethod("TryGetExposedAimSegment", PublicInstance).Invoke(component, args), Is.True);
         start = (Vector3)args[0]; end = (Vector3)args[1];
+    }
+
+    private string HashCrowbarAsset()
+    {
+        return HashAsset(authoredCrowbar);
+    }
+
+    private static string HashAsset(ScriptableObject asset)
+    {
+        string path = UnityEditor.AssetDatabase.GetAssetPath(asset);
+        using (var sha = System.Security.Cryptography.SHA256.Create())
+        {
+            byte[] bytes = System.IO.File.ReadAllBytes(path);
+            return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", string.Empty);
+        }
     }
 
     private void QueueRmb(bool pressed)

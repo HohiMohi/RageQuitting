@@ -34,6 +34,7 @@ public class MultiplayerRoomManager : NetworkBehaviour
     [FormerlySerializedAs("startGameButton")]
     [SerializeField] private Button startFppSceneButton;
     [SerializeField] private Button startTutorialSceneButton;
+    [SerializeField] private Button startDeckAreaSceneButton;
     [SerializeField] private TMP_Text[] playerSlotTexts; // Array of 4 text components
 
     private string currentRoomCode;
@@ -88,6 +89,10 @@ public class MultiplayerRoomManager : NetworkBehaviour
         if (startTutorialSceneButton != null)
         {
             startTutorialSceneButton.onClick.AddListener(OnStartTutorialSceneClicked);
+        }
+        if (startDeckAreaSceneButton != null)
+        {
+            startDeckAreaSceneButton.onClick.AddListener(OnStartDeckAreaSceneClicked);
         }
 
         // Keep buttons inactive until initialized
@@ -268,6 +273,11 @@ public class MultiplayerRoomManager : NetworkBehaviour
         TryStartGameplayScene(GameplaySceneRegistry.TutorialTerrainStage02SceneName);
     }
 
+    private void OnStartDeckAreaSceneClicked()
+    {
+        TryStartGameplayScene(GameplaySceneRegistry.TutorialDeckAreaV1SceneName);
+    }
+
     private void TryStartGameplayScene(string sceneName)
     {
         NetworkManager networkManager = NetworkManager.Singleton;
@@ -396,6 +406,10 @@ public class MultiplayerRoomManager : NetworkBehaviour
         {
             startTutorialSceneButton.gameObject.SetActive(hostCanStart);
         }
+        if (startDeckAreaSceneButton != null)
+        {
+            startDeckAreaSceneButton.gameObject.SetActive(hostCanStart);
+        }
 
         SetGameplaySceneButtonsInteractable(hostCanStart && !sceneLoadInProgress);
     }
@@ -493,6 +507,10 @@ public class MultiplayerRoomManager : NetworkBehaviour
         {
             startTutorialSceneButton.interactable = interactable;
         }
+        if (startDeckAreaSceneButton != null)
+        {
+            startDeckAreaSceneButton.interactable = interactable;
+        }
     }
 
     private void SetButtonsInteractable(bool interactable)
@@ -513,7 +531,8 @@ public class MultiplayerRoomManager : NetworkBehaviour
         Button copyCodeButton,
         Button startFppSceneButton,
         Button startTutorialSceneButton,
-        TMP_Text[] playerSlotTexts)
+        TMP_Text[] playerSlotTexts,
+        Button startDeckAreaSceneButton = null)
     {
         this.mainPanel = mainPanel;
         this.lobbyPanel = lobbyPanel;
@@ -527,5 +546,6 @@ public class MultiplayerRoomManager : NetworkBehaviour
         this.startFppSceneButton = startFppSceneButton;
         this.startTutorialSceneButton = startTutorialSceneButton;
         this.playerSlotTexts = playerSlotTexts;
+        this.startDeckAreaSceneButton = startDeckAreaSceneButton;
     }
 }

@@ -109,6 +109,8 @@ public class PlayerNetworkSetup : NetworkBehaviour
     {
         if (!TryGetComponent(out FirstPersonController firstPersonController))
         {
+            if (TryGetComponent(out PlayerSingleCarryPlacementController placementControllerWithoutFirstPerson))
+                placementControllerWithoutFirstPerson.OnLocalVirtualCameraBindingChanged(null);
             return;
         }
 
@@ -122,6 +124,8 @@ public class PlayerNetworkSetup : NetworkBehaviour
         sharedVirtualCamera = FindActiveSceneVirtualCamera();
         if (sharedVirtualCamera == null)
         {
+            if (TryGetComponent(out PlayerSingleCarryPlacementController placementControllerWithoutSceneCamera))
+                placementControllerWithoutSceneCamera.OnLocalVirtualCameraBindingChanged(null);
             Debug.LogWarning("PlayerNetworkSetup: No Cinemachine virtual camera found in scene.");
             return;
         }
@@ -134,6 +138,8 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
         sharedVirtualCamera.Follow = targetTransform;
         sharedVirtualCamera.LookAt = targetTransform;
+        if (TryGetComponent(out PlayerSingleCarryPlacementController placementControllerForCamera))
+            placementControllerForCamera.OnLocalVirtualCameraBindingChanged(sharedVirtualCamera);
 
         firstPersonController.ResetLookRotationState();
 
@@ -197,6 +203,8 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
     private void ClearLocalCameraBinding()
     {
+        if (TryGetComponent(out PlayerSingleCarryPlacementController placementControllerForCleanup))
+            placementControllerForCleanup.OnLocalVirtualCameraBindingChanged(null);
         if (TryGetComponent(out PlayerInteractionNew playerInteraction))
         {
             playerInteraction.SetAimCamera(null);

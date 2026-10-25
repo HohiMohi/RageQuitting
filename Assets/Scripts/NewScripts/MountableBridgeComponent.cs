@@ -27,7 +27,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     public bool IsPickedUp => isPickedUp;
     public bool IsActivelyCarried => isPickedUp;
     public bool IsPhysicalDeckPanel => isPhysicalDeckPanel;
-    public bool CanBePickedUp => !MountingNailSceneState.IsTargetConnected(transform);
+    public bool CanBePickedUp => !MountingNailSceneState.IsTargetConnected(transform)
+        && (!TryGetComponent(out BridgeDeckAreaPanel areaPanel) || !areaPanel.IsLockedForCompletedArea);
     public bool CanEnterSingleCarryPlacement => CanBePickedUp && mountableBridgeComponentSO != null
         && !mountableBridgeComponentSO.allowMultipleCarriers;
     public bool CanReleaseSingleCarryPlacement(PlayerInteractionNew holder)
@@ -233,7 +234,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     private void Awake()
     {
-        isPhysicalDeckPanel = GetComponent<BridgeDeckPanelMounting>() != null || mountableBridgeComponentSO != null
+        isPhysicalDeckPanel = GetComponent<BridgeDeckAreaPanel>() != null || GetComponent<BridgeDeckPanelMounting>() != null || mountableBridgeComponentSO != null
             && mountableBridgeComponentSO.bridgeComponentSO != null
             && mountableBridgeComponentSO.bridgeComponentSO.deckPanelConstructionWorkflow != null
             && mountableBridgeComponentSO.bridgeComponentSO.deckPanelConstructionWorkflow.UsesPhysicalPanelPlacement;
@@ -421,6 +422,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     public void RemoveFromWorld()
     {
+        if (TryGetComponent(out BridgeDeckAreaPanel areaPanel) && areaPanel.IsLockedForCompletedArea) return;
         if (IsNetworkSessionActive())
         {
             if (IsServer)
@@ -883,6 +885,7 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     [ServerRpc(RequireOwnership = false)]
     private void RequestRemoveFromWorldServerRpc()
     {
+        if (TryGetComponent(out BridgeDeckAreaPanel areaPanel) && areaPanel.IsLockedForCompletedArea) return;
         DespawnOrDestroy();
     }
 

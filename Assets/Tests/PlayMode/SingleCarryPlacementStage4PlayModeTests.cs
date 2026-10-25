@@ -98,8 +98,24 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
         Assert.That(rotationElapsed, Is.GreaterThanOrEqualTo(0.19f), "The bounded arrow input interval should complete.");
         QueueKeys();
         yield return null;
-        Assert.That(Quaternion.Angle(Quaternion.identity, ghost.rotation), Is.GreaterThan(1f),
-            "Arrow input must produce an actual non-identity placement rotation before confirmation.");
+        QueueKeys("LeftCtrl", "RightArrow");
+        InputSystem.Update();
+        QueueKeys();
+        InputSystem.Update();
+        yield return null;
+        MethodInfo aimRayMethod = interactionType.GetMethod("TryGetAimRay", new[]
+        {
+            typeof(Ray).MakeByRefType(), typeof(Camera).MakeByRefType(), typeof(Quaternion).MakeByRefType()
+        });
+        object[] aimRayArgs = { default(Ray), null, Quaternion.identity };
+        Assert.That((bool)aimRayMethod.Invoke(interaction, aimRayArgs), Is.True);
+        Quaternion cameraYaw = (Quaternion)aimRayArgs[2];
+        float roundedYaw = Mathf.Repeat(Mathf.Round(Mathf.Atan2((cameraYaw * Vector3.forward).x,
+            (cameraYaw * Vector3.forward).z) * Mathf.Rad2Deg), 360f);
+        Quaternion expectedOneStep = Quaternion.AngleAxis(1f, Vector3.up)
+            * Quaternion.AngleAxis(1f, Vector3.right) * Quaternion.Euler(0f, roundedYaw, 0f);
+        Assert.That(Quaternion.Angle(expectedOneStep, ghost.rotation), Is.LessThan(0.1f),
+            "Up and Ctrl+Right produce one X and one Y degree before the .35-second repeat delay.");
         Vector3 shownPosition = ghost.position;
         Quaternion shownRotation = ghost.rotation;
 
