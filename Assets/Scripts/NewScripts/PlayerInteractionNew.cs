@@ -59,9 +59,14 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private PlayerConcreteTrapController concreteTrapController;
     private PortableSubstanceContainer activeBucketHold;
     private MonoBehaviour bucketHoldTarget;
+    private FoundationLooseSoilField bucketHoldAimedPit;
+    private bool bucketHoldHasSemanticTarget;
+    private bool bucketHoldSemanticTargetMatches;
     private float bucketHoldStartedAt;
+    private float nextBucketPitAimCheck;
     [SerializeField, Min(0f)] private float bucketTargetLossGraceDuration = 0.2f;
     private float bucketTargetLostAt = -1f;
+    private PortableSubstanceContainer bucketActionIntentContainer;
 
     public bool IsSharedCarryMovementActive => sharedCarryMovementActive && _pickedUpGameObject != null;
     public bool IsPhysicalPointGripActive => IsSharedCarryMovementActive && sharedCarryPhysicsBody != null
@@ -148,6 +153,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         _playerInputNew.OnInteract += HandleInteract;
         _playerInputNew.OnActionAlt += HandleActionAlt;
         _playerInputNew.OnActionAltCanceled += HandleActionAltCanceled;
+        OnHeldObjectChanged += HandleBucketActionHeldObjectChanged;
         _playerHealth = GetComponent<PlayerHealth>();
         flexibleSaplingUI = GetComponent<PlayerFlexibleSaplingUI>();
         wheelbarrowController = GetComponent<PlayerWheelbarrowController>();
@@ -169,6 +175,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void OnDestroy()
     {
+        ClearBucketActionIntent();
+        OnHeldObjectChanged -= HandleBucketActionHeldObjectChanged;
         _playerInputNew.OnInteract -= HandleInteract;
         _playerInputNew.OnActionAlt -= HandleActionAlt;
         _playerInputNew.OnActionAltCanceled -= HandleActionAltCanceled;
@@ -176,6 +184,9 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (!isActiveAndEnabled || _playerInputNew == null || !_playerInputNew.IsLocalGameplayInputActive ||
+            _playerInputNew.IsSingleCarryPlacementActive) return;
+
         // Alternate input is reserved for the Crowbar extraction controller while the tool is selected.
         EquippableItemSO selected = _playerInventory != null ? _playerInventory.GetCurrentSelectedItem() : null;
         if (selected != null && selected.itemType == EquippableItemType.Crowbar)
@@ -211,6 +222,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleActionAltCanceled(object sender, EventArgs e)
     {
+        ClearBucketActionIntent();
         CancelBucketActionHold();
     }
 
@@ -221,9 +233,14 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             return;
         }
 
+        if (!SetBucketActionIntent(container, true)) return;
         activeBucketHold = container;
         bucketHoldTarget = target;
         bucketHoldStartedAt = Time.unscaledTime;
+        bucketHoldAimedPit = ResolveAimedBucketPit();
+        bucketHoldHasSemanticTarget = container.ShouldTrackLooseSoilPitAim(target) && bucketHoldAimedPit != null;
+        bucketHoldSemanticTargetMatches = true;
+        nextBucketPitAimCheck = Time.unscaledTime + 0.1f;
         bucketTargetLostAt = -1f;
         if (container.ActionHoldDuration <= 0f)
         {
@@ -245,7 +262,30 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             return;
         }
 
-        if (_currentTarget != bucketHoldTarget)
+        bool targetMatches = bucketHoldHasSemanticTarget
+            ? bucketHoldSemanticTargetMatches
+            : _currentTarget == bucketHoldTarget;
+        if (Time.unscaledTime >= nextBucketPitAimCheck)
+        {
+            FoundationLooseSoilField currentAimedPit = ResolveAimedBucketPit();
+            nextBucketPitAimCheck = Time.unscaledTime + 0.1f;
+            if (activeBucketHold.ShouldTrackLooseSoilPitAim(_currentTarget) &&
+                (bucketHoldHasSemanticTarget || currentAimedPit != null))
+            {
+                bucketHoldHasSemanticTarget = true;
+                bucketHoldSemanticTargetMatches = currentAimedPit == bucketHoldAimedPit;
+            }
+            else
+            {
+                bucketHoldHasSemanticTarget = false;
+                bucketHoldSemanticTargetMatches = _currentTarget == bucketHoldTarget;
+            }
+            targetMatches = bucketHoldHasSemanticTarget
+                ? bucketHoldSemanticTargetMatches
+                : _currentTarget == bucketHoldTarget;
+        }
+
+        if (!targetMatches)
         {
             if (bucketTargetLostAt < 0f)
             {
@@ -270,14 +310,17 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private void CompleteBucketActionHold()
     {
         PortableSubstanceContainer container = activeBucketHold;
-        MonoBehaviour target = bucketHoldTarget;
+        MonoBehaviour target = _currentTarget;
         CancelBucketActionHold();
         if (container == null || _pickedUpGameObject != container.gameObject)
         {
             return;
         }
 
-        container.RequestContextAction(this, target);
+        if (TryGetAimRay(out Ray aimRay))
+            container.RequestContextActionWithAimRay(this, target, aimRay);
+        else
+            container.RequestContextAction(this, target);
         OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -285,11 +328,68 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     {
         activeBucketHold = null;
         bucketHoldTarget = null;
+        bucketHoldAimedPit = null;
+        bucketHoldHasSemanticTarget = false;
+        bucketHoldSemanticTargetMatches = false;
         bucketHoldStartedAt = 0f;
+        nextBucketPitAimCheck = 0f;
         bucketTargetLostAt = -1f;
     }
 
-    public void CancelBucketActionHoldForPlacement() => CancelBucketActionHold();
+    private bool SetBucketActionIntent(PortableSubstanceContainer container, bool held)
+    {
+        if (held)
+        {
+            if (container == null || bucketActionIntentContainer != null) return false;
+            if (!container.SetBucketActionCollectionIntent(this, true)) return false;
+            bucketActionIntentContainer = container;
+            return true;
+        }
+
+        ClearBucketActionIntent();
+        return true;
+    }
+
+    private void ClearBucketActionIntent()
+    {
+        PortableSubstanceContainer container = bucketActionIntentContainer;
+        bucketActionIntentContainer = null;
+        if (container != null) container.SetBucketActionCollectionIntent(this, false);
+    }
+
+    private void HandleBucketActionHeldObjectChanged(object sender, EventArgs e)
+    {
+        if (bucketActionIntentContainer != null && _pickedUpGameObject != bucketActionIntentContainer.gameObject)
+        {
+            ClearBucketActionIntent();
+            CancelBucketActionHold();
+        }
+    }
+
+    protected void OnDisable()
+    {
+        TryGetComponent(out NetworkObject networkObject);
+        if (networkObject == null || !networkObject.IsSpawned || networkObject.IsOwner)
+            ClearBucketActionIntent();
+        CancelBucketActionHold();
+    }
+
+    private FoundationLooseSoilField ResolveAimedBucketPit()
+    {
+        TryGetComponent(out NetworkObject playerNetworkObject);
+        if (playerNetworkObject != null && playerNetworkObject.IsSpawned && !playerNetworkObject.IsOwner)
+            return null;
+        if (!TryGetAimRay(out Ray aimRay) ||
+            !FoundationLooseSoilField.TryFindAimedPit(aimRay, float.MaxValue,
+                out FoundationLooseSoilField field, out _, out _, out _)) return null;
+        return field;
+    }
+
+    public void CancelBucketActionHoldForPlacement()
+    {
+        ClearBucketActionIntent();
+        CancelBucketActionHold();
+    }
 
     public bool TryGetAimRay(out Ray aimRay) => TryGetAimRayInternal(out aimRay, out _, out _);
 
@@ -1191,8 +1291,19 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     void Update()
     {
+        TryGetComponent(out NetworkObject localNetworkObject);
+        bool localInputOwner = localNetworkObject == null || !localNetworkObject.IsSpawned || localNetworkObject.IsOwner;
+        if (localInputOwner && bucketActionIntentContainer != null &&
+            (_playerInputNew == null || !_playerInputNew.isActiveAndEnabled ||
+             !_playerInputNew.IsLocalGameplayInputActive || _playerInputNew.IsSingleCarryPlacementActive))
+        {
+            ClearBucketActionIntent();
+            CancelBucketActionHold();
+        }
+
         if (_playerHealth != null && _playerHealth.IsDowned)
         {
+            ClearBucketActionIntent();
             CancelBucketActionHold();
             ReleaseFlexibleSaplingForStateChange();
             ClearCurrentInteractable();

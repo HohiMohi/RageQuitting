@@ -50,6 +50,11 @@ namespace StarterAssets
 		[SerializeField, Range(0.1f, 1f)] private float backwardSpeedMultiplier = 0.8f;
 		[SerializeField] private float walkStepDistance = 0.8f;
 		[SerializeField] private float sprintStepDistance = 1.05f;
+		[Header("Loose Soil Movement")]
+		[SerializeField, Range(0f, 1f)] private float looseSoilWalkSpeedAtFullImmersion = 0.75f;
+		[SerializeField, Range(0f, 1f)] private float looseSoilSprintSpeedAtFullImmersion = 0.65f;
+		[SerializeField, Range(0f, 1f)] private float looseSoilJumpHeightAtFullImmersion = 0.65f;
+		private float _looseSoilImmersion;
 
 		[Space(10)]
 		[Tooltip("The height the player can jump")]
@@ -227,6 +232,7 @@ namespace StarterAssets
 		private void OnDisable()
 		{
 			_bodyYawVelocity = 0f;
+			_looseSoilImmersion = 0f;
 		}
 
 		private void OnDestroy()
@@ -390,6 +396,7 @@ namespace StarterAssets
 
         private void Update()
 		{
+			RefreshLooseSoilImmersion();
 			if (_playerActionController != null && _playerActionController.IsCrowbarExtractionActiveOrPending)
 				_isSprinting = false;
 			JumpAndGravity();
@@ -398,6 +405,32 @@ namespace StarterAssets
 			ApplyExternalImpulseMovement();
 			HandleStaminaRegeneration();
 			HandleCarryingStaminaUsage();
+		}
+
+		private void RefreshLooseSoilImmersion()
+		{
+			if (_controller == null || !_controller.enabled || !isActiveAndEnabled)
+			{
+				_looseSoilImmersion = 0f;
+				return;
+			}
+
+			Vector3 foot = _controller.transform.TransformPoint(
+				_controller.center + Vector3.down * (_controller.height * 0.5f));
+			_looseSoilImmersion = FoundationLooseSoilField.GetMaximumImmersion(foot);
+			if (float.IsNaN(_looseSoilImmersion) || float.IsInfinity(_looseSoilImmersion))
+				_looseSoilImmersion = 0f;
+			_looseSoilImmersion = Mathf.Clamp01(_looseSoilImmersion);
+		}
+
+		private float GetLooseSoilMovementMultiplier()
+		{
+			float fullImmersionMultiplier = IsSprinting
+				? looseSoilSprintSpeedAtFullImmersion
+				: looseSoilWalkSpeedAtFullImmersion;
+			if (float.IsNaN(fullImmersionMultiplier) || float.IsInfinity(fullImmersionMultiplier))
+				fullImmersionMultiplier = 1f;
+			return Mathf.Lerp(1f, Mathf.Clamp01(fullImmersionMultiplier), _looseSoilImmersion);
 		}
 
 		private void LateUpdate()
@@ -608,6 +641,7 @@ namespace StarterAssets
 			{
 				targetSpeed *= _playerActionController.ActionMovementMultiplier;
 			}
+			targetSpeed *= GetLooseSoilMovementMultiplier();
 
 			Vector3 localDesiredVelocity = new Vector3(
 				moveInput.x * strafeSpeedMultiplier,
@@ -856,7 +890,13 @@ namespace StarterAssets
 				if (canJump && _isJumpPerformed && _jumpTimeoutDelta <= 0.0f)
 				{
 					// the square root of H * -2 * G = how much velocity needed to reach desired height
-					_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+					float jumpHeightMultiplier = looseSoilJumpHeightAtFullImmersion;
+					if (float.IsNaN(jumpHeightMultiplier) || float.IsInfinity(jumpHeightMultiplier))
+						jumpHeightMultiplier = 1f;
+					float effectiveJumpHeight = JumpHeight * Mathf.Lerp(1f,
+						Mathf.Clamp01(jumpHeightMultiplier), _looseSoilImmersion);
+					_verticalVelocity = Mathf.Sqrt(effectiveJumpHeight * -2f * Gravity);
+					_isJumpPerformed = false;
 					OnJumpStarted?.Invoke(this, EventArgs.Empty);
 				}
 

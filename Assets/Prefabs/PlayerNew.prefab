@@ -547,6 +547,9 @@ MonoBehaviour:
   backwardSpeedMultiplier: 0.8
   walkStepDistance: 0.8
   sprintStepDistance: 1.05
+  looseSoilWalkSpeedAtFullImmersion: 0.75
+  looseSoilSprintSpeedAtFullImmersion: 0.65
+  looseSoilJumpHeightAtFullImmersion: 0.65
   JumpHeight: 1.2
   Gravity: -15
   JumpTimeout: 0.1

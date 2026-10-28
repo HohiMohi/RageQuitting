@@ -27,7 +27,8 @@ public class BridgeConstructionWorkflowSO : ScriptableObject
 public enum FoundationDiggingSubstage
 {
     Loosening,
-    SoilRemoval
+    SoilRemoval,
+    ReturnedSoilRemoval
 }
 
 public enum BridgeConstructionStage

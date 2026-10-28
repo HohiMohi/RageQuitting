@@ -172,6 +172,16 @@ public class GameplayManager : MonoBehaviour
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
     private const int StateMessageBaseSize = sizeof(int) * 2 + sizeof(bool);
     private const int StateMessageItemSize = sizeof(int) * 5 + sizeof(bool) * 3 + sizeof(float) * 8 + sizeof(ulong) + sizeof(double);
+    private const int LooseSoilTrailerMagic = 0x4C534631;
+    private const int LooseSoilTrailerVersion = 1;
+    private const int MaximumLooseSoilSnapshotCells = 16384;
+
+    private sealed class LooseSoilSnapshotTarget
+    {
+        public int ComponentId;
+        public FoundationLooseSoilField Field;
+        public LooseSoilHeightField.Snapshot Snapshot;
+    }
     private const int MountRequestMessageSize = sizeof(int) + sizeof(ulong);
     private const int AssembleRequestMessageSize = sizeof(int) * 2;
     private const int ConstructionWorkRequestMessageSize = sizeof(int) * 3;
@@ -1604,7 +1614,17 @@ public class GameplayManager : MonoBehaviour
 
     private FastBufferWriter CreateBridgeStateWriter()
     {
-        FastBufferWriter writer = new FastBufferWriter(StateMessageBaseSize + bridgeComponentStates.Count * StateMessageItemSize, Allocator.Temp);
+        List<LooseSoilSnapshotTarget> looseTargets = GetLooseSoilSnapshotTargets(captureSnapshots: true);
+        long capacity = StateMessageBaseSize + (long)bridgeComponentStates.Count * StateMessageItemSize;
+        if (looseTargets.Count > 0)
+        {
+            capacity += sizeof(int) * 3;
+            foreach (LooseSoilSnapshotTarget target in looseTargets)
+                capacity += sizeof(int) * 4 + sizeof(float) * 4 + sizeof(double) +
+                            (long)target.Snapshot.CellCount * sizeof(float);
+        }
+        if (capacity > int.MaxValue) throw new InvalidOperationException("Bridge state message exceeds the supported buffer size.");
+        FastBufferWriter writer = new FastBufferWriter((int)capacity, Allocator.Temp);
         writer.WriteValueSafe(bridgeComponentStates.Count);
         writer.WriteValueSafe(currentBridgeBuildingStageIndex);
         writer.WriteValueSafe(isFullyAsembled);
@@ -1612,6 +1632,8 @@ public class GameplayManager : MonoBehaviour
         {
             WriteState(writer, bridgeComponentStates[i]);
         }
+
+        if (looseTargets.Count > 0) WriteLooseSoilTrailer(writer, looseTargets);
 
         return writer;
     }
@@ -1653,6 +1675,10 @@ public class GameplayManager : MonoBehaviour
             receivedStates.Add(ReadState(reader));
         }
 
+        List<LooseSoilSnapshotTarget> looseTargets = GetLooseSoilSnapshotTargets(captureSnapshots: false);
+        if (!TryReadLooseSoilTrailer(reader, looseTargets, out List<LooseSoilSnapshotTarget> receivedLooseSnapshots))
+            return;
+
         bool shouldRaiseCompletedEvent = bridgeComplete && !bridgeFullyAssembledEventInvoked;
         currentBridgeBuildingStageIndex = stageIndex;
         isFullyAsembled = bridgeComplete;
@@ -1665,12 +1691,122 @@ public class GameplayManager : MonoBehaviour
             ApplyNetworkState(state, suppressStageEvents);
         }
 
+        foreach (LooseSoilSnapshotTarget snapshot in receivedLooseSnapshots)
+            snapshot.Field.RestoreSnapshot(snapshot.Snapshot);
+
         hasAppliedInitialNetworkBridgeState = true;
         NotifyBridgeRequirementsChanged();
         if (shouldRaiseCompletedEvent)
         {
             OnBridgeFullyAssembled?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private List<LooseSoilSnapshotTarget> GetLooseSoilSnapshotTargets(bool captureSnapshots)
+    {
+        var targets = new List<LooseSoilSnapshotTarget>();
+        if (bridgeComponents == null) return targets;
+        foreach (BridgeComponent component in bridgeComponents)
+        {
+            BridgeConstructionSite site = component != null ? component.ConstructionSite : null;
+            FoundationExcavationVolume volume = site != null ? site.ExcavationVolume : null;
+            if (volume == null || !volume.UsesLooseSoilHeightField) continue;
+            FoundationLooseSoilField field = volume.LooseSoilField;
+            if (!volume.HasValidLooseSoilConfiguration || field == null || !field.HasHeightField)
+            {
+                if (captureSnapshots)
+                    throw new InvalidOperationException($"Loose-soil field for bridge component {component.ComponentID} is not initialized.");
+                return null;
+            }
+
+            targets.Add(new LooseSoilSnapshotTarget
+            {
+                ComponentId = component.ComponentID,
+                Field = field,
+                Snapshot = captureSnapshots ? field.CaptureSnapshot() : null
+            });
+        }
+        targets.Sort((left, right) => left.ComponentId.CompareTo(right.ComponentId));
+        for (int i = 1; i < targets.Count; i++)
+            if (targets[i - 1].ComponentId == targets[i].ComponentId)
+            {
+                if (captureSnapshots)
+                    throw new InvalidOperationException($"Duplicate loose-soil component id {targets[i].ComponentId}.");
+                return null;
+            }
+        return targets;
+    }
+
+    private static void WriteLooseSoilTrailer(FastBufferWriter writer, List<LooseSoilSnapshotTarget> targets)
+    {
+        writer.WriteValueSafe(LooseSoilTrailerMagic);
+        writer.WriteValueSafe(LooseSoilTrailerVersion);
+        writer.WriteValueSafe(targets.Count);
+        foreach (LooseSoilSnapshotTarget target in targets)
+        {
+            LooseSoilHeightField.Snapshot snapshot = target.Snapshot;
+            if (snapshot == null || snapshot.CellCount > MaximumLooseSoilSnapshotCells)
+                throw new InvalidOperationException("Loose-soil snapshot is missing or exceeds the supported cell limit.");
+            writer.WriteValueSafe(target.ComponentId);
+            writer.WriteValueSafe(snapshot.Width);
+            writer.WriteValueSafe(snapshot.Length);
+            writer.WriteValueSafe(snapshot.CellSize);
+            writer.WriteValueSafe(snapshot.MaximumHeight);
+            writer.WriteValueSafe(snapshot.VolumePerUnit);
+            writer.WriteValueSafe(snapshot.Columns);
+            writer.WriteValueSafe(snapshot.Rows);
+            writer.WriteValueSafe(snapshot.CellCount);
+            for (int i = 0; i < snapshot.CellCount; i++)
+                writer.WriteValueSafe(snapshot.GetHeightAtIndex(i));
+        }
+    }
+
+    private static bool TryReadLooseSoilTrailer(FastBufferReader reader,
+        List<LooseSoilSnapshotTarget> targets,
+        out List<LooseSoilSnapshotTarget> snapshots)
+    {
+        snapshots = new List<LooseSoilSnapshotTarget>();
+        if (targets == null) return false;
+        int remaining = reader.Length - reader.Position;
+        if (remaining == 0) return targets.Count == 0;
+        if (targets.Count == 0 || remaining < sizeof(int) * 3 || !reader.TryBeginRead(sizeof(int) * 3)) return false;
+        reader.ReadValueSafe(out int magic);
+        reader.ReadValueSafe(out int version);
+        reader.ReadValueSafe(out int count);
+        if (magic != LooseSoilTrailerMagic || version != LooseSoilTrailerVersion || count != targets.Count)
+            return false;
+
+        for (int targetIndex = 0; targetIndex < count; targetIndex++)
+        {
+            if (!reader.TryBeginRead(sizeof(int) * 4 + sizeof(float) * 4 + sizeof(double))) return false;
+            reader.ReadValueSafe(out int componentId);
+            reader.ReadValueSafe(out float width);
+            reader.ReadValueSafe(out float length);
+            reader.ReadValueSafe(out float cellSize);
+            reader.ReadValueSafe(out float maximumHeight);
+            reader.ReadValueSafe(out double volumePerUnit);
+            reader.ReadValueSafe(out int columns);
+            reader.ReadValueSafe(out int rows);
+            reader.ReadValueSafe(out int cellCount);
+            LooseSoilSnapshotTarget target = targets[targetIndex];
+            if (componentId != target.ComponentId || cellCount < 1 || cellCount > MaximumLooseSoilSnapshotCells ||
+                columns < 1 || rows < 1 || (long)columns * rows != cellCount ||
+                (long)cellCount * sizeof(float) > int.MaxValue ||
+                !reader.TryBeginRead(cellCount * sizeof(float))) return false;
+
+            float[] heights = new float[cellCount];
+            for (int i = 0; i < cellCount; i++) reader.ReadValueSafe(out heights[i]);
+            if (!LooseSoilHeightField.TryCreateSnapshot(width, length, cellSize, maximumHeight,
+                    volumePerUnit, columns, rows, heights, out LooseSoilHeightField.Snapshot snapshot) ||
+                !target.Field.CanRestoreSnapshot(snapshot)) return false;
+            snapshots.Add(new LooseSoilSnapshotTarget
+            {
+                ComponentId = componentId,
+                Field = target.Field,
+                Snapshot = snapshot
+            });
+        }
+        return reader.Position == reader.Length;
     }
 
     private void WriteState(FastBufferWriter writer, BridgeComponentNetworkState state)

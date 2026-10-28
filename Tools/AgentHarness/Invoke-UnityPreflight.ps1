@@ -18,13 +18,17 @@ $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDirectory '..\..'))
 $modulePath = Join-Path $scriptDirectory 'AgentHarness.psm1'
 Import-Module $modulePath -Force
+Import-Module (Join-Path $scriptDirectory 'UnityConnection.psm1') -Force
+Import-Module (Join-Path $scriptDirectory 'ValidationSummary.psm1') -Force
 
 $startedAt = [DateTime]::UtcNow
+$completedAtUtc = $null
 $runId = '{0}-{1}' -f $startedAt.ToString('yyyyMMddTHHmmssZ'), ([Guid]::NewGuid().ToString('N').Substring(0, 8))
 $artifactRoot = Join-Path $projectRoot 'Artifacts\Validation'
 $artifactDirectory = Join-Path $artifactRoot $runId
 New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
 $summaryPath = Join-Path $artifactDirectory 'summary.json'
+$markdownSummaryPath = Join-Path $artifactDirectory 'summary.md'
 
 $steps = @()
 $warnings = @()
@@ -67,7 +71,8 @@ function Write-Summary {
         requestedScenario = $requestedScenario
         resolvedScenario = $resolvedScenario
         startedAtUtc = $startedAt.ToString('o')
-        completedAtUtc = [DateTime]::UtcNow.ToString('o')
+        completedAtUtc = if ($completedAtUtc) { $completedAtUtc } else { [DateTime]::UtcNow.ToString('o') }
+        markdownSummaryPath = if (Test-Path -LiteralPath $markdownSummaryPath -PathType Leaf) { $markdownSummaryPath } else { $null }
         status = $finalStatus
         exitCode = $exitCode
         backend = $backend
@@ -333,7 +338,23 @@ try {
         $steps += New-HarnessStep -Name 'analyzers' -Status $analyzerStatus -Message $analyzerMessage -Artifacts $analyzerArtifacts
     }
 
-    $unityCli = Join-Path $env:LOCALAPPDATA 'Unity\bin\unity.exe'
+    # A failed analyzer result is always a hard prerequisite failure. An unavailable
+    # analyzer may be bypassed only for an explicitly diagnostic lower-tier run.
+    $analyzerBlocksUnity = $analyzerStatus -eq 'failed' -or
+        ($analyzerStatus -eq 'not_available' -and -not $AllowLowerTier)
+    if ($analyzerBlocksUnity) {
+        $reason = "Unity checks were not executed because the analyzer prerequisite was ${analyzerStatus}: $analyzerMessage"
+        $dependentNames = @('unity-cli-status', 'editor-context', 'compile', 'console-baseline', 'editmode-tests', 'quick-validators')
+        if ($resolvedTier -in @('Gameplay', 'Full')) {
+            $dependentNames += @('playmode-tests', 'gameplay-scenario', 'network-smoke')
+        }
+        $dependentStatus = if ($analyzerStatus -eq 'not_available') { 'not_available' } else { 'blocked' }
+        foreach ($dependentName in $dependentNames) {
+            $steps += New-HarnessStep -Name $dependentName -Status $dependentStatus -Message $reason
+        }
+    }
+    else {
+    $unityCli = (Resolve-UnityCliPath)
     $unityStdOut = Join-Path $artifactDirectory 'unity-status.stdout.txt'
     $unityStdErr = Join-Path $artifactDirectory 'unity-status.stderr.txt'
     $connected = $false
@@ -586,7 +607,7 @@ try {
             $steps += New-HarnessStep -Name 'playmode-tests' -Status $playStatus -Message 'PlayMode tests require all existing validation prerequisites.'
         }
         else {
-            $playArguments = @()
+            $playArguments = @('-TimeoutSeconds', 300)
             if (-not [string]::IsNullOrWhiteSpace($PlayModeFilter)) { $playArguments += @('-Filter', $PlayModeFilter) }
             $steps += Invoke-PreflightUnityCheck -StepName 'playmode-tests' -ScriptPath (Join-Path $scriptDirectory 'Invoke-UnityPlayModeTests.ps1') -ChildArtifactDirectory (Join-Path $artifactDirectory 'playmode-tests') -ExtraArguments $playArguments
         }
@@ -636,6 +657,7 @@ try {
             $steps += Invoke-PreflightUnityCheck -StepName 'network-smoke' -ScriptPath (Join-Path $scriptDirectory 'Invoke-UnityNetworkSmoke.ps1') -ChildArtifactDirectory (Join-Path $artifactDirectory 'network-smoke')
         }
     }
+    }
 
     $placeholderNames = @()
     if ($resolvedTier -eq 'Full') {
@@ -648,7 +670,11 @@ try {
         if ($PlayModeFilter) { $qualifier += "playModeFilter=$PlayModeFilter" }
         if ($resolvedScenario) { $qualifier += "scenario=$resolvedScenario" }
         $suffix = if ($qualifier.Count -gt 0) { ' (' + ($qualifier -join ', ') + ')' } else { '' }
-        if ($AllowLowerTier) {
+        if ($analyzerBlocksUnity) {
+            $placeholderStatus = if ($analyzerStatus -eq 'not_available') { 'not_available' } else { 'blocked' }
+            $steps += New-HarnessStep -Name $placeholder -Status $placeholderStatus -Message "Unity check was not executed because the analyzer prerequisite was ${analyzerStatus}: $analyzerMessage$suffix."
+        }
+        elseif ($AllowLowerTier) {
             $steps += New-HarnessStep -Name $placeholder -Status 'skipped' -Message "Batch 1 placeholder skipped by -AllowLowerTier$suffix."
         }
         else {
@@ -717,12 +743,26 @@ catch {
     }
 }
 finally {
+    $completedAtUtc = [DateTime]::UtcNow.ToString('o')
     if ($artifacts -notcontains $summaryPath) {
         $artifacts += $summaryPath
     }
+    try {
+        $null = Write-Summary
+        $null = Write-UnityValidationMarkdown -SummaryPath $summaryPath -OutputPath $markdownSummaryPath
+        Add-ArtifactPath $markdownSummaryPath
+    }
+    catch {
+        $warnings += "Readable validation summary generation failed: $($_.Exception.Message)"
+        if ($exitCode -eq 0) {
+            $finalStatus = 'failed'
+            $exitCode = 2
+        }
+    }
     $summary = Write-Summary
     if ($Json) {
-        [Console]::Out.WriteLine((ConvertTo-Json -InputObject ([ordered]@{ summaryPath = $summaryPath; status = $summary['status']; exitCode = $summary['exitCode']; resolvedTier = $summary['resolvedTier'] }) -Compress))
+        $markdownPathForOutput = if (Test-Path -LiteralPath $markdownSummaryPath -PathType Leaf) { $markdownSummaryPath } else { $null }
+        [Console]::Out.WriteLine((ConvertTo-Json -InputObject ([ordered]@{ summaryPath = $summaryPath; markdownSummaryPath = $markdownPathForOutput; status = $summary['status']; exitCode = $summary['exitCode']; resolvedTier = $summary['resolvedTier'] }) -Compress))
     }
     else {
         Write-Host ("Unity preflight {0}: {1} (tier {2}, exit {3})" -f $runId, $summary['status'], $summary['resolvedTier'], $summary['exitCode'])

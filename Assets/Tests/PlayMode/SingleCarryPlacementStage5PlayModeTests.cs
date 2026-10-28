@@ -215,13 +215,13 @@ public class SingleCarryPlacementStage5PlayModeTests
         AssertGhost(lateOwnerOne, poseOne, rotationOne, true);
         AssertGhost(lateOwnerTwo, poseTwo, rotationTwo, false);
 
-        SetOwnerPreview(clientOne.LocalClient.PlayerObject.GetComponent(PreviewType),
-            FindSpawnedObject(clientOne, sourceNetworkObject.NetworkObjectId).gameObject, poseOne, rotationOne, false);
-        yield return Until(() => GhostMatches(ownerOneOnHost, poseOne, rotationOne, false)
-            && GhostMatches(lateOwnerOne, poseOne, rotationOne, false),
-            "validity-only change at the bounded network rate");
         Component clientOnePreview = clientOne.LocalClient.PlayerObject.GetComponent(PreviewType);
         GameObject clientOneSource = FindSpawnedObject(clientOne, sourceNetworkObject.NetworkObjectId).gameObject;
+        // SetOwnerPreview may drop an update inside its send interval; retry like the real per-frame caller.
+        yield return UntilOwnerPreview(clientOnePreview, clientOneSource, poseOne, rotationOne, false,
+            () => GhostMatches(ownerOneOnHost, poseOne, rotationOne, false)
+                && GhostMatches(lateOwnerOne, poseOne, rotationOne, false),
+            "validity-only change at the bounded network rate");
         Vector3 smoothedPose = poseOne + Vector3.right;
         Quaternion smoothedRotation = Quaternion.Euler(10f, 350f, 30f);
         Assert.That(GetRemoteInterpolationDuration(ownerOneOnHost), Is.EqualTo(0.05f).Within(0.0001f));

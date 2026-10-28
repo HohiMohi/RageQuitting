@@ -23,10 +23,12 @@ public sealed class ConstructionBookView : MonoBehaviour
     private Image partImage;
     private RectTransform materialsRoot;
     private RectTransform stepsRoot;
+    private WorldViewRenderState lastWorldViewRenderState;
     public RectTransform TurningPagePivot { get; private set; }
 
     public void Build(Color parchment, Color ink)
     {
+        lastWorldViewRenderState = null;
         RectTransform root = gameObject.GetComponent<RectTransform>();
         Image background = gameObject.GetComponent<Image>();
         if (background == null) background = gameObject.AddComponent<Image>();
@@ -64,6 +66,19 @@ public sealed class ConstructionBookView : MonoBehaviour
         Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment,
         Func<bool> isPageTransitioning, bool worldView, string completionSummary, bool perStockPlate = false)
     {
+        if (worldView)
+        {
+            WorldViewRenderState nextState = WorldViewRenderState.Capture(entry, count, pageIndex, pageCount,
+                materials, materialsAvailable, roster, localClientId, isAssigned, completionSummary, perStockPlate);
+            if (nextState != null && nextState.HasSameValues(lastWorldViewRenderState)) return;
+            lastWorldViewRenderState = nextState;
+        }
+        else
+        {
+            // Interactive renders must refresh their Toggle listeners on every call.
+            lastWorldViewRenderState = null;
+        }
+
         Clear(materialsRoot);
         Clear(stepsRoot);
         title.text = entry != null ? $"{entry.title}{(perStockPlate ? string.Empty : $"  x{count}")}\n<size=60%>Page {pageIndex + 1} / {pageCount}</size>" : "Data unavailable";
@@ -111,6 +126,200 @@ public sealed class ConstructionBookView : MonoBehaviour
             foreach (ConstructionBookRosterMember member in roster)
                 AddPlayerCell(players, member, localClientId, pageIndex, i, isAssigned, requestAssignment, isPageTransitioning, worldView);
         }
+    }
+
+    private sealed class WorldViewRenderState
+    {
+        private readonly string entryTitle;
+        private readonly bool entryPresent;
+        private readonly Sprite partSprite;
+        private readonly int count;
+        private readonly int pageIndex;
+        private readonly int pageCount;
+        private readonly bool materialsAvailable;
+        private readonly bool perStockPlate;
+        private readonly string completionSummary;
+        private readonly MaterialRenderValue[] materials;
+        private readonly StepRenderValue[] steps;
+        private readonly RosterRenderValue[] roster;
+        private readonly bool[][] assignments;
+
+        private WorldViewRenderState(string entryTitle, bool entryPresent, Sprite partSprite, int count, int pageIndex, int pageCount,
+            bool materialsAvailable, bool perStockPlate, string completionSummary,
+            MaterialRenderValue[] materials, StepRenderValue[] steps, RosterRenderValue[] roster, bool[][] assignments)
+        {
+            this.entryTitle = entryTitle;
+            this.entryPresent = entryPresent;
+            this.partSprite = partSprite;
+            this.count = count;
+            this.pageIndex = pageIndex;
+            this.pageCount = pageCount;
+            this.materialsAvailable = materialsAvailable;
+            this.perStockPlate = perStockPlate;
+            this.completionSummary = completionSummary;
+            this.materials = materials;
+            this.steps = steps;
+            this.roster = roster;
+            this.assignments = assignments;
+        }
+
+        public static WorldViewRenderState Capture(ConstructionBookCatalogSO.Entry entry, int count,
+            int pageIndex, int pageCount, IReadOnlyList<ConstructionBookMaterialLine> materialLines,
+            bool materialsAvailable, IReadOnlyList<ConstructionBookRosterMember> rosterMembers,
+            ulong localClientId, Func<int, int, ulong, bool> isAssigned, string completionSummary,
+            bool perStockPlate)
+        {
+            // Preserve the old render's failure behavior for invalid collections by letting
+            // Render build (and fail) instead of caching a partial representation.
+            if ((materialsAvailable && materialLines == null) ||
+                (entry != null && entry.steps != null && entry.steps.Length > 0 && rosterMembers == null))
+                return null;
+
+            if (entry != null && entry.steps != null)
+            {
+                foreach (ConstructionBookCatalogSO.Step sourceStep in entry.steps)
+                {
+                    if (sourceStep == null) return null;
+                    if (sourceStep.requirements == null) continue;
+                    foreach (ConstructionBookCatalogSO.Requirement requirement in sourceStep.requirements)
+                        if (requirement == null) return null;
+                }
+            }
+
+            var materialValues = new List<MaterialRenderValue>();
+            if (materialsAvailable)
+            {
+                for (int i = 0; i < materialLines.Count; i++)
+                {
+                    ConstructionBookMaterialLine line = materialLines[i];
+                    BaseResourceSO resource = line.Resource;
+                    materialValues.Add(new MaterialRenderValue(resource != null, resource != null ? resource.resourceName : null,
+                        resource != null ? resource.icon : null, line.PerUnit, line.Total));
+                }
+            }
+
+            ConstructionBookCatalogSO.Step[] sourceSteps = entry != null ? entry.steps : null;
+            int stepCount = sourceSteps != null ? sourceSteps.Length : 0;
+            var stepValues = new StepRenderValue[stepCount];
+            var assignmentValues = new bool[stepCount][];
+            for (int stepIndex = 0; stepIndex < stepCount; stepIndex++)
+            {
+                ConstructionBookCatalogSO.Step step = sourceSteps[stepIndex];
+                ConstructionBookCatalogSO.Requirement[] sourceRequirements = step.requirements;
+                int requirementCount = sourceRequirements != null ? sourceRequirements.Length : 0;
+                var requirementValues = new RequirementRenderValue[requirementCount];
+                for (int requirementIndex = 0; requirementIndex < requirementCount; requirementIndex++)
+                {
+                    ConstructionBookCatalogSO.Requirement requirement = sourceRequirements[requirementIndex];
+                    requirementValues[requirementIndex] = new RequirementRenderValue(
+                        requirement.displayName, requirement.sprite);
+                }
+                stepValues[stepIndex] = new StepRenderValue(step.instruction, requirementValues);
+
+                int rosterCount = rosterMembers != null ? rosterMembers.Count : 0;
+                assignmentValues[stepIndex] = new bool[rosterCount];
+                for (int rosterIndex = 0; rosterIndex < rosterCount; rosterIndex++)
+                    assignmentValues[stepIndex][rosterIndex] = isAssigned != null &&
+                        isAssigned(pageIndex, stepIndex, rosterMembers[rosterIndex].ClientId);
+            }
+
+            int memberCount = rosterMembers != null ? rosterMembers.Count : 0;
+            var rosterValues = new RosterRenderValue[memberCount];
+            for (int i = 0; i < memberCount; i++)
+            {
+                ConstructionBookRosterMember member = rosterMembers[i];
+                rosterValues[i] = new RosterRenderValue(member.ClientId, member.Label,
+                    member.ClientId == localClientId);
+            }
+
+            return new WorldViewRenderState(entry != null ? entry.title : null, entry != null,
+                entry != null ? entry.partSprite : null, count, pageIndex, pageCount, materialsAvailable,
+                perStockPlate, completionSummary, materialValues.ToArray(), stepValues, rosterValues, assignmentValues);
+        }
+
+        public bool HasSameValues(WorldViewRenderState other)
+        {
+            if (other == null || entryPresent != other.entryPresent ||
+                !string.Equals(entryTitle, other.entryTitle, StringComparison.Ordinal) ||
+                partSprite != other.partSprite || count != other.count || pageIndex != other.pageIndex ||
+                pageCount != other.pageCount || materialsAvailable != other.materialsAvailable ||
+                perStockPlate != other.perStockPlate ||
+                !string.Equals(completionSummary, other.completionSummary, StringComparison.Ordinal) ||
+                !SameValues(materials, other.materials) || !SameValues(steps, other.steps) ||
+                !SameValues(roster, other.roster) || assignments.Length != other.assignments.Length)
+                return false;
+
+            for (int i = 0; i < assignments.Length; i++)
+                if (!SameValues(assignments[i], other.assignments[i])) return false;
+            return true;
+        }
+
+        private static bool SameValues<T>(T[] left, T[] right) where T : IEquatable<T>
+        {
+            if (left.Length != right.Length) return false;
+            for (int i = 0; i < left.Length; i++)
+                if (!left[i].Equals(right[i])) return false;
+            return true;
+        }
+
+        private static bool SameValues(bool[] left, bool[] right)
+        {
+            if (left.Length != right.Length) return false;
+            for (int i = 0; i < left.Length; i++)
+                if (left[i] != right[i]) return false;
+            return true;
+        }
+    }
+
+    private readonly struct MaterialRenderValue : IEquatable<MaterialRenderValue>
+    {
+        private readonly bool resourcePresent;
+        private readonly string resourceName;
+        private readonly Sprite icon;
+        private readonly int perUnit;
+        private readonly int total;
+        public MaterialRenderValue(bool resourcePresent, string resourceName, Sprite icon, int perUnit, int total)
+        { this.resourcePresent = resourcePresent; this.resourceName = resourceName; this.icon = icon; this.perUnit = perUnit; this.total = total; }
+        public bool Equals(MaterialRenderValue other) =>
+            resourcePresent == other.resourcePresent && string.Equals(resourceName, other.resourceName, StringComparison.Ordinal) && icon == other.icon &&
+            perUnit == other.perUnit && total == other.total;
+    }
+
+    private readonly struct RequirementRenderValue : IEquatable<RequirementRenderValue>
+    {
+        private readonly string displayName;
+        private readonly Sprite sprite;
+        public RequirementRenderValue(string displayName, Sprite sprite)
+        { this.displayName = displayName; this.sprite = sprite; }
+        public bool Equals(RequirementRenderValue other) =>
+            string.Equals(displayName, other.displayName, StringComparison.Ordinal) && sprite == other.sprite;
+    }
+
+    private sealed class StepRenderValue : IEquatable<StepRenderValue>
+    {
+        private readonly string instruction;
+        private readonly RequirementRenderValue[] requirements;
+        public StepRenderValue(string instruction, RequirementRenderValue[] requirements)
+        { this.instruction = instruction; this.requirements = requirements; }
+        public bool Equals(StepRenderValue other)
+        {
+            if (other == null || !string.Equals(instruction, other.instruction, StringComparison.Ordinal) ||
+                requirements.Length != other.requirements.Length) return false;
+            for (int i = 0; i < requirements.Length; i++)
+                if (!requirements[i].Equals(other.requirements[i])) return false;
+            return true;
+        }
+    }
+
+    private readonly struct RosterRenderValue : IEquatable<RosterRenderValue>
+    {
+        private readonly ulong clientId;
+        private readonly string label;
+        private readonly bool isLocal;
+        public RosterRenderValue(ulong clientId, string label, bool isLocal)
+        { this.clientId = clientId; this.label = label; this.isLocal = isLocal; }
+        public bool Equals(RosterRenderValue other) => clientId == other.clientId && isLocal == other.isLocal &&
+            string.Equals(label, other.label, StringComparison.Ordinal);
     }
 
     private static void AddPlayerCell(RectTransform players, ConstructionBookRosterMember member, ulong localClientId, int spreadIndex, int stepIndex, Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment, Func<bool> isPageTransitioning, bool worldView)

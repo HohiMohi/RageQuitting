@@ -2,8 +2,8 @@
 
 ## Status
 
-**Dwie sceny gameplayowe są skonfigurowane.** `Tutorial_scene` pozostaje źródłową
-sceną blockoutu pełnego nowego mostu. Lobby kieruje opcję `Tutorial` do `TutorialTerrainStage02`.
+Lobby udostępnia trzy warianty poziomu. `Tutorial_scene` pozostaje źródłową
+sceną blockoutu pełnego nowego mostu.
 
 ## `MultiplayerStartScene`
 
@@ -12,8 +12,16 @@ utworzeniu pokoju wybiera:
 
 - `FPP_scene` - wcześniejszy poziom;
 - `Tutorial` - `TutorialTerrainStage02`, eksperymentalna scena oparta na tutorialowym gameplayu.
+- `Tutorial — cięcie płyt` - `TutorialDeckAreaV1`, wariant tutorialu z obszarem cięcia płyt.
 
 Klient widzi stan lobby, ale nie może rozpocząć ładowania.
+
+Etap 0 — 2026-10-25: dwa przyciski miały ten sam prostokąt i nakładały się.
+Rozdzielono je standardowym `VerticalLayoutGroup`: cztery istniejące przyciski
+(`Leave Room`, `FPP_scene`, `Tutorial`, `Tutorial — cięcie płyt`) mają rozmiar
+280×70 i odstęp 12; kolumna znajduje się obok slotów graczy, a panel rozciąga
+się na wysokość. Zachowano źródłowe callbacki oraz ograniczenie startu do hosta.
+Nie wykonano ręcznej oceny UI ani przejścia host–klient.
 
 ## `FPP_scene`
 
@@ -303,7 +311,7 @@ Rewizja oświetlenia 01 (2026-10-06) została zapisana i sprawdzona po ponownym 
 
 ## Routing lobby do Stage02 — 2026-10-07
 
-Przycisk hosta `Tutorial` w `MultiplayerStartScene` ładuje teraz `TutorialTerrainStage02` przez `GameplaySceneRegistry.TutorialTerrainStage02SceneName`. Ścieżka używa `NetworkManager.SceneManager.LoadScene`; wywołanie jest host-only, a NGO synchronizuje zmianę sceny klientom. Stage02 jest wpisana i włączona w Build Settings. Po zmianie Editor odświeżył projekt i kompilacja C# zakończyła się bez błędów. Nie wykonano testów, preflightu, buildu, Play Mode ani weryfikacji hosta i klienta w runtime.
+Przycisk hosta `Tutorial` w `MultiplayerStartScene` ładuje teraz `TutorialTerrainStage02` przez `GameplaySceneRegistry.TutorialTerrainStage02SceneName`. Opcja `Tutorial — cięcie płyt` ładuje `TutorialDeckAreaV1`. Ścieżki używają `NetworkManager.SceneManager.LoadScene`; wywołania są host-only, a NGO synchronizuje zmianę sceny klientom. Stage02 jest wpisana i włączona w Build Settings. Po zmianie Editor odświeżył projekt i kompilacja C# zakończyła się bez błędów. Nie wykonano testów, preflightu, buildu, Play Mode ani weryfikacji hosta i klienta w runtime.
 
 ## Przygotowanie betonu w `Tutorial_scene`
 
@@ -324,3 +332,6 @@ partia trafia do skrzyni po przełączeniu betoniarki na `Pouring`. Kooperacyjne
 wylanie uruchamia `30 s` schnięcia, po czym fundament przechodzi do
 `ReadyForMount`. Profile i prefab znajdują się w `GeneratedAssets/Wheelbarrow`
 oraz `Prefabs/New/Wheelbarrow.prefab`.
+### Sypka ziemia V1 — Etapy 2–3 (2026-10-26)
+
+**Aktualizacja 2026-10-26 — poprawka skoku Etapu 3:** Zgłoszenie ujawniło ponawianie startu skoku, bo kontroler nie konsumował `_isJumpPerformed`; naprawiono to po nadaniu prędkości startowej. Nowy test mierzy pełny skok Space→lądowanie w czterech wariantach (ziemia/poza nią, z karami/no penalty). Targeted Etap 3: 2/2, łącznie Etap 2+3: 4/4; końcowy strict Gameplay: [14/14, EditMode 183/183, PlayMode 211/211](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261026T165529Z-5d519e69/summary.json). Etap 3 nadal czeka na ręczny retest hosta i klienta; brak osobnej sesji sieciowej, pickup/zwrotu, a Etapy 4–6 nie rozpoczęte. Szczegóły, historyczne próby i checklista: [plan Sypkiej ziemi V1](Loose-Soil-V1-Implementation.md).

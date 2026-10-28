@@ -30,6 +30,7 @@ $report = [ordered]@{
     missingMirror = @()
     different = @()
     targetOnly = @()
+    targetOnlyScope = if ($All -or @($Document).Count -eq 0) { 'all' } else { 'not_scanned_selected_documents' }
     rejected = @()
     errors = @()
     artifacts = @()
@@ -267,15 +268,17 @@ try {
         else { $report.different += $relative }
     }
 
-    $sourceSet = @{}
-    foreach ($item in @(Get-ChildItem -LiteralPath $SourceRoot -Filter '*.md' -File -Recurse)) {
-        $relative = $item.FullName.Substring($SourceRoot.TrimEnd('\', '/').Length).TrimStart('\', '/').Replace('\', '/')
-        $sourceSet[$relative] = $true
+    if ($report.targetOnlyScope -eq 'all') {
+        $sourceSet = @{}
+        foreach ($item in @(Get-ChildItem -LiteralPath $SourceRoot -Filter '*.md' -File -Recurse)) {
+            $relative = $item.FullName.Substring($SourceRoot.TrimEnd('\', '/').Length).TrimStart('\', '/').Replace('\', '/')
+            $sourceSet[$relative] = $true
+        }
+        $report.targetOnly = @(Get-ChildItem -LiteralPath $MirrorRoot -Filter '*.md' -File -Recurse |
+            ForEach-Object { $_.FullName.Substring($MirrorRoot.TrimEnd('\', '/').Length).TrimStart('\', '/').Replace('\', '/') } |
+            Where-Object { -not $sourceSet.ContainsKey($_) } |
+            Sort-Object)
     }
-    $report.targetOnly = @(Get-ChildItem -LiteralPath $MirrorRoot -Filter '*.md' -File -Recurse |
-        ForEach-Object { $_.FullName.Substring($MirrorRoot.TrimEnd('\', '/').Length).TrimStart('\', '/').Replace('\', '/') } |
-        Where-Object { -not $sourceSet.ContainsKey($_) } |
-        Sort-Object)
 
     $report.matching = @($report.matching | Sort-Object)
     $report.missing = @($report.missing | Sort-Object)

@@ -33,8 +33,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
 
     private readonly NetworkVariable<byte> modeNetwork = new NetworkVariable<byte>((byte)ConcreteMixerMode.Mixing);
     private readonly NetworkVariable<byte> batchStateNetwork = new NetworkVariable<byte>((byte)ConcreteMixerBatchState.Empty);
-    private readonly NetworkVariable<int> waterUnitsNetwork = new NetworkVariable<int>();
-    private readonly NetworkVariable<int> gravelUnitsNetwork = new NetworkVariable<int>();
+    private readonly NetworkVariable<float> waterUnitsNetwork = new NetworkVariable<float>();
+    private readonly NetworkVariable<float> gravelUnitsNetwork = new NetworkVariable<float>();
     private readonly NetworkVariable<int> cementBagsNetwork = new NetworkVariable<int>();
     private readonly NetworkVariable<float> mixingDegreesNetwork = new NetworkVariable<float>();
     private readonly NetworkVariable<float> drumRotationDegreesNetwork = new NetworkVariable<float>();
@@ -43,8 +43,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
 
     private ConcreteMixerMode localMode = ConcreteMixerMode.Mixing;
     private ConcreteMixerBatchState localBatchState = ConcreteMixerBatchState.Empty;
-    private int localWaterUnits;
-    private int localGravelUnits;
+    private float localWaterUnits;
+    private float localGravelUnits;
     private int localCementBags;
     private float localMixingDegrees;
     private float localDrumRotationDegrees;
@@ -61,20 +61,20 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
 
     public ConcreteMixerMode Mode => IsNetworkSessionActive() ? (ConcreteMixerMode)modeNetwork.Value : localMode;
     public ConcreteMixerBatchState BatchState => IsNetworkSessionActive() ? (ConcreteMixerBatchState)batchStateNetwork.Value : localBatchState;
-    public int WaterUnits => IsNetworkSessionActive() ? waterUnitsNetwork.Value : localWaterUnits;
-    public int GravelUnits => IsNetworkSessionActive() ? gravelUnitsNetwork.Value : localGravelUnits;
+    public float WaterUnits => IsNetworkSessionActive() ? waterUnitsNetwork.Value : localWaterUnits;
+    public float GravelUnits => IsNetworkSessionActive() ? gravelUnitsNetwork.Value : localGravelUnits;
     public int CementBags => IsNetworkSessionActive() ? cementBagsNetwork.Value : localCementBags;
     public float MixingDegrees => IsNetworkSessionActive() ? mixingDegreesNetwork.Value : localMixingDegrees;
     public float DrumRotationDegrees => IsNetworkSessionActive() ? drumRotationDegreesNetwork.Value : localDrumRotationDegrees;
     public float MixingProgress => Mathf.Clamp01(MixingDegrees / RequiredMixingDegrees);
-    public int UsedVolume => WaterUnits + GravelUnits + CementBags * (profile != null ? profile.CementBagVolume : 3);
+    public float UsedVolume => WaterUnits + GravelUnits + CementBags * (profile != null ? profile.CementBagVolume : 3);
     public float MaximumMixingProgress
     {
         get
         {
             int capacity = profile != null ? profile.DrumCapacity : 15;
             int minimumVolume = profile != null ? profile.MinimumLoadedVolumeToStartMixing : 6;
-            return UsedVolume < minimumVolume ? 0f : Mathf.Clamp01((float)UsedVolume / capacity);
+            return UsedVolume < minimumVolume ? 0f : Mathf.Clamp01(UsedVolume / capacity);
         }
     }
     public float MaximumMixingDegrees => RequiredMixingDegrees * MaximumMixingProgress;
@@ -107,8 +107,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
     {
         modeNetwork.OnValueChanged += OnModeChanged;
         batchStateNetwork.OnValueChanged += OnByteStateChanged;
-        waterUnitsNetwork.OnValueChanged += OnIntStateChanged;
-        gravelUnitsNetwork.OnValueChanged += OnIntStateChanged;
+        waterUnitsNetwork.OnValueChanged += OnFloatAmountChanged;
+        gravelUnitsNetwork.OnValueChanged += OnFloatAmountChanged;
         cementBagsNetwork.OnValueChanged += OnIntStateChanged;
         mixingDegreesNetwork.OnValueChanged += OnFloatStateChanged;
         drumRotationDegreesNetwork.OnValueChanged += OnFloatStateChanged;
@@ -129,8 +129,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
     {
         modeNetwork.OnValueChanged -= OnModeChanged;
         batchStateNetwork.OnValueChanged -= OnByteStateChanged;
-        waterUnitsNetwork.OnValueChanged -= OnIntStateChanged;
-        gravelUnitsNetwork.OnValueChanged -= OnIntStateChanged;
+        waterUnitsNetwork.OnValueChanged -= OnFloatAmountChanged;
+        gravelUnitsNetwork.OnValueChanged -= OnFloatAmountChanged;
         cementBagsNetwork.OnValueChanged -= OnIntStateChanged;
         mixingDegreesNetwork.OnValueChanged -= OnFloatStateChanged;
         drumRotationDegreesNetwork.OnValueChanged -= OnFloatStateChanged;
@@ -169,8 +169,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
     {
         if (!HasSimulationAuthority() || player == null || !CanAccept(container) || !IsPlayerNear(player, loadingInteractionPoint)) return false;
         ContainerSubstanceSO substance = container.CurrentSubstance;
-        int transferred = container.TryRemoveUnits(substance, container.CurrentUnits);
-        if (transferred <= 0) return false;
+        float transferred = container.TryRemoveUnits(substance, container.CurrentUnits);
+        if (transferred <= 0f) return false;
         if (substance == waterSubstance) SetWaterUnits(WaterUnits + transferred);
         else SetGravelUnits(GravelUnits + transferred);
         PromoteLoadingState();
@@ -240,8 +240,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
             ConcreteMixerBatchState.Empty => "Mixer empty",
             ConcreteMixerBatchState.ConcreteReady => "Concrete ready",
             ConcreteMixerBatchState.RuinedMix => "Ruined mix - empty mixer",
-            _ => $"Water {WaterUnits}/{(profile != null ? profile.RequiredWaterUnits : 6)} | " +
-                 $"Gravel {GravelUnits}/{(profile != null ? profile.RequiredGravelUnits : 6)} | " +
+            _ => $"Water {SubstanceAmount.Format(WaterUnits)}/{(profile != null ? profile.RequiredWaterUnits : 6)} | " +
+                 $"Gravel {SubstanceAmount.Format(GravelUnits)}/{(profile != null ? profile.RequiredGravelUnits : 6)} | " +
                  $"Cement {CementBags}/{(profile != null ? profile.RequiredCementBags : 1)} | Mix {MixingProgress:P0}"
         };
 
@@ -326,8 +326,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
             Mathf.Max(MixingDegrees, inputMaximumDegrees));
         SetMixingDegrees(Mathf.Min(requestMaximumDegrees, MixingDegrees + accepted));
         if (MixingDegrees < RequiredMixingDegrees - 0.01f) return;
-        bool validRecipe = profile != null && WaterUnits == profile.RequiredWaterUnits &&
-            GravelUnits == profile.RequiredGravelUnits && CementBags == profile.RequiredCementBags;
+        bool validRecipe = profile != null && Mathf.Approximately(WaterUnits, profile.RequiredWaterUnits) &&
+            Mathf.Approximately(GravelUnits, profile.RequiredGravelUnits) && CementBags == profile.RequiredCementBags;
         SetBatchState(validRecipe ? ConcreteMixerBatchState.ConcreteReady : ConcreteMixerBatchState.RuinedMix);
         ReleaseCrank(clientId, true);
     }
@@ -443,8 +443,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
 
     private void SetMode(ConcreteMixerMode value) { if (IsNetworkSessionActive()) modeNetwork.Value = (byte)value; else { localMode = value; ApplyDrumPose(false); RaiseStateChanged(); } }
     private void SetBatchState(ConcreteMixerBatchState value) { if (IsNetworkSessionActive()) batchStateNetwork.Value = (byte)value; else { localBatchState = value; RaiseStateChanged(); } }
-    private void SetWaterUnits(int value) { if (IsNetworkSessionActive()) waterUnitsNetwork.Value = value; else { localWaterUnits = value; RaiseStateChanged(); } }
-    private void SetGravelUnits(int value) { if (IsNetworkSessionActive()) gravelUnitsNetwork.Value = value; else { localGravelUnits = value; RaiseStateChanged(); } }
+    private void SetWaterUnits(float value) { if (IsNetworkSessionActive()) waterUnitsNetwork.Value = value; else { localWaterUnits = value; RaiseStateChanged(); } }
+    private void SetGravelUnits(float value) { if (IsNetworkSessionActive()) gravelUnitsNetwork.Value = value; else { localGravelUnits = value; RaiseStateChanged(); } }
     private void SetCementBags(int value) { if (IsNetworkSessionActive()) cementBagsNetwork.Value = value; else { localCementBags = value; RaiseStateChanged(); } }
     private void SetMixingDegrees(float value) { if (IsNetworkSessionActive()) mixingDegreesNetwork.Value = value; else { localMixingDegrees = value; RaiseStateChanged(); } }
     private void SetDrumRotationDegrees(float value) { if (IsNetworkSessionActive()) drumRotationDegreesNetwork.Value = value; else { localDrumRotationDegrees = value; RaiseStateChanged(); } }
@@ -453,6 +453,7 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
     private void OnModeChanged(byte previous, byte current) { ApplyDrumPose(false); RaiseStateChanged(); }
     private void OnByteStateChanged(byte previous, byte current) => RaiseStateChanged();
     private void OnIntStateChanged(int previous, int current) => RaiseStateChanged();
+    private void OnFloatAmountChanged(float previous, float current) => RaiseStateChanged();
     private void OnFloatStateChanged(float previous, float current) => RaiseStateChanged();
     private void OnCrankOwnerChanged(ulong previous, ulong current) => RaiseStateChanged();
     private void OnDumpSequenceChanged(int previous, int current) { localDumpSequence = current; PlaySpillVisual(); RaiseStateChanged(); }

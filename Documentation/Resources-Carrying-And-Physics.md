@@ -447,18 +447,46 @@ Trigger placu fundamentu jest podczas `Clearing` miekkim celem targetowania. Zac
 
 ## Substancje i wiadra
 
-`PortableSubstanceContainer` jest fizycznym, sieciowym single-carry pojemnikiem. Przechowuje do trzech porcji jednej pozycji z katalogu `ContainerSubstanceSO`; nie miesza typów i zachowuje zawartość po upuszczeniu. RMB pobiera porcję z aktywnego `ISubstanceSource`, a poza źródłem wysypuje całość. Poza trybem ustawiania `E` zwyczajnie upuszcza wiadro; w trybie ustawiania `E` zatwierdza jego pozycję, a `Esc` anuluje. Serwer sprawdza holdera, odległość, pojemność i źródło.
+`PortableSubstanceContainer` jest fizycznym, sieciowym single-carry pojemnikiem. Przechowuje do trzech porcji jednej pozycji z katalogu `ContainerSubstanceSO`; ilość jest `float`, typów nie miesza, a zawartość zachowuje po upuszczeniu. `TryAddUnits` i `TryRemoveUnits` zwracają faktycznie przeniesioną ilość (odmowa to `0`), z uwzględnieniem pojemności i dostępnej zawartości. Na obecnym etapie jedno ukończone przytrzymanie RMB pobiera maksymalnie jedną porcję, ale końcówka źródła lub brak miejsca mogą dać mniej. Poza źródłem RMB wysypuje całość. Poza trybem ustawiania `E` zwyczajnie upuszcza wiadro; w trybie ustawiania `E` zatwierdza jego pozycję, a `Esc` anuluje. Serwer sprawdza holdera, odległość, pojemność i źródło.
 
 Katalog obejmuje `Soil`, `Water`, `Gravel` i przygotowany pod dalszy etap
-`Concrete`. Wysypanie Soil tworzy jeden `LooseSubstancePile` z faktyczną liczbą
-porcji. Kupę można ponownie nabierać po jednej porcji; visual maleje, a zero
-porcji despawnuje obiekt. Kupa jest dynamiczna i podatna na kolizje, ale nie
-można jej nieść rękami. Kontakt z dnem rzeki ją usuwa.
+`Concrete`. Wysypanie Soil tworzy jeden `LooseSubstancePile` z faktyczną liczbą porcji; nieudana próba utworzenia kupki nie traci zawartości wiadra. Ilość kupki jest `float`; `TryExtract` i `TryReturnTo` raportują faktycznie przeniesioną ilość, a odmowa zwraca `0`. Kupkę można ponownie nabierać, visual skaluje się także dla małych ilości, a zero porcji despawnuje obiekt. Kupa jest dynamiczna i podatna na kolizje, ale nie można jej nieść rękami. Kontakt z dnem rzeki ją usuwa.
 
 `SubstanceExtractionZone` jest niewyczerpywalnym źródłem o stabilnym ID
 scenowym. Tutorial ma dwa punkty poboru wody w `WaterBody` i po jednej strefie
-żwiru na każdym brzegu. Jedno ukończone przytrzymanie RMB pobiera jedną porcję;
-pełne wiadro przekazuje do `ISubstanceSink` wszystkie trzy porcje atomowo.
+żwiru na każdym brzegu. Jedno ukończone przytrzymanie RMB pobiera maksymalnie jedną porcję, z możliwością częściowego transferu przy końcówce źródła lub braku miejsca. Pełne wiadro do betoniarki jest przekazywane atomowo: betoniarka odrzuca wiadro niepełne oraz pełne, które w całości nie mieści się w pozostałej pojemności, bez ubytku zawartości.
+
+Ilości wody i żwiru betoniarki oraz ilość postępu wykopu są typu `float`.
+Receptura pozostaje `6 Water + 6 Gravel + 1 Cement Bag`, bęben mieści `15`
+jednostek objętości, a limity cykli, cement i liczba cykli pozostają całkowite.
+Ilości przesyłane w sieci są `float`; host i klient muszą używać tej samej
+wersji. `constructionAux0` zachowuje typ float, bez zaokrąglania przy
+odtwarzaniu stanu sieciowego i bez zmiany rozmiaru pakietu.
+
+### Sypka ziemia V1 — Etapy 1–4
+
+Etap 1 ułamkowych porcji przeszedł techniczny review i ścisły, nieprzefiltrowany
+Gameplay preflight (`14/14`, EditMode `174/174`, PlayMode `207/207`, exit `0`;
+[raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261025T212124Z-cbcacb34/summary.json)).
+Zmiana obejmuje ułamkowe transfery, częściowe transfery źródeł/kupki, atomową odmowę betoniarki,
+formatowanie ilości, pierwszą warstwę siatki wykopu oraz karę ruchu zależną od zanurzenia stóp
+zwykłego gracza (chód 0.75×, sprint 0.65×, wysokość skoku 0.65× przy pełnym zanurzeniu).
+Użytkownik zaakceptował Etapy 1 i 2 dla hosta oraz klienta bez podania szczegółowego zakresu testów.
+Użytkownik zaakceptował Etap 3 po poprawce skoku. Etap 4 automatycznego zbierania jest technicznie ukończony i czeka na ręczną kontrolę; Etapy 5–6 nie rozpoczęły się.
+Historia walidacji, zakres i checklisty: [plan Sypkiej ziemi V1](Loose-Soil-V1-Implementation.md).
+
+Historyczny, niefiltrowany strict Gameplay Etapu 3 sprzed poprawki skoku przeszedł 14/14 kroków (EditMode 183/183,
+PlayMode 210/210), bez pominięć i nowych diagnostyk analizatora (915 wobec baseline 925/316).
+[Raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261026T160119Z-46afe435/summary.json).
+Automatyczne testy ruchu użyły odizolowanego produkcyjnego prefab gracza i rzeczywistego ruchu
+klatkowego dla pełnego/płytkiego zanurzenia, chodu, sprintu, skoku, składania kar oraz cyklu
+życia pola. Nie był to nowy test host–klient; osobne buildy/procesy i WAN/Relay nie były testowane.
+
+Do ręcznego sprawdzenia ładowania betoniarki użyj testowej kopii profilu z
+`alwaysReadyConcreteForTesting` wyłączonym. Produkcyjny asset
+`Assets/GeneratedAssets/ConcretePreparation/ConcreteMixerProfile.asset` nadal
+ma tę flagę włączoną, a Stage02 korzysta z prefabu bez override; nie zmieniaj
+produkcyjnego assetu tylko na potrzeby tej kontroli.
 
 `Limestone Stone`, `Clay Lump` i `Cement Bag` są zwykłymi zasobami
 single-carry. Złoża wapienia i gliny nie są przenośne i odradzają się do
@@ -620,3 +648,10 @@ Uderzenie młotem przemysłowym w nieukończony panel usuwa bez odzysku osadzone
 Po odroczonym usunięciu jointów serwer dodaje zmianę prędkości niezależną od masy: `2 m/s` do góry oraz `0.5 m/s` poziomo od gracza. Wartości domyślne są konfigurowalne z ograniczeniem zakresu w `BridgeDeckPanelConstructionWorkflowSO`. Przed impulsem sprawdzane są autorytet i cykl życia obiektu; fizykę symuluje serwer. Panel trzymany przez gracza/NPC nie jest celem resetu. Poprawnie ukończony panel jest chroniony nawet po wcześniejszym ukończeniu; cztery mocowania w błędnej pozie nie oznaczają ukończenia. Trafiony gwóźdź ma pierwszeństwo przed panelem także wtedy, gdy nie może postąpić jego stan.
 
 Historyczny strict, nieprzefiltrowany Gameplay przed poprawką grawitacji przeszedł: exit 0, 14/14 kroków, EditMode 117/117 i PlayMode 120/120; analyzer 921 wobec chronionego baseline 925/316. [Historyczny raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261018T152306Z-c16f3daa/summary.json). Test NGO używał hosta, zdalnego ownera, obserwatora i late join w jednym procesie loopback UTP; network-smoke był host-only. Nie potwierdzono osobnego procesu, buildu, WAN ani Relay. Snapshot Console po tamtym Gameplay wykazał 0 błędów i 11 ostrzeżeń; wszystkie teksty ostrzeżeń występowały w baseline (porównanie po tekście komunikatu, nie stack/origin): [historyczny snapshot](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3_20261018/Validation/post-gameplay-console.json). Aktualny snapshot Console po poprawce i jego porównanie: [snapshot](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3Gravity_20261018/Validation/post-gameplay-console.json), [porównanie](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3Gravity_20261018/Validation/post-gameplay-console-comparison.json). [Historyczne szczegóły ograniczeń i zakresu fixture](D:/Programy/UnityProjects/RageQuitting/Artifacts/DeckPanelStage3_20261018/Validation/final-worker-checkpoint.txt). Najnowszy wynik po poprawce 117/121 opisuje sekcja [Mounting-Nails](Mounting-Nails.md#fizyczne-płyty--etap-3). Ten historyczny wpis nie opisuje bieżącego odbioru: użytkownik zaakceptował Etap 3 na hoście i kliencie. Etap 4 jest wdrożony i technicznie zwalidowany; jego ręczny odbiór oraz ograniczenia opisuje [Mounting-Nails](Mounting-Nails.md#fizyczne-płyty--etap-4).
+### Sypka ziemia V1 — Etapy 2–3 (2026-10-26)
+
+**Aktualizacja 2026-10-26 — poprawka skoku Etapu 3:** Zgłoszenie ujawniło ponawianie startu skoku, bo kontroler nie konsumował `_isJumpPerformed`; naprawiono to po nadaniu prędkości startowej. Nowy test mierzy pełny skok Space→lądowanie w czterech wariantach (ziemia/poza nią, z karami/no penalty). Targeted Etap 3: 2/2, łącznie Etap 2+3: 4/4; końcowy strict Gameplay: [14/14, EditMode 183/183, PlayMode 211/211](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261026T165529Z-5d519e69/summary.json). Późniejsza akceptacja użytkownika potwierdziła działanie poprawki skoku Etapu 3. Etap 4 oczekuje na ręczną kontrolę; jego wyniki i ograniczenia opisano niżej. Brak osobnych buildów/procesów, WAN ani Relay. Etapy 5–6 nie rozpoczęte. Szczegóły, historyczne próby i checklista: [plan Sypkiej ziemi V1](Loose-Soil-V1-Implementation.md).
+
+### Sypka ziemia V1 — Etap 4 (2026-10-26)
+
+Automatyczny pobór z nowych pól Stage02 jest wdrożony na prefabie wiadra. Serwer liczy go z poziomego ruchu gracza niosącego wiadro (próbkowana jest pozycja gracza, nie animacja wiadra); domyślne wartości to `0.5` porcji/s, promień `0.6 m`, próbkowanie `0.1 s`, próg ruchu `0.01 m` i limit teleportu `1.5 m` na próbkę. Cała końcówka warstwy jest zbierana tylko, gdy mieści się w wiadrze. Zdalny klient nie podaje ilości do pobrania; konfiguracja klienta nie steruje autorytatywnym serwerowym wiadrem. Użytkownik zaakceptował poprawkę skoku Stage 3. Etap 4 czeka na ręczne sprawdzenie Stage02; etap 5 (lokalny zwrot/RMB) i 6 (pełna pętla/strojenie) nie rozpoczęły się. Szczegóły, ograniczenia, ręczna checklista i historia prób: [plan Sypkiej ziemi V1](Loose-Soil-V1-Implementation.md).

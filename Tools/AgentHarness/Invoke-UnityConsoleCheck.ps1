@@ -10,6 +10,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 Import-Module (Join-Path $scriptDirectory 'AgentHarness.psm1') -Force
+Import-Module (Join-Path $scriptDirectory 'UnityConnection.psm1') -Force
 $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDirectory '..\..'))
 $started = [DateTime]::UtcNow
 if ([string]::IsNullOrWhiteSpace($ArtifactDirectory)) {
@@ -23,7 +24,7 @@ $reportPath = Join-Path $ArtifactDirectory 'unity-console-report.json'
 $stdout = Join-Path $ArtifactDirectory 'get-console-logs.stdout.txt'
 $stderr = Join-Path $ArtifactDirectory 'get-console-logs.stderr.txt'
 $baselinePath = Join-Path $scriptDirectory 'unity-console-baseline.json'
-$unityCli = Join-Path $env:LOCALAPPDATA 'Unity\bin\unity.exe'
+$unityCli = (Resolve-UnityCliPath)
 $report = [ordered]@{
     schemaVersion = 1; status = 'failed'; exitCode = 2; startedAtUtc = $started.ToString('o'); completedAtUtc = $null
     projectRoot = $projectRoot; limit = $Limit; total = 0; returned = 0; truncated = $false

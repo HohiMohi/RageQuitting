@@ -120,7 +120,8 @@ public sealed class BridgeDeckAreaV1AuthoringTests
         using (SHA256 sha = SHA256.Create())
         {
             string hash = BitConverter.ToString(sha.ComputeHash(File.ReadAllBytes(sourcePath))).Replace("-", string.Empty);
-            Assert.That(hash, Is.EqualTo("94EFADC380FD3FE025680A1E3C35B7774212EAC6D3C0ACDE2C07C3FBF113A93F"));
+            // Approved Stage02 source hash includes the user-saved Stage02 authoring baseline; this test still verifies that copying does not mutate the source scene.
+            Assert.That(hash, Is.EqualTo("80745C9D5D64212006656523985AAD53AFF8C9F0088AF19476FD47DBE7362308"));
         }
         Assert.That(EditorBuildSettings.scenes.Any(scene => scene.enabled && scene.path == ScenePath), Is.True);
         Component manager = FindSingleComponent(areaScene, "GameplayManager");

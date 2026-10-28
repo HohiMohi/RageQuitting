@@ -47,9 +47,9 @@ public class SubstanceExtractionZone : MonoBehaviour, ISubstanceSource, IInterac
         return requested != null && requested == substance;
     }
 
-    public bool TryExtract(ContainerSubstanceSO requested, int units)
+    public float TryExtract(ContainerSubstanceSO requested, float units)
     {
-        return units > 0 && CanExtract(requested) && HasAuthority();
+        return SubstanceAmount.IsFinitePositive(units) && CanExtract(requested) && HasAuthority() ? units : 0f;
     }
 
     public Vector3 GetClosestInteractionPoint(Vector3 worldPosition)

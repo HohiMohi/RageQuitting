@@ -402,7 +402,7 @@ public class SingleCarryPlacementStage2EditModeTests
         Type containerType = Type.GetType("PortableSubstanceContainer, Assembly-CSharp");
         Component container = ghostSource.GetComponent(containerType);
         Assert.That(container, Is.Not.Null);
-        containerType.GetField("localUnits", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(container, 2);
+        containerType.GetField("localUnits", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(container, 2f);
         containerType.GetField("localSubstanceIndex", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(container, 0);
         Transform content = (Transform)containerType.GetField("contentVisual", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(container);
         Renderer contentRenderer = (Renderer)containerType.GetField("contentRenderer", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(container);

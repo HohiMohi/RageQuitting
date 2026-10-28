@@ -218,9 +218,14 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
         WheelbarrowController activeWheelbarrow = Wheelbarrow;
         bool validState = State == WheelbarrowPouringState.WaitingForPlayers ||
             State == WheelbarrowPouringState.Active;
-        return validState && station != null && activeWheelbarrow != null &&
+        return validState && IsBoundDockReadyForPouring(activeWheelbarrow);
+    }
+
+    private bool IsBoundDockReadyForPouring(WheelbarrowController activeWheelbarrow)
+    {
+        return station != null && activeWheelbarrow != null &&
             station.DockedWheelbarrow == activeWheelbarrow && activeWheelbarrow.IsDockSecured &&
-            activeWheelbarrow.HasPourableConcrete;
+            activeWheelbarrow.HasPourableConcrete && (site == null || site.CanAcceptFoundationDock);
     }
 
     public bool TryResolveAnchorPose(
@@ -340,7 +345,15 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
 
     private void Update()
     {
-        if (!HasAuthority || State != WheelbarrowPouringState.Active || wheelbarrow == null || profile == null) return;
+        if (!HasAuthority || profile == null) return;
+        if (State != WheelbarrowPouringState.Active) return;
+        if (!IsReadyForParticipants())
+        {
+            CancelAndRelease(false);
+            SetState(WheelbarrowPouringState.WaitingForPlayers);
+            return;
+        }
+
         float difference = Mathf.Abs(LeftCursor - RightCursor);
         float synchronizedProgress = difference <= profile.SynchronizedTolerance ? Mathf.Min(LeftCursor, RightCursor) : 0f;
         wheelbarrow.PhysicsBody.MoveRotation(transportRotation * Quaternion.Euler(profile.MaximumPourAngle * synchronizedProgress, 0f, 0f));
@@ -360,6 +373,13 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
         if (!HasAuthority || wheelbarrow == null || criticalFailureSequenceCoroutine != null) return;
         if (success)
         {
+            if (!IsReadyForParticipants())
+            {
+                CancelAndRelease(false);
+                SetState(WheelbarrowPouringState.WaitingForPlayers);
+                return;
+            }
+
             SetState(WheelbarrowPouringState.Success);
             wheelbarrow.RestoreSecuredDockPose();
             if (wheelbarrow.ConsumeConcreteLoad()) site?.TryAcceptConcreteLoad(1);

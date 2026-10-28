@@ -255,7 +255,17 @@ MonoBehaviour:
   MoveSpeed: 4
   SprintSpeed: 6
   RotationSpeed: 1
-  SpeedChangeRate: 10
+  groundAcceleration: 22
+  groundDeceleration: 28
+  reverseAcceleration: 34
+  airAcceleration: 4
+  strafeSpeedMultiplier: 0.9
+  backwardSpeedMultiplier: 0.8
+  walkStepDistance: 0.8
+  sprintStepDistance: 1.05
+  looseSoilWalkSpeedAtFullImmersion: 0.75
+  looseSoilSprintSpeedAtFullImmersion: 0.65
+  looseSoilJumpHeightAtFullImmersion: 0.65
   JumpHeight: 1.2
   Gravity: -15
   JumpTimeout: 0.1
@@ -269,9 +279,17 @@ MonoBehaviour:
   CinemachineCameraTarget: {fileID: 4135013735270702863}
   TopClamp: 89
   BottomClamp: -89
+  maximumCameraBodyYawOffset: 6
+  bodyYawSmoothTime: 0.09
+  bodyMaximumYawSpeed: 720
   MaxStamina: 5
   StaminaRegenerationTimeout: 2
   currentMovementSpeed: 0
+  sharedCarryAttachCorrectionSpeed: 12
+  sharedCarryAttachSnapDistance: 1.5
+  sharedCarryInputSendInterval: 0.05
+  sharedCarryInputChangeThreshold: 0.01
+  sharedCarryExhaustionWarningDuration: 3
 --- !u!114 &1978471637655604388
 MonoBehaviour:
   m_ObjectHideFlags: 0

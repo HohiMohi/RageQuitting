@@ -11,6 +11,10 @@ public class FoundationExcavationVolume : MonoBehaviour
     [SerializeField] private Material compactSoilMaterial;
     [SerializeField] private Material loosenedSoilMaterial;
     [SerializeField] private float surfaceStartLocalY;
+    [Header("Loose soil V1")]
+    [SerializeField] private bool useLooseSoilHeightField;
+    [SerializeField] private FoundationLooseSoilField looseSoilField;
+    [SerializeField] private BoxCollider soilSupportCollider;
     [Header("Concrete")]
     [SerializeField] private Transform concreteFillVisual;
     [SerializeField] private Renderer concreteRenderer;
@@ -38,12 +42,25 @@ public class FoundationExcavationVolume : MonoBehaviour
     private Vector3 driedColliderBaseCenter;
     private Vector3 driedColliderBaseSize = Vector3.one;
     private bool driedColliderBaselineCaptured;
+    private bool soilRendererBaselineCaptured;
+    private bool soilRendererBaselineEnabled;
+    private bool looseSoilConfigurationErrorLogged;
+    private int appliedLooseSoilCycle = int.MinValue;
+    private FoundationDiggingSubstage appliedLooseSoilSubstage;
 
     public Transform FailedWheelbarrowPose => failedWheelbarrowPose;
     public FoundationFailedConcreteTarget FailedConcreteTarget => failedConcreteTarget;
     public NavMeshObstacle PitNavMeshObstacle => pitNavMeshObstacle;
     public GameObject NavMeshBakeProxy => navMeshBakeProxy;
     public Collider DriedConcreteCollider => driedConcreteCollider;
+    public bool UsesLooseSoilHeightField => useLooseSoilHeightField;
+    public FoundationLooseSoilField LooseSoilField => looseSoilField;
+    public BridgeConstructionSite ConstructionSite => constructionSite;
+    public bool HasValidLooseSoilConfiguration => !useLooseSoilHeightField ||
+        (soilSurface != null && soilSupportCollider != null && looseSoilField != null &&
+         soilSupportCollider.transform == soilSurface &&
+         looseSoilField.transform.parent == transform && looseSoilField.transform.localScale == Vector3.one &&
+         looseSoilField.transform.localRotation == Quaternion.identity);
     public IReadOnlyList<GameObject> FailedConcreteCrackVisuals => failedConcreteCrackVisuals;
     public bool ContainsRecoveryWheelbarrow(Vector3 worldPosition)
     {
@@ -54,21 +71,102 @@ public class FoundationExcavationVolume : MonoBehaviour
     }
 
     public void ApplyDiggingState(BridgeConstructionStage stage, FoundationDiggingSubstage substage,
-        float looseningProgress, int removedSoilUnits, BridgeConstructionWorkflowSO workflow)
+        float looseningProgress, float removedSoilUnits, BridgeConstructionWorkflowSO workflow, int cycleIndex = 0)
     {
         if (workflow == null)
         {
             return;
         }
 
+        if (useLooseSoilHeightField)
+        {
+            if (!HasValidLooseSoilConfiguration)
+            {
+                if (!looseSoilConfigurationErrorLogged)
+                {
+                    Debug.LogError($"Loose soil is enabled on {name}, but its surface/support references or stable child transform are invalid.", this);
+                    looseSoilConfigurationErrorLogged = true;
+                }
+                if (looseSoilField != null) looseSoilField.SetSurfaceState(false, loosenedSoilMaterial);
+                return;
+            }
+
+            int safeCycleIndex = Mathf.Clamp(cycleIndex, 0, Mathf.Max(0, workflow.DiggingCycleCount - 1));
+            bool returnedSoilOverlay = substage == FoundationDiggingSubstage.ReturnedSoilRemoval;
+            bool looseLayerActive = stage == BridgeConstructionStage.Digging &&
+                                    (substage == FoundationDiggingSubstage.SoilRemoval || returnedSoilOverlay) &&
+                                    cycleIndex >= 0 && cycleIndex < workflow.DiggingCycleCount;
+            int cycleCount = Mathf.Max(1, workflow.DiggingCycleCount);
+            float firstLayerDepth = workflow.FinalExcavationDepth / cycleCount;
+            int unitsPerCycle = Mathf.Max(1, workflow.SoilUnitsPerCycle);
+            bool reconfigured = looseSoilField.EnsureConfiguration(concreteFootprintSize.x, concreteFootprintSize.y,
+                looseSoilField.ConfiguredCellSize, firstLayerDepth, firstLayerDepth, unitsPerCycle);
+            int configuredTotalUnits = Mathf.Max(1, cycleCount * unitsPerCycle);
+            bool excavationComplete = removedSoilUnits >= configuredTotalUnits;
+            int fieldCycle = stage == BridgeConstructionStage.Digging
+                ? safeCycleIndex * 3 + (substage == FoundationDiggingSubstage.SoilRemoval ? 0 :
+                    returnedSoilOverlay ? 2 : 1)
+                : excavationComplete ? int.MinValue + 1 : int.MinValue + 2;
+            bool previousWasReturnedOverlay = appliedLooseSoilCycle != int.MinValue &&
+                appliedLooseSoilSubstage == FoundationDiggingSubstage.ReturnedSoilRemoval;
+            bool stateChanged = appliedLooseSoilCycle != fieldCycle ||
+                                appliedLooseSoilSubstage != substage;
+            if (reconfigured || stateChanged)
+            {
+                // A new cycle gets a fresh layer exactly once. Reapplying the same
+                // replicated body state must preserve the already-carved shape.
+                if (returnedSoilOverlay || previousWasReturnedOverlay && substage == FoundationDiggingSubstage.Loosening ||
+                    excavationComplete && (stage != BridgeConstructionStage.Digging ||
+                                            substage == FoundationDiggingSubstage.SoilRemoval))
+                    looseSoilField.Clear();
+                else
+                    looseSoilField.ResetToInitial();
+                appliedLooseSoilCycle = fieldCycle;
+                appliedLooseSoilSubstage = substage;
+            }
+            if (looseSoilField.HeightField != null)
+                looseSoilField.HeightField.ExpandMaximumHeight(workflow.FinalExcavationDepth);
+
+            float looseTotalUnits = configuredTotalUnits;
+            float supportDepth = stage == BridgeConstructionStage.Digging
+                ? (safeCycleIndex + (substage == FoundationDiggingSubstage.SoilRemoval ? 1 : 0)) * firstLayerDepth
+                : CurrentSupportDepth(removedSoilUnits, looseTotalUnits, workflow.FinalExcavationDepth);
+            if (soilSurface != null)
+            {
+                Vector3 localPosition = soilSurface.localPosition;
+                localPosition.y = surfaceStartLocalY - supportDepth;
+                soilSurface.localPosition = localPosition;
+            }
+            if (soilSupportCollider != null) soilSupportCollider.enabled = true;
+
+            Vector3 supportTopWorld = soilSupportCollider.transform.TransformPoint(
+                soilSupportCollider.center + Vector3.up * (soilSupportCollider.size.y * 0.5f));
+            Vector3 fieldOrigin = transform.InverseTransformPoint(supportTopWorld);
+            looseSoilField.transform.localPosition = new Vector3(fieldOrigin.x, fieldOrigin.y, fieldOrigin.z);
+
+            if (soilRenderer != null)
+            {
+                if (!soilRendererBaselineCaptured)
+                {
+                    soilRendererBaselineEnabled = soilRenderer.enabled;
+                    soilRendererBaselineCaptured = true;
+                }
+                soilRenderer.enabled = soilRendererBaselineEnabled;
+            }
+
+            if (looseSoilField != null) looseSoilField.SetSurfaceState(looseLayerActive, loosenedSoilMaterial);
+            return;
+        }
+
         int totalUnits = workflow.DiggingCycleCount * workflow.SoilUnitsPerCycle;
-        float normalizedDepth = totalUnits > 0 ? Mathf.Clamp01((float)removedSoilUnits / totalUnits) : 0f;
+        float normalizedDepth = totalUnits > 0 ? Mathf.Clamp01(removedSoilUnits / totalUnits) : 0f;
         if (soilSurface != null)
         {
             Vector3 localPosition = soilSurface.localPosition;
             localPosition.y = surfaceStartLocalY - workflow.FinalExcavationDepth * normalizedDepth;
             soilSurface.localPosition = localPosition;
         }
+        if (soilSupportCollider != null) soilSupportCollider.enabled = true;
 
         if (soilRenderer == null)
         {
@@ -87,6 +185,41 @@ public class FoundationExcavationVolume : MonoBehaviour
             }
 
             runtimeMaterial.Lerp(compactSoilMaterial, loosenedSoilMaterial, loosened);
+        }
+    }
+
+    public bool TryGetLooseSoilSurfaceHeight(Vector3 worldPosition, out float surfaceWorldY)
+    {
+        surfaceWorldY = 0f;
+        return useLooseSoilHeightField && looseSoilField != null && looseSoilField.IsSurfaceActive &&
+               looseSoilField.TryGetWorldSurfaceHeight(worldPosition, out surfaceWorldY);
+    }
+
+    private static float CurrentSupportDepth(float removedUnits, float totalUnits, float finalDepth)
+    {
+        if (float.IsNaN(removedUnits) || float.IsInfinity(removedUnits)) return 0f;
+        return Mathf.Clamp01(removedUnits / totalUnits) * finalDepth;
+    }
+
+    public float GetLooseSoilSubmersionDepth(Vector3 worldPosition) =>
+        TryGetLooseSoilSurfaceHeight(worldPosition, out float surfaceWorldY)
+            ? Mathf.Max(0f, surfaceWorldY - worldPosition.y)
+            : 0f;
+
+    public void ResetLooseSoilState()
+    {
+        if (soilSurface != null)
+        {
+            Vector3 localPosition = soilSurface.localPosition;
+            localPosition.y = surfaceStartLocalY;
+            soilSurface.localPosition = localPosition;
+        }
+        if (soilRenderer != null && soilRendererBaselineCaptured)
+            soilRenderer.enabled = soilRendererBaselineEnabled;
+        if (looseSoilField != null)
+        {
+            looseSoilField.ResetToInitial();
+            looseSoilField.SetSurfaceState(false, loosenedSoilMaterial);
         }
     }
 
@@ -139,8 +272,9 @@ public class FoundationExcavationVolume : MonoBehaviour
         bool fullyPoured = fill >= 0.999f;
         if (driedConcreteCollider != null) driedConcreteCollider.enabled = dry && visible;
         bool awaitingRecovery = failureState == FoundationConcreteFailureState.AwaitingWheelbarrowExit;
-        if (exitRampRenderer != null) exitRampRenderer.enabled = awaitingRecovery || !fullyPoured;
-        if (exitRampCollider != null) exitRampCollider.enabled = awaitingRecovery || !(fullyPoured && dry);
+        bool hideExitRampDuringLooseSoilDigging = useLooseSoilHeightField && stage == BridgeConstructionStage.Digging;
+        if (exitRampRenderer != null) exitRampRenderer.enabled = !hideExitRampDuringLooseSoilDigging && (awaitingRecovery || !fullyPoured);
+        if (exitRampCollider != null) exitRampCollider.enabled = !hideExitRampDuringLooseSoilDigging && (awaitingRecovery || !(fullyPoured && dry));
         if (concreteRenderer != null && wetConcreteMaterial != null && dryConcreteMaterial != null)
         {
             float drying = stage == BridgeConstructionStage.ConcreteDrying && dryingDuration > 0f

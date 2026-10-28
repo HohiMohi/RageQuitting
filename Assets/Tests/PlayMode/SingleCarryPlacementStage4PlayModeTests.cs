@@ -56,14 +56,14 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
         Component resource = item.GetComponent(TypeByName("BaseResourceNew, Assembly-CSharp"));
         Assert.That(container, Is.Not.Null);
         Assert.That(resource, Is.Not.Null);
-        int unitsBefore;
+        float unitsBefore;
         object substanceBefore;
 #if UNITY_EDITOR
         UnityEngine.Object water = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(
             "Assets/ScriptableObjectAssets/New/Substances/Water.asset");
-        MethodInfo addUnits = container.GetType().GetMethod("TryAddUnits", new[] { TypeByName("ContainerSubstanceSO, Assembly-CSharp"), typeof(int) });
-        Assert.That(addUnits.Invoke(container, new[] { water, (object)2 }), Is.EqualTo(true), "The bucket should contain real substance before release.");
-        unitsBefore = (int)container.GetType().GetProperty("CurrentUnits").GetValue(container);
+        MethodInfo addUnits = container.GetType().GetMethod("TryAddUnits", new[] { TypeByName("ContainerSubstanceSO, Assembly-CSharp"), typeof(float) });
+        Assert.That((float)addUnits.Invoke(container, new[] { water, (object)2f }), Is.EqualTo(2f), "The bucket should contain real substance before release.");
+        unitsBefore = (float)container.GetType().GetProperty("CurrentUnits").GetValue(container);
         substanceBefore = container.GetType().GetProperty("CurrentSubstance").GetValue(container);
 #else
         Assert.Ignore("This fixture populates the established bucket prefab through Editor assets.");
@@ -132,7 +132,7 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
         Assert.That(body.linearVelocity.y, Is.EqualTo(0f).Within(0.001f));
         Assert.That(body.linearVelocity.z, Is.EqualTo(0f).Within(0.001f));
         Assert.That(body.angularVelocity.sqrMagnitude, Is.LessThan(0.0001f));
-        Assert.That((int)container.GetType().GetProperty("CurrentUnits").GetValue(container), Is.EqualTo(unitsBefore));
+        Assert.That((float)container.GetType().GetProperty("CurrentUnits").GetValue(container), Is.EqualTo(unitsBefore));
         Assert.That(container.GetType().GetProperty("CurrentSubstance").GetValue(container), Is.SameAs(substanceBefore));
         Assert.That(item.GetComponentInChildren<Renderer>(true).forceRenderingOff, Is.False,
             "The original bucket renderers return when placement mode ends.");

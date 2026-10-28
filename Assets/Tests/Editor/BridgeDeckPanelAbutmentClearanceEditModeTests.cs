@@ -1,7 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -12,30 +15,23 @@ public sealed class BridgeDeckPanelAbutmentClearanceEditModeTests
 {
     private const string ScenePath = "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity";
     private const string PanelPath = "Assets/Prefabs/New/BridgeComponents/WoodenDeckPanelMountable.prefab";
-    private Scene originalActiveScene;
     private Scene targetScene;
-    private bool openedScene;
+    private string sourceSceneHash;
 
     [SetUp]
     public void SetUp()
     {
-        openedScene = false;
-        originalActiveScene = SceneManager.GetActiveScene();
-        targetScene = SceneManager.GetSceneByPath(ScenePath);
-        if (!targetScene.IsValid() || !targetScene.isLoaded)
-        {
-            openedScene = true;
-            targetScene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
-        }
+        sourceSceneHash = ComputeSourceSceneHash();
+        targetScene = EditorSceneManager.OpenPreviewScene(ScenePath);
     }
 
     [TearDown]
     public void TearDown()
     {
-        if (openedScene && targetScene.IsValid() && targetScene.isLoaded)
-            EditorSceneManager.CloseScene(targetScene, true);
-        if (originalActiveScene.IsValid() && originalActiveScene.isLoaded)
-            SceneManager.SetActiveScene(originalActiveScene);
+        if (targetScene.IsValid() && targetScene.isLoaded)
+            EditorSceneManager.ClosePreviewScene(targetScene);
+        Assert.That(ComputeSourceSceneHash(), Is.EqualTo(sourceSceneHash),
+            "The disposable geometry preview must not mutate the accepted source scene.");
     }
 
     [Test]
@@ -57,6 +53,12 @@ public sealed class BridgeDeckPanelAbutmentClearanceEditModeTests
             .Where(t => t.name.StartsWith("WoodenAbutmentBridgeComponent", StringComparison.Ordinal))
             .ToArray();
         Assert.That(abutmentRoots.Length, Is.EqualTo(2), "Use only the two abutments belonging to the main bridge.");
+        Type bridgeComponentType = TypeByName("BridgeComponent");
+        foreach (Transform abutmentRoot in abutmentRoots)
+            ConfigureCompletedPreview(abutmentRoot.GetComponentInChildren(bridgeComponentType, true));
+        foreach (Component girder in girders)
+            ConfigureCompletedPreview(girder.GetComponentInChildren(bridgeComponentType, true));
+
         Collider[] abutments = abutmentRoots.SelectMany(root => root.GetComponentsInChildren<Collider>(true))
             .Where(c => c.enabled && c.gameObject.activeInHierarchy && !c.isTrigger && c.bounds.size.sqrMagnitude > 0.01f)
             .Distinct().ToArray();
@@ -212,4 +214,24 @@ public sealed class BridgeDeckPanelAbutmentClearanceEditModeTests
     }
 
     private static Type TypeByName(string name) => Type.GetType(name + ", Assembly-CSharp");
+
+    private static void ConfigureCompletedPreview(Component component)
+    {
+        Assert.That(component, Is.Not.Null, "Each measured bridge member must use its BridgeComponent preview state.");
+        SerializedObject serialized = new(component);
+        SerializedProperty completed = serialized.FindProperty("startFullyCompleted");
+        Assert.That(completed, Is.Not.Null, "BridgeComponent must expose its authored initial completion state.");
+        completed.boolValue = true;
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+        MethodInfo refresh = component.GetType().GetMethod("RefreshInitialStatePreview",
+            BindingFlags.Instance | BindingFlags.Public);
+        Assert.That(refresh, Is.Not.Null, "Completed preview geometry must use the production preview refresh path.");
+        refresh.Invoke(component, null);
+    }
+
+    private static string ComputeSourceSceneHash()
+    {
+        using (SHA256 sha = SHA256.Create())
+            return BitConverter.ToString(sha.ComputeHash(File.ReadAllBytes(ScenePath))).Replace("-", string.Empty);
+    }
 }
