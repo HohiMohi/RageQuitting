@@ -528,3 +528,10 @@ MonoBehaviour:
   contentBottomLocalY: 0.45
   contentTopLocalY: 0.55
   respawnPointIndex: 0
+  automaticLooseSoilCollection: 1
+  looseSoilUnitsPerSecond: 0.5
+  looseSoilBrushRadius: 0.8
+  looseSoilWholeLayerTailThreshold: 0.05
+  looseSoilSampleInterval: 0.1
+  looseSoilMinimumMovement: 0.01
+  looseSoilMaximumMovementPerSample: 1.5

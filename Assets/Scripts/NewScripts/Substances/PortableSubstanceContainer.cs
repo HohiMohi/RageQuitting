@@ -27,7 +27,7 @@ public class PortableSubstanceContainer : NetworkBehaviour
     [SerializeField, Min(0.01f), Tooltip("Maximum soil collection rate in portions per second while moving.")]
     private float looseSoilUnitsPerSecond = 0.5f;
     [SerializeField, Min(0.01f), Tooltip("Horizontal radius around the holder used to remove loose soil.")]
-    private float looseSoilBrushRadius = 0.6f;
+    private float looseSoilBrushRadius = 0.8f;
     [SerializeField, Min(0f), Tooltip("When the entire active layer has at most this much soil remaining, transfer its tail together if it fits.")]
     private float looseSoilWholeLayerTailThreshold = 0.05f;
     [SerializeField, Min(0.05f), Tooltip("Server sampling interval. Missed intervals are discarded rather than accumulated.")]

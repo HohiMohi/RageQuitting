@@ -22,12 +22,170 @@ public sealed class LooseSoilStage4AutomaticCollectionPlayModeTests
         Component container = prefab.GetComponent(Type.GetType("PortableSubstanceContainer, Assembly-CSharp"));
         Assert.That(container, Is.Not.Null);
         Assert.That(Read<float>(container, "looseSoilUnitsPerSecond"), Is.EqualTo(.5f));
-        Assert.That(Read<float>(container, "looseSoilBrushRadius"), Is.EqualTo(.6f));
+        Assert.That(Read<float>(container, "looseSoilBrushRadius"), Is.EqualTo(.8f));
         Assert.That(Read<float>(container, "looseSoilWholeLayerTailThreshold"), Is.EqualTo(.05f));
         Assert.That(Read<float>(container, "looseSoilSampleInterval"), Is.EqualTo(.1f));
         Assert.That(Read<bool>(container, "automaticLooseSoilCollection"), Is.True);
 #else
         Assert.Ignore("Prefab configuration is verified through the Unity Editor AssetDatabase.");
+#endif
+    }
+
+    [UnityTest]
+    public IEnumerator DefaultRadiusReachesAllFourNearestCornerCellsWithMovingEmptyPartialAndFullBuckets()
+    {
+#if !UNITY_EDITOR
+        Assert.Ignore("The production player and soil assets require Editor AssetDatabase access.");
+        yield break;
+#else
+        if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+            Assert.Ignore("This integration fixture requires an offline authority context.");
+        GameObject playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/PlayerNew.prefab");
+        GameObject bucketPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/New/Substances/PortableBucket.prefab");
+        Object soil = UnityEditor.AssetDatabase.LoadAssetAtPath<Object>("Assets/ScriptableObjectAssets/New/Substances/Soil.asset");
+        Assert.That(playerPrefab, Is.Not.Null); Assert.That(bucketPrefab, Is.Not.Null); Assert.That(soil, Is.Not.Null);
+        GameObject siteRoot = CreateActiveLooseSoilSite();
+        GameObject inactivePlayerRoot = new GameObject("Stage4 corner brush player parent");
+        inactivePlayerRoot.SetActive(false);
+        GameObject player = Object.Instantiate(playerPrefab, new Vector3(0f, .08f, 0f), Quaternion.identity,
+            inactivePlayerRoot.transform);
+        GameObject bucket = Object.Instantiate(bucketPrefab, new Vector3(0f, .5f, 0f), Quaternion.identity);
+        try
+        {
+            Type fpcType = Type.GetType("StarterAssets.FirstPersonController, Assembly-CSharp");
+            ((Behaviour)player.GetComponent(fpcType)).enabled = false;
+            player.GetComponent<PlayerInput>().enabled = false;
+            ((Behaviour)player.GetComponent(Type.GetType("PlayerInputNew, Assembly-CSharp"))).enabled = false;
+            inactivePlayerRoot.SetActive(true);
+            yield return null;
+            CharacterController capsule = player.GetComponent<CharacterController>();
+            capsule.center += Vector3.left * .2f;
+            capsule.enabled = false;
+            Component interaction = player.GetComponent(Type.GetType("PlayerInteractionNew, Assembly-CSharp"));
+            ((Behaviour)interaction).enabled = false;
+            Component resource = bucket.GetComponent(Type.GetType("BaseResourceNew, Assembly-CSharp"));
+            Component container = bucket.GetComponent(Type.GetType("PortableSubstanceContainer, Assembly-CSharp"));
+            int capacity = Read<int>(container, "Capacity");
+            float rate = Read<float>(container, "looseSoilUnitsPerSecond");
+            float radius = Read<float>(container, "looseSoilBrushRadius");
+            FieldInfo tailThresholdField = container.GetType().GetField("looseSoilWholeLayerTailThreshold", Instance);
+            tailThresholdField.SetValue(container, 0f);
+            float tailThreshold = Read<float>(container, "looseSoilWholeLayerTailThreshold");
+            Assert.That(capacity, Is.EqualTo(3));
+            Assert.That(rate, Is.EqualTo(.5f).Within(.0001f));
+            Assert.That(radius, Is.EqualTo(.8f).Within(.0001f));
+            Assert.That(tailThreshold, Is.Zero, "Set tail tolerance to zero so corner removal is measured directly.");
+            resource.GetType().GetMethod("PickedUp").Invoke(resource, new object[] { player.transform });
+            Assert.That(interaction.GetType().GetMethod("GetPickedUpGameObject").Invoke(interaction, null), Is.SameAs(bucket));
+
+            Component field = siteRoot.GetComponentInChildren(Type.GetType("FoundationLooseSoilField, Assembly-CSharp"));
+            Component volume = siteRoot.GetComponentInChildren(Type.GetType("FoundationExcavationVolume, Assembly-CSharp"));
+            Component site = siteRoot.GetComponentInChildren(Type.GetType("BridgeConstructionSite, Assembly-CSharp"));
+            Type stageType = Type.GetType("BridgeConstructionStage, Assembly-CSharp");
+            Type substageType = Type.GetType("FoundationDiggingSubstage, Assembly-CSharp");
+            object digging = Enum.Parse(stageType, "Digging");
+            object removal = Enum.Parse(substageType, "SoilRemoval");
+            object workflow = Read<object>(site, "workflow");
+            Vector3[] cornerCenters =
+            {
+                new Vector3(-3.15f, .02f, -1.9f), new Vector3(-3.15f, .02f, 1.9f),
+                new Vector3(3.15f, .02f, -1.9f), new Vector3(3.15f, .02f, 1.9f)
+            };
+            int[,] cornerCells = { { 0, 0 }, { 0, 19 }, { 32, 0 }, { 32, 19 } };
+            MethodInfo initialize = field.GetType().GetMethod("Initialize", Instance);
+            MethodInfo applyDigging = volume.GetType().GetMethod("ApplyDiggingState", Instance);
+            MethodInfo empty = container.GetType().GetMethod("Empty", Instance);
+            MethodInfo add = container.GetType().GetMethod("TryAddUnits", new[] { soil.GetType(), typeof(float) });
+            FieldInfo radiusField = container.GetType().GetField("looseSoilBrushRadius", Instance);
+            radiusField.SetValue(container, radius);
+
+            for (int corner = 0; corner < cornerCenters.Length; corner++)
+            {
+                initialize.Invoke(field, new object[] { 6.5f, 4f, .2f, .4f, .4f, 6f });
+                field.GetType().GetMethod("SetSurfaceState", Instance).Invoke(field, new object[] { true, null });
+                applyDigging.Invoke(volume, new object[] { digging, removal, 0f, 0f, workflow, 0 });
+                object heightField = field.GetType().GetProperty("HeightField").GetValue(field);
+                float initialCornerHeight = (float)heightField.GetType()
+                    .GetMethod("GetHeight", new[] { typeof(int), typeof(int) })
+                    .Invoke(heightField, new object[] { cornerCells[corner, 0], cornerCells[corner, 1] });
+                Vector3 outward = new Vector3(Mathf.Sign(cornerCenters[corner].x), 0f,
+                    Mathf.Sign(cornerCenters[corner].z)).normalized;
+                Vector3 target = cornerCenters[corner] - outward * 1.05f + Vector3.up * .06f;
+                player.transform.position = target + Vector3.right * .2f;
+                AssertCornerFootprintPosition(player.transform, corner);
+                empty.Invoke(container, new object[] { false, Vector3.zero });
+                yield return new WaitForSeconds(.25f);
+                float movementStarted = Time.time;
+                while (Time.time - movementStarted < .5f)
+                {
+                    player.transform.position += outward * (.6f * Time.deltaTime);
+                    AssertCornerFootprintPosition(player.transform, corner);
+                    yield return null;
+                }
+                float actualMovingTime = Time.time - movementStarted;
+                yield return new WaitForSeconds(.15f);
+                float collected = Read<float>(container, "CurrentUnits");
+                Assert.That(collected, Is.GreaterThan(0f), $"Corner {corner} nearest cell must be reachable with the configured .8m brush.");
+                Assert.That(collected, Is.LessThanOrEqualTo(rate * actualMovingTime + .08f),
+                    $"Corner {corner} remains bounded by the configured per-second collection rate.");
+                Assert.That(collected, Is.LessThanOrEqualTo(capacity));
+                float finalCornerHeight = (float)heightField.GetType()
+                    .GetMethod("GetHeight", new[] { typeof(int), typeof(int) })
+                    .Invoke(heightField, new object[] { cornerCells[corner, 0], cornerCells[corner, 1] });
+                Assert.That(finalCornerHeight, Is.LessThan(initialCornerHeight),
+                    $"Corner {corner} nearest height-field cell is actually removed by the moving brush.");
+            }
+
+            initialize.Invoke(field, new object[] { 6.5f, 4f, .2f, .4f, .4f, 6f });
+            field.GetType().GetMethod("SetSurfaceState", Instance).Invoke(field, new object[] { true, null });
+            applyDigging.Invoke(volume, new object[] { digging, removal, 0f, 0f, workflow, 0 });
+            object finalHeightField = field.GetType().GetProperty("HeightField").GetValue(field);
+            Vector3 finalCornerCenter = cornerCenters[3];
+            Vector3 outwardFromCorner = new Vector3(1f, 0f, 1f).normalized;
+            player.transform.position = new Vector3(100f, .08f, 100f);
+            empty.Invoke(container, new object[] { false, Vector3.zero });
+            yield return new WaitForSeconds(.25f);
+            player.transform.position = finalCornerCenter - outwardFromCorner * 1.05f + Vector3.up * .06f + Vector3.right * .2f;
+            AssertCornerFootprintPosition(player.transform, 3);
+            yield return new WaitForSeconds(.25f); // Settle the holder sample while the bucket is empty.
+            add.Invoke(container, new object[] { soil, 2.98f });
+            Assert.That(Read<float>(container, "CurrentUnits"), Is.EqualTo(2.98f).Within(.00001f),
+                "The corner partial-capacity case starts at the intended 2.98 units.");
+            float beforePartialUnits = (float)finalHeightField.GetType().GetProperty("TotalUnits").GetValue(finalHeightField);
+            float partialStart = Time.time;
+            while (Time.time - partialStart < .5f)
+            {
+                player.transform.position += outwardFromCorner * (.6f * Time.deltaTime);
+                AssertCornerFootprintPosition(player.transform, 3);
+                yield return null;
+            }
+            yield return new WaitForSeconds(.15f);
+            Assert.That(Read<float>(container, "CurrentUnits"), Is.EqualTo(3f).Within(.0001f),
+                "A moving nearly full bucket accepts only its remaining .02-unit capacity at the corner.");
+            Assert.That(beforePartialUnits - (float)finalHeightField.GetType().GetProperty("TotalUnits").GetValue(finalHeightField),
+                Is.EqualTo(.02f).Within(.01f),
+                $"A partial bucket removes exactly its accepted corner soil. Before={beforePartialUnits}, after={(float)finalHeightField.GetType().GetProperty("TotalUnits").GetValue(finalHeightField)}, precise={(double)finalHeightField.GetType().GetProperty("TotalUnitsPrecise").GetValue(finalHeightField)}, bucket={Read<float>(container, "CurrentUnits")}");
+
+            float beforeFullBucket = (float)finalHeightField.GetType().GetProperty("TotalUnits").GetValue(finalHeightField);
+            player.transform.position += Vector3.right * 100f;
+            yield return new WaitForSeconds(.2f);
+            player.transform.position = finalCornerCenter - outwardFromCorner * 1.05f + Vector3.up * .06f + Vector3.right * .2f;
+            AssertCornerFootprintPosition(player.transform, 3);
+            yield return new WaitForSeconds(.2f);
+            player.transform.position += outwardFromCorner * .2f;
+            AssertCornerFootprintPosition(player.transform, 3);
+            yield return new WaitForSeconds(.35f);
+            Assert.That(Read<float>(container, "CurrentUnits"), Is.EqualTo(3f).Within(.0001f),
+                "A full bucket cannot exceed the authored three-unit capacity at a corner.");
+            Assert.That((float)finalHeightField.GetType().GetProperty("TotalUnits").GetValue(finalHeightField),
+                Is.EqualTo(beforeFullBucket).Within(.00001f), "A full bucket leaves the corner height field unchanged.");
+        }
+        finally
+        {
+            Object.Destroy(siteRoot);
+            Object.Destroy(inactivePlayerRoot);
+            Object.Destroy(bucket);
+        }
 #endif
     }
 
@@ -311,6 +469,15 @@ public sealed class LooseSoilStage4AutomaticCollectionPlayModeTests
         volumeType.GetMethod("ApplyDiggingState", Instance).Invoke(volume,
             new object[] { digging, soilRemoval, 0f, 0f, workflow, 0 });
         return bridgeRoot;
+    }
+
+    private static void AssertCornerFootprintPosition(Transform player, int corner)
+    {
+        Vector3 capsuleCenter = player.TransformPoint(player.GetComponent<CharacterController>().center);
+        Assert.That(Mathf.Abs(capsuleCenter.x), Is.LessThanOrEqualTo(2.74f),
+            $"Corner {corner} movement keeps the player capsule inside the authored field width.");
+        Assert.That(Mathf.Abs(capsuleCenter.z), Is.LessThanOrEqualTo(1.49f),
+            $"Corner {corner} movement keeps the player capsule inside the authored field depth.");
     }
 
     private static void Set(object target, string name, object value) =>

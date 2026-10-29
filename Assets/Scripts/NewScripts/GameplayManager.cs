@@ -25,6 +25,7 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
     public int mountAlignmentState;
     public ulong mountAlignmentCandidateNetworkObjectId;
     public double mountAlignmentStartedAt;
+    public bool foundationRampClearanceGranted;
 
     public BridgeComponentNetworkState(int componentID)
     {
@@ -46,6 +47,7 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
         mountAlignmentState = (int)BridgeMountAlignmentState.Inactive;
         mountAlignmentCandidateNetworkObjectId = BridgeMountSocket.NoCandidateNetworkObjectId;
         mountAlignmentStartedAt = -1d;
+        foundationRampClearanceGranted = false;
     }
 
     public bool Equals(BridgeComponentNetworkState other)
@@ -67,7 +69,8 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
             && constructionAux1.Equals(other.constructionAux1)
             && mountAlignmentState == other.mountAlignmentState
             && mountAlignmentCandidateNetworkObjectId == other.mountAlignmentCandidateNetworkObjectId
-            && mountAlignmentStartedAt.Equals(other.mountAlignmentStartedAt);
+            && mountAlignmentStartedAt.Equals(other.mountAlignmentStartedAt)
+            && foundationRampClearanceGranted == other.foundationRampClearanceGranted;
     }
 
     public override bool Equals(object obj)
@@ -90,7 +93,8 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
                 constructionAux1,
                 mountAlignmentState,
                 mountAlignmentCandidateNetworkObjectId,
-                mountAlignmentStartedAt));
+                mountAlignmentStartedAt,
+                foundationRampClearanceGranted));
     }
 }
 
@@ -171,7 +175,7 @@ public class GameplayManager : MonoBehaviour
     private const string GirderFasteningWindowMessageName = "GameplayManager_GirderFasteningWindow";
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
     private const int StateMessageBaseSize = sizeof(int) * 2 + sizeof(bool);
-    private const int StateMessageItemSize = sizeof(int) * 5 + sizeof(bool) * 3 + sizeof(float) * 8 + sizeof(ulong) + sizeof(double);
+    private const int StateMessageItemSize = sizeof(int) * 5 + sizeof(bool) * 4 + sizeof(float) * 8 + sizeof(ulong) + sizeof(double);
     private const int LooseSoilTrailerMagic = 0x4C534631;
     private const int LooseSoilTrailerVersion = 1;
     private const int MaximumLooseSoilSnapshotCells = 16384;
@@ -1829,6 +1833,7 @@ public class GameplayManager : MonoBehaviour
         writer.WriteValueSafe(state.mountAlignmentState);
         writer.WriteValueSafe(state.mountAlignmentCandidateNetworkObjectId);
         writer.WriteValueSafe(state.mountAlignmentStartedAt);
+        writer.WriteValueSafe(state.foundationRampClearanceGranted);
     }
 
     private BridgeComponentNetworkState ReadState(FastBufferReader reader)
@@ -1851,6 +1856,7 @@ public class GameplayManager : MonoBehaviour
         reader.ReadValueSafe(out int mountAlignmentState);
         reader.ReadValueSafe(out ulong mountAlignmentCandidateNetworkObjectId);
         reader.ReadValueSafe(out double mountAlignmentStartedAt);
+        reader.ReadValueSafe(out bool foundationRampClearanceGranted);
 
         return new BridgeComponentNetworkState(componentID)
         {
@@ -1870,7 +1876,8 @@ public class GameplayManager : MonoBehaviour
             constructionAux1 = constructionAux1,
             mountAlignmentState = mountAlignmentState,
             mountAlignmentCandidateNetworkObjectId = mountAlignmentCandidateNetworkObjectId,
-            mountAlignmentStartedAt = mountAlignmentStartedAt
+            mountAlignmentStartedAt = mountAlignmentStartedAt,
+            foundationRampClearanceGranted = foundationRampClearanceGranted
         };
     }
 

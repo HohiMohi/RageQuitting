@@ -244,6 +244,11 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
             Assert.That(GetProperty(site, "CurrentStage").ToString(), Is.EqualTo("ConcretePouring"));
             Assert.That((float)GetProperty(site, "RemovedSoilUnits"), Is.EqualTo(18f).Within(.00001f));
             Assert.That((float)GetProperty(GetProperty(field, "HeightField"), "TotalUnits"), Is.Zero);
+            Component rampWaitPlayer = (Component)Object.FindFirstObjectByType(Resolve("PlayerInteractionNew"));
+            Assert.That(rampWaitPlayer, Is.Not.Null);
+            rampWaitPlayer.transform.position = new Vector3(1000f, 100f, 1000f);
+            float rampDeadline = Time.realtimeSinceStartup + 3f;
+            while (!rampCollider.enabled && Time.realtimeSinceStartup < rampDeadline) yield return null;
             Assert.That(rampCollider.enabled, Is.True, "The exit ramp returns after excavation is complete.");
             Assert.That(rampRenderer.enabled, Is.True);
 
@@ -375,6 +380,7 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
             Assert.That((bool)GetProperty(restartController, "CanRequestRestart"), Is.True,
                 "The public local restart path is available in the offline gameplay scene.");
             int oldSceneHandle = SceneManager.GetSceneByPath(Stage02Path).handle;
+            testPlayerRoot.transform.position = new Vector3(1000f, 100f, 1000f);
             restartType.GetMethod("RequestRestartLevel", Instance).Invoke(restartController, null);
 
             float restartDeadline = Time.realtimeSinceStartup + 15f;
@@ -408,6 +414,11 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
                 Is.EqualTo(unitsPerCycle).Within(.001f), "Restart restores the first six-unit layer.");
             Collider resetRampCollider = GetField(resetVolumes[0], "exitRampCollider") as Collider;
             Renderer resetRampRenderer = GetField(resetVolumes[0], "exitRampRenderer") as Renderer;
+            Component restartedPlayer = (Component)Object.FindFirstObjectByType(Resolve("PlayerInteractionNew"));
+            Assert.That(restartedPlayer, Is.Not.Null);
+            restartedPlayer.transform.position = new Vector3(1000f, 100f, 1000f);
+            float resetRampDeadline = Time.realtimeSinceStartup + 3f;
+            while (!resetRampCollider.enabled && Time.realtimeSinceStartup < resetRampDeadline) yield return null;
             Assert.That(resetRampCollider.enabled, Is.True);
             Assert.That(resetRampRenderer.enabled, Is.True);
 

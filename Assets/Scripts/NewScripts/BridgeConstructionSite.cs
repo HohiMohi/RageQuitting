@@ -43,6 +43,10 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     [NonSerialized] private ulong collectionBalanceRevision;
     [NonSerialized] private int collectionBalanceTransferCount;
     [NonSerialized] private double collectionRoundingBalance;
+    private bool foundationRampClearanceGranted;
+    private bool rampLocalClearanceGranted;
+    private bool rampClearancePending;
+    private float nextRampClearanceCheckTime;
 
     public virtual BridgeConstructionStage CurrentStage => currentStage;
     public bool RequiresSiteClearing => requiresSiteClearing;
@@ -101,7 +105,9 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         concreteFailureState == FoundationConcreteFailureState.HardenedFailure;
     public bool CanAcceptFoundationDock =>
         currentStage == BridgeConstructionStage.ConcretePouring &&
-        concreteFailureState is FoundationConcreteFailureState.None or FoundationConcreteFailureState.Ready;
+        (concreteFailureState is FoundationConcreteFailureState.None or FoundationConcreteFailureState.Ready) &&
+        (!UsesLooseSoilHeightField || (foundationRampClearanceGranted && rampLocalClearanceGranted &&
+          !rampClearancePending && excavationVolume != null && excavationVolume.IsExitRampColliderEnabled));
     public Transform FailedWheelbarrowPose => excavationVolume != null
         ? excavationVolume.FailedWheelbarrowPose
         : null;
@@ -126,6 +132,9 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         concreteFailureState = currentStage == BridgeConstructionStage.ConcretePouring
             ? FoundationConcreteFailureState.Ready
             : FoundationConcreteFailureState.None;
+        foundationRampClearanceGranted = false;
+        rampLocalClearanceGranted = false;
+        rampClearancePending = false;
         diggingCycleIndex = 0;
         diggingSubstage = FoundationDiggingSubstage.Loosening;
         ApplyClearingAreaSize();
@@ -144,10 +153,10 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     private void Update()
     {
+        UpdateFoundationRampClearance();
         if (IsConcreteDrying)
         {
-            excavationVolume?.ApplyConcreteState(currentStage, concreteLoadsPoured, RequiredConcreteLoads,
-                RemainingConcreteDryingTime, workflow != null ? workflow.ConcreteDryingDuration : 30f);
+            ApplyConcreteVisualState();
         }
 
         if (concreteFailureState != FoundationConcreteFailureState.None &&
@@ -414,6 +423,8 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     public virtual void ApplyNetworkState(BridgeComponentNetworkState state)
     {
+        bool serverGrant = state.foundationRampClearanceGranted;
+        bool rampWasAlreadyReady = excavationVolume != null && excavationVolume.IsExitRampColliderEnabled;
         currentStage = (BridgeConstructionStage)state.constructionStage;
         currentWorkProgress = Mathf.Max(0f, state.constructionProgress);
         diggingCycleIndex = Mathf.Max(0, state.constructionValueA);
@@ -422,6 +433,15 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
             ? 0f
             : Mathf.Max(0f, state.constructionAux0);
         concreteLoadsPoured = Mathf.Max(0, Mathf.RoundToInt(state.constructionAnchor0));
+        foundationRampClearanceGranted = serverGrant;
+        rampLocalClearanceGranted = serverGrant && rampWasAlreadyReady;
+        rampClearancePending = serverGrant && !rampWasAlreadyReady;
+        if (currentStage == BridgeConstructionStage.Digging)
+        {
+            foundationRampClearanceGranted = false;
+            rampLocalClearanceGranted = false;
+            rampClearancePending = false;
+        }
         concreteFailureState = (FoundationConcreteFailureState)Mathf.Clamp(
             Mathf.RoundToInt(state.constructionAnchor1),
             (int)FoundationConcreteFailureState.None,
@@ -461,6 +481,7 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
         state.constructionAux1 = IsSoilHardeningActive
             ? soilHardeningDeadline
             : IsConcreteDrying ? concreteDryingDeadline : 0f;
+        state.foundationRampClearanceGranted = foundationRampClearanceGranted;
     }
 
     public virtual void NotifyMounted()
@@ -639,6 +660,16 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
 
     private void ApplyConcreteVisualState()
     {
+        if (UsesLooseSoilHeightField && excavationVolume != null &&
+            !excavationVolume.IsExitRampColliderRequested(currentStage, concreteLoadsPoured,
+                RequiredConcreteLoads, concreteFailureState))
+        {
+            // Clearance is an OFF-to-ON grant. Once the ramp is actually requested
+            // off (hard concrete, re-dig, restart), a later request needs a fresh check.
+            foundationRampClearanceGranted = false;
+            rampLocalClearanceGranted = false;
+            rampClearancePending = false;
+        }
         excavationVolume?.ApplyConcreteState(
             currentStage,
             concreteLoadsPoured,
@@ -648,7 +679,70 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
             concreteFailureState,
             failedConcreteBreakProgress,
             concretePouringProfile != null ? concretePouringProfile.FailedConcreteCrackThresholds : new Vector3(1f, 34f, 67f),
-            FailedConcreteCollapseProgress);
+            FailedConcreteCollapseProgress,
+            foundationRampClearanceGranted && rampLocalClearanceGranted,
+            rampClearancePending);
+    }
+
+    private void UpdateFoundationRampClearance()
+    {
+        if (!UsesLooseSoilHeightField || excavationVolume == null) return;
+        bool eligible = excavationVolume.IsExitRampColliderRequested(currentStage, concreteLoadsPoured,
+                            RequiredConcreteLoads, concreteFailureState);
+        if (!eligible)
+        {
+            if (currentStage == BridgeConstructionStage.Digging)
+            {
+                foundationRampClearanceGranted = false;
+                rampLocalClearanceGranted = false;
+            }
+            rampClearancePending = false;
+            return;
+        }
+
+        NetworkManager manager = NetworkManager.Singleton;
+        bool authoritative = manager == null || !manager.IsListening || manager.IsServer;
+        if (!authoritative && !foundationRampClearanceGranted)
+        {
+            rampClearancePending = true;
+            return;
+        }
+        if (Time.time < nextRampClearanceCheckTime) return;
+        nextRampClearanceCheckTime = Time.time + 0.1f;
+        if (authoritative && foundationRampClearanceGranted && rampLocalClearanceGranted &&
+            !rampClearancePending && excavationVolume.IsExitRampColliderEnabled)
+        {
+            return;
+        }
+        if (!authoritative && foundationRampClearanceGranted &&
+            rampLocalClearanceGranted && excavationVolume.IsExitRampColliderEnabled)
+        {
+            // A snapshot or visual refresh must not revoke a clearance grant from
+            // beneath a player who is already standing on the active ramp.
+            return;
+        }
+
+        rampClearancePending = true;
+        if (!excavationVolume.IsExitRampVolumeClear())
+        {
+            rampLocalClearanceGranted = false;
+            ApplyConcreteVisualState();
+            return;
+        }
+
+        rampLocalClearanceGranted = true;
+        rampClearancePending = false;
+        if (authoritative && !foundationRampClearanceGranted)
+        {
+            foundationRampClearanceGranted = true;
+            ApplyConcreteVisualState();
+            GameplayManager managerInstance = GameplayManager.Instance;
+            if (managerInstance != null) managerInstance.NotifyConstructionSiteStateChanged(this);
+        }
+        else
+        {
+            ApplyConcreteVisualState();
+        }
     }
 
     private void ApplyClearingAreaSize()
