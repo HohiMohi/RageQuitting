@@ -21,6 +21,7 @@ public sealed class LooseSoilStage5NetworkPlayModeTests
     private readonly List<GameObject> roots = new();
     private readonly HashSet<GameObject> trackedRoots = new();
     private readonly List<NetworkManager> managers = new();
+    private PlayModeTestScope scope;
     private NetworkManager previous, host, owner, late;
     private Component previousGameplay, serverGameplay, ownerGameplay, lateGameplay;
     private GameObject playerPrefab, bucketPrefab;
@@ -323,10 +324,16 @@ public sealed class LooseSoilStage5NetworkPlayModeTests
 
     private IEnumerator StartHostAndOwner()
     {
+        scope = new PlayModeTestScope("LooseSoilStage5Network");
         previous = NetworkManager.Singleton;
         if (previous != null && previous.IsListening)
             Assert.Ignore("The isolated Stage5 NGO test requires no pre-existing network session.");
         gameplayType = Type.GetType("GameplayManager, Assembly-CSharp");
+        if (gameplayType != null)
+        {
+            previousGameplay = GetGameplaySingleton();
+            scope.RestoreWith(() => SetGameplaySingleton(previousGameplay));
+        }
         bridgeType = Type.GetType("Bridge, Assembly-CSharp");
         bridgeComponentType = Type.GetType("BridgeComponent, Assembly-CSharp");
         siteType = Type.GetType("BridgeConstructionSite, Assembly-CSharp");
@@ -337,7 +344,6 @@ public sealed class LooseSoilStage5NetworkPlayModeTests
         playerInteractionType = Type.GetType("PlayerInteractionNew, Assembly-CSharp");
         Assert.That(new[] { gameplayType, bridgeType, bridgeComponentType, siteType, volumeType,
             fieldType, containerType, resourceType, playerInteractionType }, Has.None.Null);
-        previousGameplay = GetGameplaySingleton();
         bucketPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/New/Substances/PortableBucket.prefab");
         soil = UnityEditor.AssetDatabase.LoadAssetAtPath<Object>("Assets/ScriptableObjectAssets/New/Substances/Soil.asset");
         Assert.That(bucketPrefab, Is.Not.Null);
@@ -378,7 +384,7 @@ public sealed class LooseSoilStage5NetworkPlayModeTests
     {
         Peer peer = new();
         peer.BridgeRoot = new GameObject("Stage5 " + label + " foundation bridge");
-        peer.BridgeRoot.SetActive(false); roots.Add(peer.BridgeRoot);
+        peer.BridgeRoot.SetActive(false); TrackRoot(peer.BridgeRoot);
         Component bridge = peer.BridgeRoot.AddComponent(bridgeType);
         GameObject holder = new("Stage5 foundations"); holder.transform.SetParent(peer.BridgeRoot.transform, false);
         Set(bridge, "bridgeComponentHolder", holder);
@@ -444,7 +450,7 @@ public sealed class LooseSoilStage5NetworkPlayModeTests
 
     private Component CreateGameplay(string name, Peer peer)
     {
-        GameObject go = new(name); go.SetActive(false); roots.Add(go);
+        GameObject go = new(name); go.SetActive(false); TrackRoot(go);
         Component gameplay = go.AddComponent(gameplayType); Set(gameplay, "bridge", peer.BridgeRoot.GetComponent(bridgeType));
         Type rowType = (Type)gameplayType.GetField("bridgeComponentDataArray", Instance).FieldType.GetElementType();
         Array rows = Array.CreateInstance(rowType, 2);
@@ -503,11 +509,12 @@ public sealed class LooseSoilStage5NetworkPlayModeTests
 
     private NetworkManager CreateManager(string label, ushort listenPort)
     {
-        GameObject go = new(label); roots.Add(go);
+        GameObject go = new(label); TrackRoot(go);
         UnityTransport transport = go.AddComponent<UnityTransport>(); transport.SetConnectionData("127.0.0.1", listenPort, "127.0.0.1");
         NetworkManager manager = go.AddComponent<NetworkManager>();
         manager.NetworkConfig = new NetworkConfig { NetworkTransport = transport, PlayerPrefab = playerPrefab, EnableSceneManagement = false };
-        manager.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = bucketPrefab }); managers.Add(manager); return manager;
+        manager.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = bucketPrefab });
+        managers.Add(manager); scope.OwnManager(manager); return manager;
     }
 
     private NetworkObject SpawnBucket(Vector3 position)
@@ -589,38 +596,30 @@ public sealed class LooseSoilStage5NetworkPlayModeTests
     {
         for (int i = 0; i < frames; i++) { owner.LocalClient.PlayerObject.transform.position += Vector3.forward * distance; yield return new WaitForSeconds(.12f); }
     }
-    private static void SetNetworkSingleton(NetworkManager manager)
+    private void TrackRoot(GameObject root)
     {
-        manager.SetSingleton();
-    }
-
-    private void TrackRoot(GameObject root) { if (root != null && trackedRoots.Add(root)) roots.Add(root); }
-
-    private void TrackSyntheticPlayerReplicas(NetworkManager manager)
-    {
-        if (manager?.SpawnManager == null) return;
-        foreach (NetworkObject obj in manager.SpawnManager.SpawnedObjectsList)
-            if (obj != null && Convert.ToUInt32(typeof(NetworkObject).GetField("GlobalObjectIdHash", Instance).GetValue(obj)) == SyntheticPlayerHash)
-                TrackRoot(obj.gameObject);
+        if (root != null && trackedRoots.Add(root))
+        {
+            roots.Add(root);
+            scope?.Own(root);
+        }
     }
 
     [UnityTearDown]
     public IEnumerator Cleanup()
     {
-        foreach (NetworkManager manager in managers) TrackSyntheticPlayerReplicas(manager);
-        foreach (NetworkManager manager in managers) if (manager != null && manager.IsListening) manager.Shutdown(true);
-        float deadline = Time.realtimeSinceStartup + 15f;
-        while (Time.realtimeSinceStartup < deadline && managers.Exists(m => m != null && (m.IsListening || m.ShutdownInProgress))) yield return null;
-        Assert.That(managers.Exists(m => m != null && (m.IsListening || m.ShutdownInProgress)), Is.False, "All Stage5 NGO peers must finish shutdown.");
-        foreach (GameObject root in roots) if (root != null) Object.Destroy(root);
-        yield return null;
-        NetworkObject[] leftovers = Object.FindObjectsByType<NetworkObject>(FindObjectsSortMode.None);
-        Assert.That(Array.Exists(leftovers, obj => obj != null && Convert.ToUInt32(typeof(NetworkObject).GetField("GlobalObjectIdHash", Instance).GetValue(obj)) == SyntheticPlayerHash), Is.False,
-            "No Stage5 synthetic player replicas may remain after cleanup.");
-        if (previous != null) SetNetworkSingleton(previous);
-        else typeof(NetworkManager).GetMethod("ResetSingleton", Static)?.Invoke(null, null);
-        if (gameplayType != null) SetGameplaySingleton(previousGameplay);
-        roots.Clear(); trackedRoots.Clear(); managers.Clear(); host = owner = late = null;
+        if (scope == null) yield break;
+        PlayModeTestScope cleanupScope = scope;
+        foreach (GameObject root in roots) cleanupScope.Own(root);
+        foreach (NetworkManager manager in managers) cleanupScope.OwnManager(manager);
+        yield return cleanupScope.Cleanup();
+        roots.Clear(); trackedRoots.Clear(); managers.Clear();
+        host = owner = late = previous = null;
+        previousGameplay = serverGameplay = ownerGameplay = lateGameplay = null;
+        playerPrefab = bucketPrefab = null; soil = null; port = 0;
+        serverPeer = ownerPeer = latePeer = null;
+        scope = null;
+        cleanupScope.AssertCleanupSucceeded();
     }
 
     [UnityTest]

@@ -14,15 +14,22 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
 {
     private const BindingFlags Instance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
     private readonly List<GameObject> roots = new();
+    private readonly List<Mouse> ownedTestMice = new();
+    private PlayModeTestScope scope;
     private GameObject bucketPrefab, playerPrefab, foundationPrefab;
     private Mouse testMouse;
     private CrowbarInputSettingsScope testInputSettings;
+    private bool focusedInputRoutingUsed;
     private Object soil, looseSoilMaterial;
     private Type bucketType, siteType, fieldType, volumeType, bridgeType, playerType, heightFieldType;
 
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        scope = new PlayModeTestScope("LooseSoilStage5Return");
+        testInputSettings = new CrowbarInputSettingsScope();
+        scope.RestoreWith(RemoveOwnedTestMice);
+        scope.RestoreWith(RestoreInputSettings);
         bucketType = Type.GetType("PortableSubstanceContainer, Assembly-CSharp");
         siteType = Type.GetType("BridgeConstructionSite, Assembly-CSharp");
         fieldType = Type.GetType("FoundationLooseSoilField, Assembly-CSharp");
@@ -48,19 +55,43 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
     [UnityTearDown]
     public IEnumerator TearDown()
     {
-        try
-        {
-            foreach (GameObject root in roots) if (root != null) Object.Destroy(root);
-            roots.Clear();
-            yield return null;
-        }
-        finally
-        {
-            if (testMouse != null && testMouse.added) InputSystem.RemoveDevice(testMouse);
-            testMouse = null;
-            testInputSettings?.Restore();
-            testInputSettings = null;
-        }
+        if (scope == null) yield break;
+        PlayModeTestScope cleanupScope = scope;
+        foreach (GameObject root in roots) cleanupScope.Own(root);
+        yield return cleanupScope.Cleanup();
+        roots.Clear(); ownedTestMice.Clear();
+        bucketPrefab = playerPrefab = foundationPrefab = null;
+        testMouse = null; testInputSettings = null; focusedInputRoutingUsed = false;
+        soil = looseSoilMaterial = null;
+        bucketType = siteType = fieldType = volumeType = bridgeType = playerType = heightFieldType = null;
+        scope = null;
+        cleanupScope.AssertCleanupSucceeded();
+    }
+
+    private void UseFocusedGameViewRouting()
+    {
+        if (focusedInputRoutingUsed) return;
+        focusedInputRoutingUsed = true;
+        testInputSettings.UseFocusedGameViewRouting();
+    }
+
+    private void AddOwnedTestMouse()
+    {
+        testMouse = InputSystem.AddDevice<Mouse>();
+        ownedTestMice.Add(testMouse);
+    }
+
+    private void RemoveOwnedTestMice()
+    {
+        foreach (Mouse mouse in ownedTestMice)
+            if (mouse != null && mouse.added) InputSystem.RemoveDevice(mouse);
+        testMouse = null;
+    }
+
+    private void RestoreInputSettings()
+    {
+        try { testInputSettings?.Restore(); }
+        finally { testInputSettings = null; }
     }
 
     [UnityTest]
@@ -313,7 +344,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         playerObject.transform.SetPositionAndRotation(
             fixture.field.transform.TransformPoint(localBody), fixture.field.transform.rotation);
         GameObject cameraObject = new GameObject("Stage5 actual viewport aim camera");
-        roots.Add(cameraObject);
+        TrackRoot(cameraObject);
         cameraObject.transform.SetParent(cameraTarget, false);
         Camera camera = cameraObject.AddComponent<Camera>();
         camera.nearClipPlane = .2f;
@@ -328,7 +359,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         Assert.That(pilePrefab, Is.Not.Null);
         GameObject sourceObject = Object.Instantiate(pilePrefab.gameObject,
             fixture.field.transform.TransformPoint(new Vector3(-1f, 0f, -2.2f)), Quaternion.identity);
-        roots.Add(sourceObject);
+        TrackRoot(sourceObject);
         Component sourcePile = sourceObject.GetComponent(Type.GetType("LooseSubstancePile, Assembly-CSharp"));
         Call(sourcePile, "Initialize", soil, .25f);
         Call(bucket, "RequestContextAction", player, sourcePile);
@@ -338,9 +369,8 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
 
         Component playerInput = playerObject.GetComponent(Type.GetType("PlayerInputNew, Assembly-CSharp"));
         Assert.That(playerInput, Is.Not.Null);
-        testInputSettings = new CrowbarInputSettingsScope();
-        testInputSettings.UseFocusedGameViewRouting();
-        testMouse = InputSystem.AddDevice<Mouse>();
+        UseFocusedGameViewRouting();
+        AddOwnedTestMouse();
         ((Behaviour)playerInput).enabled = true;
         yield return null;
         ConfigureVirtualMouse(playerInput);
@@ -447,7 +477,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         Component firstPerson = playerObject.GetComponent(firstPersonType);
         GameObject cameraTarget = (GameObject)FieldValue(firstPerson, "CinemachineCameraTarget");
         GameObject cameraObject = new GameObject("Stage5 actual held-input camera");
-        roots.Add(cameraObject);
+        TrackRoot(cameraObject);
         cameraObject.transform.SetParent(cameraTarget.transform, false);
         Camera camera = cameraObject.AddComponent<Camera>();
         camera.nearClipPlane = .2f;
@@ -459,9 +489,8 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
 
         Type inputType = Type.GetType("PlayerInputNew, Assembly-CSharp");
         Component playerInput = playerObject.GetComponent(inputType);
-        testInputSettings = new CrowbarInputSettingsScope();
-        testInputSettings.UseFocusedGameViewRouting();
-        testMouse = InputSystem.AddDevice<Mouse>();
+        UseFocusedGameViewRouting();
+        AddOwnedTestMouse();
         ((Behaviour)playerInput).enabled = true;
         Set(player, "_currentTarget", fixture.site);
         return new RmbScenario(fixture, bucket, playerObject, player, playerInput);
@@ -476,9 +505,8 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
     private IEnumerator InitializeControlledPlayerInput(GameObject playerObject)
     {
         Component playerInput = playerObject.GetComponent(Type.GetType("PlayerInputNew, Assembly-CSharp"));
-        testInputSettings = new CrowbarInputSettingsScope();
-        testInputSettings.UseFocusedGameViewRouting();
-        testMouse = InputSystem.AddDevice<Mouse>();
+        UseFocusedGameViewRouting();
+        AddOwnedTestMouse();
         ((Behaviour)playerInput).enabled = true;
         yield return null;
         ConfigureVirtualMouse(playerInput);
@@ -564,7 +592,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         Assert.That(pilePrefab, Is.Not.Null);
         Vector3 returnPosition = fixture.field.transform.TransformPoint(Vector3.zero);
         GameObject pileObject = Object.Instantiate(pilePrefab.gameObject, returnPosition, Quaternion.identity);
-        roots.Add(pileObject);
+        TrackRoot(pileObject);
         Component pile = pileObject.GetComponent(Type.GetType("LooseSubstancePile, Assembly-CSharp"));
         Call(pile, "Initialize", soil, 3f);
 
@@ -672,7 +700,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         HashSet<int> pilesBefore = CapturePileIds();
 
         GameObject blocker = new GameObject("Stage5 return aim blocker");
-        roots.Add(blocker);
+        TrackRoot(blocker);
         blocker.transform.SetParent(fixture.volume.transform, true);
         blocker.transform.position = ray.origin + ray.direction * .2f;
         blocker.AddComponent<BoxCollider>().size = Vector3.one * .2f;
@@ -682,7 +710,6 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         Assert.That((bool)Call(Prop(fixture.field, "HeightField"), "MatchesSnapshot", before), Is.True);
         pilesBefore = CapturePileIds();
         Object.Destroy(blocker);
-        roots.Remove(blocker);
 
         Vector3 surface = ((Component)fixture.field).transform.TransformPoint(new Vector3(0f, .4f, 0f));
         playerObject.transform.position = surface + Vector3.up * 3f - Vector3.forward * 1.1f;
@@ -808,7 +835,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         Hold(bucket, playerObject);
         Vector3 target = ((Component)fixture.field).transform.TransformPoint(new Vector3(0f, .4f, 0f));
         GameObject cameraObject = new GameObject("Stage5 semantic pit aim camera");
-        roots.Add(cameraObject);
+        TrackRoot(cameraObject);
         cameraObject.transform.position = target + Vector3.up * 1f - Vector3.forward * 1.1f;
         cameraObject.transform.rotation = Quaternion.LookRotation(target - cameraObject.transform.position);
         Set(player, "aimCamera", cameraObject.AddComponent<Camera>());
@@ -846,7 +873,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         Hold(bucket, playerObject);
         Vector3 target = ((Component)fixture.field).transform.TransformPoint(new Vector3(0f, .4f, 0f));
         GameObject cameraObject = new GameObject("Stage5 colliderless target loss camera");
-        roots.Add(cameraObject);
+        TrackRoot(cameraObject);
         cameraObject.transform.position = target + Vector3.up + Vector3.back;
         cameraObject.transform.rotation = Quaternion.LookRotation(target - cameraObject.transform.position);
         Set(player, "aimCamera", cameraObject.AddComponent<Camera>());
@@ -883,7 +910,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         Component pilePrefab = (Component)FieldValue(bucket, "loosePilePrefab");
         Assert.That(pilePrefab, Is.Not.Null);
         GameObject pileObject = Object.Instantiate(pilePrefab.gameObject, ray.origin + ray.direction * .2f, Quaternion.identity);
-        roots.Add(pileObject);
+        TrackRoot(pileObject);
         Component pile = pileObject.GetComponent(Type.GetType("LooseSubstancePile, Assembly-CSharp"));
         Call(pile, "Initialize", soil, 1f);
         object fieldBefore = Call(Prop(fixture.field, "HeightField"), "CaptureSnapshot");
@@ -967,7 +994,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
     private SiteFixture CreateSite(int cycle, float removedUnits, bool surfaceActive)
     {
         GameObject root = Object.Instantiate(foundationPrefab);
-        roots.Add(root);
+        TrackRoot(root);
         Component bridgeBehaviour = root.GetComponentInChildren(bridgeType, true);
         if (bridgeBehaviour is Behaviour bridgeAsBehaviour) bridgeAsBehaviour.enabled = false;
         Component site = root.GetComponentInChildren(siteType, true);
@@ -1023,7 +1050,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
     private Component CreateBucket()
     {
         GameObject go = Object.Instantiate(bucketPrefab);
-        roots.Add(go);
+        TrackRoot(go);
         return go.GetComponent(bucketType);
     }
 
@@ -1031,7 +1058,7 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
     {
         GameObject inactiveParent = new GameObject("Stage5 inactive player test parent");
         inactiveParent.SetActive(false);
-        roots.Add(inactiveParent);
+        TrackRoot(inactiveParent);
         GameObject player = Object.Instantiate(playerPrefab, inactiveParent.transform, false);
         player.name = "Stage5 bucket return holder";
         player.transform.rotation = Quaternion.identity;
@@ -1092,10 +1119,17 @@ public sealed class LooseSoilStage5ReturnPlayModeTests
         {
             if (behaviour == null || behaviour.GetType().Name != "LooseSubstancePile" ||
                 existingIds.Contains(behaviour.GetInstanceID())) continue;
-            roots.Add(behaviour.gameObject);
+            TrackRoot(behaviour.gameObject);
             added.Add(behaviour);
         }
         return added;
+    }
+
+    private void TrackRoot(GameObject root)
+    {
+        if (root == null) return;
+        if (!roots.Contains(root)) roots.Add(root);
+        scope?.Own(root);
     }
 
     private static float Add(Component container, Object substance, float amount) =>

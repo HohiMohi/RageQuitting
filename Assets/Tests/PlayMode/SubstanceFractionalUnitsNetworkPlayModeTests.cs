@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -13,9 +12,8 @@ using Type = System.Type;
 
 public sealed class SubstanceFractionalUnitsNetworkPlayModeTests
 {
-    private readonly List<GameObject> roots = new();
-    private readonly List<NetworkManager> managers = new();
-    private NetworkManager previous, host, owner, late;
+    private PlayModeTestScope scope;
+    private NetworkManager host, owner, late;
     private GameObject bucketPrefab, pilePrefab;
     private Object soil;
     private Type bucketType, pileType, substanceType;
@@ -24,6 +22,7 @@ public sealed class SubstanceFractionalUnitsNetworkPlayModeTests
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        scope = new PlayModeTestScope("SubstanceFractionalUnitsNetwork");
         bucketType = Type.GetType("PortableSubstanceContainer, Assembly-CSharp");
         pileType = Type.GetType("LooseSubstancePile, Assembly-CSharp");
         substanceType = Type.GetType("ContainerSubstanceSO, Assembly-CSharp");
@@ -34,7 +33,6 @@ public sealed class SubstanceFractionalUnitsNetworkPlayModeTests
         soil = UnityEditor.AssetDatabase.LoadAssetAtPath<Object>("Assets/ScriptableObjectAssets/New/Substances/Soil.asset");
 #endif
         Assert.That(bucketPrefab, Is.Not.Null); Assert.That(pilePrefab, Is.Not.Null); Assert.That(soil, Is.Not.Null);
-        previous = NetworkManager.Singleton;
         ushort port = ReservePort();
         host = Manager("Fractional host", port);
         Assert.That(host.StartHost(), Is.True); host.SetSingleton();
@@ -47,14 +45,10 @@ public sealed class SubstanceFractionalUnitsNetworkPlayModeTests
     [UnityTearDown]
     public IEnumerator TearDown()
     {
-        foreach (NetworkManager manager in managers) if (manager != null && manager.IsListening) manager.Shutdown(true);
-        float deadline = Time.realtimeSinceStartup + 12f;
-        while (Time.realtimeSinceStartup < deadline && managers.Exists(m => m != null && (m.IsListening || m.ShutdownInProgress)))
-            yield return null;
-        foreach (GameObject root in roots) if (root != null) Object.Destroy(root);
-        roots.Clear(); managers.Clear();
-        if (previous != null && previous.IsListening) previous.SetSingleton();
-        yield return null;
+        if (scope == null) yield break;
+        yield return scope.Cleanup();
+        scope.AssertCleanupSucceeded();
+        scope = null;
     }
 
     [UnityTest]
@@ -76,7 +70,7 @@ public sealed class SubstanceFractionalUnitsNetworkPlayModeTests
 
         host.SetSingleton();
         GameObject pileInstance = Object.Instantiate(pilePrefab, new Vector3(51, 0, 0), Quaternion.identity);
-        roots.Add(pileInstance);
+        scope.Own(pileInstance);
         NetworkObject pileObject = pileInstance.GetComponent<NetworkObject>();
         pileObject.SetSceneObjectStatus(false);
         Component serverPile = pileObject.GetComponent(pileType);
@@ -101,7 +95,7 @@ public sealed class SubstanceFractionalUnitsNetworkPlayModeTests
 
     private NetworkObject Spawn(GameObject prefab, Vector3 position, ulong? ownerId = null)
     {
-        GameObject instance = Object.Instantiate(prefab, position, Quaternion.identity); roots.Add(instance);
+        GameObject instance = scope.Own(Object.Instantiate(prefab, position, Quaternion.identity));
         NetworkObject networkObject = instance.GetComponent<NetworkObject>();
         networkObject.SetSceneObjectStatus(false);
         if (ownerId.HasValue) networkObject.SpawnWithOwnership(ownerId.Value); else networkObject.Spawn();
@@ -109,13 +103,13 @@ public sealed class SubstanceFractionalUnitsNetworkPlayModeTests
     }
     private NetworkManager Manager(string name, ushort port)
     {
-        GameObject root = new(name); roots.Add(root);
+        GameObject root = scope.Own(new GameObject(name));
         UnityTransport transport = root.AddComponent<UnityTransport>(); transport.SetConnectionData("127.0.0.1", port, "127.0.0.1");
         NetworkManager manager = root.AddComponent<NetworkManager>();
         manager.NetworkConfig = new NetworkConfig { NetworkTransport = transport, EnableSceneManagement = false };
         manager.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = bucketPrefab });
         manager.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = pilePrefab });
-        managers.Add(manager); return manager;
+        scope.OwnManager(manager); return manager;
     }
     private static float Add(Component c, Object s, float n) => (float)c.GetType().GetMethod("TryAddUnits", new[] { Type.GetType("ContainerSubstanceSO, Assembly-CSharp"), typeof(float) }).Invoke(c, new object[] { s, n });
     private static float Units(Component c) => (float)c.GetType().GetProperty("CurrentUnits").GetValue(c);

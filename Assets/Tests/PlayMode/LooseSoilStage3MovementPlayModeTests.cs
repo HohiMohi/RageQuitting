@@ -18,11 +18,15 @@ public sealed class LooseSoilStage3MovementPlayModeTests
     private Keyboard keyboard;
     private Type fieldType;
     private CrowbarInputSettingsScope inputSettingsScope;
+    private PlayModeTestScope scope;
 
     [UnitySetUp]
     public IEnumerator SetUpSyntheticKeyboardRouting()
     {
+        scope = new PlayModeTestScope("LooseSoilStage3Movement");
         inputSettingsScope = new CrowbarInputSettingsScope();
+        scope.RestoreWith(RemoveTestKeyboard);
+        scope.RestoreWith(RestoreInputSettings);
         inputSettingsScope.UseFocusedGameViewRouting();
         yield break;
     }
@@ -30,38 +34,25 @@ public sealed class LooseSoilStage3MovementPlayModeTests
     [UnityTearDown]
     public IEnumerator TearDown()
     {
-        try
-        {
-            if (playerRoot != null)
-            {
-                Component input = playerRoot.GetComponent(Type.GetType("PlayerInputNew, Assembly-CSharp"));
-                if (input is Behaviour inputBehaviour) inputBehaviour.enabled = false;
-                if (input != null)
-                {
-                    MethodInfo dispose = input.GetType().GetMethod("DisposeInput", PrivateInstance);
-                    if (dispose != null) dispose.Invoke(input, null);
-                }
-            }
-            if (inactiveParent != null) Object.Destroy(inactiveParent);
-            else if (playerRoot != null) Object.Destroy(playerRoot);
-            if (fieldRoot != null) Object.Destroy(fieldRoot);
-            if (floorRoot != null) Object.Destroy(floorRoot);
-            yield return null;
-            if (keyboard != null) InputSystem.RemoveDevice(keyboard);
-            keyboard = null;
-            yield return null;
-        }
-        finally
-        {
-            try
-            {
-                inputSettingsScope?.Restore();
-            }
-            finally
-            {
-                inputSettingsScope = null;
-            }
-        }
+        if (scope == null) yield break;
+        PlayModeTestScope cleanupScope = scope;
+        yield return cleanupScope.Cleanup();
+        fieldRoot = playerRoot = inactiveParent = floorRoot = null;
+        keyboard = null; inputSettingsScope = null; fieldType = null;
+        scope = null;
+        cleanupScope.AssertCleanupSucceeded();
+    }
+
+    private void RemoveTestKeyboard()
+    {
+        if (keyboard != null && keyboard.added) InputSystem.RemoveDevice(keyboard);
+        keyboard = null;
+    }
+
+    private void RestoreInputSettings()
+    {
+        try { inputSettingsScope?.Restore(); }
+        finally { inputSettingsScope = null; }
     }
 
     [UnityTest]
@@ -75,19 +66,19 @@ public sealed class LooseSoilStage3MovementPlayModeTests
         Assert.That(prefab, Is.Not.Null);
         fieldType = Type.GetType("FoundationLooseSoilField, Assembly-CSharp");
         Assert.That(fieldType, Is.Not.Null);
-        fieldRoot = new GameObject("Stage 3 jump field");
+        fieldRoot = scope.Own(new GameObject("Stage 3 jump field"));
         Component field = fieldRoot.AddComponent(fieldType);
         fieldType.GetMethod("Initialize").Invoke(field, new object[] { 12f, 12f, .5f, .4f, .4f, 6f });
         fieldType.GetMethod("SetSurfaceState").Invoke(field, new object[] { true, null });
 
-        floorRoot = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        floorRoot = scope.Own(GameObject.CreatePrimitive(PrimitiveType.Cube));
         floorRoot.name = "Stage 3 movement floor";
         floorRoot.transform.position = new Vector3(0f, -.1f, 0f);
         floorRoot.transform.localScale = new Vector3(100f, .2f, 100f);
 
-        inactiveParent = new GameObject("Stage 3 inactive player parent");
+        inactiveParent = scope.Own(new GameObject("Stage 3 inactive player parent"));
         inactiveParent.SetActive(false);
-        playerRoot = Object.Instantiate(prefab, inactiveParent.transform, false);
+        playerRoot = scope.Own(Object.Instantiate(prefab, inactiveParent.transform, false));
         Behaviour gameInput = (Behaviour)playerRoot.GetComponent(Type.GetType("PlayerInputNew, Assembly-CSharp"));
         Behaviour inputSystemPlayer = playerRoot.GetComponent<UnityEngine.InputSystem.PlayerInput>();
         Assert.That(gameInput, Is.Not.Null);
@@ -218,13 +209,13 @@ public sealed class LooseSoilStage3MovementPlayModeTests
         Assert.That((float)Get(controller, "_looseSoilImmersion"), Is.Zero, "Disabling the player clears its sampled state.");
         ((Behaviour)controller).enabled = true;
         yield return null;
-        UnityEngine.SceneManagement.Scene soilScene = UnityEngine.SceneManagement.SceneManager.CreateScene("Stage3FieldUnloadFixture");
+        UnityEngine.SceneManagement.Scene soilScene = scope.OwnScene(UnityEngine.SceneManagement.SceneManager.CreateScene("Stage3FieldUnloadFixture"));
         UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(fieldRoot, soilScene);
         AsyncOperation unload = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(soilScene);
         while (!unload.isDone) yield return null;
         fieldRoot = null;
         Assert.That(GetImmersion(playerRoot.transform.position), Is.Zero, "Unloaded fields leave the registry.");
-        fieldRoot = new GameObject("Stage 3 destroyed registry field");
+        fieldRoot = scope.Own(new GameObject("Stage 3 destroyed registry field"));
         Component destroyedField = fieldRoot.AddComponent(fieldType);
         fieldType.GetMethod("Initialize").Invoke(destroyedField, new object[] { 4f, 4f, .5f, .4f, .4f, 6f });
         fieldType.GetMethod("SetSurfaceState").Invoke(destroyedField, new object[] { true, null });
@@ -251,19 +242,19 @@ public sealed class LooseSoilStage3MovementPlayModeTests
         Assert.That(prefab, Is.Not.Null);
         fieldType = Type.GetType("FoundationLooseSoilField, Assembly-CSharp");
         Assert.That(fieldType, Is.Not.Null);
-        fieldRoot = new GameObject("Stage 3 full-flight regression field");
+        fieldRoot = scope.Own(new GameObject("Stage 3 full-flight regression field"));
         Component field = fieldRoot.AddComponent(fieldType);
         fieldType.GetMethod("Initialize").Invoke(field, new object[] { 12f, 12f, .5f, .4f, .4f, 6f });
         fieldType.GetMethod("SetSurfaceState").Invoke(field, new object[] { true, null });
 
-        floorRoot = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        floorRoot = scope.Own(GameObject.CreatePrimitive(PrimitiveType.Cube));
         floorRoot.name = "Stage 3 full-flight support";
         floorRoot.transform.position = new Vector3(0f, -.1f, 0f);
         floorRoot.transform.localScale = new Vector3(100f, .2f, 100f);
 
-        inactiveParent = new GameObject("Stage 3 full-flight inactive parent");
+        inactiveParent = scope.Own(new GameObject("Stage 3 full-flight inactive parent"));
         inactiveParent.SetActive(false);
-        playerRoot = Object.Instantiate(prefab, inactiveParent.transform, false);
+        playerRoot = scope.Own(Object.Instantiate(prefab, inactiveParent.transform, false));
         Behaviour gameInput = (Behaviour)playerRoot.GetComponent(Type.GetType("PlayerInputNew, Assembly-CSharp"));
         Behaviour inputSystemPlayer = playerRoot.GetComponent<UnityEngine.InputSystem.PlayerInput>();
         Assert.That(gameInput, Is.Not.Null);

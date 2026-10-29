@@ -1,12 +1,14 @@
 # Odłożony plan: izolacja testów i sprzątanie stanu
 
-Data: 2026-10-28  
-Status: **plan odłożony, niewdrożony**  
+Data aktualizacji: 2026-10-29  
+Status: **Etap 1 wdrożony i zwalidowany; dalsza migracja fixture etapami**  
 Zakres: punkt 2 z 3 usprawnień workflow testów.
 
-## Warunek wznowienia
+## Warunek wznowienia — spełniony 2026-10-29
 
-Nie rozpoczynać audytu ani implementacji tego planu, dopóki pierwotny plan mechaniki **Sypka ziemia V1** nie zostanie ukończony, włącznie z Etapem 6 i ręczną oceną użytkownika. Stan na 2026-10-28: Etap 6 nie był jeszcze rozpoczęty. Użytkownik zaakceptował najnowszą funkcjonalność Etapu 5; nie przenosić do bieżącego stanu starszych wpisów o oczekującej ręcznej akceptacji. Główny plan: [Loose-Soil-V1-Implementation.md](Loose-Soil-V1-Implementation.md).
+Etap 5 został zaakceptowany wcześniej. Użytkownik 2026-10-29 zaakceptował Etap 6 i zakończenie pierwotnego planu, zgłaszając, że wszystko wydaje się działać poprawnie. Szczegółów wykonanych pozycji checklisty nie podano. Zgodnie z tą akceptacją warunek wznowienia spełniono; pierwszy etap audytu i implementacji opisano poniżej. To użytkownikowska akceptacja manualna; nie należy jej mylić z automatyczną walidacją ani rozszerzać zapisanych raportów na przypadki, których testy nie obejmowały. Główny plan i jego zachowane ograniczenia: [Loose-Soil-V1-Implementation.md](Loose-Soil-V1-Implementation.md).
+
+Pierwsza partia audytu, wspólnego scope i migracji pięciu fixture wdrożona i zwalidowana; pozostałe fixture migrujemy osobnymi, przeglądalnymi etapami. Szczegóły pierwszej partii poniżej, a wcześniejsze założenia zachowano jako historyczny plan; przed kolejnymi zmianami sprawdź aktualny kod i odtwórz wąski przypadek.
 
 Usprawnienie 1 (niezawodna ścieżka Unity) i usprawnienie 3 (wczesne analyzery / raportowanie wygenerowane) są ukończone. Ta notatka zapisuje propozycję dalszej pracy; nie zatwierdza finalnej architektury ani nie obiecuje, że wszystkie historyczne flakiness mają wspólną przyczynę.
 
@@ -28,6 +30,20 @@ Dla NGO śledzić wszystkie repliki peerów. W teardown wykonać shutdown i z og
 
 Asercje po teście mają wskazać test, który pozostawił obiekt lub aktywny transport. Oddzielić izolację wielu peerów wewnątrz jednego testu od wycieków pomiędzy testami. Wymieszanie replik `NetworkManager.Singleton` w fixture Stage5 nie dowodzi samo w sobie wycieku między testami.
 
+## Etap 1 wdrożenia — scope i pierwsze migracje (2026-10-29)
+
+Wdrożono pierwszy wspólny mechanizm i ograniczoną migrację pięciu fixture; nie zmigrowano wszystkich testów ani nie zakończono planu izolacji. Główny agent niezależnie przejrzał zmiany. Jedyna zmiana produkcyjna to `PlayerInteractionNew.OnDestroy`: najpierw wypisuje własny handler `EquippableItem.OnAnyItemEquipped`. Nie zmieniano gameplayu, scen, prefabów ani tuningu. Test regresyjny rzeczywistego cyklu `create/Start/Destroy` pozostawiał stary target po zniszczeniu (RED: 1), a po korekcie przechodził trzy cykle (GREEN: 3) i zachowywał niezależnych subskrybentów.
+
+Nowy `Assets/Tests/PlayMode/PlayModeTestScope.cs` tworzy pustą, aktywną scenę runtime i własność rejestruje jawnie: `Own` dla utworzonych korzeni, `OwnManager` przed uruchomieniem sieci, `OwnTransientAsset` dla tymczasowych assetów i `OwnScene` dla dodatkowych utworzonych scen. Zachowuje wcześniejsze i nieposiadane sceny, obiekty, test runner oraz pożyczone korzenie. NGO cleanup zbiera repliki także przez wewnętrzne `NetworkObject.NetworkManagerOwner` i `ReferenceEquals` (w tym wrapper zniszczonego menedżera), z listami SpawnManager należących do testu menedżerów; sama `NetworkManager.Singleton` nie jest dowodem własności. Zamykanie czeka z limitem czasu na oba warunki `!IsListening` oraz `!ShutdownInProgress`; potem niszczy własne obiekty i sceny przed callbackami odtwarzania stanu. Próbuje wszystkich callbacków FIFO, zbiera błędy do `AssertCleanupSucceeded()` i jest idempotentne. Odtwarza dokładnie wcześniejszy singleton, również null lub nieaktywną instancję, `Time.timeScale`, `fixedDeltaTime`, `maximumDeltaTime`, `Physics.gravity`, `autoSyncTransforms` i `simulationMode`. Fixture z inputem zachowują istniejący `CrowbarInputSettingsScope` i kontrolę hasha assetu; generowane mapy gracza są zwalniane przez niszczenie obiektu przed usuwaniem należących do testu klawiatur/myszy. Nie ma globalnego resetu wszystkich statyków ani nowego procesu Unity.
+
+Zmigrowane fixture i liczba istniejących przypadków: `SubstanceFractionalUnitsNetworkPlayModeTests` (1), `LooseSoilStage4NetworkPlayModeTests` (1), `LooseSoilStage5NetworkPlayModeTests` (2), `Stage3Movement` (2), `LooseSoilStage5Return` (16), razem 22 istniejące przypadki. Dodano 7 testów scope i 1 event lifecycle regression. Czerwone→zielone reprodukcje potwierdziły cztery usterki: przywrócenie nieaktywnego singletonu, orphan `DontDestroyOnLoad`, wrapper zniszczonego menedżera oraz pozostawionego subskrybenta statycznego zdarzenia. Pozostałe nowe testy sprawdzają kontynuację przywracania po wstrzykniętym błędzie callbacku (także dla inputu), dodatkową scenę, idempotencję oraz sekwencje A→B, B→A i A→A. Te sekwencje nie są permutacjami całego zestawu.
+
+Ścisły, nieprzefiltrowany Gameplay po tej partii: [summary.json](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261029T153314Z-ef5195a2/summary.json) — passed, exit 0, 14/14 kroków; EditMode 219/219, PlayMode 247/247, brak kroków niezaliczonych, ostrzeżeń i pominięć. Końcowe hashe źródeł potwierdzają brak niezamierzonych zmian; `InputSystem.inputsettings.asset` i `EditorBuildSettings.asset` są identyczne z baseline. Pierwsze próby Fast `20261029T144849Z-870de826` i `20261029T154302Z-afced85e` nie przeszły bramki analyzera i zablokowały kolejne kontrole; raporty builda pokazały zero błędów kompilatora i nie ustalono przyczyny. Niezależny analyzer recheck bez zmian źródeł/konfiguracji przeszedł (913 istniejących znalezisk wobec baseline 925; baseline 316 wpisów). Końcowy ścisły Fast uruchomiony po dokumentacji przez głównego agenta przeszedł: [summary.json](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261029T154407Z-3781b972/summary.json), exit 0. Nie ma nowych narzędzi ani zmian baseline.
+
+Artefakty reprodukcji i migracji (wyniki przed/po zachowano): `Artifacts/TestIsolation_20261029/red-original-fixture`, `red-current-ddol`, `player-interaction-event-red`, `player-interaction-event-green`, `destroyed-owner-red-compiled`, `destroyed-owner-green`, `scope-extra-scene`, `stage3-final-input-scope`, `stage5-return-input-scope`, `stage4-scope`, `stage5-scope`, `final-reviewed-suite` i `baseline-analyzer-recheck`. Testy z filtrami dającymi zero przypadków traktowano jako diagnostykę, nie dowód regresji.
+
+Pozostałe prace: ocenić i migrować dalsze legacy fixture etapami, w tym te oparte o `InputTestFixture`; Stage6 Single-reload nadal ma własny lifecycle fixture. Scope współdzieli świat fizyki, odtwarza zapisane pola skalarne i jawnie zarejestrowane callbacki, a nie cały globalny stan silnika. Nie dowodzi obsługi anulowanego procesu w każdej fazie setupu/teardown ani niezależności pełnego zestawu od wszystkich kolejności. Historyczne incydenty poniżej zachowują wartość jako zapis dawnych symptomów; naprawa handlera potwierdza obecny błąd cyklu życia tego zdarzenia, lecz nie dowodzi, że to była przyczyna wszystkich wcześniejszych flakiness.
+
 ## Uzasadnienie: lokalne dowody historyczne
 
 Poniższe logi uzasadniają wspólną infrastrukturę sprzątania. Nie zakładać, że problem nadal występuje ani że każdy przypadek flakiness ma ten sam root cause.
@@ -40,11 +56,11 @@ Kontrprzykłady i ograniczenia interpretacji:
 
 - **27.10:** timeout `SingleCarryPlacementStage5` (217/218) wynikał z żądania przed oknem 50 ms; po poprawce harmonogramu fixture pełny przebieg dał 218/218 (`20261027T084206Z-1ba3c170` → `20261027T084825Z-dd420c5e`). Nie wykazano wycieku.
 - **26.10:** przyczyna sporadycznej porażki `BridgeDeckPanelStage1` pozostaje nieznana.
-- Podejrzenie subskrypcji `EquippableItem.OnAnyItemEquipped` w `PlayerInteractionNew.Start` / `OnDestroy` jest hipotezą do sprawdzenia w aktualnym kodzie, a nie potwierdzoną dawną przyczyną.
+- Odtworzony w tej partii test lifecycle potwierdził, że stary `PlayerInteractionNew` target mógł pozostać subskrybentem `EquippableItem.OnAnyItemEquipped`; naprawiono usunięcie własnego handlera przy `OnDestroy`. To nie dowodzi związku z każdą historyczną flakiness.
 
 ## Kandydaci i kolejność prac
 
-Pierwsze pliki do przejrzenia: `Assets/Tests/PlayMode/SubstanceFractionalUnitsNetworkPlayModeTests.cs`, `LooseSoilStage4NetworkPlayModeTests.cs`, `LooseSoilStage5NetworkPlayModeTests.cs` oraz fixture związane z inputem. Przy powrocie sprawdzić aktualny kod i stan roboczy; historyczne poprawki mogły już rozwiązać część problemów.
+Migracja pierwszej partii objęła `SubstanceFractionalUnitsNetworkPlayModeTests.cs`, `LooseSoilStage4NetworkPlayModeTests.cs`, `LooseSoilStage5NetworkPlayModeTests.cs` oraz fixture Stage3 i Stage5 wymienione wyżej. Następnie oceń pozostałe legacy fixture, w tym pozostałe testy bazujące na `InputTestFixture`, według aktualnych symptomów i wycieków; nie powtarzaj zakończonej migracji bez nowego dowodu. `Stage6 Single-reload` nadal używa własnego lifecycle fixture.
 
 1. Najpierw audyt i odtworzenie możliwie wąskiego przypadku z zachowaniem kolejności.
 2. Dodać wspólny mechanizm do jednego fixture i test regresyjny, który wiarygodnie obala wadliwy cleanup przed poprawką oraz przechodzi po niej.

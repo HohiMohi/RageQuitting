@@ -175,6 +175,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void OnDestroy()
     {
+        EquippableItem.OnAnyItemEquipped -= EquippableItem_OnAnyItemEquipped;
         ClearBucketActionIntent();
         OnHeldObjectChanged -= HandleBucketActionHeldObjectChanged;
         _playerInputNew.OnInteract -= HandleInteract;

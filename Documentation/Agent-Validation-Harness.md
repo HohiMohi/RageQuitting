@@ -155,6 +155,14 @@ Tools/RageQuitting/Validation
 
 ## Samodzielne narzędzia dokumentacji
 
+Do sprawdzenia treści i par lustrzanych kilku dokumentów uruchom:
+
+```powershell
+.\Tools\AgentHarness\Invoke-DocumentationCheck.ps1 -Document Loose-Soil-V1-Implementation.md,Bridge-Construction.md,Deferred-Test-Isolation-Plan.md,Agent-Validation-Harness.md -Json
+```
+
+Kontrola wybranych plików zapisuje raport JSON i porównuje bajty między katalogiem `Documentation` projektu a katalogiem dokumentacji roboczej; nie modyfikuje plików. `-All` sprawdza wszystkie dokumenty Markdown. Po edycji pojedynczego dokumentu parę należy zsynchronizować przed checkiem; `Invoke-DocumentationSync.ps1` zapisuje wyłącznie w kierunku ze źródła autorytatywnego w projekcie do dokumentacji roboczej, więc nie używaj go do niezamienionych lokalnych kopii.
+
 `Invoke-DocumentationCheck.ps1` i `Invoke-DocumentationSync.ps1` są samodzielnymi narzędziami. Nie uruchamiają się automatycznie ani w preflighcie, ani w oknie `Tools/RageQuitting/Validation`.
 
 Dokumentacja w `D:\Programy\UnityProjects\RageQuitting\Documentation` jest źródłem autorytatywnym. Synchronizacja działa wyłącznie w kierunku:
@@ -191,3 +199,36 @@ Artifacts\Validation\DocumentationSync\<run-id>\documentation-sync-report.json
 ```
 
 Raporty są zapisane w JSON. Parametr `-Json` wypisuje na stdout zwartą kopertę z `reportPath`, `status` i `exitCode`. Najważniejsze kody wyjścia są wspólne: `0` oznacza sukces, `1` niezgodność, odrzucone dane wejściowe lub błąd operacji, `2` nieobsłużony błąd skryptu albo zapisu raportu, a `3` niedostępny wymagany root.
+
+## Wspólny zakres testu PlayMode
+
+`Assets/Tests/PlayMode/PlayModeTestScope.cs` to opt-in helper dla etapowej migracji fixture, nie automatyczne globalne sandboxowanie. Zarejestruj każdy utworzony korzeń, `NetworkManager`, tymczasowy asset i dodatkową scenę zaraz po utworzeniu; rejestruj `NetworkManager` przed startem NGO. Nie rejestruj runnera, scen bazowych ani pożyczonych obiektów. Setup inputu zachowuje odpowiedni input-settings scope i asset-hash guard; wytworzone mapy są zwalniane w lifecycle obiektu. Po `yield return scope.Cleanup()` zakończ cleanup, przywróć lokalne pola fixture (np. wskaźnik do bieżącego scope), a następnie wywołaj `scope.AssertCleanupSucceeded()`. Przykład dla fixture NGO:
+
+
+```csharp
+private PlayModeTestScope scope;
+
+[UnitySetUp]
+public IEnumerator SetUp()
+{
+    scope = new PlayModeTestScope(nameof(MyFixture));
+    CaptureInputState();
+    scope.RestoreWith(RestoreInputState);
+    NetworkManager manager = scope.OwnManager(CreateConfiguredNetworkManager());
+    Assert.That(manager.StartHost(), Is.True);
+    yield return null;
+}
+
+[UnityTearDown]
+public IEnumerator TearDown()
+{
+    if (scope == null) yield break;
+    PlayModeTestScope current = scope;
+    yield return current.Cleanup();
+    scope = null;
+    ClearFixtureReferences();
+    current.AssertCleanupSucceeded();
+}
+```
+
+`CaptureInputState`, `RestoreInputState`, `ClearFixtureReferences` i `CreateConfiguredNetworkManager` są placeholderami dla metod danego fixture; menedżer musi być skonfigurowany z transportem przed `StartHost`. Rejestruj callback odtworzenia po przechwyceniu stanu i przed mutacją inputu/sieci. Zakres fixture pozostaje opt-in: scope próbuje wszystkie odtworzenia i zgłasza zebrane błędy; nie resetuje arbitralnie globalnych statyków ani nie tworzy nowego procesu Unity. Nie wyprowadzaj z tego przykładu obowiązku użycia `InputTestFixture` przez każdy test. Nadal migruj fixture etapami i waliduj rzeczywiste sekwencje regresyjne.
