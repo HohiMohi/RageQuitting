@@ -135,6 +135,7 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
         int unitsPerCycle = (int)GetProperty(workflow, "SoilUnitsPerCycle");
         Assert.That(cycleCount, Is.EqualTo(3));
         Assert.That(unitsPerCycle, Is.EqualTo(6));
+        PrepareControlledDiggingState(site, volume, field);
         Assert.That((float)GetProperty(GetProperty(field, "HeightField"), "TotalUnits"),
             Is.EqualTo(unitsPerCycle).Within(.001f), "Only the first authored layer is present at a time.");
 
@@ -384,7 +385,8 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
                     ? FindSceneComponents(volumeType, Stage02Path)
                     : new Component[0];
                 if (reloadedVolumes.Length == 2 &&
-                    GetProperty(GetField(reloadedVolumes[0], "constructionSite"), "DiggingCycleIndex") is int index && index == 0)
+                    GetProperty(GetField(reloadedVolumes[0], "constructionSite"), "CurrentStage").ToString() == "Clearing" &&
+                    (int)GetProperty(GetField(reloadedVolumes[0], "constructionSite"), "RemainingObstacleCount") == 3)
                     break;
                 yield return null;
             }
@@ -394,7 +396,9 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
             Assert.That(resetVolumes, Has.Length.EqualTo(2), "The restart reloads the authored scene.");
             Component resetSite = GetField(resetVolumes[0], "constructionSite") as Component;
             Component resetField = GetField(resetVolumes[0], "looseSoilField") as Component;
-            Assert.That(GetProperty(resetSite, "CurrentStage").ToString(), Is.EqualTo("Digging"));
+            Assert.That(GetProperty(resetSite, "CurrentStage").ToString(), Is.EqualTo("Clearing"),
+                "Offline restart restores the authored obstacle-clearing stage.");
+            Assert.That((int)GetProperty(resetSite, "RemainingObstacleCount"), Is.EqualTo(3));
             Assert.That((int)GetProperty(resetSite, "DiggingCycleIndex"), Is.Zero);
             Assert.That(GetProperty(resetSite, "DiggingSubstage").ToString(), Is.EqualTo("Loosening"));
             Assert.That((float)GetProperty(resetSite, "RemovedSoilUnits"), Is.Zero.Within(.001f));
@@ -404,8 +408,8 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
                 Is.EqualTo(unitsPerCycle).Within(.001f), "Restart restores the first six-unit layer.");
             Collider resetRampCollider = GetField(resetVolumes[0], "exitRampCollider") as Collider;
             Renderer resetRampRenderer = GetField(resetVolumes[0], "exitRampRenderer") as Renderer;
-            Assert.That(resetRampCollider.enabled, Is.False);
-            Assert.That(resetRampRenderer.enabled, Is.False);
+            Assert.That(resetRampCollider.enabled, Is.True);
+            Assert.That(resetRampRenderer.enabled, Is.True);
 
             foreach (GameObject bucketObject in buckets)
             {
@@ -437,6 +441,7 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
             .OrderBy(candidate => candidate.transform.position.x).First();
         Component site = GetField(volume, "constructionSite") as Component;
         Component field = GetField(volume, "looseSoilField") as Component;
+        PrepareControlledDiggingState(site, volume, field);
         object workflow = GetField(site, "workflow");
         int cycles = (int)GetProperty(workflow, "DiggingCycleCount");
         int unitsPerCycle = (int)GetProperty(workflow, "SoilUnitsPerCycle");
@@ -724,6 +729,11 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
         Component initialField = GetField(initialVolume, "looseSoilField") as Component;
         object initialHeightField = GetProperty(initialField, "HeightField");
         Assert.That(initialSite.GetType(), Is.EqualTo(siteType));
+        Assert.That(GetProperty(initialSite, "CurrentStage").ToString(), Is.EqualTo("Clearing"),
+            "The authored Stage02 site starts in its saved obstacle-clearing stage.");
+        Assert.That((int)GetProperty(initialSite, "RemainingObstacleCount"), Is.EqualTo(3),
+            "The authored initial state retains its three active clearing obstacles.");
+        Assert.That((bool)GetProperty(initialSite, "RequiresSiteClearing"), Is.True);
         Assert.That((int)GetProperty(initialSite, "DiggingCycleIndex"), Is.Zero);
         Assert.That((float)GetProperty(initialSite, "RemovedSoilUnits"), Is.Zero);
         Assert.That((bool)GetProperty(initialField, "IsSurfaceActive"), Is.False);
@@ -734,8 +744,8 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
         Renderer initialRampRenderer = GetField(initialVolume, "exitRampRenderer") as Renderer;
         Assert.That(initialRamp, Is.Not.Null);
         Assert.That(initialRampRenderer, Is.Not.Null);
-        Assert.That(initialRamp.enabled, Is.False);
-        Assert.That(initialRampRenderer.enabled, Is.False);
+        Assert.That(initialRamp.enabled, Is.True, "The ramp remains available during authored obstacle clearing.");
+        Assert.That(initialRampRenderer.enabled, Is.True);
 
         NetworkObject restartPlayerObject = restartHost.LocalClient.PlayerObject.GetComponent<NetworkObject>();
         Assert.That(restartPlayerObject, Is.Not.Null);
@@ -753,6 +763,7 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
         MethodInfo applyToolWork = siteType.GetMethod("TryApplyToolWork", new[]
             { Resolve("EquippableItemType"), typeof(float), typeof(int) });
         Assert.That(applyToolWork, Is.Not.Null);
+        PrepareControlledDiggingState(initialSite, initialVolume, initialField);
         Assert.That((bool)applyToolWork.Invoke(initialSite,
             new[] { diggingTool, (object)looseningWork, -1 }), Is.True,
             "The host applies ordinary public shovel work to the actual authored foundation.");
@@ -826,7 +837,9 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
         Component resetSite = GetField(resetVolume, "constructionSite") as Component;
         Component resetField = GetField(resetVolume, "looseSoilField") as Component;
         object resetHeightField = GetProperty(resetField, "HeightField");
-        Assert.That(GetProperty(resetSite, "CurrentStage").ToString(), Is.EqualTo("Digging"));
+        Assert.That(GetProperty(resetSite, "CurrentStage").ToString(), Is.EqualTo("Clearing"),
+            "The first host restart restores the authored obstacle-clearing stage.");
+        Assert.That((int)GetProperty(resetSite, "RemainingObstacleCount"), Is.EqualTo(3));
         Assert.That((int)GetProperty(resetSite, "DiggingCycleIndex"), Is.Zero);
         Assert.That(GetProperty(resetSite, "DiggingSubstage").ToString(), Is.EqualTo("Loosening"));
         Assert.That((float)GetProperty(resetSite, "RemovedSoilUnits"), Is.Zero);
@@ -837,8 +850,8 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
             "The restarted heightfield has the same initial geometry as the authored scene.");
         Collider resetRamp = GetField(resetVolume, "exitRampCollider") as Collider;
         Renderer resetRampRenderer = GetField(resetVolume, "exitRampRenderer") as Renderer;
-        Assert.That(resetRamp.enabled, Is.False);
-        Assert.That(resetRampRenderer.enabled, Is.False);
+        Assert.That(resetRamp.enabled, Is.True);
+        Assert.That(resetRampRenderer.enabled, Is.True);
 
         int secondSceneHandle = SceneManager.GetSceneByPath(Stage02Path).handle;
         restartType.GetMethod("RequestRestartLevel", Instance).Invoke(restartedController, null);
@@ -859,7 +872,9 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
         Assert.That(secondResetVolumes, Has.Length.EqualTo(2));
         Component secondResetSite = GetField(secondResetVolumes[0], "constructionSite") as Component;
         Component secondResetField = GetField(secondResetVolumes[0], "looseSoilField") as Component;
-        Assert.That(GetProperty(secondResetSite, "CurrentStage").ToString(), Is.EqualTo("Digging"));
+        Assert.That(GetProperty(secondResetSite, "CurrentStage").ToString(), Is.EqualTo("Clearing"),
+            "A second host restart again restores the authored obstacle-clearing stage.");
+        Assert.That((int)GetProperty(secondResetSite, "RemainingObstacleCount"), Is.EqualTo(3));
         Assert.That((int)GetProperty(secondResetSite, "DiggingCycleIndex"), Is.Zero);
         Assert.That((float)GetProperty(GetProperty(secondResetField, "HeightField"), "TotalUnits"),
             Is.EqualTo(6f).Within(.00001f));
@@ -979,6 +994,55 @@ public sealed class LooseSoilStage6LifecyclePlayModeTests
     }
 
     private static Type Resolve(string name) => Type.GetType(name + ", Assembly-CSharp");
+
+    private static void PrepareControlledDiggingState(Component site, Component volume, Component field)
+    {
+        Assert.That(GetProperty(site, "CurrentStage").ToString(), Is.EqualTo("Clearing"),
+            "The fixture begins from Stage02's actual authored clearing state.");
+        Assert.That((bool)GetProperty(site, "RequiresSiteClearing"), Is.True);
+        Assert.That((int)GetProperty(site, "RemainingObstacleCount"), Is.EqualTo(3),
+            "The fixture confirms all three authored obstacles are active before it clears them.");
+        Assert.That((bool)GetProperty(field, "IsSurfaceActive"), Is.False);
+        Assert.That((float)GetProperty(GetProperty(field, "HeightField"), "TotalUnits"), Is.EqualTo(6f).Within(.001f));
+
+        Collider rampCollider = GetField(volume, "exitRampCollider") as Collider;
+        Renderer rampRenderer = GetField(volume, "exitRampRenderer") as Renderer;
+        Assert.That(rampCollider, Is.Not.Null);
+        Assert.That(rampRenderer, Is.Not.Null);
+        Assert.That(rampCollider.enabled, Is.True, "The authored ramp is available during obstacle clearing.");
+        Assert.That(rampRenderer.enabled, Is.True);
+
+        site.GetType().GetMethod("ApplyInitialCompletedState", Instance).Invoke(site, null);
+        Type bridgeComponentType = Resolve("BridgeComponent");
+        Component bridgeComponent = site.GetComponent(bridgeComponentType);
+        Assert.That(bridgeComponent, Is.Not.Null);
+        Type networkStateType = Resolve("BridgeComponentNetworkState");
+        Type stageType = Resolve("BridgeConstructionStage");
+        Type substageType = Resolve("FoundationDiggingSubstage");
+        Assert.That(networkStateType, Is.Not.Null);
+        Assert.That(stageType, Is.Not.Null);
+        Assert.That(substageType, Is.Not.Null);
+        int componentId = (int)GetProperty(bridgeComponent, "ComponentID");
+        object diggingState = Activator.CreateInstance(networkStateType, new object[] { componentId });
+        SetField(diggingState, "constructionStage", (int)Enum.Parse(stageType, "Digging"));
+        SetField(diggingState, "constructionValueA", 0);
+        SetField(diggingState, "constructionValueB", (int)Enum.Parse(substageType, "Loosening"));
+        SetField(diggingState, "constructionAux0", 0f);
+        MethodInfo applyNetworkState = bridgeComponentType.GetMethod("ApplyNetworkState", Instance);
+        Assert.That(applyNetworkState, Is.Not.Null);
+        applyNetworkState.Invoke(bridgeComponent, new[] { diggingState });
+
+        Assert.That(GetProperty(site, "CurrentStage").ToString(), Is.EqualTo("Digging"),
+            "The excavation lifecycle begins only after the test explicitly clears obstacles and applies a real Digging state.");
+        Assert.That((int)GetProperty(site, "RemainingObstacleCount"), Is.Zero);
+        Assert.That((int)GetProperty(site, "DiggingCycleIndex"), Is.Zero);
+        Assert.That(GetProperty(site, "DiggingSubstage").ToString(), Is.EqualTo("Loosening"));
+        Assert.That((float)GetProperty(site, "RemovedSoilUnits"), Is.Zero);
+        Assert.That((bool)GetProperty(field, "IsSurfaceActive"), Is.False);
+        Assert.That((float)GetProperty(GetProperty(field, "HeightField"), "TotalUnits"), Is.EqualTo(6f).Within(.001f));
+        Assert.That(rampCollider.enabled, Is.False, "Ramp assertions continue to hold throughout the controlled Digging stage.");
+        Assert.That(rampRenderer.enabled, Is.False);
+    }
 
     private static ushort ReservePort()
     {

@@ -236,3 +236,7 @@ Incydenty rozwiązane przed wynikiem końcowym: nieobsługiwane NUnit Assert.Mul
 - Sprawdź rozłączenie gracza trzymającego wiadro/taczkę i ponowne dołączenie; oceń również sterowanie, animacje, widoczność powierzchni i płynność.
 
 Etap 6 i zakończenie pierwotnego planu zostały zaakceptowane przez użytkownika 2026-10-29; zgłosił on, że wszystko wydaje się działać poprawnie. Nie są udokumentowane szczegóły, które pozycje checklisty wykonano. Ta ręczna akceptacja nie zmienia ograniczeń zapisanych automatycznych dowodów: host-only/loopback nie stanowi dowodu dla osobnych procesów, WAN/Relay ani fizycznego wejścia. Pierwsza partia izolacji testów i cleanupu została wdrożona i zwalidowana; pozostałe fixture będą migrowane etapami. Zakres i ograniczenia opisano w [Deferred-Test-Isolation-Plan.md](Deferred-Test-Isolation-Plan.md).
+### Ściany rzeczne wykopów Stage02 — etap 1 (2026-10-29)
+
+Etap 1 dodał nieprzezroczyste ściany w obu dołach `TutorialTerrainStage02`; szczegóły techniczne i walidacyjne opisuje [notatka implementacyjna poprawek wykopów](Excavation-Fixes-Implementation.md). Końcowy ścisły Gameplay przeszedł, ale ręczny odbiór wizualny i odczuć nadal oczekuje. Zaobserwowane wcześniej cofnięcie 0,129 m podczas ruchu po przekątnej pozostaje nierozstrzygnięte. Etapy 2 (promień zbierania 0,8 m) i 3 (bezpieczna aktywacja rampy) mają zatwierdzony zakres opisany w notatce i nie zostały rozpoczęte.
+
