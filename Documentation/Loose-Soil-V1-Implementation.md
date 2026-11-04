@@ -4,7 +4,7 @@
 
 ## Cel i zakres
 
-Pierwszym celem grywalnym jest `TutorialTerrainStage02`, uruchamiane przez lobby. Docelowa mechanika pozostaje zgodna z zatwierdzonym planem poniżej; implementacja jest etapowa i zatrzymuje się po każdym etapie do nowej wiadomości użytkownika.
+Pierwszym celem grywalnym jest `TutorialTerrainStage02`, uruchamiane przez lobby. Etap 6 pierwotnego planu został ręcznie zaakceptowany przez użytkownika. Późniejsze poprawki ścian (Etap 1) również zostały zaakceptowane ręcznie. Połączone Etapy 2–3 — promień zbierania 0,8 m i bezpieczna aktywacja rampy — wdrożono i zwalidowano technicznie, lecz oczekują na ręczną akceptację. Bieżący status oraz ograniczenia: [poprawki wykopów](Excavation-Fixes-Implementation.md).
 
 ## Zatwierdzone zachowanie docelowe
 
@@ -238,5 +238,10 @@ Incydenty rozwiązane przed wynikiem końcowym: nieobsługiwane NUnit Assert.Mul
 Etap 6 i zakończenie pierwotnego planu zostały zaakceptowane przez użytkownika 2026-10-29; zgłosił on, że wszystko wydaje się działać poprawnie. Nie są udokumentowane szczegóły, które pozycje checklisty wykonano. Ta ręczna akceptacja nie zmienia ograniczeń zapisanych automatycznych dowodów: host-only/loopback nie stanowi dowodu dla osobnych procesów, WAN/Relay ani fizycznego wejścia. Pierwsza partia izolacji testów i cleanupu została wdrożona i zwalidowana; pozostałe fixture będą migrowane etapami. Zakres i ograniczenia opisano w [Deferred-Test-Isolation-Plan.md](Deferred-Test-Isolation-Plan.md).
 ### Ściany rzeczne wykopów Stage02 — etap 1 (2026-10-29)
 
-Etap 1 dodał nieprzezroczyste ściany w obu dołach `TutorialTerrainStage02`; szczegóły techniczne i walidacyjne opisuje [notatka implementacyjna poprawek wykopów](Excavation-Fixes-Implementation.md). Końcowy ścisły Gameplay przeszedł, ale ręczny odbiór wizualny i odczuć nadal oczekuje. Zaobserwowane wcześniej cofnięcie 0,129 m podczas ruchu po przekątnej pozostaje nierozstrzygnięte. Etapy 2 (promień zbierania 0,8 m) i 3 (bezpieczna aktywacja rampy) mają zatwierdzony zakres opisany w notatce i nie zostały rozpoczęte.
+Etap 1 dodał nieprzezroczyste ściany w obu dołach `TutorialTerrainStage02` i został zaakceptowany przez użytkownika przed połączonymi Etapami 2–3. Szczegóły techniczne i walidacyjne opisuje [notatka implementacyjna poprawek wykopów](Excavation-Fixes-Implementation.md). Zaobserwowane wcześniej cofnięcie 0,129 m podczas ruchu po przekątnej pozostaje nierozstrzygnięte; nie potwierdzono poprawki FPC. Połączone Etapy 2–3 (promień zbierania 0,8 m i bezpieczna aktywacja rampy) zostały wdrożone i przeszły końcowy ścisły Gameplay; czekają na ręczną akceptację. Szczegóły, raport i checklistę opisuje [notatka poprawek wykopów](Excavation-Fixes-Implementation.md).
 
+
+
+### Aktualizacja 2026-11-04 — zasięg wiadra, rampa i fixture testowy
+
+Etap 6 i zakończenie pierwotnego planu pozostają ręcznie zaakceptowane. Promień zbierania zwiększono domyślnie z 0,6 m do 0,8 m; tempo 0,5 porcji/s, ruch, pojemność i promień wysypywania 0,6 m nie zmieniły się. Połączona zmiana bezpiecznej aktywacji rampy oraz izolacja testów są technicznie zwalidowane; ręczna akceptacja nowych zmian nadal oczekuje. Końcowy Gameplay 2026-11-04 przeszedł 14/14 kroków, EditMode 230/230, PlayMode 251/251; [raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261104T170540Z-16d79c76/summary.json). Szczegóły semantyki rampy, historii błędów, test copy i checklisty są w [poprawkach wykopów](Excavation-Fixes-Implementation.md). Ręczna kontrola ma obejmować oba doły i trzy warstwy, narożniki, pusty/częściowy/pełny stan wiadra, pomiar ruchu przy 0,8 m, zajętą rampę i jej bezimpulsowe zwolnienie, dokowanie taczki i wylewanie betonu oraz zwrot ziemi/kopanie/restart/late join. Kontakt kółka taczki w marginesie 0,02 m może poprawnie opóźnić ponowne grantowanie rampy; sprawdzić normalne odłączenie, odsunięcie i ponowne dokowanie bez omijania filtra.

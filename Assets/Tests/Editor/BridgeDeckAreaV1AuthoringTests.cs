@@ -20,10 +20,12 @@ public sealed class BridgeDeckAreaV1AuthoringTests
     private Scene lobbyScene;
     private bool openedAreaScene;
     private bool openedLobbyScene;
+    private string stage02SourceHashBefore;
 
     [SetUp]
     public void SetUp()
     {
+        stage02SourceHashBefore = ComputeFileHash("Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity");
         originalActiveScene = SceneManager.GetActiveScene();
         areaScene = SceneManager.GetSceneByPath(ScenePath);
         if (!areaScene.IsValid() || !areaScene.isLoaded)
@@ -49,6 +51,9 @@ public sealed class BridgeDeckAreaV1AuthoringTests
             EditorSceneManager.CloseScene(lobbyScene, true);
         if (originalActiveScene.IsValid() && originalActiveScene.isLoaded)
             SceneManager.SetActiveScene(originalActiveScene);
+        string stage02SourceHashAfter = ComputeFileHash("Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity");
+        Assert.That(stage02SourceHashAfter, Is.EqualTo(stage02SourceHashBefore),
+            "This fixture must not modify the current Stage02 source scene while inspecting copied-scene authoring.");
         openedAreaScene = false;
         openedLobbyScene = false;
     }
@@ -114,15 +119,8 @@ public sealed class BridgeDeckAreaV1AuthoringTests
     }
 
     [Test]
-    public void CopiedSceneUsesSingleAreaRequirementAndPreservesOriginalSceneHash()
+    public void CopiedSceneUsesSingleAreaRequirementWithoutChangingStage02Source()
     {
-        string sourcePath = Path.GetFullPath("Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity");
-        using (SHA256 sha = SHA256.Create())
-        {
-            string hash = BitConverter.ToString(sha.ComputeHash(File.ReadAllBytes(sourcePath))).Replace("-", string.Empty);
-            // Approved Stage02 source hash includes the user-saved Stage02 authoring baseline; this test still verifies that copying does not mutate the source scene.
-            Assert.That(hash, Is.EqualTo("90BF7E8B24ADABFF50379BCE04A31B562855E800515BCA182408376FA5DEAA26"));
-        }
         Assert.That(EditorBuildSettings.scenes.Any(scene => scene.enabled && scene.path == ScenePath), Is.True);
         Component manager = FindSingleComponent(areaScene, "GameplayManager");
         SerializedObject managerSO = new(manager);
@@ -357,6 +355,13 @@ public sealed class BridgeDeckAreaV1AuthoringTests
             .ToArray();
     }
     private static Component FindSingleComponent(Scene scene, string typeName) => FindComponents(scene, typeName).Single();
+
+    private static string ComputeFileHash(string assetPath)
+    {
+        string fullPath = Path.GetFullPath(assetPath);
+        using (SHA256 sha = SHA256.Create())
+            return BitConverter.ToString(sha.ComputeHash(File.ReadAllBytes(fullPath))).Replace("-", string.Empty);
+    }
     private static object ReadField(object target, string name) => target.GetType().GetField(name, InstanceFields)?.GetValue(target);
     private static object GetProperty(object target, string name) => target.GetType().GetProperty(name, InstanceFields)?.GetValue(target);
 }

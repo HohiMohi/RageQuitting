@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 public sealed class ExcavationRiverWallEditModeTests
 {
-    private const string ScenePath = "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity";
+    private const string ScenePath = "Assets/Tests/Fixtures/TutorialTerrainStage02.unity";
 
     [Test]
     public void BothRiverWallsAreSolidOutsideTheSoilAndCloseTheFullPitEnd()

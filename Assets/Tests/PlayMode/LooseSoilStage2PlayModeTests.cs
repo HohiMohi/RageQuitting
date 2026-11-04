@@ -10,9 +10,11 @@ using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 using Type = System.Type;
 
+[PrebuildSetup(typeof(ExcavationTestSceneScope))]
+[PostBuildCleanup(typeof(ExcavationTestSceneScope))]
 public sealed class LooseSoilStage2PlayModeTests
 {
-    private const string Stage02 = "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity";
+    private const string Stage02 = ExcavationTestSceneScope.ScenePath;
     private const BindingFlags Instance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
     private AsyncOperation sceneLoad;
     private GameObject characterRoot;
@@ -21,6 +23,8 @@ public sealed class LooseSoilStage2PlayModeTests
     [UnitySetUp]
     public IEnumerator LoadStage02()
     {
+        Assert.That(SceneUtility.GetBuildIndexByScenePath(Stage02), Is.GreaterThanOrEqualTo(0),
+            "The Unity Test Framework prebuild setup registers the fixture before PlayMode scene APIs initialize.");
         sceneLoad = SceneManager.LoadSceneAsync(Stage02, LoadSceneMode.Additive);
         Assert.That(sceneLoad, Is.Not.Null);
         while (!sceneLoad.isDone) yield return null;

@@ -11,6 +11,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
+[PrebuildSetup(typeof(ExcavationTestSceneScope))]
+[PostBuildCleanup(typeof(ExcavationTestSceneScope))]
 public sealed class ExcavationRiverWallPlayModeTests
 {
     private const BindingFlags InstanceMembers = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
@@ -25,6 +27,8 @@ public sealed class ExcavationRiverWallPlayModeTests
     public IEnumerator SetUp()
     {
         scope = new PlayModeTestScope("ExcavationRiverWall");
+        Assert.That(SceneUtility.GetBuildIndexByScenePath(ExcavationTestSceneScope.ScenePath), Is.GreaterThanOrEqualTo(0),
+            "The Unity Test Framework prebuild setup registers the fixture before PlayMode scene APIs initialize.");
         inputSettings = new CrowbarInputSettingsScope();
         scope.RestoreWith(() =>
         {
@@ -58,7 +62,7 @@ public sealed class ExcavationRiverWallPlayModeTests
         Assert.Ignore("PlayerNew is loaded from AssetDatabase in Editor PlayMode tests.");
         yield break;
 #else
-        const string scenePath = "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity";
+        const string scenePath = ExcavationTestSceneScope.ScenePath;
         AsyncOperation load = SceneManager.LoadSceneAsync(scenePath, LoadSceneMode.Additive);
         Assert.That(load, Is.Not.Null);
         while (!load.isDone) yield return null;
@@ -165,7 +169,7 @@ public sealed class ExcavationRiverWallPlayModeTests
                 applyConcrete.Invoke(volume, new object[]
                 {
                     Enum.Parse(stageEnum, "Digging"), 0, (int)GetProperty(workflow, "RequiredConcreteLoads"),
-                    0f, 30f, Enum.Parse(failureEnum, "None"), 0f, new Vector3(1f, 34f, 67f), 0f
+                    0f, 30f, Enum.Parse(failureEnum, "None"), 0f, new Vector3(1f, 34f, 67f), 0f, false, false
                 });
                 Physics.SyncTransforms();
                 Vector3 supportTop = support.transform.TransformPoint(support.center + Vector3.up * (support.size.y * .5f));
@@ -467,8 +471,38 @@ public sealed class ExcavationRiverWallPlayModeTests
         Vector3 top = new(bounds.center.x, bounds.max.y - radius, bounds.center.z);
         return Physics.OverlapCapsule(bottom, top, radius, ~0, QueryTriggerInteraction.Collide)
             .Where(collider => collider != null && collider != character)
-            .Select(collider => $"{collider.name}@{collider.bounds.center}/layer{collider.gameObject.layer}/trigger{collider.isTrigger}")
+            .Select(collider =>
+                $"{GetHierarchyPath(collider.transform)}@{collider.bounds.center}/layer{collider.gameObject.layer}/trigger{collider.isTrigger}/{DescribeBridgeOwner(collider)}")
             .ToArray();
+    }
+
+    private static string GetHierarchyPath(Transform transform)
+    {
+        string path = transform.name;
+        for (Transform parent = transform.parent; parent != null; parent = parent.parent)
+            path = parent.name + "/" + path;
+        return path;
+    }
+
+    private static string DescribeBridgeOwner(Collider collider)
+    {
+        Type bridgeType = Type.GetType("BridgeComponent, Assembly-CSharp");
+        Component bridge = bridgeType == null ? null : collider.GetComponentInParent(bridgeType);
+        if (bridge == null) return "bridgeOwner:none";
+
+        int componentId = Convert.ToInt32(GetMember(bridge, "ComponentID"));
+        bool mounted = Convert.ToBoolean(GetMember(bridge, "IsMounted"));
+        bool assembled = Convert.ToBoolean(GetMember(bridge, "IsAssembled"));
+        string[] colliderLists = { "mountedPhysicalColliders", "disabledAfterAssemblyColliders", "readyForMountingInteractionColliders" };
+        string membership = string.Join(",", colliderLists.Select(fieldName =>
+        {
+            FieldInfo field = bridgeType.GetField(fieldName, InstanceMembers);
+            Array colliders = field?.GetValue(bridge) as Array;
+            return colliders != null && colliders.Cast<object>().Any(candidate => ReferenceEquals(candidate, collider))
+                ? fieldName
+                : null;
+        }).Where(name => name != null));
+        return $"bridgeOwner:{GetHierarchyPath(bridge.transform)}/ComponentID{componentId}/mounted{mounted}/assembled{assembled}/cachedIn[{membership}]";
     }
 
     private static void Set(object target, string name, object value)

@@ -38,13 +38,15 @@ public sealed class BridgeDeckPanelStage3NetworkPlayModeTests
     private ScriptableObject shovel;
 
     [UnityTest]
+    [PrebuildSetup(typeof(ExcavationTestSceneScope))]
+    [PostBuildCleanup(typeof(ExcavationTestSceneScope))]
     public IEnumerator TutorialTerrainStage02InScenePanelUsesServerDroppedPhysicsAfterNetworkSpawn()
     {
 #if !UNITY_EDITOR
         Assert.Ignore("Uses the authored tutorial scene available only in the Editor.");
         yield break;
 #else
-        const string tutorialScenePath = "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity";
+        const string tutorialScenePath = ExcavationTestSceneScope.ScenePath;
         Assert.That(NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening, Is.True,
             "The in-scene smoke requires no active NGO session.");
         priorSingleton = NetworkManager.Singleton;
@@ -57,12 +59,12 @@ public sealed class BridgeDeckPanelStage3NetworkPlayModeTests
         {
             unloadTutorialSmokeScene = true;
             AsyncOperation load = SceneManager.LoadSceneAsync(tutorialScenePath, LoadSceneMode.Additive);
-            Assert.That(load, Is.Not.Null, "The actual TutorialTerrainStage02 scene starts loading additively.");
-            yield return Until(() => load.isDone, "actual TutorialTerrainStage02 additive scene load");
+            Assert.That(load, Is.Not.Null, "The dedicated TutorialTerrainStage02 fixture starts loading additively.");
+            yield return Until(() => load.isDone, "dedicated TutorialTerrainStage02 fixture additive scene load");
             tutorialSmokeScene = SceneManager.GetSceneByPath(tutorialScenePath);
         }
         Assert.That(tutorialSmokeScene.IsValid() && tutorialSmokeScene.isLoaded, Is.True,
-            "The actual TutorialTerrainStage02 scene is loaded for the smoke.");
+            "The dedicated TutorialTerrainStage02 fixture is loaded for the smoke.");
         Assert.That(SceneManager.SetActiveScene(tutorialSmokeScene), Is.True,
             "The authored scene is active while its in-scene NetworkObjects spawn.");
         Assert.That(SceneManager.GetActiveScene().path, Is.EqualTo(tutorialScenePath));

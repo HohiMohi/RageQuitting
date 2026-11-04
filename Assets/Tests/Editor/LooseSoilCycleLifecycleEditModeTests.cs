@@ -425,7 +425,7 @@ public sealed class LooseSoilCycleLifecycleEditModeTests
         object pouring = Enum.Parse(stageType, "ConcretePouring");
         object noFailure = Enum.Parse(Type.GetType("FoundationConcreteFailureState, Assembly-CSharp"), "None");
         MethodInfo applyConcrete = volumeType.GetMethod("ApplyConcreteState", Instance);
-        object[] concreteArgs = { digging, 0, 1, 0f, 30f, noFailure, 0f, Vector3.zero, 0f };
+        object[] concreteArgs = { digging, 0, 1, 0f, 30f, noFailure, 0f, Vector3.zero, 0f, false, false };
 
         Set(volume, "useLooseSoilHeightField", false);
         applyConcrete.Invoke(volume, concreteArgs);
@@ -475,6 +475,13 @@ public sealed class LooseSoilCycleLifecycleEditModeTests
 
         Assert.That(totalCollected, Is.EqualTo(18d).Within(.00001d));
         Assert.That(Property(site, "CurrentStage").ToString(), Is.EqualTo("ConcretePouring"));
+        bucketObject.transform.position = new Vector3(100f, 100f, 100f);
+        Physics.SyncTransforms();
+        Assert.That((bool)Call(volume, "IsExitRampVolumeClear"), Is.True,
+            "The owned bucket and all other owned physical props are outside the future ramp volume after excavation.");
+        Call(site, "UpdateFoundationRampClearance");
+        Assert.That((bool)siteType.GetField("foundationRampClearanceGranted", Instance).GetValue(site), Is.True,
+            "The offline authoritative site grants ramp clearance only after its real occupancy query succeeds.");
         Assert.That(exitRampRenderer.enabled, Is.True,
             "The ramp renderer returns only after all eighteen units have been excavated.");
         Assert.That(exitRampCollider.enabled, Is.True,
@@ -484,6 +491,8 @@ public sealed class LooseSoilCycleLifecycleEditModeTests
         concreteArgs[0] = pouring;
         concreteArgs[1] = 1;
         concreteArgs[5] = awaitingRecovery;
+        concreteArgs[9] = (bool)siteType.GetField("foundationRampClearanceGranted", Instance).GetValue(site);
+        concreteArgs[10] = false;
         applyConcrete.Invoke(volume, concreteArgs);
         Assert.That(exitRampRenderer.enabled, Is.True);
         Assert.That(exitRampCollider.enabled, Is.True,

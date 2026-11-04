@@ -10,7 +10,7 @@ using Type = System.Type;
 
 public sealed class LooseSoilStage2SceneEditModeTests
 {
-    private const string Stage02 = "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity";
+    private const string Stage02 = "Assets/Tests/Fixtures/TutorialTerrainStage02.unity";
     private const string LegacyTutorial = "Assets/Scenes/Tutorial_scene.unity";
     private const string LooseMaterial = "Assets/ScriptableObjectAssets/New/Substances/LooseSoil.mat";
     private SceneSetup[] originalSetup;

@@ -121,14 +121,11 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
         MoveAllPlayersAway(host);
         bucket.transform.position = hostSite.RampCollider.transform.position + Vector3.right * 0.1f;
         Physics.SyncTransforms();
-        Set(hostSite.Site, "nextRampClearanceCheckTime", 0f);
-        Call(hostSite.Site, "UpdateFoundationRampClearance");
+        TickRampClearance(hostSite, host);
         Assert.That(Get<bool>(hostSite.Site, "foundationRampClearanceGranted"), Is.False,
             "The production network bucket alone blocks server clearance.");
         Assert.That(hostSite.RampCollider.enabled, Is.False);
-        PlaceBucketReplicasAway(bucketNetworkObject.NetworkObjectId);
-        yield return Until(() => AreBucketReplicasAway(bucketNetworkObject.NetworkObjectId,
-                hostSite.RampCollider.transform.position), "all production bucket replicas leave the ramp");
+        yield return PlaceBucketReplicasAway(bucketNetworkObject.NetworkObjectId, hostSite.RampCollider, 2);
         Assert.That(OrientedCapsuleOverlapsRamp(remoteOwnerOnServer.transform, disabledRemoteCapsule,
             hostSite.RampCollider), Is.False);
         remoteOwnerOnServer.transform.position = hostSite.RampCollider.transform.position;
@@ -140,8 +137,7 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
             hostSite.RampCollider), Is.True, "The disabled host player's actual capsule occupies the ramp.");
         host.SetSingleton();
         SetGameplaySingleton(hostSite.Gameplay);
-        Set(hostSite.Site, "nextRampClearanceCheckTime", 0f);
-        Call(hostSite.Site, "UpdateFoundationRampClearance");
+        TickRampClearance(hostSite, host);
         Assert.That(Get<bool>(hostSite.Site, "foundationRampClearanceGranted"), Is.False,
             "Both disabled player capsules independently block server clearance after the bucket leaves.");
 
@@ -154,11 +150,9 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
             "late-join production bucket replica");
         lateJoin.SetSingleton();
         MoveAllPlayersAway(lateJoin);
-        PlaceBucketReplicasAway(bucketNetworkObject.NetworkObjectId);
+        yield return PlaceBucketReplicasAway(bucketNetworkObject.NetworkObjectId, hostSite.RampCollider, 3);
         host.SetSingleton();
         SetGameplaySingleton(hostSite.Gameplay);
-        yield return Until(() => AreBucketReplicasAway(bucketNetworkObject.NetworkObjectId,
-                hostSite.RampCollider.transform.position), "all late-join bucket replicas remain outside the ramp");
         lateSite = CreateSite("Late-join foundation");
         RegisterGameplay(lateSite.Gameplay, lateJoin, server: false);
         RequestSnapshot(lateSite.Gameplay, lateJoin);
@@ -177,21 +171,22 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
         SetGameplaySingleton(hostSite.Gameplay);
         remoteOwnerOnServer.transform.position = new Vector3(80f, 30f, 80f);
         Physics.SyncTransforms();
-        Set(hostSite.Site, "nextRampClearanceCheckTime", 0f);
-        Call(hostSite.Site, "UpdateFoundationRampClearance");
+        TickRampClearance(hostSite, host);
         Assert.That(Get<bool>(hostSite.Site, "foundationRampClearanceGranted"), Is.False,
             "The host player's capsule alone continues blocking after the remote player leaves.");
         hostPlayerOnServer.transform.position = new Vector3(90f, 30f, 90f);
         Physics.SyncTransforms();
-        Set(hostSite.Site, "nextRampClearanceCheckTime", 0f);
-        Call(hostSite.Site, "UpdateFoundationRampClearance");
+        TickRampClearance(hostSite, host);
         bool clearAfterAllLeave = (bool)hostSite.Volume.GetType().GetMethod("IsExitRampVolumeClear").Invoke(hostSite.Volume, null);
         Assert.That(Get<bool>(hostSite.Site, "foundationRampClearanceGranted"), Is.True,
-            $"The authoritative server grants once both players and the already-cleared bucket have left. DirectClear={clearAfterAllLeave}; hostPlayer={hostPlayerOnServer.transform.position}; remotePlayer={remoteOwnerOnServer.transform.position}; bucket={bucket.transform.position}; candidates={DescribeRampOccupants(hostSite.RampCollider)}");
+            $"The authoritative server grants once both players and the already-cleared bucket have left. DirectClear={clearAfterAllLeave}; hostPlayer={hostPlayerOnServer.transform.position}; remotePlayer={remoteOwnerOnServer.transform.position}; bucket={bucket.transform.position}; replicas={DescribeBucketReplicas(bucketNetworkObject.NetworkObjectId)}; candidates={DescribeRampOccupants(hostSite.RampCollider)}");
         Assert.That(hostSite.RampCollider.enabled, Is.True);
         yield return Until(() => HasFoundationGrant(lateSite.Gameplay, true), "approved full-state broadcast");
         Assert.That(Get<bool>(lateSite.Site, "foundationRampClearanceGranted"), Is.True,
             "The production bridge full-state broadcast replicates the server's clearance grant.");
+        TickRampClearance(lateSite, lateJoin);
+        Assert.That(lateSite.RampCollider.enabled, Is.True,
+            "The clear late-join peer completes its own local occupancy check before enabling the ramp.");
 
         NetworkObject localLatePlayer = lateJoin.LocalClient.PlayerObject;
         CharacterController disabledLateCapsule = localLatePlayer.GetComponent<CharacterController>();
@@ -212,19 +207,20 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
             "server grant revocation reaches late joiner");
 
         localLatePlayer.transform.position = lateSite.RampCollider.transform.position;
-        SetStage(hostSite.Site, "ConcreteDrying");
+        SetStage(hostSite.Site, "ConcretePouring");
         Call(hostSite.Site, "ApplyConcreteVisualState");
-        Set(hostSite.Site, "nextRampClearanceCheckTime", 0f);
-        Call(hostSite.Site, "UpdateFoundationRampClearance");
+        TickRampClearance(hostSite, host);
         Assert.That(Get<bool>(hostSite.Site, "foundationRampClearanceGranted"), Is.True);
         yield return Until(() => HasFoundationGrant(lateSite.Gameplay, true), "server regrant reaches late joiner");
+        TickRampClearance(lateSite, lateJoin);
+        Assert.That(Get<bool>(lateSite.Site, "rampLocalClearanceGranted"), Is.False,
+            "The late peer rechecks its occupied disabled capsule after receiving the fresh server grant.");
         Assert.That(lateSite.RampCollider.enabled, Is.False,
             "A false-to-true replicated grant cannot reuse stale local permission while a disabled local player blocks.");
 
         localLatePlayer.transform.position = new Vector3(100f, 30f, 100f);
         lateJoin.SetSingleton();
-        Set(lateSite.Site, "nextRampClearanceCheckTime", 0f);
-        Call(lateSite.Site, "UpdateFoundationRampClearance");
+        TickRampClearance(lateSite, lateJoin);
         Assert.That(lateSite.RampCollider.enabled, Is.True,
             "The late joiner activates the ramp only after its local blocker leaves.");
         localLatePlayer.transform.position = lateSite.RampCollider.transform.position;
@@ -237,18 +233,16 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
         host.SetSingleton();
         SetStage(hostSite.Site, "Digging");
         Call(hostSite.Site, "ApplyConcreteVisualState");
-        SetStage(hostSite.Site, "ConcreteDrying");
+        SetStage(hostSite.Site, "ConcretePouring");
         Call(hostSite.Site, "ApplyConcreteVisualState");
         remoteOwnerOnServer.transform.position = hostSite.RampCollider.transform.position;
         Physics.SyncTransforms();
-        Set(hostSite.Site, "nextRampClearanceCheckTime", 0f);
-        Call(hostSite.Site, "UpdateFoundationRampClearance");
+        TickRampClearance(hostSite, host);
         Assert.That(hostSite.RampCollider.enabled, Is.False);
         owner.Shutdown();
         yield return Until(() => host.ConnectedClientsIds.Count == 2, "blocking owner disconnect");
         host.SetSingleton();
-        Set(hostSite.Site, "nextRampClearanceCheckTime", 0f);
-        Call(hostSite.Site, "UpdateFoundationRampClearance");
+        TickRampClearance(hostSite, host);
         Assert.That(hostSite.RampCollider.enabled, Is.True,
             "The host rechecks after a blocking peer disconnects and activates only after that player object is gone.");
 #endif
@@ -296,6 +290,7 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
         Assert.That(definition, Is.Not.Null);
         Set(fixture.BridgeComponent, "bridgeComponentSO", definition);
         fixture.Site = fixture.SiteRoot.AddComponent(TypeByName("BridgeConstructionSite"));
+        ((Behaviour)fixture.Site).enabled = false;
         fixture.VolumeRoot = scope.Own(new GameObject(label + " volume"));
         fixture.VolumeRoot.transform.SetParent(holder.transform, false);
         fixture.VolumeRoot.transform.position = new Vector3(0f, 25f, 0f);
@@ -334,9 +329,9 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
             .GetValue(fixture.Volume), Is.True, "The network ramp safety fixture must use a valid loose-soil volume configuration.");
         Set(fixture.Site, "excavationVolume", fixture.Volume);
         fixture.BridgeRoot.SetActive(true);
-        Set(fixture.Site, "currentStage", Enum.Parse(TypeByName("BridgeConstructionStage"), "ConcreteDrying"));
+        Set(fixture.Site, "currentStage", Enum.Parse(TypeByName("BridgeConstructionStage"), "ConcretePouring"));
         Set(fixture.Site, "concreteLoadsPoured", 1);
-        Set(fixture.Site, "concreteFailureState", Enum.Parse(TypeByName("FoundationConcreteFailureState"), "None"));
+        Set(fixture.Site, "concreteFailureState", Enum.Parse(TypeByName("FoundationConcreteFailureState"), "Ready"));
         fixture.Gameplay = CreateGameplay(label + " bridge state", fixture.Bridge);
         Call(fixture.Site, "ApplyConcreteVisualState");
         return fixture;
@@ -483,32 +478,133 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
         return string.Join(";", items);
     }
 
-    private void PlaceBucketReplicasAway(ulong networkObjectId)
+    private IEnumerator PlaceBucketReplicasAway(ulong networkObjectId, BoxCollider ramp, int expectedPeerCount)
     {
+        const float outsideDistance = 10f;
+        const float horizontalSyncTolerance = 0.5f;
         Vector3 outside = new Vector3(95f, 30f, 95f);
-        if (owner != null && owner.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject ownerReplica))
+        NetworkManager[] managers = { host, owner, lateJoin };
+        Assert.That(expectedPeerCount, Is.InRange(2, managers.Length));
+        Assert.That(owner != null && owner.IsListening, Is.True, "The client that owns the production bucket remains connected while it is moved.");
+        Assert.That(owner.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject ownerReplica), Is.True,
+            "The authoritative owner replica must exist before moving the networked bucket.");
+        Unity.Netcode.Components.NetworkTransform ownerTransform = ownerReplica.GetComponent<Unity.Netcode.Components.NetworkTransform>();
+        Rigidbody ownerBody = ownerReplica.GetComponent<Rigidbody>();
+        Assert.That(ownerTransform, Is.Not.Null);
+        Assert.That(ownerBody, Is.Not.Null);
+        Assert.That(ownerReplica.IsOwner && ownerTransform.CanCommitToTransform, Is.True,
+            "The owner-authoritative client uses the real NetworkTransform teleport API to move its bucket.");
+
+        Quaternion rotation = ownerReplica.transform.rotation;
+        ownerTransform.Teleport(outside, rotation, ownerReplica.transform.localScale);
+        ownerBody.position = outside;
+        if (!ownerBody.isKinematic)
         {
-            owner.SetSingleton();
-            ownerReplica.transform.position = outside;
+            ownerBody.linearVelocity = Vector3.zero;
+            ownerBody.angularVelocity = Vector3.zero;
         }
-        if (host != null && host.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject serverReplica))
-            serverReplica.transform.position = outside;
-        if (lateJoin != null && lateJoin.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject lateReplica))
-            lateReplica.transform.position = outside;
         Physics.SyncTransforms();
+
+        long stableSinceTick = -1;
+        float deadline = Time.realtimeSinceStartup + 20f;
+        while (Time.realtimeSinceStartup < deadline)
+        {
+            Physics.SyncTransforms();
+            bool allPeersReady = true;
+            Vector3 ownerPosition = ownerReplica.transform.position;
+            for (int index = 0; index < expectedPeerCount; index++)
+            {
+                NetworkManager manager = managers[index];
+                if (manager == null || !manager.IsListening || manager.SpawnManager == null ||
+                    !manager.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject replica) ||
+                    !ReplicaIsOutsideRamp(replica, owner.LocalClientId, outside, ownerPosition,
+                        horizontalSyncTolerance, outsideDistance, ramp))
+                {
+                    allPeersReady = false;
+                    break;
+                }
+            }
+
+            long currentTick = host.NetworkTickSystem.ServerTime.Tick;
+            if (!allPeersReady)
+            {
+                stableSinceTick = -1;
+            }
+            else if (stableSinceTick < 0)
+            {
+                stableSinceTick = currentTick;
+            }
+            else if (currentTick != stableSinceTick)
+            {
+                Assert.That(ownerReplica.OwnerClientId, Is.EqualTo(owner.LocalClientId),
+                    "The owner remains authoritative throughout the synchronized relocation.");
+                yield break;
+            }
+            yield return null;
+        }
+
+        Assert.Fail($"Timed out waiting for all {expectedPeerCount} known production bucket replicas to receive and stabilize the owner teleport with their actual rigidbody colliders outside the ramp OBB. replicas={DescribeBucketReplicas(networkObjectId)}; rampCandidates={DescribeRampOccupants(ramp)}");
     }
 
-    private bool AreBucketReplicasAway(ulong networkObjectId, Vector3 rampCenter)
+    private static bool ReplicaIsOutsideRamp(NetworkObject replica, ulong ownerClientId, Vector3 target,
+        Vector3 ownerPosition, float horizontalTolerance, float outsideDistance, BoxCollider ramp)
     {
-        NetworkManager[] managers = { host, owner, lateJoin };
-        foreach (NetworkManager manager in managers)
+        if (replica == null || !replica.IsSpawned || replica.OwnerClientId != ownerClientId) return false;
+        Unity.Netcode.Components.NetworkTransform networkTransform = replica.GetComponent<Unity.Netcode.Components.NetworkTransform>();
+        Rigidbody body = replica.GetComponent<Rigidbody>();
+        if (networkTransform == null || body == null) return false;
+        bool expectedAuthority = replica.IsOwner;
+        if (networkTransform.CanCommitToTransform != expectedAuthority) return false;
+
+        Vector3 transformPosition = replica.transform.position;
+        Vector3 bodyPosition = body.position;
+        Vector2 targetHorizontal = new Vector2(target.x, target.z);
+        Vector2 ownerHorizontal = new Vector2(ownerPosition.x, ownerPosition.z);
+        Vector2 transformHorizontal = new Vector2(transformPosition.x, transformPosition.z);
+        Vector2 bodyHorizontal = new Vector2(bodyPosition.x, bodyPosition.z);
+        if (Vector3.Distance(transformPosition, ramp.transform.position) <= outsideDistance ||
+            Vector3.Distance(bodyPosition, ramp.transform.position) <= outsideDistance ||
+            Vector2.Distance(transformHorizontal, targetHorizontal) > horizontalTolerance ||
+            Vector2.Distance(bodyHorizontal, transformHorizontal) > 0.05f ||
+            Vector2.Distance(transformHorizontal, ownerHorizontal) > horizontalTolerance)
+            return false;
+
+        Vector3 center = ramp.transform.TransformPoint(ramp.center);
+        Vector3 halfExtents = Vector3.Scale(ramp.size * 0.5f, Abs(ramp.transform.lossyScale)) + Vector3.one * 0.02f;
+        Collider[] occupants = Physics.OverlapBox(center, halfExtents, ramp.transform.rotation,
+            Physics.AllLayers, QueryTriggerInteraction.Ignore);
+        foreach (Collider occupant in occupants)
         {
-            if (manager == null || manager.SpawnManager == null ||
-                !manager.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject replica)) continue;
-            if (Vector3.Distance(replica.transform.position, rampCenter) < 10f) return false;
+            if (occupant != null && (occupant.transform == replica.transform || occupant.transform.IsChildOf(replica.transform) ||
+                                     occupant.attachedRigidbody == body)) return false;
         }
         return true;
     }
+
+    private string DescribeBucketReplicas(ulong networkObjectId)
+    {
+        NetworkManager[] managers = { host, owner, lateJoin };
+        List<string> items = new List<string>();
+        foreach (NetworkManager manager in managers)
+        {
+            if (manager == null || manager.SpawnManager == null)
+            {
+                items.Add("manager:null");
+                continue;
+            }
+            if (!manager.SpawnManager.SpawnedObjects.TryGetValue(networkObjectId, out NetworkObject replica))
+            {
+                items.Add($"{manager.name}/local{manager.LocalClientId}/replica:missing");
+                continue;
+            }
+
+            Rigidbody body = replica.GetComponent<Rigidbody>();
+            Unity.Netcode.Components.NetworkTransform networkTransform = replica.GetComponent<Unity.Netcode.Components.NetworkTransform>();
+            items.Add($"{manager.name}/local{manager.LocalClientId}/instance{replica.GetInstanceID()}/owner{replica.OwnerClientId}/isOwner{replica.IsOwner}/transform{replica.transform.position}/rigidbody{(body != null ? body.position.ToString() : "none")}/velocity{(body != null ? body.linearVelocity.ToString() : "none")}/kinematic{(body != null && body.isKinematic)}/networkTransform{(networkTransform != null ? networkTransform.GetType().Name : "none")}/canCommit{(networkTransform != null && networkTransform.CanCommitToTransform)}");
+        }
+        return string.Join(";", items);
+    }
+
 
     private static bool HasFoundationGrant(Component gameplay, bool expected)
     {
@@ -517,8 +613,8 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
         object state = states[0];
         Type stateType = TypeByName("BridgeComponentNetworkState");
         int stage = (int)stateType.GetField("constructionStage").GetValue(state);
-        int drying = (int)Enum.Parse(TypeByName("BridgeConstructionStage"), "ConcreteDrying");
-        return stage == drying &&
+        int pouring = (int)Enum.Parse(TypeByName("BridgeConstructionStage"), "ConcretePouring");
+        return stage == pouring &&
                (bool)stateType.GetField("foundationRampClearanceGranted").GetValue(state) == expected;
     }
 
@@ -559,6 +655,14 @@ public sealed class ExcavationRampSafetyNetworkPlayModeTests
     private static void SetStage(object site, string stage) => Set(site, "currentStage", Enum.Parse(TypeByName("BridgeConstructionStage"), stage));
     private static void SetGameplaySingleton(Component gameplay) =>
         TypeByName("GameplayManager").GetField("<Instance>k__BackingField", Static).SetValue(null, gameplay);
+
+    private static void TickRampClearance(SiteFixture fixture, NetworkManager manager)
+    {
+        manager.SetSingleton();
+        SetGameplaySingleton(fixture.Gameplay);
+        Set(fixture.Site, "nextRampClearanceCheckTime", 0f);
+        Call(fixture.Site, "UpdateFoundationRampClearance");
+    }
 
     private static object Call(object target, string methodName, params object[] args)
     {
