@@ -602,8 +602,8 @@ public class LookingAtComponentUI : MonoBehaviour
             cachedPlacementHudText = waitingForServer
                 ? $"{status}\nAwaiting server response\n{confirmHint}"
                 : string.IsNullOrEmpty(mountingGuidance)
-                    ? $"{status}\nF Toggle | Esc Cancel | Up/Down X | Left/Right Z (1°) | Ctrl + Left/Right Y\n{confirmHint}"
-                    : $"{status}\n{mountingGuidance}\n{confirmHint} | F Toggle | Esc Cancel\nUp/Down X | Left/Right Z (1°) | Ctrl + Left/Right Y";
+                    ? $"{status}\nF Toggle | Esc Cancel | Up/Down X | Left/Right Z (1°) | Ctrl + Left/Right Y | WASD Move\n{confirmHint}"
+                    : $"{status}\n{mountingGuidance}\n{confirmHint} | F Toggle | Esc Cancel\nUp/Down X | Left/Right Z (1°) | Ctrl + Left/Right Y | WASD Move";
         }
         SetPromptText(cachedPlacementHudText, true);
         Show();

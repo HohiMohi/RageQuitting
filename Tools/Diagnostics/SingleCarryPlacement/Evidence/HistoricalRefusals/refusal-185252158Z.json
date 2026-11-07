@@ -1,0 +1,100 @@
+{
+    "trials": [
+        {
+            "kind": "remote-moving-e",
+            "packetDelayMs": 100,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "InvalidAimOrigin",
+            "requestId": "1",
+            "measuredResponseMs": 394.2720031738281,
+            "pendingHorizontalDrift": 0.0,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 1.4995672702789307
+            },
+            "authoritativePose": {
+                "x": 0.0,
+                "y": 1.2899999618530274,
+                "z": 1.746701717376709
+            },
+            "movedOwnerPose": {
+                "x": 0.0,
+                "y": 0.0899999737739563,
+                "z": 0.359980046749115
+            },
+            "ownerAtPendingPose": {
+                "x": 0.0,
+                "y": 0.0899999737739563,
+                "z": 0.359980046749115
+            },
+            "networkAim": {
+                "poseSamplePhase": "pre-E",
+                "serverPoseSampleSource": "pre-E rendered/interpolated NetworkTransform.GetSpaceRelativePosition/Rotation(true) diagnostic only",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0899999737739563,
+                    "z": 0.359980046749115
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.08508766442537308,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 1.190000057220459,
+                    "z": 0.359980046749115
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 1.1850876808166505,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 1.0485785007476807,
+                    "z": 0.4509890675544739
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": -0.70710688829422,
+                    "z": 0.7071067094802856
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 1.1850876808166505,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                },
+                "serverNetworkTransformType": "ClientNetworkTransform",
+                "localValidation": "Valid",
+                "serverNetworkTransformSpawned": true,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.4154239892959595,
+                "preERenderedAimOriginResidual": 0.3096067011356354,
+                "ownerServerHorizontalSeparationPreE": 0.359980046749115,
+                "ownerFrameAtCapture": 142,
+                "ownerRealtimeAtCapture": 13.47284290011521,
+                "ownerNetworkTickAtCapture": 64,
+                "ownerDeltaTimeAtCapture": 0.014403500594198704,
+                "ownerUnscaledDeltaTimeAtCapture": 0.014403500594198704
+            },
+            "serverRpcAimDiagnostic": "{\n    \"branch\": \"ResidualExceeded\",\n    \"requestId\": 1,\n    \"senderClientId\": 1,\n    \"playerNetworkObjectId\": 3,\n    \"playerOwnerClientId\": 1,\n    \"sourceNetworkObjectId\": 4,\n    \"sourceResolved\": true,\n    \"serverFrame\": 159,\n    \"serverRealtime\": 13.66562060011347,\n    \"serverDeltaTime\": 0.01137359719723463,\n    \"serverUnscaledDeltaTime\": 0.01137359719723463,\n    \"serverNetworkTick\": 75,\n    \"aimAnchorExists\": true,\n    \"clientNetworkTransformExists\": true,\n    \"receivedPoseAvailable\": true,\n    \"authoritativePlayerPosition\": {\n        \"x\": 0.0,\n        \"y\": 0.0899999737739563,\n        \"z\": 0.058098841458559039\n    },\n    \"authoritativePlayerRotation\": {\n        \"x\": 0.0,\n        \"y\": 0.0,\n        \"z\": 0.0,\n        \"w\": 1.0\n    },\n    \"renderedPlayerPosition\": {\n        \"x\": 0.0,\n        \"y\": 0.08883307129144669,\n        \"z\": 0.036499738693237308\n    },\n    \"renderedPlayerRotation\": {\n        \"x\": 0.0,\n        \"y\": 0.0,\n        \"z\": 0.0,\n        \"w\": 1.0\n    },\n    \"anchorLocalOffset\": {\n        \"x\": 0.0,\n        \"y\": 1.100000023841858,\n        \"z\": 0.0\n    },\n    \"playerLocalScale\": {\n        \"x\": 1.0,\n        \"y\": 1.0,\n        \"z\": 1.0\n    },\n    \"trustedAimAnchor\": {\n        \"x\": 0.0,\n        \"y\": 1.190000057220459,\n        \"z\": 0.058098841458559039\n    },\n    \"rayOrigin\": {\n        \"x\": 0.0,\n        \"y\": 1.0485785007476807,\n        \"z\": 0.4509890675544739\n    },\n    \"rayDirection\": {\n        \"x\": 0.0,\n        \"y\": -0.70710688829422,\n        \"z\": 0.7071067094802856\n    },\n    \"forwardOffset\": 0.37781545519828799,\n    \"lateralOffset\": {\n        \"x\": 0.0,\n        \"y\": 0.1257343590259552,\n        \"z\": 0.1257343590259552\n    },\n    \"nearestAllowedForwardOffset\": 0.20000000298023225,\n    \"residualSquared\": 0.06323659420013428,\n    \"cameraNearClipDistance\": 0.20000000298023225,\n    \"maximumAimOriginResidual\": 0.15000000596046449,\n    \"hasFinalResult\": true,\n    \"finalResult\": 5,\n    \"receive\": {\n        \"receiveCount\": 4,\n        \"positionChangeCount\": 4,\n        \"rotationChangeCount\": 1,\n        \"lastReceiveFrame\": 153,\n        \"lastReceiveRealtime\": 13.586151200113818,\n        \"receiveDeltaTime\": 0.013775198720395565,\n        \"receiveUnscaledDeltaTime\": 0.013775198720395565,\n        \"lastPositionChangeFrame\": 153,\n        \"lastPositionChangeRealtime\": 13.586152600113565,\n        \"lastRotationChangeFrame\": 17,\n        \"lastRotationChangeRealtime\": 12.330541500115942,\n        \"lastReceivedNetworkTick\": 63,\n        \"networkObjectId\": 3,\n        \"hasNetworkObjectId\": true,\n        \"ownerClientId\": 1,\n        \"parentInstanceId\": 0,\n        \"sampledObjectId\": 3,\n        \"hasSampledObjectId\": true,\n        \"sampledOwnerClientId\": 1,\n        \"sampledParentInstanceId\": 0,\n        \"inLocalSpace\": false,\n        \"currentInLocalSpace\": false,\n        \"sampledInLocalSpace\": false,\n        \"cachedAuthoritativeSpacePosition\": {\n            \"x\": 0.0,\n            \"y\": 0.0899999737739563,\n            \"z\": 0.058098841458559039\n        },\n        \"cachedAuthoritativeSpaceRotation\": {\n            \"x\": 0.0,\n            \"y\": 0.0,\n            \"z\": 0.0,\n            \"w\": 1.0\n        },\n        \"lastPositionReceivedNetworkTick\": 63,\n        \"lastRotationReceivedNetworkTick\": 30,\n        \"hasCompletePose\": true,\n        \"sampledContextMatches\": true,\n        \"isAuthority\": false,\n        \"isSpawned\": true\n    }\n}"
+        }
+    ]
+}

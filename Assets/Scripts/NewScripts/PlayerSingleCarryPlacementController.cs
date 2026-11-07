@@ -7,8 +7,15 @@ using UnityEngine.SceneManagement;
 /// <summary>Local-only single-carry placement preview with discrete one-degree world-axis rotation and F-mode camera stabilization.</summary>
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(1100)]
-public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
+public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
 {
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+    partial void SetDiagnosticRefreshCallbackKind(int kind);
+    partial void BeginDiagnosticPreviewRefresh();
+    partial void RecordDiagnosticPreview(Ray ray, Camera aimCamera, Vector3 previewPosition,
+        Quaternion previewRotation, int availabilityFlags);
+    partial void RecordDiagnosticPlacementRequest(ulong requestId, Vector3 position, Quaternion rotation, int flags);
+#endif
     [SerializeField, Min(0.1f)] private float placementDistance = 2f;
     [SerializeField, Min(0f)] private float rotationDegreesPerSecond = 90f;
     private PlayerInputNew input;
@@ -178,6 +185,9 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             || brain.OutputCamera != aimCamera) return;
         UpdatePlacementCameraNoiseMute(brain);
         if (requestPending) return;
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        SetDiagnosticRefreshCallbackKind(1);
+#endif
         RefreshPreview();
     }
 
@@ -210,8 +220,10 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         UpdatePlacementCameraNoiseMute();
         interaction.CancelBucketActionHoldForPlacement();
         if (actionController != null) actionController.CancelActionForStateChange();
-        if (firstPersonController != null) firstPersonController.StopHorizontalMovementForPlacement();
         input.SetSingleCarryPlacementActive(true);
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        SetDiagnosticRefreshCallbackKind(2);
+#endif
         RefreshPreview();
     }
 
@@ -233,9 +245,15 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
 
     private void RefreshPreview()
     {
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        BeginDiagnosticPreviewRefresh();
+#endif
         if (ghost == null || geometrySolver == null || validator == null)
         {
             hasLastRenderedPose = false;
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+            RecordDiagnosticPreview(default, null, default, default, 7);
+#endif
             return;
         }
         // NetworkTransform and carried-object movement can update collider Transforms outside
@@ -251,6 +269,10 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             ghost.SetPlacementValid(false);
             if (ghost.Root != null)
                 PublishPreviewState(ghost.Root.transform.position, ghost.Root.transform.rotation, false);
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+            RecordDiagnosticPreview(default, aimCamera, ghost.Root != null ? ghost.Root.transform.position : default,
+                ghost.Root != null ? ghost.Root.transform.rotation : Quaternion.identity, 1 | (aimCamera == null ? 2 : 0) | (ghost.Root == null ? 4 : 0));
+#endif
             return;
         }
         if (aimCamera != null && worldRenderLayer < 0)
@@ -269,6 +291,9 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
         lastRenderedPose = pose;
         lastRenderedAimRay = aimRay;
         hasLastRenderedPose = true;
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticPreview(aimRay, aimCamera, pose.Position, pose.Rotation, aimCamera == null ? 2 : 0);
+#endif
         CaptureNetworkSurfaceAnchor(pose);
         LastValidation = validator.Validate(pose);
         ghost.SetPlacementValid(LastValidation.IsValid);
@@ -313,6 +338,11 @@ public sealed class PlayerSingleCarryPlacementController : MonoBehaviour
             lastRequestId = lastRequestId == ulong.MaxValue ? 1 : lastRequestId + 1;
             pendingRequestId = lastRequestId;
             requestPending = true;
+            if (firstPersonController != null) firstPersonController.StopHorizontalMovementForPlacement();
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+            RecordDiagnosticPlacementRequest(pendingRequestId, poseToCommit.Position, poseToCommit.Rotation,
+                useSurfaceAnchor ? 1 : 0);
+#endif
             rotationBlockedUntilNeutral = true;
             rotationState.ResetRepeatState();
             placementResultMessage = null;

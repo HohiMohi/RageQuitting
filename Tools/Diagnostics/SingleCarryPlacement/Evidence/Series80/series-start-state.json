@@ -1,0 +1,33 @@
+{
+  "startedUtc": "2026-11-06T16:17:45.8711675Z",
+  "scenePath": "Assets/Scenes/MultiplayerStartScene.unity",
+  "sceneSha256": "E26BEF381F5E29BBD0BA753E59418FBE4CEE5746EFC9693F201138AEBFBDC115",
+  "acceptedSourceHashes": [
+    {
+      "path": "Assets/Scripts/NetworkManagement/ClientNetworkTransform.cs",
+      "sha256": "A2AE31668E65AC4D86797CF16456CD16476BE3051C41300E6B7A66FD49A85BEE"
+    },
+    {
+      "path": "Assets/Scripts/NewScripts/PlayerSingleCarryPlacementController.cs",
+      "sha256": "71C179EA9832769724EA7FA7B808284694099AA91D8B0E066FA556364AA661C6"
+    },
+    {
+      "path": "Assets/Scripts/NewScripts/PlayerSingleCarryPlacementNetworkPreview.cs",
+      "sha256": "E394078EF86FE43346A069D14C80F7BBD094E4D51A8C9E185CB4576404BDCC86"
+    },
+    {
+      "path": "Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs",
+      "sha256": "F23C3FCCADDDAC3D392DCDBE2D93E339D893D181AB22AA35BF95FB056B1CA188"
+    },
+    {
+      "path": "Assets/Scripts/NetworkManagement/SingleCarryStateDivergenceTrace.cs",
+      "sha256": "5EBDC209DC59D533BCA3D502F4AF5B6F6FD773CEB70855A3E32F61B8A443040C"
+    },
+    {
+      "path": "Assets/Tests/PlayMode/SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+      "sha256": "7018347B49F764843FA8DB39CA0677A4E058793CC3385F359399C626438E4ED6"
+    }
+  ],
+  "expectedSceneSha256": "E26BEF381F5E29BBD0BA753E59418FBE4CEE5746EFC9693F201138AEBFBDC115",
+  "sourceHashesMatch": true
+}

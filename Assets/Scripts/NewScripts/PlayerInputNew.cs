@@ -49,6 +49,8 @@ public class PlayerInputNew : NetworkBehaviour
     public event Action<Vector2, bool, double> OnSingleCarryPlacementRotationChanged;
 
     public bool IsSingleCarryPlacementActive => singleCarryPlacementActive;
+    public bool IsSingleCarryPlacementMovementBlocked => singleCarryPlacementActive
+        && placementController != null && placementController.IsRequestPending;
     public bool IsLocalGameplayInputActive => IsInputActive() && !IsUIOpened;
 
     [SerializeField]
@@ -515,7 +517,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     public Vector2 GetMoveVectorValue()
     {
-        if (!IsInputActive() || IsUIOpened || singleCarryPlacementActive)
+        if (!IsInputActive() || IsUIOpened || IsSingleCarryPlacementMovementBlocked)
         {
             return Vector2.zero;
         }

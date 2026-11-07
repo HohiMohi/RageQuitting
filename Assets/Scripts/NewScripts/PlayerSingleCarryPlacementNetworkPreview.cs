@@ -17,8 +17,21 @@ public enum SingleCarryPlacementNetworkResult
 
 /// <summary>Replicates cosmetic single-carry preview state for observers of this player.</summary>
 [DisallowMultipleComponent]
-public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
+public sealed partial class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
 {
+    partial void RecordDiagnosticFinalResult(SingleCarryPlacementNetworkResult result);
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+    partial void RecordDiagnosticPlacementResponse(ulong requestId, SingleCarryPlacementNetworkResult result);
+    partial void InitializeDiagnosticValidation(ulong requestId, ulong senderClientId, Ray aimRay);
+    partial void RecordDiagnosticSource(NetworkObject source);
+    partial void RecordDiagnosticPlayerSnapshot(NetworkObject player, Transform aimAnchor);
+    partial void RecordDiagnosticBranch(string branch);
+    partial void RecordDiagnosticReceiveSnapshot(ClientNetworkTransform playerTransform);
+    partial void RecordDiagnosticReceivedPose(bool available, Vector3 position, Quaternion rotation);
+    partial void RecordDiagnosticTrustedAnchor(Vector3 localOffset, Vector3 localScale, Vector3 trustedAnchor);
+    partial void RecordDiagnosticResidual(Ray aimRay, float forwardOffset, Vector3 lateralOffset,
+        float nearestAllowedForwardOffset, float residualSquared, float cameraNearClipDistance, float maximumAimOriginResidual);
+#endif
     [SerializeField, Min(0.1f)] private float placementDistance = 2f;
 
     private struct PreviewState : INetworkSerializable, System.IEquatable<PreviewState>
@@ -271,6 +284,9 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
 
     private void ReportPlacementResult(ulong requestId, SingleCarryPlacementNetworkResult result)
     {
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticPlacementResponse(requestId, result);
+#endif
         LastCompletedPlacementRequestId = requestId;
         LastPlacementResult = result;
         PlacementRequestCompleted?.Invoke(requestId, result);
@@ -278,16 +294,24 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
 
     private SingleCarryPlacementNetworkResult ValidateAndCommitPlacement(NetworkObjectReference sourceReference,
         ulong requestId, Vector3 position, Quaternion rotation, Ray aimRay, ulong senderClientId)
-        => ValidateAndCommitPlacementCore(sourceReference, default, false, requestId, default, Quaternion.identity,
+    {
+        SingleCarryPlacementNetworkResult result = ValidateAndCommitPlacementCore(sourceReference, default, false, requestId, default, Quaternion.identity,
             default, default, null, false, position, rotation, aimRay, senderClientId);
+        RecordDiagnosticFinalResult(result);
+        return result;
+    }
 
     private SingleCarryPlacementNetworkResult ValidateAndCommitSurfacePlacement(NetworkObjectReference sourceReference,
         NetworkObjectReference targetReference, ulong requestId, Vector3 localPosition, Quaternion localRotation,
         Vector3 localSurfacePoint, Vector3 localSurfaceNormal, string physicalRootPath,
         bool physicalRootHasRigidbody, Vector3 position, Quaternion rotation, Ray aimRay, ulong senderClientId)
-        => ValidateAndCommitPlacementCore(sourceReference, targetReference, true, requestId, localPosition,
+    {
+        SingleCarryPlacementNetworkResult result = ValidateAndCommitPlacementCore(sourceReference, targetReference, true, requestId, localPosition,
             localRotation, localSurfacePoint, localSurfaceNormal, physicalRootPath,
             physicalRootHasRigidbody, position, rotation, aimRay, senderClientId);
+        RecordDiagnosticFinalResult(result);
+        return result;
+    }
 
     private SingleCarryPlacementNetworkResult ValidateAndCommitPlacementCore(NetworkObjectReference sourceReference,
         NetworkObjectReference targetReference, bool hasSurfaceAnchor, ulong requestId, Vector3 localPosition,
@@ -295,6 +319,9 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
         string physicalRootPath, bool physicalRootHasRigidbody,
         Vector3 position, Quaternion rotation, Ray aimRay, ulong senderClientId)
     {
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        InitializeDiagnosticValidation(requestId, senderClientId, aimRay);
+#endif
         NetworkManager manager = NetworkManager;
         if (!IsServer || manager == null || !manager.IsListening || requestId == 0)
             return SingleCarryPlacementNetworkResult.InvalidRequest;
@@ -314,6 +341,9 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
             || !body.gameObject.activeInHierarchy || !IsFinite(position) || !IsUnitQuaternion(rotation)
             || !IsFinite(aimRay.origin) || !IsUnitDirection(aimRay.direction))
             return SingleCarryPlacementNetworkResult.InvalidRequest;
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticSource(source);
+#endif
 
         PlayerHealth health = holder.GetComponent<PlayerHealth>();
         ISingleCarryPlaceable placeable = source.GetComponent<ISingleCarryPlaceable>();
@@ -323,19 +353,46 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
             return SingleCarryPlacementNetworkResult.IneligibleHolder;
 
         Transform aimAnchor = holder.SingleCarryPlacementAimAnchor;
-        NetworkTransform playerTransform = client.PlayerObject.GetComponent<NetworkTransform>();
-        if (aimAnchor == null || playerTransform == null || !playerTransform.IsSpawned)
-            return SingleCarryPlacementNetworkResult.InvalidAimOrigin;
-        Vector3 anchorLocalOffset = client.PlayerObject.transform.InverseTransformPoint(aimAnchor.position);
-        Vector3 authoritativePlayerPosition = playerTransform.GetSpaceRelativePosition(true);
-        Quaternion authoritativePlayerRotation = playerTransform.GetSpaceRelativeRotation(true);
-        if (playerTransform.InLocalSpace && client.PlayerObject.transform.parent != null)
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticPlayerSnapshot(client.PlayerObject, aimAnchor);
+#endif
+        if (aimAnchor == null)
         {
-            authoritativePlayerPosition = client.PlayerObject.transform.parent.TransformPoint(authoritativePlayerPosition);
-            authoritativePlayerRotation = client.PlayerObject.transform.parent.rotation * authoritativePlayerRotation;
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+            RecordDiagnosticBranch("MissingAnchor");
+#endif
+            return SingleCarryPlacementNetworkResult.InvalidAimOrigin;
         }
+        if (!client.PlayerObject.TryGetComponent(out ClientNetworkTransform playerTransform))
+        {
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+            RecordDiagnosticBranch("MissingTransform");
+#endif
+            return SingleCarryPlacementNetworkResult.InvalidAimOrigin;
+        }
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticReceiveSnapshot(playerTransform);
+#endif
+        bool receivedPoseAvailable = playerTransform.TryGetLatestAuthoritativeWorldPose(
+            out Vector3 authoritativePlayerPosition, out Quaternion authoritativePlayerRotation);
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticReceivedPose(receivedPoseAvailable, authoritativePlayerPosition, authoritativePlayerRotation);
+#endif
+        if (!receivedPoseAvailable)
+        {
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+            RecordDiagnosticBranch("MissingReceivedPose");
+#endif
+            return SingleCarryPlacementNetworkResult.InvalidAimOrigin;
+        }
+
+        Vector3 anchorLocalOffset = client.PlayerObject.transform.InverseTransformPoint(aimAnchor.position);
+        Vector3 playerLocalScale = client.PlayerObject.transform.localScale;
         Vector3 trustedAimAnchor = authoritativePlayerPosition
-            + authoritativePlayerRotation * Vector3.Scale(anchorLocalOffset, client.PlayerObject.transform.localScale);
+            + authoritativePlayerRotation * Vector3.Scale(anchorLocalOffset, playerLocalScale);
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticTrustedAnchor(anchorLocalOffset, playerLocalScale, trustedAimAnchor);
+#endif
         // A direct interactionOrigin ray starts at the target. ViewportPointToRay starts at
         // the camera near plane; both first-person camera prefabs use a 0.2m near plane.
         // Keep the existing 0.15m bounded feedback/snapshot allowance around those two known
@@ -348,8 +405,20 @@ public sealed class PlayerSingleCarryPlacementNetworkPreview : NetworkBehaviour
         float nearestAllowedForwardOffset = Mathf.Clamp(forwardOffset, 0f, cameraNearClipDistance);
         float residualSquared = lateralOffset.sqrMagnitude
             + Mathf.Pow(forwardOffset - nearestAllowedForwardOffset, 2f);
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticResidual(aimRay, forwardOffset, lateralOffset, nearestAllowedForwardOffset, residualSquared,
+            cameraNearClipDistance, maximumAimOriginResidual);
+#endif
         if (residualSquared > maximumAimOriginResidual * maximumAimOriginResidual)
+        {
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+            RecordDiagnosticBranch("ResidualExceeded");
+#endif
             return SingleCarryPlacementNetworkResult.InvalidAimOrigin;
+        }
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+        RecordDiagnosticBranch("AimPassed");
+#endif
 
         Physics.SyncTransforms();
         var geometry = new SingleCarryPlacementGeometrySolver(source.gameObject);

@@ -94,7 +94,8 @@ public class SingleCarryPlacementStage1PlayModeTests : InputTestFixture
             Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.True);
             Assert.That((bool)inputType.GetProperty("IsSingleCarryPlacementActive").GetValue(input), Is.True);
             Assert.That(interactionType.GetMethod("GetPickedUpGameObject").Invoke(interaction, null), Is.SameAs(heldObject));
-            Assert.That(horizontalVelocity.GetValue(firstPerson), Is.EqualTo(Vector3.zero));
+            Assert.That(((Vector3)horizontalVelocity.GetValue(firstPerson)).sqrMagnitude, Is.GreaterThan(0f),
+                "Entering preview keeps the existing walking velocity continuous.");
 
             object impulse = Activator.CreateInstance(impulseDataType);
             impulseDataType.GetField("InitialVelocity").SetValue(impulse, new Vector3(4f, 0f, 0f));
@@ -125,7 +126,7 @@ public class SingleCarryPlacementStage1PlayModeTests : InputTestFixture
                 elapsed += Time.deltaTime;
             }
             Assert.That(elapsed, Is.GreaterThanOrEqualTo(0.2f));
-            Assert.That(player.transform.position.z, Is.EqualTo(initialPosition.z).Within(0.03f), "Movement input should remain blocked.");
+            Assert.That(player.transform.position.z, Is.GreaterThan(initialPosition.z + 0.05f), "WASD remains available during preview.");
             Assert.That(player.transform.position.x, Is.GreaterThan(initialPosition.x + 0.05f), "The external impulse should continue moving the player.");
             Assert.That(player.transform.position.y, Is.LessThan(initialPosition.y - 0.05f), "Gravity should continue in placement mode.");
             Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.True);

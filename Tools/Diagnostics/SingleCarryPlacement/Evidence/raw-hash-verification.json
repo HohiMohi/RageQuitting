@@ -1,0 +1,162 @@
+{
+  "count": 26,
+  "allMatch": true,
+  "entries": [
+    {
+      "path": "HistoricalRefusals/refusal-185252158Z.json",
+      "manifestSha256": "12ABAC1056E7D47B3A406A5849709585BC685057FA039CE56EAF0CDBC32A1302",
+      "actualSha256": "12ABAC1056E7D47B3A406A5849709585BC685057FA039CE56EAF0CDBC32A1302",
+      "matches": true
+    },
+    {
+      "path": "HistoricalRefusals/refusal-191028214Z.json",
+      "manifestSha256": "AAA27D7F56201D78CB718205B2ABB2FECF0B914C81E3EDBDCC5E728F78A7E4AA",
+      "actualSha256": "AAA27D7F56201D78CB718205B2ABB2FECF0B914C81E3EDBDCC5E728F78A7E4AA",
+      "matches": true
+    },
+    {
+      "path": "OlderRpcContext/Findings.json",
+      "manifestSha256": "892BF5A5E24CF89AE0AF5A7FD34ACF300077B279330C8DA275B33C166B18AB0F",
+      "actualSha256": "892BF5A5E24CF89AE0AF5A7FD34ACF300077B279330C8DA275B33C166B18AB0F",
+      "matches": true
+    },
+    {
+      "path": "OlderRpcContext/trial-index.json",
+      "manifestSha256": "B5F7B7883A79B5F2F969311BFBEEA47BECA51B78F0F8F054542F372C0FE63BAD",
+      "actualSha256": "B5F7B7883A79B5F2F969311BFBEEA47BECA51B78F0F8F054542F372C0FE63BAD",
+      "matches": true
+    },
+    {
+      "path": "OlderRpcContext/source-hashes-before.json",
+      "manifestSha256": "C88299A447EF8A77DD4FCF76FEDCFCF11380B21DE74028FD6D2AB9F7AB523ED4",
+      "actualSha256": "C88299A447EF8A77DD4FCF76FEDCFCF11380B21DE74028FD6D2AB9F7AB523ED4",
+      "matches": true
+    },
+    {
+      "path": "OlderRpcContext/source-hashes-after.json",
+      "manifestSha256": "C88299A447EF8A77DD4FCF76FEDCFCF11380B21DE74028FD6D2AB9F7AB523ED4",
+      "actualSha256": "C88299A447EF8A77DD4FCF76FEDCFCF11380B21DE74028FD6D2AB9F7AB523ED4",
+      "matches": true
+    },
+    {
+      "path": "Series80/Findings.json",
+      "manifestSha256": "4F4A316B494741C038CE53AD5EA5DD55EF3B6F2F5BB8991A5597040606C86A2D",
+      "actualSha256": "4F4A316B494741C038CE53AD5EA5DD55EF3B6F2F5BB8991A5597040606C86A2D",
+      "matches": true
+    },
+    {
+      "path": "Series80/trial-index.json",
+      "manifestSha256": "BC5D4DC9F51265FEB9BD8E912EE716BC6AC81D15449B2E11B0D0836F4355A781",
+      "actualSha256": "BC5D4DC9F51265FEB9BD8E912EE716BC6AC81D15449B2E11B0D0836F4355A781",
+      "matches": true
+    },
+    {
+      "path": "Series80/series-run-summary.json",
+      "manifestSha256": "44CC93D9D97AC0D18563ABB55869C6A6BE96D8594441CEE467A78F3741278AD4",
+      "actualSha256": "44CC93D9D97AC0D18563ABB55869C6A6BE96D8594441CEE467A78F3741278AD4",
+      "matches": true
+    },
+    {
+      "path": "Series80/accepted-source-hashes.json",
+      "manifestSha256": "91F51D57D94A5049E980CBD6B3E12A706F51F5858CB5C9DE629B76947CAA31BC",
+      "actualSha256": "91F51D57D94A5049E980CBD6B3E12A706F51F5858CB5C9DE629B76947CAA31BC",
+      "matches": true
+    },
+    {
+      "path": "Series80/AcceptedMax/accepted-max-0ms-e41d165ad5f24b9d9a89ac44243e19d3.json",
+      "manifestSha256": "DF2B7655F60AF82A86617758D3D2AB0C652B87DB14A8B52F8D5D1C84DA505884",
+      "actualSha256": "DF2B7655F60AF82A86617758D3D2AB0C652B87DB14A8B52F8D5D1C84DA505884",
+      "matches": true
+    },
+    {
+      "path": "Series80/AcceptedMax/accepted-max-100ms-403ff050c57b4298b02a8a1480e0cb69.json",
+      "manifestSha256": "11F2C26A7577B79CBFE7515A8CD2112B3B6B0C39A0E46B3D7D43CB1F2C0F314C",
+      "actualSha256": "11F2C26A7577B79CBFE7515A8CD2112B3B6B0C39A0E46B3D7D43CB1F2C0F314C",
+      "matches": true
+    },
+    {
+      "path": "Series80/DataBatch/summary.json",
+      "manifestSha256": "CE0289D5C625BF7FEF3596C168D3DD6B99B1C2EF59B96D7739524FC276B8177C",
+      "actualSha256": "CE0289D5C625BF7FEF3596C168D3DD6B99B1C2EF59B96D7739524FC276B8177C",
+      "matches": true
+    },
+    {
+      "path": "Series80/DataBatch/batch-index.json",
+      "manifestSha256": "DFEF0302F2497EF96E2AC84AB0422F038B7424ADB71AA2F3954D8666D988EE77",
+      "actualSha256": "DFEF0302F2497EF96E2AC84AB0422F038B7424ADB71AA2F3954D8666D988EE77",
+      "matches": true
+    },
+    {
+      "path": "Series80/AcceptedSource/ClientNetworkTransform.cs",
+      "manifestSha256": "A2AE31668E65AC4D86797CF16456CD16476BE3051C41300E6B7A66FD49A85BEE",
+      "actualSha256": "A2AE31668E65AC4D86797CF16456CD16476BE3051C41300E6B7A66FD49A85BEE",
+      "matches": true
+    },
+    {
+      "path": "Series80/AcceptedSource/SingleCarryStateDivergenceTrace.cs",
+      "manifestSha256": "5EBDC209DC59D533BCA3D502F4AF5B6F6FD773CEB70855A3E32F61B8A443040C",
+      "actualSha256": "5EBDC209DC59D533BCA3D502F4AF5B6F6FD773CEB70855A3E32F61B8A443040C",
+      "matches": true
+    },
+    {
+      "path": "Series80/AcceptedSource/PlayerSingleCarryPlacementController.cs",
+      "manifestSha256": "71C179EA9832769724EA7FA7B808284694099AA91D8B0E066FA556364AA661C6",
+      "actualSha256": "71C179EA9832769724EA7FA7B808284694099AA91D8B0E066FA556364AA661C6",
+      "matches": true
+    },
+    {
+      "path": "Series80/AcceptedSource/PlayerSingleCarryPlacementNetworkPreview.cs",
+      "manifestSha256": "E394078EF86FE43346A069D14C80F7BBD094E4D51A8C9E185CB4576404BDCC86",
+      "actualSha256": "E394078EF86FE43346A069D14C80F7BBD094E4D51A8C9E185CB4576404BDCC86",
+      "matches": true
+    },
+    {
+      "path": "Series80/AcceptedSource/FirstPersonController.cs",
+      "manifestSha256": "F23C3FCCADDDAC3D392DCDBE2D93E339D893D181AB22AA35BF95FB056B1CA188",
+      "actualSha256": "F23C3FCCADDDAC3D392DCDBE2D93E339D893D181AB22AA35BF95FB056B1CA188",
+      "matches": true
+    },
+    {
+      "path": "Series80/AcceptedSource/SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+      "manifestSha256": "7018347B49F764843FA8DB39CA0677A4E058793CC3385F359399C626438E4ED6",
+      "actualSha256": "7018347B49F764843FA8DB39CA0677A4E058793CC3385F359399C626438E4ED6",
+      "matches": true
+    },
+    {
+      "path": "Series80/DataBatch/accepted-source-hashes.json",
+      "manifestSha256": "91F51D57D94A5049E980CBD6B3E12A706F51F5858CB5C9DE629B76947CAA31BC",
+      "actualSha256": "91F51D57D94A5049E980CBD6B3E12A706F51F5858CB5C9DE629B76947CAA31BC",
+      "matches": true
+    },
+    {
+      "path": "Series80/DataBatch/batch-start.json",
+      "manifestSha256": "90A7629C048291A6C5BB7C848529454E3B9F5F66E77967E90F40C2C7BAE122E6",
+      "actualSha256": "90A7629C048291A6C5BB7C848529454E3B9F5F66E77967E90F40C2C7BAE122E6",
+      "matches": true
+    },
+    {
+      "path": "Series80/series-start-state.json",
+      "manifestSha256": "34A9D19E14E37D2BFEAA4D0D7FB1B583A9F59A504FC255856F6EC76EEF6A8A7B",
+      "actualSha256": "34A9D19E14E37D2BFEAA4D0D7FB1B583A9F59A504FC255856F6EC76EEF6A8A7B",
+      "matches": true
+    },
+    {
+      "path": "Series80/series-end-state.json",
+      "manifestSha256": "09FE33886A26C64BA49E7C05B36902653FC32647C6484900C9F7BBA9F92F31F3",
+      "actualSha256": "09FE33886A26C64BA49E7C05B36902653FC32647C6484900C9F7BBA9F92F31F3",
+      "matches": true
+    },
+    {
+      "path": "ProjectContext/packages-lock-at-archive.json",
+      "manifestSha256": "394D3A79137A432E3DD17BBABA5D1E305C372EFA7924952231C6EBBE6E113B9F",
+      "actualSha256": "394D3A79137A432E3DD17BBABA5D1E305C372EFA7924952231C6EBBE6E113B9F",
+      "matches": true
+    },
+    {
+      "path": "ProjectContext/ProjectVersion.txt",
+      "manifestSha256": "D03FCA18D2E511A37F7A81F8709404EBB2A571D3E0E5C854038C91A943AE15DA",
+      "actualSha256": "D03FCA18D2E511A37F7A81F8709404EBB2A571D3E0E5C854038C91A943AE15DA",
+      "matches": true
+    }
+  ]
+}

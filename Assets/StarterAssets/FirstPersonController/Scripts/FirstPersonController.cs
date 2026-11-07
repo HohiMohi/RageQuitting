@@ -10,8 +10,11 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM
 	[RequireComponent(typeof(PlayerInput))]
 #endif
-	public class FirstPersonController : MonoBehaviour
+	public partial class FirstPersonController : MonoBehaviour
 	{
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+		partial void RecordSingleCarryPlacementMovementDiagnostic();
+#endif
 		public event EventHandler OnJumpStarted;
 		public event EventHandler<LandedEventArgs> OnLanded;
 		public event EventHandler<FootstepEventArgs> OnFootstep;
@@ -405,6 +408,9 @@ namespace StarterAssets
 			ApplyExternalImpulseMovement();
 			HandleStaminaRegeneration();
 			HandleCarryingStaminaUsage();
+#if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
+			RecordSingleCarryPlacementMovementDiagnostic();
+#endif
 		}
 
 		private void RefreshLooseSoilImmersion()
@@ -576,9 +582,12 @@ namespace StarterAssets
 			{
 				_isSprinting = false;
 				_isJumpPerformed = false;
-				_horizontalVelocity = Vector3.zero;
-				_controller.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
-				return;
+				if (_playerInputNew.IsSingleCarryPlacementMovementBlocked)
+				{
+					_horizontalVelocity = Vector3.zero;
+					_controller.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
+					return;
+				}
 			}
 
 			if (_concreteTrapController != null && _concreteTrapController.BlocksGameplayInput)

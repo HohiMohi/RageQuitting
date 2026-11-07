@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "validationScope": "supplemental-current-nine-case-Verify",
+  "classification": "current-nine-case-Verify-failed-on-KI-003-natural-refusal; not part of historical paired-80 trial set",
+  "run": {
+    "runRoot": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyFixed/20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5",
+    "status": "failed",
+    "exitCode": 1,
+    "passedTests": 8,
+    "failedTests": 1,
+    "totalTests": 9,
+    "restoration": "success; parent verified disk define OFF and process environment null",
+    "unityVersion": "6000.3.18f1",
+    "packetDelayMs": 100,
+    "overflow": false,
+    "runId": "ea00d2dd71d14c5a8c01f45a7bbef4d3"
+  },
+  "natural100Failure": {
+    "runId": "ea00d2dd71d14c5a8c01f45a7bbef4d3",
+    "responseResult": 5,
+    "validationBranchCode": -1644485048,
+    "legacyServerBranch": "ResidualExceeded",
+    "legacyFinalResult": 5,
+    "authoritativePoseRead": true,
+    "completeCache": true,
+    "residualMeters": 0.2938803287292333,
+    "thresholdMeters": 0.15000000596046448,
+    "measuredResponseMilliseconds": 418.08230000000003,
+    "requestId": 1,
+    "interpretation": "Actual received pose was available and cache complete; residual exceeded threshold and response refused. This is the planned KI-003 outcome; assertions remain enabled."
+  },
+  "natural0Comparison": {
+    "runId": "39f55c8de7294ec880875068fff08101",
+    "packetDelayMs": 0,
+    "responseResult": 0,
+    "residualMeters": 0.026700025133291214,
+    "overflow": false
+  },
+  "paired80Relationship": "Supplemental current Verify evidence, not an additional historical 80-series trial; historical counts remain 40 trials per delay.",
+  "prior0msFinding": {
+    "classification": "unclassified",
+    "runRoot": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyRetry/20261106T193238Z-a1a37aee512b48148298e8e97d624d91",
+    "noFullTimeline": true,
+    "interpretation": "Preserved legacy JSON and harness result; outside the paired-80 set, no residual-control branch attribution."
+  },
+  "readerAnalysis": {
+    "report": "analysis-fixed-new-six-analysis-after-reader-fix.json",
+    "traceCount": 6,
+    "incompleteOrAmbiguousCount": 0,
+    "stationaryUnobservedOwnerHistory": 1
+  },
+  "sourceHashManifest": "verify-fixed-source-hashes.json",
+  "archiveManifest": "validation-evidence-manifest.json"
+}

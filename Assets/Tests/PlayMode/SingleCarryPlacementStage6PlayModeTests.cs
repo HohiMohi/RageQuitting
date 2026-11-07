@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
@@ -209,6 +210,49 @@ public class SingleCarryPlacementStage6PlayModeTests
         yield return Until(() => owner.IsConnectedClient && owner.LocalClient?.PlayerObject != null
             && host.ConnectedClientsIds.Count == 2, "moving-surface remote owner");
         NetworkObject ownerPlayer = owner.LocalClient.PlayerObject;
+        NetworkObject serverOwnerPlayer = host.ConnectedClients[owner.LocalClientId].PlayerObject;
+        string initialOwnerPose = DescribeNetworkPoseAuthority(ownerPlayer, "owner-before-natural-settle");
+        string initialServerPose = DescribeNetworkPoseAuthority(serverOwnerPlayer, "server-before-natural-settle");
+        string initialSnapshotPath = Path.GetFullPath(Path.Combine(Application.dataPath,
+            $"../Artifacts/SingleCarrySyncFix_20261105/Part2b/stage6-initial-pose-before-motion-{motion}-{DateTime.UtcNow:yyyyMMddTHHmmssfffZ}-{Guid.NewGuid():N}.txt"));
+        Directory.CreateDirectory(Path.GetDirectoryName(initialSnapshotPath));
+        File.WriteAllText(initialSnapshotPath, $"testMotion={motion}{Environment.NewLine}{initialOwnerPose}{Environment.NewLine}{initialServerPose}{Environment.NewLine}");
+        // Wait for the normal initial network synchronization before target/preview setup. The
+        // fixture deliberately leaves the owner stationary; this is a readiness check, not motion.
+        float initialPoseDeadline = Time.realtimeSinceStartup + 5f;
+        object[] initialPoseArguments = { Vector3.zero, Quaternion.identity };
+        MethodInfo poseQuery = Type.GetType("ClientNetworkTransform, Assembly-CSharp")
+            .GetMethod("TryGetLatestAuthoritativeWorldPose", BindingFlags.Instance | BindingFlags.Public);
+        bool receivedInitialPose = false;
+        Vector3 receivedInitialPosition = Vector3.zero;
+        Quaternion receivedInitialRotation = Quaternion.identity;
+        while (Time.realtimeSinceStartup < initialPoseDeadline)
+        {
+            initialPoseArguments[0] = Vector3.zero;
+            initialPoseArguments[1] = Quaternion.identity;
+            bool hasSample = poseQuery != null && (bool)poseQuery.Invoke(serverOwnerPlayer.GetComponent(poseQuery.DeclaringType), initialPoseArguments);
+            if (hasSample)
+            {
+                receivedInitialPosition = (Vector3)initialPoseArguments[0];
+                receivedInitialRotation = (Quaternion)initialPoseArguments[1];
+                receivedInitialPose = Vector3.Distance(receivedInitialPosition, ownerPlayer.transform.position) < 0.002f
+                    && Quaternion.Angle(receivedInitialRotation, ownerPlayer.transform.rotation) < 0.1f;
+            }
+            if (receivedInitialPose) break;
+            yield return null;
+        }
+        string settledOwnerPose = DescribeNetworkPoseAuthority(ownerPlayer, "owner-after-natural-settle");
+        string settledServerPose = DescribeNetworkPoseAuthority(serverOwnerPlayer, "server-after-natural-settle");
+        string settledSnapshotPath = Path.GetFullPath(Path.Combine(Application.dataPath,
+            $"../Artifacts/SingleCarrySyncFix_20261105/Part2b/stage6-initial-pose-after-motion-{motion}-{DateTime.UtcNow:yyyyMMddTHHmmssfffZ}-{Guid.NewGuid():N}.txt"));
+        Directory.CreateDirectory(Path.GetDirectoryName(settledSnapshotPath));
+        File.WriteAllText(settledSnapshotPath, $"testMotion={motion}{Environment.NewLine}{settledOwnerPose}{Environment.NewLine}{settledServerPose}{Environment.NewLine}");
+        Assert.That(receivedInitialPose, Is.True,
+            $"The initial network synchronization must produce a usable pose matching the stationary owner before target/preview setup. before={initialSnapshotPath}; after={settledSnapshotPath}; {settledServerPose}");
+        Assert.That(Vector3.Distance(receivedInitialPosition, ownerPlayer.transform.position), Is.LessThan(0.002f),
+            $"The server received pose must match the owner settling pose; before={initialSnapshotPath}; after={settledSnapshotPath}.");
+        Assert.That(Quaternion.Angle(receivedInitialRotation, ownerPlayer.transform.rotation), Is.LessThan(0.1f),
+            $"The server received rotation must match the owner settling rotation; before={initialSnapshotPath}; after={settledSnapshotPath}.");
         DisposeFixtureInputMaps(null);
         foreach (NetworkClient connected in host.ConnectedClientsList)
             if (connected.ClientId != host.LocalClientId && connected.PlayerObject != null)
@@ -441,6 +485,12 @@ public class SingleCarryPlacementStage6PlayModeTests
         Transform ghost = GetControllerGhost(controller).transform;
         Vector3 renderedPosition = ghost.position;
         Quaternion renderedRotation = ghost.rotation;
+        string ownerPoseAuthority = DescribeNetworkPoseAuthority(ownerPlayer, "owner-authority");
+        string serverPoseAuthority = DescribeNetworkPoseAuthority(serverOwnerPlayer, "host-non-authority");
+        string poseSnapshotPath = Path.GetFullPath(Path.Combine(Application.dataPath,
+            $"../Artifacts/SingleCarrySyncFix_20261105/Part2b/stage6-authoritative-pose-motion-{motion}-{DateTime.UtcNow:yyyyMMddTHHmmssfffZ}-{Guid.NewGuid():N}.txt"));
+        Directory.CreateDirectory(Path.GetDirectoryName(poseSnapshotPath));
+        File.WriteAllText(poseSnapshotPath, $"testMotion={motion}{Environment.NewLine}{ownerPoseAuthority}{Environment.NewLine}{serverPoseAuthority}{Environment.NewLine}");
 
         // The same NetworkObject moves after preview sampling. Keep the owner render copy frozen
         // and make the authoritative collider the only visible physics target for server receipt.
@@ -616,7 +666,8 @@ public class SingleCarryPlacementStage6PlayModeTests
                 cachedPhysicalRootPath, cachedPhysicalRootHasRigidbody, requestPosition, requestRotation,
                 renderedAimRay.origin, renderedAimRay.direction, default(ServerRpcParams) });
             yield return Until(() => LastRequest(preview) == 1, "anchored occupancy rejection response");
-            Assert.That(ResultName(ownerPlayer), Is.EqualTo("Occupied"));
+            Assert.That(ResultName(ownerPlayer), Is.EqualTo("Occupied"),
+                $"A truly occupied local fixture must reach the unchanged server occupancy check. Owner pose authority: {ownerPoseAuthority}; server pose authority: {serverPoseAuthority}; snapshot={poseSnapshotPath}.");
             AssertHeld(owner, sourceObject);
             UnityEngine.Object.Destroy(occupied);
             yield return null;
@@ -720,7 +771,8 @@ public class SingleCarryPlacementStage6PlayModeTests
         Assert.That(ResultName(ownerPlayer), Is.EqualTo(expectedResult),
             $"The selected local pose should be rebased after same-NI target motion. Motion={motion}, "
             + $"serverTarget={serverSurface.transform.position}/{serverSurface.transform.rotation.eulerAngles}, "
-            + $"contactEnabled={serverSurfaceCollider.enabled}, sameNI={serverSurface.NetworkObjectId == surfaceObject.NetworkObjectId}.");
+            + $"contactEnabled={serverSurfaceCollider.enabled}, sameNI={serverSurface.NetworkObjectId == surfaceObject.NetworkObjectId}. "
+            + $"Owner pose authority: {ownerPoseAuthority}; server pose authority: {serverPoseAuthority}; snapshot={poseSnapshotPath}.");
         if (expectedResult != "Accepted")
         {
             AssertHeld(owner, sourceObject);
@@ -1781,9 +1833,12 @@ public class SingleCarryPlacementStage6PlayModeTests
         yield return Until(() => (bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller), "controller placement entry");
         cameraObject.transform.position += Vector3.right;
         yield return null;
-        PressKey(Key.E);
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.W, Key.E));
+        InputSystem.Update();
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.True,
             "The request must enter pending state before the asynchronous server response.");
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.True, "A pending placement request blocks player-controlled movement input.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.zero), "Pending movement input is zero.");
         Transform ghost = GetControllerGhost(controller).transform;
         Vector3 frozenPosition = ghost.position;
         Quaternion frozenRotation = ghost.rotation;
@@ -1793,7 +1848,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.True,
             "F, Escape, and E do not bypass an in-flight placement request.");
 
-        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.UpArrow, Key.LeftCtrl, Key.RightArrow));
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.W, Key.UpArrow, Key.LeftCtrl, Key.RightArrow));
         InputSystem.Update();
         cameraObject.transform.position += Vector3.right;
         PlacementControllerType.GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(controller, null);
@@ -1809,6 +1864,9 @@ public class SingleCarryPlacementStage6PlayModeTests
         yield return Until(() => LastRequest(preview) == 1, "controller refusal response");
         AssertResult(ownerPlayer, "InvalidAimOrigin");
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "A refusal releases the derived movement block.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.up),
+            "The still-held W key resumes movement input immediately after refusal, without a release/repress.");
         Assert.That((string)PlacementControllerType.GetProperty("PlacementStatusLabel").GetValue(controller),
             Is.EqualTo("Aim out of sync; try again"));
         AssertHeld(owner, sourceNetworkObject);
@@ -1843,12 +1901,15 @@ public class SingleCarryPlacementStage6PlayModeTests
         cameraObject.transform.position = aimAnchor.position + Vector3.right;
         PressKey(Key.F);
         yield return null;
-        PressKey(Key.E);
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.W, Key.E));
+        InputSystem.Update();
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.True);
         ulong forcedRequestId = GetPendingRequestId(controller);
         ((Behaviour)controller).enabled = false;
         Assert.That((bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller), Is.False);
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "Forced controller disable clears the derived movement block.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.up), "After controller disable, held W is no longer masked by the placement gate.");
         yield return Until(() => LastRequest(preview) == forcedRequestId, "late response after forced cleanup");
         AssertResult(ownerPlayer, "InvalidAimOrigin");
         AssertHeld(owner, sourceNetworkObject);
@@ -1874,6 +1935,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         yield return Until(() => LastRequest(preview) == acceptedRequestId
             && ResultName(ownerPlayer) == "Accepted", "cached rendered ray acceptance");
         Assert.That((bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "Accepted placement exits F and clears the derived movement block.");
         Assert.That(sourceNetworkObject.OwnerClientId, Is.EqualTo(NetworkManager.ServerClientId));
         Assert.That(Vector3.Distance(source.transform.position, expectedPosition), Is.LessThan(0.003f),
             $"Accepted network placement changed cached rendered pose {expectedPosition} to {source.transform.position}.");
@@ -1918,7 +1980,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         ConfirmLocalPickup(owner, sourceNetworkObject.NetworkObjectId);
         yield return Until(() => sourceNetworkObject.OwnerClientId == owner.LocalClientId, "source re-pickup for lifecycle check");
         // Forced lifecycle paths clear pending state even when the server result is still in flight.
-        foreach (string route in new[] { "menu", "scene", "channel" })
+        foreach (string route in new[] { "menu", "ui-open", "scene", "input-disable", "channel" })
         {
             yield return AssertForcedExitWhilePending(route, owner, ownerPlayer, controller, preview,
                 sourceNetworkObject, cameraObject.transform, aimAnchor);
@@ -1926,7 +1988,8 @@ public class SingleCarryPlacementStage6PlayModeTests
         cameraObject.transform.position = aimAnchor.position;
         PressKey(Key.F);
         yield return null;
-        PressKey(Key.E);
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.W, Key.E));
+        InputSystem.Update();
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.True);
         ulong ownershipLossRequestId = GetPendingRequestId(controller);
         sourceNetworkObject.ChangeOwnership(NetworkManager.ServerClientId);
@@ -1935,8 +1998,12 @@ public class SingleCarryPlacementStage6PlayModeTests
         yield return Until(() => !(bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller),
             "forced cleanup after held source ownership loss");
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "Ownership loss clears the derived movement block.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.up), "Ownership loss releases held-W movement input.");
         yield return Until(() => LastRequest(preview) == ownershipLossRequestId, "late result after source ownership loss");
         Assert.That((bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "A late ownership-loss response cannot re-block movement.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.up), "The late ownership-loss result leaves held W available.");
 
         // A spawned held source disappearing while a new request is in flight also unlocks local placement.
         sourceNetworkObject.ChangeOwnership(owner.LocalClientId);
@@ -1945,15 +2012,20 @@ public class SingleCarryPlacementStage6PlayModeTests
         cameraObject.transform.position = aimAnchor.position;
         PressKey(Key.F);
         yield return null;
-        PressKey(Key.E);
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.W, Key.E));
+        InputSystem.Update();
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.True);
         ulong despawnRequestId = GetPendingRequestId(controller);
         sourceNetworkObject.Despawn(true);
         yield return Until(() => !(bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller),
             "forced cleanup after held source despawn");
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "Source despawn clears the derived movement block.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.up), "Source despawn releases held-W movement input.");
         yield return Until(() => LastRequest(preview) == despawnRequestId, "late response after source despawn");
         Assert.That((bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "A late source-despawn response cannot re-block movement.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.up), "The late source-despawn result leaves held W available.");
 
         // A real server downing transition notifies the owner controller and intentionally releases held items.
         GameObject downedSource = UnityEngine.Object.Instantiate(resourcePrefab);
@@ -1969,7 +2041,8 @@ public class SingleCarryPlacementStage6PlayModeTests
         cameraObject.transform.position = aimAnchor.position + Vector3.right;
         PressKey(Key.F);
         yield return null;
-        PressKey(Key.E);
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.W, Key.E));
+        InputSystem.Update();
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.True);
         ulong downedRequestId = GetPendingRequestId(controller);
         host.SetSingleton();
@@ -1984,8 +2057,12 @@ public class SingleCarryPlacementStage6PlayModeTests
         yield return Until(() => !(bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller),
             "forced cleanup after actual downed state transition");
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "Downed cleanup clears the derived movement block.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.up), "Downed placement cleanup releases the placement-specific mask on held W.");
         yield return Until(() => LastRequest(preview) == downedRequestId, "late response after downed cleanup");
         Assert.That((bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller), Is.False);
+        Assert.That(IsMovementBlocked(ownerPlayer), Is.False, "A late downed response cannot re-block movement.");
+        Assert.That(GetMoveVector(ownerPlayer), Is.EqualTo(Vector2.up), "The late downed result leaves held W available.");
         InteractionType.GetEvent("OnHeldObjectChanged").RemoveEventHandler(ownerInteraction, mirrorColliderSync);
     }
 
@@ -2221,6 +2298,55 @@ public class SingleCarryPlacementStage6PlayModeTests
             .Select(collider => collider != null ? $"{collider.name}:{collider.enabled}" : "<destroyed>"));
     }
 
+    private static string DescribeNetworkPoseAuthority(NetworkObject player, string role)
+    {
+        if (player == null) return $"{role}: player=null";
+        Type transformType = Type.GetType("ClientNetworkTransform, Assembly-CSharp");
+        Component networkTransform = transformType != null ? player.GetComponent(transformType) : null;
+        if (networkTransform == null) return $"{role}: player={player.name}; ClientNetworkTransform=missing";
+
+        PropertyInfo property(string name) => networkTransform.GetType().GetProperty(name,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        FieldInfo publicOrPrivateField(string name) => networkTransform.GetType().GetField(name,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        string read(string name)
+        {
+            PropertyInfo propertyInfo = property(name);
+            if (propertyInfo != null)
+                return Convert.ToString(propertyInfo.GetValue(networkTransform), System.Globalization.CultureInfo.InvariantCulture);
+            FieldInfo fieldInfo = publicOrPrivateField(name);
+            return fieldInfo != null
+                ? Convert.ToString(fieldInfo.GetValue(networkTransform), System.Globalization.CultureInfo.InvariantCulture)
+                : "<missing>";
+        }
+        string field(string name)
+        {
+            FieldInfo info = publicOrPrivateField(name);
+            return info != null ? Convert.ToString(info.GetValue(networkTransform), System.Globalization.CultureInfo.InvariantCulture) : "<missing>";
+        }
+
+        object[] poseArguments = { Vector3.zero, Quaternion.identity };
+        MethodInfo query = transformType.GetMethod("TryGetLatestAuthoritativeWorldPose", BindingFlags.Instance | BindingFlags.Public);
+        bool hasPose = query != null && (bool)query.Invoke(networkTransform, poseArguments);
+        Vector3 sampledPosition = hasPose ? (Vector3)poseArguments[0] : Vector3.zero;
+        Quaternion sampledRotation = hasPose ? (Quaternion)poseArguments[1] : Quaternion.identity;
+        NetworkManager manager = player.NetworkManager;
+        string parent = player.transform.parent != null ? player.transform.parent.name : "<root>";
+        string componentEnabled = networkTransform is Behaviour behaviour ? behaviour.enabled.ToString() : "<not-behaviour>";
+        return $"{role}: player={player.name}; IsSpawned={player.IsSpawned}; IsOwner={read("IsOwner")}; CanCommitToTransform={read("CanCommitToTransform")}; "
+            + $"OwnerClientId={player.OwnerClientId}; manager={manager?.name ?? "<null>"}; managerIsServer={manager?.IsServer}; managerIsClient={manager?.IsClient}; LocalClientId={manager?.LocalClientId}; "
+            + $"transformEnabled={componentEnabled}; transformPosition={player.transform.position.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}; "
+            + $"transformRotation={player.transform.rotation.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}; "
+            + $"sampleAvailable={hasPose}; samplePosition={sampledPosition.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}; "
+            + $"sampleRotation={sampledRotation.ToString("R", System.Globalization.CultureInfo.InvariantCulture)}; "
+            + $"SyncPosition=({read("SyncPositionX")},{read("SyncPositionY")},{read("SyncPositionZ")}); "
+            + $"SyncRotation=({read("SyncRotAngleX")},{read("SyncRotAngleY")},{read("SyncRotAngleZ")}); InLocalSpace={read("InLocalSpace")}; parent={parent}; "
+            + $"cacheValid={field("hasCompleteAuthoritativePose")}; sampleOwnerClientId={field("sampleOwnerClientId")}; "
+            + $"sampleObject={(networkTransform.GetType().GetField("sampleObject", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(networkTransform) as NetworkObject)?.NetworkObjectId.ToString() ?? "<null>"}; "
+            + $"sampleParent={(networkTransform.GetType().GetField("sampleParent", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(networkTransform) as Transform)?.name ?? "<null>"}; "
+            + $"sampleInLocalSpace={field("sampleInLocalSpace")}; currentOwner={player.OwnerClientId}; localClient={manager?.LocalClientId}.";
+    }
+
     private static void DisableDisconnectFixtureRemotePlayerPhysics(NetworkManager server, NetworkManager[] clientManagers)
     {
         foreach (NetworkManager clientManager in clientManagers)
@@ -2288,9 +2414,11 @@ public class SingleCarryPlacementStage6PlayModeTests
         camera.position = aimAnchor.position + Vector3.right;
         PressKey(Key.F);
         yield return null;
-        PressKey(Key.E);
+        InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.W, Key.E));
+        InputSystem.Update();
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.True,
             $"The {route} lifecycle case must begin with a pending server request.");
+        Assert.That(IsMovementBlocked(player), Is.True, $"The {route} case begins with movement blocked by the pending request.");
         ulong requestId = GetPendingRequestId(controller);
         switch (route)
         {
@@ -2298,12 +2426,18 @@ public class SingleCarryPlacementStage6PlayModeTests
                 PlayerInputType.GetMethod("ToggleRestartMenu_performed", BindingFlags.Instance | BindingFlags.NonPublic)
                     .Invoke(player.GetComponent(PlayerInputType), new object[] { default(InputAction.CallbackContext) });
                 break;
+            case "ui-open":
+                PlayerInputType.GetMethod("SetGameplayUiOpen").Invoke(player.GetComponent(PlayerInputType), new object[] { true });
+                break;
             case "scene":
                 PlacementControllerType.GetMethod("ActiveSceneChanged", BindingFlags.Instance | BindingFlags.NonPublic)
                     .Invoke(controller, new object[] { default(UnityEngine.SceneManagement.Scene), default(UnityEngine.SceneManagement.Scene) });
                 break;
             case "channel":
                 PreviewType.GetMethod("OnLostOwnership").Invoke(preview, null);
+                break;
+            case "input-disable":
+                ((Behaviour)player.GetComponent(PlayerInputType)).enabled = false;
                 break;
             default:
                 Assert.Fail("Unknown forced cleanup test route: " + route);
@@ -2313,11 +2447,27 @@ public class SingleCarryPlacementStage6PlayModeTests
             $"The {route} lifecycle event must exit placement while pending.");
         Assert.That((bool)PlacementControllerType.GetProperty("IsRequestPending").GetValue(controller), Is.False,
             $"The {route} lifecycle event must clear the pending request correlation.");
+        Assert.That(IsMovementBlocked(player), Is.False, $"The {route} lifecycle event clears the derived movement block.");
+        if (route == "ui-open")
+            Assert.That(GetMoveVector(player), Is.EqualTo(Vector2.zero), "The open UI keeps the regular movement gate active.");
+        if (route == "input-disable")
+            Assert.That(GetMoveVector(player), Is.EqualTo(Vector2.zero), "The disabled input component keeps its normal movement gate.");
         yield return Until(() => LastRequest(preview) == requestId, $"late response after {route} forced cleanup");
         Assert.That((bool)PlacementControllerType.GetProperty("IsActive").GetValue(controller), Is.False,
             $"The late {route} response must not revive placement.");
+        Assert.That(IsMovementBlocked(player), Is.False, $"The late {route} response cannot re-block movement.");
+        if (route == "input-disable") ((Behaviour)player.GetComponent(PlayerInputType)).enabled = true;
+        if (route == "ui-open") PlayerInputType.GetMethod("SetGameplayUiOpen").Invoke(player.GetComponent(PlayerInputType), new object[] { false });
+        if (route != "input-disable" && route != "ui-open")
+            Assert.That(GetMoveVector(player), Is.EqualTo(Vector2.up), $"The {route} cleanup releases held-W input after the placement block clears.");
         AssertHeld(owner, source);
     }
+
+    private static bool IsMovementBlocked(NetworkObject player) =>
+        (bool)PlayerInputType.GetProperty("IsSingleCarryPlacementMovementBlocked").GetValue(player.GetComponent(PlayerInputType));
+
+    private static Vector2 GetMoveVector(NetworkObject player) =>
+        (Vector2)PlayerInputType.GetMethod("GetMoveVectorValue").Invoke(player.GetComponent(PlayerInputType), null);
 
     private static void DisableMirrorColliders(NetworkManager manager, ulong id, NetworkManager server)
     {

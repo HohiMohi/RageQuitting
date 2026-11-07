@@ -128,6 +128,7 @@ public class SingleCarryPlacementStage3PlayModeTests : InputTestFixture
         Assert.That(visualRoot.activeSelf, Is.True, "Status HUD remains visible while aiming into empty air.");
         Assert.That(text.GetType().GetProperty("text").GetValue(text).ToString(), Does.Contain("Placement valid"));
         Assert.That(text.GetType().GetProperty("text").GetValue(text).ToString(), Does.Contain("Up/Down X | Left/Right Z"));
+        Assert.That(text.GetType().GetProperty("text").GetValue(text).ToString(), Does.Contain("WASD Move"));
 
         obstacle = GameObject.CreatePrimitive(PrimitiveType.Cube);
         obstacle.name = "off-axis placement blocker";

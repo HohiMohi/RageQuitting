@@ -1,0 +1,5341 @@
+{
+  "schemaVersion": 1,
+  "createdAtUtc": "2026-11-06T19:54:25.6254638Z",
+  "inputDirectories": [
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Traces"
+  ],
+  "traceCount": 6,
+  "incompleteOrAmbiguousCount": 0,
+  "traces": [
+    {
+      "path": "2f58112f4222421f9962479b32e08a76.json",
+      "inputDirectoryIndex": 0,
+      "runId": "2f58112f4222421f9962479b32e08a76",
+      "recordCount": 42,
+      "capacityPerPeer": 8192,
+      "overflow": false,
+      "caseName": "host-synchronous-acceptance",
+      "packetDelayMs": 0,
+      "simulatorSettings": {
+        "preset": "none",
+        "connected": false,
+        "jitterMs": 0,
+        "lossPercent": 0,
+        "lossInterval": 0,
+        "ownerUseUnreliableDeltas": false,
+        "serverUseUnreliableDeltas": false,
+        "ownerSyncAxes": 63,
+        "serverSyncAxes": 63,
+        "ownerPositionThreshold": 0.0010000000474974513,
+        "serverPositionThreshold": 0.0010000000474974513,
+        "ownerRotationThreshold": 0.009999999776482582,
+        "serverRotationThreshold": 0.009999999776482582,
+        "ownerQuaternionSync": false,
+        "serverQuaternionSync": false,
+        "ownerInLocalSpace": false,
+        "serverInLocalSpace": false
+      },
+      "measuredResponseMilliseconds": 10.0505,
+      "initialSynchronization": {
+        "recordCount": 0,
+        "ownerPushes": 0,
+        "receiveCallbackBoundaryRecords": 0,
+        "physicalObservedCallbackCount": 0,
+        "pairedBeforeBoundaryRecords": 0,
+        "pairedAfterBoundaryRecords": 0
+      },
+      "eventCounts": {
+        "MovementUpdateEnd": 16,
+        "PreviewRefresh": 17,
+        "RequestSubmitted": 1,
+        "AuthorityPush": 4,
+        "ReceiveCallbackBeforeBase": 0,
+        "ReceiveCallbackAfterBase": 0,
+        "ReceiveCacheUpdated": 0,
+        "ReceiveCacheCleared": 0,
+        "ServerValidationRead": 1,
+        "PlacementResponse": 1,
+        "SessionBegin": 1,
+        "SessionFrozen": 1
+      },
+      "requests": [
+        {
+          "requestId": "1",
+          "submitCount": 1,
+          "responseCount": 1,
+          "validationCount": 1,
+          "responseResult": 0,
+          "validationBranch": -544137075,
+          "measuredResponseMilliseconds": 10.0505,
+          "requestToResponseSamePeerMilliseconds": 8.578699998906814,
+          "residualMeters": 0.019073861690642405,
+          "authoritativePoseRead": true,
+          "completeCache": false,
+          "cacheEventBeforeValidation": null,
+          "cacheEventAfterValidation": null,
+          "lastOwnerPushBeforeRequest": {
+            "sequence": 36,
+            "frame": 58,
+            "sourceTick": 35,
+            "position": {
+              "x": 0.0,
+              "y": 0.08999985456466675,
+              "z": 0.14328433573246002
+            },
+            "positionMask": 4,
+            "rotationMask": 0
+          },
+          "firstOwnerPushAfterRequest": null,
+          "validationQuery": {
+            "sequence": 39,
+            "frame": 58,
+            "sourceTick": 0,
+            "localTick": 35,
+            "serverTick": 35,
+            "position": {
+              "x": 0.0,
+              "y": 0.09000009298324585,
+              "z": 0.17025864124298096
+            },
+            "renderedBodyPositionFallback": null,
+            "hasPoseRead": true,
+            "completeCache": false,
+            "inLocalSpace": false
+          },
+          "lastPushToValidationPoseDistanceMeters": 0.026974305511574592,
+          "lastPushToValidationPoseDistanceUnavailableReason": null,
+          "matchedStateHandoffs": [],
+          "issues": [],
+          "tickDomains": {
+            "source": [],
+            "ownerLocal": [
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 29,
+                "eventKind": 10,
+                "sequence": 0
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 1
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 2
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 3
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 4
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 5
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 6
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 7
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 8
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 32,
+                "eventKind": 3,
+                "sequence": 9
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 10
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 11
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 12
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 13
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 14
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 15
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 3,
+                "sequence": 16
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 17
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 18
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 19
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 20
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 21
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 22
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 23
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 24
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 25
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 26
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 3,
+                "sequence": 27
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 28
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 29
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 30
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 31
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 32
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 33
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 34
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 35
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 35,
+                "eventKind": 3,
+                "sequence": 36
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 37
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 35,
+                "eventKind": 2,
+                "sequence": 38
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 35,
+                "eventKind": 8,
+                "sequence": 39
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 35,
+                "eventKind": 9,
+                "sequence": 40
+              },
+              {
+                "peerLocalClientId": 0,
+                "peerIsServer": true,
+                "localTick": 35,
+                "eventKind": 11,
+                "sequence": 41
+              }
+            ],
+            "server": [
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 35,
+                "eventKind": 2,
+                "sequence": 38
+              },
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 35,
+                "eventKind": 8,
+                "sequence": 39
+              },
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 35,
+                "eventKind": 9,
+                "sequence": 40
+              },
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 35,
+                "eventKind": 11,
+                "sequence": 41
+              }
+            ]
+          }
+        }
+      ],
+      "issues": [],
+      "limitations": [
+        "packetDelayMs comes from trace metadata as the transport simulator delay; measuredResponseMilliseconds is a separate observed duration.",
+        "Tick clocks are kept in separate source, owner-local, and server domains; values are never subtracted across domains.",
+        "Quaternion values are compared sign-invariantly because raw transmitted Euler components were not captured; a match is reconstructed state evidence, not wire-component proof.",
+        "State handoff matching requires matching object/owner identity and quaternion-sync mode. Local-space matches are left unverified because parent transform context is not recorded.",
+        "Owner pushes may be matched through validation, including pushes observed after request submission; last pre-request push remains a separate sample.",
+        "A receive with no owner push in the recorded trace window is marked as unobserved owner history, not proof that no earlier push existed.",
+        "A matching observer hook is evidence of matching observed state, not proof of a physical transport send or NGO queue delivery.",
+        "Owner and server spawn generations are peer-local and are reported/validated per replica, never compared across peers.",
+        "Missing data and ambiguous state matches remain explicitly unresolved.",
+        "Embedded metadata/snapshots are not additional trials."
+      ]
+    },
+    {
+      "path": "39f55c8de7294ec880875068fff08101.json",
+      "inputDirectoryIndex": 0,
+      "runId": "39f55c8de7294ec880875068fff08101",
+      "recordCount": 76,
+      "capacityPerPeer": 8192,
+      "overflow": false,
+      "caseName": "remote-moving-acceptance",
+      "packetDelayMs": 0,
+      "simulatorSettings": {
+        "preset": "None",
+        "connected": true,
+        "jitterMs": 0,
+        "lossPercent": 0,
+        "lossInterval": 0,
+        "ownerUseUnreliableDeltas": false,
+        "serverUseUnreliableDeltas": false,
+        "ownerSyncAxes": 63,
+        "serverSyncAxes": 63,
+        "ownerPositionThreshold": 0.0010000000474974513,
+        "serverPositionThreshold": 0.0010000000474974513,
+        "ownerRotationThreshold": 0.009999999776482582,
+        "serverRotationThreshold": 0.009999999776482582,
+        "ownerQuaternionSync": false,
+        "serverQuaternionSync": false,
+        "ownerInLocalSpace": false,
+        "serverInLocalSpace": false
+      },
+      "measuredResponseMilliseconds": 18.9493,
+      "initialSynchronization": {
+        "recordCount": 0,
+        "ownerPushes": 0,
+        "receiveCallbackBoundaryRecords": 0,
+        "physicalObservedCallbackCount": 0,
+        "pairedBeforeBoundaryRecords": 0,
+        "pairedAfterBoundaryRecords": 0
+      },
+      "eventCounts": {
+        "MovementUpdateEnd": 25,
+        "PreviewRefresh": 25,
+        "RequestSubmitted": 1,
+        "AuthorityPush": 5,
+        "ReceiveCallbackBeforeBase": 5,
+        "ReceiveCallbackAfterBase": 5,
+        "ReceiveCacheUpdated": 5,
+        "ReceiveCacheCleared": 0,
+        "ServerValidationRead": 1,
+        "PlacementResponse": 1,
+        "SessionBegin": 2,
+        "SessionFrozen": 1
+      },
+      "requests": [
+        {
+          "requestId": "1",
+          "submitCount": 1,
+          "responseCount": 1,
+          "validationCount": 1,
+          "responseResult": 0,
+          "validationBranch": -544137075,
+          "measuredResponseMilliseconds": 18.9493,
+          "requestToResponseSamePeerMilliseconds": 17.044300002453383,
+          "residualMeters": 0.026700025133291214,
+          "authoritativePoseRead": true,
+          "completeCache": true,
+          "cacheEventBeforeValidation": {
+            "kind": 6,
+            "sequence": 69,
+            "sourceTick": 27,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.2956143617630005
+            }
+          },
+          "cacheEventAfterValidation": null,
+          "lastOwnerPushBeforeRequest": {
+            "sequence": 64,
+            "frame": 1361,
+            "sourceTick": 27,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.2956143617630005
+            },
+            "positionMask": 4,
+            "rotationMask": 0
+          },
+          "firstOwnerPushAfterRequest": null,
+          "validationQuery": {
+            "sequence": 72,
+            "frame": 1363,
+            "sourceTick": 27,
+            "localTick": 29,
+            "serverTick": 29,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.2956143617630005
+            },
+            "renderedBodyPositionFallback": null,
+            "hasPoseRead": true,
+            "completeCache": true,
+            "inLocalSpace": false
+          },
+          "lastPushToValidationPoseDistanceMeters": 0.0,
+          "lastPushToValidationPoseDistanceUnavailableReason": null,
+          "matchedStateHandoffs": [
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 14,
+              "serverCallbackSequence": 17,
+              "sourceTick": 23,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 28,
+              "serverCallbackSequence": 31,
+              "sourceTick": 24,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 40,
+              "serverCallbackSequence": 43,
+              "sourceTick": 25,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 52,
+              "serverCallbackSequence": 55,
+              "sourceTick": 26,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 64,
+              "serverCallbackSequence": 67,
+              "sourceTick": 27,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            }
+          ],
+          "issues": [],
+          "tickDomains": {
+            "source": [
+              {
+                "peerLocalClientId": 0,
+                "sourceTick": 27,
+                "eventKind": 8,
+                "sequence": 72
+              }
+            ],
+            "ownerLocal": [
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 21,
+                "eventKind": 10,
+                "sequence": 0
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 21,
+                "eventKind": 1,
+                "sequence": 2
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 21,
+                "eventKind": 1,
+                "sequence": 3
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 22,
+                "eventKind": 0,
+                "sequence": 4
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 22,
+                "eventKind": 1,
+                "sequence": 5
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 22,
+                "eventKind": 0,
+                "sequence": 6
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 22,
+                "eventKind": 1,
+                "sequence": 7
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 22,
+                "eventKind": 0,
+                "sequence": 8
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 22,
+                "eventKind": 1,
+                "sequence": 9
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 0,
+                "sequence": 10
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 1,
+                "sequence": 11
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 0,
+                "sequence": 12
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 1,
+                "sequence": 13
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 3,
+                "sequence": 14
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 0,
+                "sequence": 15
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 1,
+                "sequence": 16
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 0,
+                "sequence": 20
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 1,
+                "sequence": 21
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 0,
+                "sequence": 22
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 23,
+                "eventKind": 1,
+                "sequence": 23
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 0,
+                "sequence": 24
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 1,
+                "sequence": 25
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 0,
+                "sequence": 26
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 1,
+                "sequence": 27
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 3,
+                "sequence": 28
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 0,
+                "sequence": 29
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 1,
+                "sequence": 30
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 0,
+                "sequence": 34
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 24,
+                "eventKind": 1,
+                "sequence": 35
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 0,
+                "sequence": 36
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 1,
+                "sequence": 37
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 0,
+                "sequence": 38
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 1,
+                "sequence": 39
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 3,
+                "sequence": 40
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 0,
+                "sequence": 41
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 1,
+                "sequence": 42
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 0,
+                "sequence": 46
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 25,
+                "eventKind": 1,
+                "sequence": 47
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 0,
+                "sequence": 48
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 1,
+                "sequence": 49
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 0,
+                "sequence": 50
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 1,
+                "sequence": 51
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 3,
+                "sequence": 52
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 0,
+                "sequence": 53
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 1,
+                "sequence": 54
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 0,
+                "sequence": 58
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 1,
+                "sequence": 59
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 0,
+                "sequence": 60
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 1,
+                "sequence": 61
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 0,
+                "sequence": 62
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 1,
+                "sequence": 63
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 3,
+                "sequence": 64
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 0,
+                "sequence": 65
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 1,
+                "sequence": 66
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 0,
+                "sequence": 70
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 27,
+                "eventKind": 2,
+                "sequence": 71
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 0,
+                "sequence": 73
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 9,
+                "sequence": 74
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 11,
+                "sequence": 75
+              }
+            ],
+            "server": [
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 29,
+                "eventKind": 8,
+                "sequence": 72
+              }
+            ]
+          }
+        }
+      ],
+      "issues": [],
+      "limitations": [
+        "packetDelayMs comes from trace metadata as the transport simulator delay; measuredResponseMilliseconds is a separate observed duration.",
+        "Tick clocks are kept in separate source, owner-local, and server domains; values are never subtracted across domains.",
+        "Quaternion values are compared sign-invariantly because raw transmitted Euler components were not captured; a match is reconstructed state evidence, not wire-component proof.",
+        "State handoff matching requires matching object/owner identity and quaternion-sync mode. Local-space matches are left unverified because parent transform context is not recorded.",
+        "Owner pushes may be matched through validation, including pushes observed after request submission; last pre-request push remains a separate sample.",
+        "A receive with no owner push in the recorded trace window is marked as unobserved owner history, not proof that no earlier push existed.",
+        "A matching observer hook is evidence of matching observed state, not proof of a physical transport send or NGO queue delivery.",
+        "Owner and server spawn generations are peer-local and are reported/validated per replica, never compared across peers.",
+        "Missing data and ambiguous state matches remain explicitly unresolved.",
+        "Embedded metadata/snapshots are not additional trials."
+      ]
+    },
+    {
+      "path": "43c3e3cf73c5455fb894a9c010a78139.json",
+      "inputDirectoryIndex": 0,
+      "runId": "43c3e3cf73c5455fb894a9c010a78139",
+      "recordCount": 149,
+      "capacityPerPeer": 8192,
+      "overflow": false,
+      "caseName": "stationary-physical-panel-acceptance",
+      "packetDelayMs": 100,
+      "simulatorSettings": {
+        "preset": "SingleCarry 100ms",
+        "connected": true,
+        "jitterMs": 0,
+        "lossPercent": 0,
+        "lossInterval": 0,
+        "ownerUseUnreliableDeltas": false,
+        "serverUseUnreliableDeltas": false,
+        "ownerSyncAxes": 63,
+        "serverSyncAxes": 63,
+        "ownerPositionThreshold": 0.0010000000474974513,
+        "serverPositionThreshold": 0.0010000000474974513,
+        "ownerRotationThreshold": 0.009999999776482582,
+        "serverRotationThreshold": 0.009999999776482582,
+        "ownerQuaternionSync": false,
+        "serverQuaternionSync": false,
+        "ownerInLocalSpace": false,
+        "serverInLocalSpace": false
+      },
+      "measuredResponseMilliseconds": 418.2678,
+      "initialSynchronization": {
+        "recordCount": 0,
+        "ownerPushes": 0,
+        "receiveCallbackBoundaryRecords": 0,
+        "physicalObservedCallbackCount": 0,
+        "pairedBeforeBoundaryRecords": 0,
+        "pairedAfterBoundaryRecords": 0
+      },
+      "eventCounts": {
+        "MovementUpdateEnd": 95,
+        "PreviewRefresh": 45,
+        "RequestSubmitted": 1,
+        "AuthorityPush": 0,
+        "ReceiveCallbackBeforeBase": 1,
+        "ReceiveCallbackAfterBase": 1,
+        "ReceiveCacheUpdated": 1,
+        "ReceiveCacheCleared": 0,
+        "ServerValidationRead": 1,
+        "PlacementResponse": 1,
+        "SessionBegin": 2,
+        "SessionFrozen": 1
+      },
+      "requests": [
+        {
+          "requestId": "1",
+          "submitCount": 1,
+          "responseCount": 1,
+          "validationCount": 1,
+          "responseResult": 0,
+          "validationBranch": -544137075,
+          "measuredResponseMilliseconds": 418.2678,
+          "requestToResponseSamePeerMilliseconds": 416.58900000038557,
+          "residualMeters": 0.00029773487208049345,
+          "authoritativePoseRead": true,
+          "completeCache": true,
+          "cacheEventBeforeValidation": {
+            "kind": 6,
+            "sequence": 6,
+            "sourceTick": 22,
+            "position": {
+              "x": 0.0,
+              "y": 0.0902976393699646,
+              "z": -0.605107843875885
+            }
+          },
+          "cacheEventAfterValidation": null,
+          "lastOwnerPushBeforeRequest": null,
+          "firstOwnerPushAfterRequest": null,
+          "validationQuery": {
+            "sequence": 121,
+            "frame": 1773,
+            "sourceTick": 22,
+            "localTick": 48,
+            "serverTick": 48,
+            "position": {
+              "x": 0.0,
+              "y": 0.0902976393699646,
+              "z": -0.605107843875885
+            },
+            "renderedBodyPositionFallback": null,
+            "hasPoseRead": true,
+            "completeCache": true,
+            "inLocalSpace": false
+          },
+          "lastPushToValidationPoseDistanceMeters": null,
+          "lastPushToValidationPoseDistanceUnavailableReason": null,
+          "matchedStateHandoffs": [
+            {
+              "status": "state-handoff-unobserved-owner-history",
+              "serverCallbackSequence": 4,
+              "sourceTick": 22,
+              "historyBoundary": "no owner authority push was recorded in this trace window",
+              "initialSynchronization": false
+            }
+          ],
+          "issues": [],
+          "tickDomains": {
+            "source": [
+              {
+                "peerLocalClientId": 0,
+                "sourceTick": 22,
+                "eventKind": 8,
+                "sequence": 121
+              }
+            ],
+            "ownerLocal": [
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 10,
+                "sequence": 0
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 1,
+                "sequence": 2
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 1,
+                "sequence": 3
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 0,
+                "sequence": 7
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 1,
+                "sequence": 8
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 9
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 1,
+                "sequence": 10
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 11
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 1,
+                "sequence": 12
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 13
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 1,
+                "sequence": 14
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 15
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 1,
+                "sequence": 16
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 17
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 1,
+                "sequence": 18
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 19
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 1,
+                "sequence": 20
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 21
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 1,
+                "sequence": 22
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 23
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 1,
+                "sequence": 24
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 25
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 1,
+                "sequence": 26
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 27
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 1,
+                "sequence": 28
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 29
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 1,
+                "sequence": 30
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 31
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 1,
+                "sequence": 32
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 33
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 1,
+                "sequence": 34
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 35
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 1,
+                "sequence": 36
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 37
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 1,
+                "sequence": 38
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 39
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 1,
+                "sequence": 40
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 41
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 1,
+                "sequence": 42
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 43
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 1,
+                "sequence": 44
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 45
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 1,
+                "sequence": 46
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 47
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 1,
+                "sequence": 48
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 49
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 1,
+                "sequence": 50
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 51
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 1,
+                "sequence": 52
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 53
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 1,
+                "sequence": 54
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 55
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 1,
+                "sequence": 56
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 57
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 1,
+                "sequence": 58
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 59
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 1,
+                "sequence": 60
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 61
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 1,
+                "sequence": 62
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 63
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 1,
+                "sequence": 64
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 65
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 1,
+                "sequence": 66
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 67
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 1,
+                "sequence": 68
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 69
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 1,
+                "sequence": 70
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 71
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 1,
+                "sequence": 72
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 73
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 1,
+                "sequence": 74
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 75
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 1,
+                "sequence": 76
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 77
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 1,
+                "sequence": 78
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 79
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 1,
+                "sequence": 80
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 81
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 1,
+                "sequence": 82
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 83
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 1,
+                "sequence": 84
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 85
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 1,
+                "sequence": 86
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 87
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 1,
+                "sequence": 88
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 89
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 1,
+                "sequence": 90
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 91
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 1,
+                "sequence": 92
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 93
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 2,
+                "sequence": 94
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 95
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 96
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 97
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 98
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 99
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 100
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 101
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 51,
+                "eventKind": 0,
+                "sequence": 102
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 51,
+                "eventKind": 0,
+                "sequence": 103
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 51,
+                "eventKind": 0,
+                "sequence": 104
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 51,
+                "eventKind": 0,
+                "sequence": 105
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 0,
+                "sequence": 106
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 0,
+                "sequence": 107
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 0,
+                "sequence": 108
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 0,
+                "sequence": 109
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 0,
+                "sequence": 110
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 53,
+                "eventKind": 0,
+                "sequence": 111
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 53,
+                "eventKind": 0,
+                "sequence": 112
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 53,
+                "eventKind": 0,
+                "sequence": 113
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 53,
+                "eventKind": 0,
+                "sequence": 114
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 53,
+                "eventKind": 0,
+                "sequence": 115
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 54,
+                "eventKind": 0,
+                "sequence": 116
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 54,
+                "eventKind": 0,
+                "sequence": 117
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 54,
+                "eventKind": 0,
+                "sequence": 118
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 54,
+                "eventKind": 0,
+                "sequence": 119
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 55,
+                "eventKind": 0,
+                "sequence": 120
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 55,
+                "eventKind": 0,
+                "sequence": 122
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 55,
+                "eventKind": 0,
+                "sequence": 123
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 55,
+                "eventKind": 0,
+                "sequence": 124
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 56,
+                "eventKind": 0,
+                "sequence": 125
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 56,
+                "eventKind": 0,
+                "sequence": 126
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 56,
+                "eventKind": 0,
+                "sequence": 127
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 56,
+                "eventKind": 0,
+                "sequence": 128
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 56,
+                "eventKind": 0,
+                "sequence": 129
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 57,
+                "eventKind": 0,
+                "sequence": 130
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 57,
+                "eventKind": 0,
+                "sequence": 131
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 57,
+                "eventKind": 0,
+                "sequence": 132
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 58,
+                "eventKind": 0,
+                "sequence": 133
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 58,
+                "eventKind": 0,
+                "sequence": 134
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 58,
+                "eventKind": 0,
+                "sequence": 135
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 58,
+                "eventKind": 0,
+                "sequence": 136
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 59,
+                "eventKind": 0,
+                "sequence": 137
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 59,
+                "eventKind": 0,
+                "sequence": 138
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 59,
+                "eventKind": 0,
+                "sequence": 139
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 59,
+                "eventKind": 0,
+                "sequence": 140
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 60,
+                "eventKind": 0,
+                "sequence": 141
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 60,
+                "eventKind": 0,
+                "sequence": 142
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 60,
+                "eventKind": 0,
+                "sequence": 143
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 60,
+                "eventKind": 0,
+                "sequence": 144
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 60,
+                "eventKind": 0,
+                "sequence": 145
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 61,
+                "eventKind": 0,
+                "sequence": 146
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 61,
+                "eventKind": 9,
+                "sequence": 147
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 61,
+                "eventKind": 11,
+                "sequence": 148
+              }
+            ],
+            "server": [
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 48,
+                "eventKind": 8,
+                "sequence": 121
+              }
+            ]
+          }
+        }
+      ],
+      "issues": [],
+      "limitations": [
+        "packetDelayMs comes from trace metadata as the transport simulator delay; measuredResponseMilliseconds is a separate observed duration.",
+        "Tick clocks are kept in separate source, owner-local, and server domains; values are never subtracted across domains.",
+        "Quaternion values are compared sign-invariantly because raw transmitted Euler components were not captured; a match is reconstructed state evidence, not wire-component proof.",
+        "State handoff matching requires matching object/owner identity and quaternion-sync mode. Local-space matches are left unverified because parent transform context is not recorded.",
+        "Owner pushes may be matched through validation, including pushes observed after request submission; last pre-request push remains a separate sample.",
+        "A receive with no owner push in the recorded trace window is marked as unobserved owner history, not proof that no earlier push existed.",
+        "A matching observer hook is evidence of matching observed state, not proof of a physical transport send or NGO queue delivery.",
+        "Owner and server spawn generations are peer-local and are reported/validated per replica, never compared across peers.",
+        "Missing data and ambiguous state matches remain explicitly unresolved.",
+        "Embedded metadata/snapshots are not additional trials."
+      ]
+    },
+    {
+      "path": "9e30c927ed3c418ca991d5e9af570e4e.json",
+      "inputDirectoryIndex": 0,
+      "runId": "9e30c927ed3c418ca991d5e9af570e4e",
+      "recordCount": 120,
+      "capacityPerPeer": 8192,
+      "overflow": false,
+      "caseName": "residual-exceeded-refusal-control",
+      "packetDelayMs": 100,
+      "simulatorSettings": {
+        "preset": "SingleCarry 100ms",
+        "connected": true,
+        "jitterMs": 0,
+        "lossPercent": 0,
+        "lossInterval": 0,
+        "ownerUseUnreliableDeltas": false,
+        "serverUseUnreliableDeltas": false,
+        "ownerSyncAxes": 63,
+        "serverSyncAxes": 63,
+        "ownerPositionThreshold": 0.0010000000474974513,
+        "serverPositionThreshold": 0.0010000000474974513,
+        "ownerRotationThreshold": 0.009999999776482582,
+        "serverRotationThreshold": 0.009999999776482582,
+        "ownerQuaternionSync": false,
+        "serverQuaternionSync": false,
+        "ownerInLocalSpace": false,
+        "serverInLocalSpace": false
+      },
+      "measuredResponseMilliseconds": 427.348,
+      "initialSynchronization": {
+        "recordCount": 0,
+        "ownerPushes": 0,
+        "receiveCallbackBoundaryRecords": 0,
+        "physicalObservedCallbackCount": 0,
+        "pairedBeforeBoundaryRecords": 0,
+        "pairedAfterBoundaryRecords": 0
+      },
+      "eventCounts": {
+        "MovementUpdateEnd": 71,
+        "PreviewRefresh": 23,
+        "RequestSubmitted": 1,
+        "AuthorityPush": 5,
+        "ReceiveCallbackBeforeBase": 5,
+        "ReceiveCallbackAfterBase": 5,
+        "ReceiveCacheUpdated": 5,
+        "ReceiveCacheCleared": 0,
+        "ServerValidationRead": 1,
+        "PlacementResponse": 1,
+        "SessionBegin": 2,
+        "SessionFrozen": 1
+      },
+      "requests": [
+        {
+          "requestId": "1",
+          "submitCount": 1,
+          "responseCount": 1,
+          "validationCount": 1,
+          "responseResult": 5,
+          "validationBranch": -1644485048,
+          "measuredResponseMilliseconds": 427.348,
+          "requestToResponseSamePeerMilliseconds": 424.989999999525,
+          "residualMeters": 0.5037905538057277,
+          "authoritativePoseRead": true,
+          "completeCache": true,
+          "cacheEventBeforeValidation": {
+            "kind": 6,
+            "sequence": 86,
+            "sourceTick": 32,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.20478856563568115
+            }
+          },
+          "cacheEventAfterValidation": {
+            "kind": 6,
+            "sequence": 94,
+            "sourceTick": 33,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.29501843452453613
+            }
+          },
+          "lastOwnerPushBeforeRequest": {
+            "sequence": 43,
+            "frame": 1517,
+            "sourceTick": 32,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.20478856563568115
+            },
+            "positionMask": 4,
+            "rotationMask": 0
+          },
+          "firstOwnerPushAfterRequest": {
+            "sequence": 53,
+            "frame": 1522,
+            "sourceTick": 33,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.29501843452453613
+            }
+          },
+          "validationQuery": {
+            "sequence": 89,
+            "frame": 1545,
+            "sourceTick": 32,
+            "localTick": 41,
+            "serverTick": 41,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.20478856563568115
+            },
+            "renderedBodyPositionFallback": null,
+            "hasPoseRead": true,
+            "completeCache": true,
+            "inLocalSpace": false
+          },
+          "lastPushToValidationPoseDistanceMeters": 0.0,
+          "lastPushToValidationPoseDistanceUnavailableReason": null,
+          "matchedStateHandoffs": [
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 16,
+              "serverCallbackSequence": 64,
+              "sourceTick": 29,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 23,
+              "serverCallbackSequence": 70,
+              "sourceTick": 30,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 34,
+              "serverCallbackSequence": 77,
+              "sourceTick": 31,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 43,
+              "serverCallbackSequence": 84,
+              "sourceTick": 32,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 53,
+              "serverCallbackSequence": 92,
+              "sourceTick": 33,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            }
+          ],
+          "issues": [],
+          "tickDomains": {
+            "source": [
+              {
+                "peerLocalClientId": 0,
+                "sourceTick": 32,
+                "eventKind": 8,
+                "sequence": 89
+              }
+            ],
+            "ownerLocal": [
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 10,
+                "sequence": 0
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 1,
+                "sequence": 2
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 26,
+                "eventKind": 1,
+                "sequence": 3
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 0,
+                "sequence": 4
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 1,
+                "sequence": 5
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 0,
+                "sequence": 6
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 1,
+                "sequence": 7
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 0,
+                "sequence": 8
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 1,
+                "sequence": 9
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 0,
+                "sequence": 10
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 11
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 0,
+                "sequence": 12
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 13
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 0,
+                "sequence": 14
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 15
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 3,
+                "sequence": 16
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 0,
+                "sequence": 17
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 18
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 0,
+                "sequence": 19
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 1,
+                "sequence": 20
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 0,
+                "sequence": 21
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 1,
+                "sequence": 22
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 3,
+                "sequence": 23
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 0,
+                "sequence": 24
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 1,
+                "sequence": 25
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 0,
+                "sequence": 26
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 1,
+                "sequence": 27
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 28
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 29
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 30
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 31
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 32
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 33
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 3,
+                "sequence": 34
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 35
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 36
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 37
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 38
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 39
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 40
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 41
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 42
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 3,
+                "sequence": 43
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 44
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 45
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 46
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 47
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 48
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 49
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 50
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 2,
+                "sequence": 51
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 52
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 3,
+                "sequence": 53
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 54
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 55
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 56
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 57
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 58
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 59
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 60
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 61
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 62
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 63
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 67
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 68
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 69
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 73
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 74
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 75
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 76
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 0,
+                "sequence": 80
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 0,
+                "sequence": 81
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 0,
+                "sequence": 82
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 83
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 87
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 88
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 90
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 91
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 95
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 96
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 97
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 98
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 99
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 100
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 101
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 102
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 103
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 104
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 105
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 106
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 107
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 108
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 109
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 110
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 111
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 112
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 113
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 114
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 115
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 116
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 117
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 9,
+                "sequence": 118
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 11,
+                "sequence": 119
+              }
+            ],
+            "server": [
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 41,
+                "eventKind": 8,
+                "sequence": 89
+              }
+            ]
+          }
+        }
+      ],
+      "issues": [],
+      "limitations": [
+        "packetDelayMs comes from trace metadata as the transport simulator delay; measuredResponseMilliseconds is a separate observed duration.",
+        "Tick clocks are kept in separate source, owner-local, and server domains; values are never subtracted across domains.",
+        "Quaternion values are compared sign-invariantly because raw transmitted Euler components were not captured; a match is reconstructed state evidence, not wire-component proof.",
+        "State handoff matching requires matching object/owner identity and quaternion-sync mode. Local-space matches are left unverified because parent transform context is not recorded.",
+        "Owner pushes may be matched through validation, including pushes observed after request submission; last pre-request push remains a separate sample.",
+        "A receive with no owner push in the recorded trace window is marked as unobserved owner history, not proof that no earlier push existed.",
+        "A matching observer hook is evidence of matching observed state, not proof of a physical transport send or NGO queue delivery.",
+        "Owner and server spawn generations are peer-local and are reported/validated per replica, never compared across peers.",
+        "Missing data and ambiguous state matches remain explicitly unresolved.",
+        "Embedded metadata/snapshots are not additional trials."
+      ]
+    },
+    {
+      "path": "d52e7e48563f44fb98516218d43e13b5.json",
+      "inputDirectoryIndex": 0,
+      "runId": "d52e7e48563f44fb98516218d43e13b5",
+      "recordCount": 143,
+      "capacityPerPeer": 8192,
+      "overflow": false,
+      "caseName": "missing-received-pose-control",
+      "packetDelayMs": 100,
+      "simulatorSettings": {
+        "preset": "SingleCarry 100ms",
+        "connected": true,
+        "jitterMs": 0,
+        "lossPercent": 0,
+        "lossInterval": 0,
+        "ownerUseUnreliableDeltas": false,
+        "serverUseUnreliableDeltas": false,
+        "ownerSyncAxes": 63,
+        "serverSyncAxes": 63,
+        "ownerPositionThreshold": 0.0010000000474974513,
+        "serverPositionThreshold": 0.0010000000474974513,
+        "ownerRotationThreshold": 0.009999999776482582,
+        "serverRotationThreshold": 0.009999999776482582,
+        "ownerQuaternionSync": false,
+        "serverQuaternionSync": false,
+        "ownerInLocalSpace": false,
+        "serverInLocalSpace": false
+      },
+      "measuredResponseMilliseconds": 435.858,
+      "initialSynchronization": {
+        "recordCount": 0,
+        "ownerPushes": 0,
+        "receiveCallbackBoundaryRecords": 0,
+        "physicalObservedCallbackCount": 0,
+        "pairedBeforeBoundaryRecords": 0,
+        "pairedAfterBoundaryRecords": 0
+      },
+      "eventCounts": {
+        "MovementUpdateEnd": 85,
+        "PreviewRefresh": 29,
+        "RequestSubmitted": 1,
+        "AuthorityPush": 7,
+        "ReceiveCallbackBeforeBase": 7,
+        "ReceiveCallbackAfterBase": 7,
+        "ReceiveCacheUpdated": 0,
+        "ReceiveCacheCleared": 2,
+        "ServerValidationRead": 1,
+        "PlacementResponse": 1,
+        "SessionBegin": 2,
+        "SessionFrozen": 1
+      },
+      "requests": [
+        {
+          "requestId": "1",
+          "submitCount": 1,
+          "responseCount": 1,
+          "validationCount": 1,
+          "responseResult": 5,
+          "validationBranch": 1725238067,
+          "measuredResponseMilliseconds": 435.858,
+          "requestToResponseSamePeerMilliseconds": 432.7952000021469,
+          "residualMeters": null,
+          "authoritativePoseRead": false,
+          "completeCache": false,
+          "cacheEventBeforeValidation": {
+            "kind": 7,
+            "sequence": 109,
+            "sourceTick": 0,
+            "position": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "cacheEventAfterValidation": null,
+          "lastOwnerPushBeforeRequest": {
+            "sequence": 64,
+            "frame": 197,
+            "sourceTick": 36,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.35847193002700806
+            },
+            "positionMask": 4,
+            "rotationMask": 0
+          },
+          "firstOwnerPushAfterRequest": null,
+          "validationQuery": {
+            "sequence": 110,
+            "frame": 225,
+            "sourceTick": 36,
+            "localTick": 44,
+            "serverTick": 44,
+            "position": null,
+            "renderedBodyPositionFallback": {
+              "x": 0.0,
+              "y": 0.08942776173353195,
+              "z": 0.21104803681373596
+            },
+            "hasPoseRead": false,
+            "completeCache": false,
+            "inLocalSpace": false
+          },
+          "lastPushToValidationPoseDistanceMeters": null,
+          "lastPushToValidationPoseDistanceUnavailableReason": "authoritative pose read failed; bodyPosition is the rendered fallback",
+          "matchedStateHandoffs": [
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 14,
+              "serverCallbackSequence": 69,
+              "sourceTick": 30,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 21,
+              "serverCallbackSequence": 77,
+              "sourceTick": 31,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 30,
+              "serverCallbackSequence": 80,
+              "sourceTick": 32,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 37,
+              "serverCallbackSequence": 85,
+              "sourceTick": 33,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 46,
+              "serverCallbackSequence": 93,
+              "sourceTick": 34,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 53,
+              "serverCallbackSequence": 101,
+              "sourceTick": 35,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 64,
+              "serverCallbackSequence": 107,
+              "sourceTick": 36,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            }
+          ],
+          "issues": [],
+          "tickDomains": {
+            "source": [
+              {
+                "peerLocalClientId": 0,
+                "sourceTick": 36,
+                "eventKind": 8,
+                "sequence": 110
+              }
+            ],
+            "ownerLocal": [
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 10,
+                "sequence": 0
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 1,
+                "sequence": 2
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 28,
+                "eventKind": 1,
+                "sequence": 3
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 0,
+                "sequence": 4
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 5
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 0,
+                "sequence": 6
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 7
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 0,
+                "sequence": 8
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 29,
+                "eventKind": 1,
+                "sequence": 9
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 0,
+                "sequence": 10
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 1,
+                "sequence": 11
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 0,
+                "sequence": 12
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 1,
+                "sequence": 13
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 3,
+                "sequence": 14
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 0,
+                "sequence": 15
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 30,
+                "eventKind": 1,
+                "sequence": 16
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 17
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 18
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 19
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 20
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 3,
+                "sequence": 21
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 22
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 23
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 24
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 25
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 26
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 27
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 28
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 29
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 3,
+                "sequence": 30
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 31
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 32
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 33
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 34
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 35
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 36
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 3,
+                "sequence": 37
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 38
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 39
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 40
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 41
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 42
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 43
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 44
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 45
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 3,
+                "sequence": 46
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 47
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 48
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 49
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 1,
+                "sequence": 50
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 51
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 1,
+                "sequence": 52
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 3,
+                "sequence": 53
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 54
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 1,
+                "sequence": 55
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 56
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 1,
+                "sequence": 57
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 58
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 1,
+                "sequence": 59
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 60
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 1,
+                "sequence": 61
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 62
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 1,
+                "sequence": 63
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 3,
+                "sequence": 64
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 65
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 2,
+                "sequence": 67
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 68
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 71
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 72
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 73
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 0,
+                "sequence": 74
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 0,
+                "sequence": 75
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 0,
+                "sequence": 76
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 38,
+                "eventKind": 0,
+                "sequence": 79
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 82
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 83
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 39,
+                "eventKind": 0,
+                "sequence": 84
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 87
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 88
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 89
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 40,
+                "eventKind": 0,
+                "sequence": 90
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 91
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 92
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 95
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 96
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 41,
+                "eventKind": 0,
+                "sequence": 97
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 98
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 99
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 100
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 103
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 104
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 105
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 106
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 111
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 112
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 113
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 114
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 115
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 116
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 117
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 118
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 119
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 120
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 121
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 122
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 123
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 124
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 125
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 126
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 127
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 128
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 129
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 130
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 131
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 132
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 133
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 134
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 135
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 136
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 137
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 138
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 139
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 140
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 9,
+                "sequence": 141
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 11,
+                "sequence": 142
+              }
+            ],
+            "server": [
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 44,
+                "eventKind": 8,
+                "sequence": 110
+              }
+            ]
+          }
+        }
+      ],
+      "issues": [],
+      "limitations": [
+        "packetDelayMs comes from trace metadata as the transport simulator delay; measuredResponseMilliseconds is a separate observed duration.",
+        "Tick clocks are kept in separate source, owner-local, and server domains; values are never subtracted across domains.",
+        "Quaternion values are compared sign-invariantly because raw transmitted Euler components were not captured; a match is reconstructed state evidence, not wire-component proof.",
+        "State handoff matching requires matching object/owner identity and quaternion-sync mode. Local-space matches are left unverified because parent transform context is not recorded.",
+        "Owner pushes may be matched through validation, including pushes observed after request submission; last pre-request push remains a separate sample.",
+        "A receive with no owner push in the recorded trace window is marked as unobserved owner history, not proof that no earlier push existed.",
+        "A matching observer hook is evidence of matching observed state, not proof of a physical transport send or NGO queue delivery.",
+        "Owner and server spawn generations are peer-local and are reported/validated per replica, never compared across peers.",
+        "Missing data and ambiguous state matches remain explicitly unresolved.",
+        "Embedded metadata/snapshots are not additional trials."
+      ]
+    },
+    {
+      "path": "ea00d2dd71d14c5a8c01f45a7bbef4d3.json",
+      "inputDirectoryIndex": 0,
+      "runId": "ea00d2dd71d14c5a8c01f45a7bbef4d3",
+      "recordCount": 116,
+      "capacityPerPeer": 8192,
+      "overflow": false,
+      "caseName": "remote-moving-acceptance",
+      "packetDelayMs": 100,
+      "simulatorSettings": {
+        "preset": "SingleCarry 100ms",
+        "connected": true,
+        "jitterMs": 0,
+        "lossPercent": 0,
+        "lossInterval": 0,
+        "ownerUseUnreliableDeltas": false,
+        "serverUseUnreliableDeltas": false,
+        "ownerSyncAxes": 63,
+        "serverSyncAxes": 63,
+        "ownerPositionThreshold": 0.0010000000474974513,
+        "serverPositionThreshold": 0.0010000000474974513,
+        "ownerRotationThreshold": 0.009999999776482582,
+        "serverRotationThreshold": 0.009999999776482582,
+        "ownerQuaternionSync": false,
+        "serverQuaternionSync": false,
+        "ownerInLocalSpace": false,
+        "serverInLocalSpace": false
+      },
+      "measuredResponseMilliseconds": 418.0823,
+      "initialSynchronization": {
+        "recordCount": 0,
+        "ownerPushes": 0,
+        "receiveCallbackBoundaryRecords": 0,
+        "physicalObservedCallbackCount": 0,
+        "pairedBeforeBoundaryRecords": 0,
+        "pairedAfterBoundaryRecords": 0
+      },
+      "eventCounts": {
+        "MovementUpdateEnd": 73,
+        "PreviewRefresh": 25,
+        "RequestSubmitted": 1,
+        "AuthorityPush": 3,
+        "ReceiveCallbackBeforeBase": 3,
+        "ReceiveCallbackAfterBase": 3,
+        "ReceiveCacheUpdated": 3,
+        "ReceiveCacheCleared": 0,
+        "ServerValidationRead": 1,
+        "PlacementResponse": 1,
+        "SessionBegin": 2,
+        "SessionFrozen": 1
+      },
+      "requests": [
+        {
+          "requestId": "1",
+          "submitCount": 1,
+          "responseCount": 1,
+          "validationCount": 1,
+          "responseResult": 5,
+          "validationBranch": -1644485048,
+          "measuredResponseMilliseconds": 418.0823,
+          "requestToResponseSamePeerMilliseconds": 415.2590000012424,
+          "residualMeters": 0.2938803287292333,
+          "authoritativePoseRead": true,
+          "completeCache": true,
+          "cacheEventBeforeValidation": {
+            "kind": 6,
+            "sequence": 70,
+            "sourceTick": 33,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.05517465993762016
+            }
+          },
+          "cacheEventAfterValidation": {
+            "kind": 6,
+            "sequence": 97,
+            "sourceTick": 34,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.38984715938568115
+            }
+          },
+          "lastOwnerPushBeforeRequest": {
+            "sequence": 25,
+            "frame": 1181,
+            "sourceTick": 33,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.05517465993762016
+            },
+            "positionMask": 4,
+            "rotationMask": 0
+          },
+          "firstOwnerPushAfterRequest": {
+            "sequence": 64,
+            "frame": 1202,
+            "sourceTick": 34,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.38984715938568115
+            }
+          },
+          "validationQuery": {
+            "sequence": 84,
+            "frame": 1218,
+            "sourceTick": 33,
+            "localTick": 45,
+            "serverTick": 45,
+            "position": {
+              "x": 0.0,
+              "y": 0.0899999737739563,
+              "z": 0.05517465993762016
+            },
+            "renderedBodyPositionFallback": null,
+            "hasPoseRead": true,
+            "completeCache": true,
+            "inLocalSpace": false
+          },
+          "lastPushToValidationPoseDistanceMeters": 0.0,
+          "lastPushToValidationPoseDistanceUnavailableReason": null,
+          "matchedStateHandoffs": [
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 16,
+              "serverCallbackSequence": 59,
+              "sourceTick": 32,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 25,
+              "serverCallbackSequence": 68,
+              "sourceTick": 33,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            },
+            {
+              "status": "unique-observed-state-match",
+              "ownerPushSequence": 64,
+              "serverCallbackSequence": 95,
+              "sourceTick": 34,
+              "positionMask": 4,
+              "rotationMask": 0,
+              "quaternionSync": false,
+              "rotationMatchMethod": "normalized-sign-invariant-full-quaternion",
+              "initialSynchronization": false,
+              "ownerPeerRegistrationCount": 1,
+              "serverPeerRegistrationCount": 1,
+              "registrationsMatchOwnEvents": true,
+              "sameNetworkObjectAndOwner": true,
+              "sameQuaternionSyncMode": true,
+              "excludedSameStateForeignIdentityOrSyncCandidates": 0,
+              "worldSpaceOnly": true,
+              "peerLocalGenerationsKeptSeparate": true
+            }
+          ],
+          "issues": [],
+          "tickDomains": {
+            "source": [
+              {
+                "peerLocalClientId": 0,
+                "sourceTick": 33,
+                "eventKind": 8,
+                "sequence": 84
+              }
+            ],
+            "ownerLocal": [
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 10,
+                "sequence": 0
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 2
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 3
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 4
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 1,
+                "sequence": 5
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 6
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 1,
+                "sequence": 7
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 8
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 1,
+                "sequence": 9
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 10
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 1,
+                "sequence": 11
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 12
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 1,
+                "sequence": 13
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 14
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 1,
+                "sequence": 15
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 3,
+                "sequence": 16
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 17
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 1,
+                "sequence": 18
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 19
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 1,
+                "sequence": 20
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 21
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 1,
+                "sequence": 22
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 23
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 1,
+                "sequence": 24
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 3,
+                "sequence": 25
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 26
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 1,
+                "sequence": 27
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 28
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 1,
+                "sequence": 29
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 0,
+                "sequence": 30
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 37,
+                "eventKind": 1,
+                "sequence": 31
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 32
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 33
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 34
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 35
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 0,
+                "sequence": 36
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 31,
+                "eventKind": 1,
+                "sequence": 37
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 38
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 39
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 40
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 41
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 0,
+                "sequence": 42
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 32,
+                "eventKind": 1,
+                "sequence": 43
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 44
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 45
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 46
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 47
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 48
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 49
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 0,
+                "sequence": 50
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 33,
+                "eventKind": 1,
+                "sequence": 51
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 52
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 2,
+                "sequence": 53
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 54
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 34,
+                "eventKind": 0,
+                "sequence": 55
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 56
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 57
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 35,
+                "eventKind": 0,
+                "sequence": 58
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 36,
+                "eventKind": 0,
+                "sequence": 62
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 63
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 3,
+                "sequence": 64
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 65
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 42,
+                "eventKind": 0,
+                "sequence": 66
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 67
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 71
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 72
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 43,
+                "eventKind": 0,
+                "sequence": 73
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 74
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 75
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 76
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 44,
+                "eventKind": 0,
+                "sequence": 77
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 78
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 79
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 80
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 45,
+                "eventKind": 0,
+                "sequence": 81
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 82
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 83
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 85
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 46,
+                "eventKind": 0,
+                "sequence": 86
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 87
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 88
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 89
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 47,
+                "eventKind": 0,
+                "sequence": 90
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 91
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 92
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 93
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 48,
+                "eventKind": 0,
+                "sequence": 94
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 98
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 99
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 100
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 49,
+                "eventKind": 0,
+                "sequence": 101
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 102
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 103
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 104
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 105
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 50,
+                "eventKind": 0,
+                "sequence": 106
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 51,
+                "eventKind": 0,
+                "sequence": 107
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 51,
+                "eventKind": 0,
+                "sequence": 108
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 51,
+                "eventKind": 0,
+                "sequence": 109
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 51,
+                "eventKind": 0,
+                "sequence": 110
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 0,
+                "sequence": 111
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 0,
+                "sequence": 112
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 0,
+                "sequence": 113
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 9,
+                "sequence": 114
+              },
+              {
+                "peerLocalClientId": 1,
+                "peerIsServer": false,
+                "localTick": 52,
+                "eventKind": 11,
+                "sequence": 115
+              }
+            ],
+            "server": [
+              {
+                "peerLocalClientId": 0,
+                "serverTick": 45,
+                "eventKind": 8,
+                "sequence": 84
+              }
+            ]
+          }
+        }
+      ],
+      "issues": [],
+      "limitations": [
+        "packetDelayMs comes from trace metadata as the transport simulator delay; measuredResponseMilliseconds is a separate observed duration.",
+        "Tick clocks are kept in separate source, owner-local, and server domains; values are never subtracted across domains.",
+        "Quaternion values are compared sign-invariantly because raw transmitted Euler components were not captured; a match is reconstructed state evidence, not wire-component proof.",
+        "State handoff matching requires matching object/owner identity and quaternion-sync mode. Local-space matches are left unverified because parent transform context is not recorded.",
+        "Owner pushes may be matched through validation, including pushes observed after request submission; last pre-request push remains a separate sample.",
+        "A receive with no owner push in the recorded trace window is marked as unobserved owner history, not proof that no earlier push existed.",
+        "A matching observer hook is evidence of matching observed state, not proof of a physical transport send or NGO queue delivery.",
+        "Owner and server spawn generations are peer-local and are reported/validated per replica, never compared across peers.",
+        "Missing data and ambiguous state matches remain explicitly unresolved.",
+        "Embedded metadata/snapshots are not additional trials."
+      ]
+    }
+  ],
+  "inputErrors": []
+}

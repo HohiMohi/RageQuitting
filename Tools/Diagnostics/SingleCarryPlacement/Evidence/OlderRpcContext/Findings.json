@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "status": "diagnostics_implemented_natural_repro_observed",
+  "originalPlacementAcceptance": "still_blocked",
+  "naturalSeries": {
+    "pairs": 7,
+    "uniqueTrials": 14,
+    "delay0": {
+      "accepted": 7,
+      "rejected": 0
+    },
+    "delay100": {
+      "accepted": 6,
+      "invalidAimOrigin": 1
+    },
+    "stoppedAtFirstNaturalFailure": true,
+    "statisticalLimitation": "Small sequential loopback sample, stopped on failure; not an estimate of in-game probability."
+  },
+  "failure": {
+    "test": "RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+    "localValidation": "Valid",
+    "result": "InvalidAimOrigin",
+    "branch": "ResidualExceeded",
+    "queryAvailable": true,
+    "cacheComplete": true,
+    "cacheContextMatches": true,
+    "ownerPreEPosition": {
+      "x": 0.0,
+      "y": 0.0899999737739563,
+      "z": 0.359980046749115
+    },
+    "queryWorldPosition": {
+      "x": 0.0,
+      "y": 0.0899999737739563,
+      "z": 0.058098841458559036
+    },
+    "renderedPositionAtRpc": {
+      "x": 0.0,
+      "y": 0.08883307129144669,
+      "z": 0.036499738693237305
+    },
+    "ownerPreEToQuerySeparationMeters": 0.30188120529055595,
+    "residualMeters": 0.251468873223177,
+    "maximumResidualMeters": 0.15000000596046448,
+    "receiveAgeAtRpcSeconds": 0.07946939999965252,
+    "receiveAgeAtRpcFrames": 6,
+    "measuredRequestResponseMs": 394.2720031738281,
+    "pendingHorizontalDriftMeters": 0.0
+  },
+  "confirmedMechanism": "This request was rejected by the existing residual limit with an available complete received pose whose context matched. Its received position lagged the owner pre-E snapshot. It was not the missing-sample branch and was not using the rendered pose.",
+  "unresolved": "Why a newer authoritative pose was not available before this RPC: sender production/commit timing, transit, or message handling order are not distinguished by this capture. No packet-send sequence trace collected.",
+  "instrumentation": {
+    "scope": "UNITY_EDITOR only",
+    "hotPath": "Bounded per-instance value snapshots; no file IO or formatting during validation",
+    "export": "JSON after RPC response before test assertions",
+    "timingLimitation": "Instrumentation can influence timing",
+    "behaviorChanges": "No tolerance, RPC payload, retry, physics, or movement behavior changes"
+  },
+  "evidence": {
+    "trace": "Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185252158Z-547bd8c6e0ee4ffbb1298bf467859eb2.json",
+    "report": "Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-07\\unity-playmode-tests-report.json",
+    "trialIndex": "Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\trial-index.json",
+    "targetedGameplay": "Artifacts/Validation/20261105T183757Z-f4949d0a/summary.json",
+    "baseline": "Baseline/"
+  },
+  "validation": "Final strict Fast and unfiltered Gameplay are reported separately in final-validation.json",
+  "manualHostAndSeparateClient": "not performed",
+  "wanRelay": "not performed",
+  "newPlayerBuild": "not performed for Editor-only instrumentation"
+}
