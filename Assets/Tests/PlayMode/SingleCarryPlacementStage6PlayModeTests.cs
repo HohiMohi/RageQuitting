@@ -106,7 +106,7 @@ public class SingleCarryPlacementStage6PlayModeTests
     }
 
     [UnityTest]
-    public IEnumerator RemoteOwnerRotationStepsSnapWorldYawAndCommitTheExactPreviewRotation()
+    public IEnumerator RemoteOwnerRotationStepsUseCapturedLocalAxesAndCommitTheExactPreviewRotation()
     {
         return RunRemoteControllerPlacementRebase(0, false, false, false, true);
     }
@@ -461,16 +461,16 @@ public class SingleCarryPlacementStage6PlayModeTests
             Quaternion baseYaw = (Quaternion)aimArgs[2];
             float yawDegrees = Mathf.Repeat(Mathf.Atan2((baseYaw * Vector3.forward).x,
                 (baseYaw * Vector3.forward).z) * Mathf.Rad2Deg, 360f);
-            expectedStepRotationForRemote = Quaternion.AngleAxis(1f, Vector3.up)
-                * Quaternion.AngleAxis(1f, Vector3.right)
-                * Quaternion.Euler(0f, Mathf.FloorToInt(yawDegrees + .5f) % 360, 0f)
+            Quaternion capturedBase = Quaternion.Euler(0f, Mathf.FloorToInt(yawDegrees + .5f) % 360, 0f)
                 * Quaternion.Euler(0f, 90f, 0f);
+            expectedStepRotationForRemote = capturedBase * Quaternion.AngleAxis(1f, Vector3.right)
+                * Quaternion.AngleAxis(1f, Vector3.up);
             refresh.Invoke(controller, null);
             Assert.That(Quaternion.Angle(GetControllerGhost(controller).transform.rotation, expectedStepRotationForRemote), Is.LessThan(.1f),
-                "The spawned non-server owner applies X and Ctrl+Right Y world-degree steps on integer camera yaw, without Z.");
+                "The spawned non-server owner applies X then Ctrl+Right Y about the captured local axes, without Z.");
         }
         if (probeUnsyncedSurfaceMovement)
-            SetRotationCounter(controller, "worldXDegrees", 90);
+            SetLocalRotationForFixture(controller, Quaternion.AngleAxis(90f, Vector3.right));
         refresh.Invoke(controller, null);
         Assert.That(PlacementControllerType.GetProperty("LastGeometryStatus").GetValue(controller).ToString(),
             Is.EqualTo("SurfaceSupported"), "The owner must sample a real contact on the spawned target.");
@@ -789,7 +789,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         Quaternion expectedCommittedRotation = serverSurface.transform.rotation * cachedLocalRotation;
         if (probeSteppedRotation)
             Assert.That(Quaternion.Angle(expectedCommittedRotation, expectedStepRotationForRemote), Is.LessThan(.1f),
-                "The captured owner preview quaternion sent through E is the same integer-grid yaw and world-axis step.");
+                "The captured owner preview quaternion sent through E matches the exact local-axis preview pose.");
         NetworkObject ownerSource = Find(owner, sourceObject.NetworkObjectId);
         Rigidbody serverBody = source.GetComponent<Rigidbody>();
         Rigidbody ownerBody = ownerSource != null ? ownerSource.GetComponent<Rigidbody>() : null;
@@ -1888,7 +1888,7 @@ public class SingleCarryPlacementStage6PlayModeTests
         InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState(Key.LeftCtrl, Key.RightArrow));
         InputSystem.Update();
         yield return null;
-        Assert.That(Quaternion.Angle(Quaternion.AngleAxis(1f, Vector3.up) * beforeFreshChord, ghost.rotation),
+        Assert.That(Quaternion.Angle(beforeFreshChord * Quaternion.AngleAxis(1f, Vector3.up), ghost.rotation),
             Is.LessThan(.1f), "After a real neutral release, a fresh Ctrl+Right chord applies exactly one Y step.");
         InputSystem.QueueStateEvent(syntheticKeyboard, new KeyboardState());
         InputSystem.Update();
@@ -2206,11 +2206,12 @@ public class SingleCarryPlacementStage6PlayModeTests
 
     private static Component Preview(NetworkObject player) => player.GetComponent(PreviewType);
 
-    private static void SetRotationCounter(Component controller, string counterName, int value)
+    private static void SetLocalRotationForFixture(Component controller, Quaternion rotation)
     {
         object state = PlacementControllerType.GetField("rotationState", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
-        state.GetType().GetField(counterName, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(state, value);
+        state.GetType().GetField("localRotation", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(state, rotation);
     }
+
     private static GameObject GetControllerGhost(Component controller)
     {
         object ghost = PlacementControllerType.GetField("ghost", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);

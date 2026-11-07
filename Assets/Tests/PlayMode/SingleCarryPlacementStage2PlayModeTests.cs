@@ -109,8 +109,8 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         QueueKeys();
         InputSystem.Update();
         yield return null;
-        Quaternion oneDegreeYaw = Quaternion.AngleAxis(1f, Vector3.right)
-            * Quaternion.Euler(0f, Mathf.Repeat(Mathf.Round(cameraYaw.eulerAngles.y), 360f), 0f);
+        Quaternion oneDegreeYaw = Quaternion.Euler(0f, Mathf.Repeat(Mathf.Round(cameraYaw.eulerAngles.y), 360f), 0f)
+            * Quaternion.AngleAxis(1f, Vector3.right);
         Assert.That(Quaternion.Angle(oneDegreeYaw, ghostRoot.transform.rotation), Is.LessThan(0.1f),
             "A rotation press and release processed within one rendered frame still applies exactly one step.");
 
@@ -118,23 +118,22 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         QueueKeys("LeftCtrl", "RightArrow");
         InputSystem.Update();
         object rotationState = controllerType.GetField("rotationState", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
-        Assert.That((int)rotationState.GetType().GetProperty("WorldYDegrees").GetValue(rotationState), Is.EqualTo(1),
-            "The combined keyboard state event is sampled with Ctrl active.");
-        Assert.That((int)rotationState.GetType().GetProperty("WorldZDegrees").GetValue(rotationState), Is.Zero,
-            "The same event must not generate a transient Z step.");
+        Quaternion expectedLocalChord = Quaternion.AngleAxis(1f, Vector3.right) * Quaternion.AngleAxis(1f, Vector3.up);
+        Assert.That(Quaternion.Angle((Quaternion)rotationState.GetType().GetProperty("LocalRotation").GetValue(rotationState), expectedLocalChord), Is.LessThan(.01f),
+            "The combined keyboard state event selects Ctrl Y without a transient Z step.");
         QueueKeys();
         InputSystem.Update();
         yield return null;
         Quaternion chordCameraYaw = Quaternion.Euler(0f, Mathf.Repeat(Mathf.Round(cameraYaw.eulerAngles.y), 360f), 0f);
-        Quaternion yawAndX = Quaternion.AngleAxis(1f, Vector3.right) * chordCameraYaw;
-        Quaternion expectedControlRight = Quaternion.AngleAxis(1f, Vector3.up) * yawAndX;
+        Quaternion yawAndX = chordCameraYaw * Quaternion.AngleAxis(1f, Vector3.right);
+        Quaternion expectedControlRight = yawAndX * Quaternion.AngleAxis(1f, Vector3.up);
         Assert.That(Quaternion.Angle(expectedControlRight, ghostRoot.transform.rotation), Is.LessThan(0.1f),
             "One keyboard state event containing Ctrl+Right applies Y only, in addition to the earlier X tap.");
 
         QueueKeys("LeftCtrl", "RightCtrl", "RightArrow");
         InputSystem.Update();
         yield return null;
-        Quaternion expectedBothControls = Quaternion.AngleAxis(2f, Vector3.up) * yawAndX;
+        Quaternion expectedBothControls = yawAndX * Quaternion.AngleAxis(2f, Vector3.up);
         Assert.That(Quaternion.Angle(expectedBothControls, ghostRoot.transform.rotation), Is.LessThan(0.1f),
             "Adding the other Ctrl while the arrow remains held does not double-step.");
 
@@ -153,27 +152,21 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         QueueKeys("RightArrow");
         InputSystem.Update();
         yield return null;
-        Quaternion expectedZStep = Quaternion.AngleAxis(2f, Vector3.up)
-            * Quaternion.AngleAxis(1f, Vector3.right)
-            * Quaternion.AngleAxis(359f, Vector3.forward) * chordCameraYaw;
+        Quaternion expectedZStep = expectedBothControls * Quaternion.AngleAxis(-1f, Vector3.forward);
         Assert.That(Quaternion.Angle(expectedZStep, ghostRoot.transform.rotation), Is.LessThan(0.1f),
             "Right without Ctrl immediately selects Z and preserves the previously accumulated Y angle.");
 
         QueueKeys("LeftCtrl", "RightArrow");
         InputSystem.Update();
         yield return null;
-        Quaternion expectedSecondYStep = Quaternion.AngleAxis(3f, Vector3.up)
-            * Quaternion.AngleAxis(1f, Vector3.right)
-            * Quaternion.AngleAxis(359f, Vector3.forward) * chordCameraYaw;
+        Quaternion expectedSecondYStep = expectedZStep * Quaternion.AngleAxis(1f, Vector3.up);
         Assert.That(Quaternion.Angle(expectedSecondYStep, ghostRoot.transform.rotation), Is.LessThan(0.1f),
             "Pressing Ctrl while Right remains held switches to Y immediately and starts a fresh delay.");
 
         QueueKeys("RightArrow");
         InputSystem.Update();
         yield return null;
-        Quaternion expectedReleasedControl = Quaternion.AngleAxis(3f, Vector3.up)
-            * Quaternion.AngleAxis(1f, Vector3.right)
-            * Quaternion.AngleAxis(358f, Vector3.forward) * chordCameraYaw;
+        Quaternion expectedReleasedControl = expectedSecondYStep * Quaternion.AngleAxis(-1f, Vector3.forward);
         Assert.That(Quaternion.Angle(expectedReleasedControl, ghostRoot.transform.rotation), Is.LessThan(0.1f),
             "Releasing the last Ctrl while Right stays held switches to Z without erasing Y.");
         QueueKeys();
@@ -183,9 +176,7 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         QueueKeys("RightArrow", "RightCtrl");
         InputSystem.Update();
         yield return null;
-        Quaternion expectedReverseBindingOrder = Quaternion.AngleAxis(4f, Vector3.up)
-            * Quaternion.AngleAxis(1f, Vector3.right)
-            * Quaternion.AngleAxis(358f, Vector3.forward) * chordCameraYaw;
+        Quaternion expectedReverseBindingOrder = expectedReleasedControl * Quaternion.AngleAxis(1f, Vector3.up);
         Assert.That(Quaternion.Angle(expectedReverseBindingOrder, ghostRoot.transform.rotation), Is.LessThan(0.1f),
             "The same keyboard chord works when arrow and modifier controls are listed in the opposite order.");
         QueueKeys();
@@ -216,8 +207,9 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         Assert.That(actualRepeatCount, Is.InRange(expectedMinimumRepeatCount, expectedMaximumRepeatCount),
             "The repeat count follows the .35 second delay and 90 degree/second cadence, within one rendered-frame sampling interval.");
         int expectedDegrees = (1 + actualRepeatCount) % 360;
-        Quaternion expectedHeldRotation = Quaternion.AngleAxis(expectedDegrees, Vector3.right)
-            * Quaternion.Euler(0f, Mathf.Round(cameraYaw.eulerAngles.y), 0f);
+        Quaternion heldBaseRotation = (Quaternion)controllerType.GetField("placementBaseRotation", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(controller);
+        Quaternion expectedHeldRotation = heldBaseRotation * Quaternion.AngleAxis(expectedDegrees, Vector3.right);
         Assert.That(Quaternion.Angle(expectedHeldRotation, ghostRoot.transform.rotation), Is.LessThan(1f),
             "The ghost rotation matches the repeat steps applied by the production controller.");
 
@@ -226,12 +218,12 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.False);
         QueueKeys();
         yield return null;
+        testAimCameraObject.transform.rotation = Quaternion.Euler(-60f, 45f, 0f);
         QueueKeys("F");
         yield return null;
         Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.True);
         ghostRoot = (GameObject)ghostType.GetProperty("Root").GetValue(ghostField.GetValue(controller));
 
-        testAimCameraObject.transform.rotation = Quaternion.Euler(-60f, 45f, 0f);
         yield return null;
         rayArgs = new object[] { default(Ray), null, default(Quaternion) };
         Assert.That((bool)aimRayMethod.Invoke(interaction, rayArgs), Is.True);
@@ -249,10 +241,10 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
             yield return null;
         double diagonalHeldSeconds = Time.realtimeSinceStartupAsDouble - diagonalPressTime;
         Assert.That(diagonalHeldSeconds, Is.GreaterThanOrEqualTo(0.2), "The bounded real-time diagonal input interval should complete.");
-        Quaternion expectedDiagonal = Quaternion.AngleAxis(1f, Vector3.right)
-            * Quaternion.AngleAxis(1f, Vector3.forward) * roundedCameraYaw;
+        Quaternion expectedDiagonal = roundedCameraYaw * Quaternion.AngleAxis(1f, Vector3.right)
+            * Quaternion.AngleAxis(1f, Vector3.forward);
         Assert.That(Quaternion.Angle(expectedDiagonal, ghostRoot.transform.rotation), Is.LessThan(0.1f),
-            "Simultaneous Up and Left apply one degree on each independent world axis without digital normalization.");
+            "Simultaneous Up and Left apply one degree on each independent local axis without digital normalization.");
         QueueKeys();
         yield return null;
 
@@ -353,14 +345,34 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
             typeof(Ray).MakeByRefType(), typeof(Camera).MakeByRefType(), typeof(Quaternion).MakeByRefType()
         });
         Assert.That((bool)getAimRay.Invoke(interaction, aimArgs), Is.True);
-        object rotationState = controllerType.GetField("rotationState", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
-        Quaternion referenceRotation = (Quaternion)rotationState.GetType().GetMethod("BuildWorldRotation")
-            .Invoke(rotationState, new object[] { aimArgs[2] });
+        Quaternion aimBase = (Quaternion)aimArgs[2];
+        Vector3 baseForward = Vector3.ProjectOnPlane(aimBase * Vector3.forward, Vector3.up);
+        float baseYaw = baseForward.sqrMagnitude < 0.000001f ? 0f
+            : Mathf.Repeat(Mathf.Atan2(baseForward.x, baseForward.z) * Mathf.Rad2Deg, 360f);
+        Quaternion expectedBase = Quaternion.Euler(0f, Mathf.FloorToInt(baseYaw + .5f) % 360, 0f) * offset;
+        Quaternion capturedBase = (Quaternion)controllerType.GetField("placementBaseRotation", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        Assert.That(Quaternion.Angle(capturedBase, expectedBase), Is.LessThan(.1f),
+            "The first valid aim ray captures the rounded camera yaw and authored offset exactly once.");
         FieldInfo ghostField = controllerType.GetField("ghost", BindingFlags.Instance | BindingFlags.NonPublic);
         Type ghostType = Resolve("SingleCarryPlacementGhost, Assembly-CSharp");
         GameObject ghostRoot = (GameObject)ghostType.GetProperty("Root").GetValue(ghostField.GetValue(controller));
-        Assert.That(Quaternion.Angle(ghostRoot.transform.rotation, referenceRotation * offset), Is.LessThan(.1f),
-            "F captures the same root offset and composes it once after the existing placement reference rotation.");
+        Assert.That(Quaternion.Angle(ghostRoot.transform.rotation, expectedBase), Is.LessThan(.1f),
+            "The preview starts from the captured yaw and authored offset.");
+        Vector3 positionBeforeYawChange = ghostRoot.transform.position;
+        Quaternion orientationBeforeYawChange = ghostRoot.transform.rotation;
+        aimCamera.transform.rotation = Quaternion.Euler(0f, aimCamera.transform.eulerAngles.y + 90f, 0f);
+        controllerType.GetMethod("RefreshPreview", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(controller, null);
+        Assert.That(Vector3.Distance(positionBeforeYawChange, ghostRoot.transform.position), Is.GreaterThan(.01f),
+            "Camera aim continues to move the preview position while placement is active.");
+        Assert.That(Quaternion.Angle(orientationBeforeYawChange, ghostRoot.transform.rotation), Is.LessThan(.1f),
+            "Camera yaw changes cannot change the captured preview orientation.");
+        QueueKeys("UpArrow");
+        InputSystem.Update();
+        yield return null;
+        Assert.That(Quaternion.Angle(expectedBase * Quaternion.AngleAxis(1f, Vector3.right), ghostRoot.transform.rotation), Is.LessThan(.1f),
+            "Subsequent input rotates the captured item around its local X axis.");
+        QueueKeys();
+        InputSystem.Update();
         QueueKeys("Escape");
         yield return null;
         QueueKeys();
@@ -488,13 +500,13 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         Assert.That(Vector3.Distance(arrowLine.GetPosition(2), arrowLine.GetPosition(4)), Is.GreaterThan(0.01f),
             "The vertical correction arrowhead must remain visible when its direction is parallel to world up.");
         previewSlot.transform.position -= previewSlot.transform.up * 0.04f;
-        SetRotationCounter(controller, "worldZDegrees", 6);
+        SetLocalRotationForFixture(controller, Quaternion.AngleAxis(6f, Vector3.forward));
         Physics.SyncTransforms();
         yield return null;
         yield return null;
         Assert.That(controllerType.GetProperty("PanelMountingGuidanceLabel").GetValue(controller), Is.EqualTo("Mount: Angle 6°"));
         Assert.That(arrowObject.activeInHierarchy, Is.False, "Orientation-only guidance does not display a translation arrow.");
-        SetRotationCounter(controller, "worldZDegrees", 0);
+        SetLocalRotationForFixture(controller, Quaternion.identity);
         yield return null;
         yield return null;
 
@@ -705,23 +717,16 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
 
     private static Type Resolve(string name) => Type.GetType(name);
 
-    private static void SetRotationCounter(Component controller, string counterName, int value)
+    private static void SetLocalRotationForFixture(Component controller, Quaternion rotation)
     {
         object state = controller.GetType().GetField("rotationState", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
-        state.GetType().GetField(counterName, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(state, value);
+        state.GetType().GetField("localRotation", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(state, rotation);
     }
-
     private static double ReadRotationAxisTimestamp(Component controller, string axisName)
     {
         object state = controller.GetType().GetField("rotationState", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
         object axis = state.GetType().GetField(axisName, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(state);
         return (double)axis.GetType().GetField("PressedAt", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).GetValue(axis);
-    }
-
-    private static int ReadRotationCounter(Component controller, string counterName)
-    {
-        object state = controller.GetType().GetField("rotationState", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
-        return (int)state.GetType().GetField(counterName, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(state);
     }
 
     private static int ReadRotationAxisRepeatCount(Component controller, string axisName)

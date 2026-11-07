@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>Local-only single-carry placement preview with discrete one-degree world-axis rotation and F-mode camera stabilization.</summary>
+/// <summary>Local-only single-carry placement preview with discrete local-axis rotation and F-mode camera stabilization.</summary>
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(1100)]
 public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
@@ -36,6 +36,8 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
     private ISingleCarryPlaceable heldPlaceable;
     private readonly SingleCarryPlacementRotationState rotationState = new();
     private Quaternion placementOffset = Quaternion.identity;
+    private Quaternion placementBaseRotation = Quaternion.identity;
+    private bool hasPlacementBaseRotation;
     private CinemachineBasicMultiChannelPerlin mutedCameraNoise;
     private float originalCameraNoiseAmplitude;
     private SingleCarryPlacementPose lastRenderedPose;
@@ -205,6 +207,8 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
         validator = new SingleCarryPlacementValidator(heldObject);
         heldVisual = new SingleCarryPlacementHeldVisual(heldObject);
         rotationState.Reset();
+        placementBaseRotation = Quaternion.identity;
+        hasPlacementBaseRotation = false;
         rotationBlockedUntilNeutral = false;
         worldRenderLayer = -1;
         LastGeometryStatus = SingleCarryPlacementGeometryStatus.NoObstacle;
@@ -240,7 +244,7 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
             if (direction.sqrMagnitude < 0.0001f) rotationBlockedUntilNeutral = false;
             return;
         }
-        rotationState.SetInput(direction, controlModifier, timestamp);
+        rotationState.SetInput(direction, controlModifier, timestamp, rotationDegreesPerSecond);
     }
 
     private void RefreshPreview()
@@ -280,7 +284,16 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
             worldRenderLayer = ResolveWorldRenderLayer(aimCamera.cullingMask, heldObject.layer);
             ghost.SetWorldRenderLayer(worldRenderLayer);
         }
-        Quaternion itemRotation = CarryPlacementOrientation.Compose(rotationState.BuildWorldRotation(baseYaw), placementOffset);
+        if (!hasPlacementBaseRotation)
+        {
+            Vector3 cameraForward = Vector3.ProjectOnPlane(baseYaw * Vector3.forward, Vector3.up);
+            float yaw = cameraForward.sqrMagnitude < 0.000001f ? 0f
+                : Mathf.Repeat(Mathf.Atan2(cameraForward.x, cameraForward.z) * Mathf.Rad2Deg, 360f);
+            int roundedYaw = Mathf.FloorToInt(yaw + 0.5f) % 360;
+            placementBaseRotation = CarryPlacementOrientation.Compose(Quaternion.Euler(0f, roundedYaw, 0f), placementOffset);
+            hasPlacementBaseRotation = true;
+        }
+        Quaternion itemRotation = placementBaseRotation * rotationState.LocalRotation;
         SingleCarryPlacementPose pose = geometrySolver.Calculate(aimRay, PlacementDistance, itemRotation, Quaternion.identity, transform);
         bool renderedPoseChanged = !hasLastRenderedPose
             || Vector3.Distance(lastRenderedPose.Position, pose.Position) > 0.001f
@@ -599,6 +612,8 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
         validator = null;
         heldObject = null;
         placementOffset = Quaternion.identity;
+        placementBaseRotation = Quaternion.identity;
+        hasPlacementBaseRotation = false;
         heldPlaceable = null;
         IsActive = false;
         requestPending = false;

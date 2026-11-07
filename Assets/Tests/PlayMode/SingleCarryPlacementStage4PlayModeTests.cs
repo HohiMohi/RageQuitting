@@ -87,6 +87,7 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
         Assert.That((bool)controller.GetType().GetProperty("IsActive").GetValue(controller), Is.True);
         Assert.That((bool)controller.GetType().GetProperty("IsCurrentPlacementValid").GetValue(controller), Is.True);
         Transform ghost = GetGhostRoot(controller).transform;
+        Quaternion capturedBase = ghost.rotation;
         QueueKeys("UpArrow");
         float rotationElapsed = 0f;
         float rotationDeadline = Time.realtimeSinceStartup + 2f;
@@ -103,17 +104,8 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
         QueueKeys();
         InputSystem.Update();
         yield return null;
-        MethodInfo aimRayMethod = interactionType.GetMethod("TryGetAimRay", new[]
-        {
-            typeof(Ray).MakeByRefType(), typeof(Camera).MakeByRefType(), typeof(Quaternion).MakeByRefType()
-        });
-        object[] aimRayArgs = { default(Ray), null, Quaternion.identity };
-        Assert.That((bool)aimRayMethod.Invoke(interaction, aimRayArgs), Is.True);
-        Quaternion cameraYaw = (Quaternion)aimRayArgs[2];
-        float roundedYaw = Mathf.Repeat(Mathf.Round(Mathf.Atan2((cameraYaw * Vector3.forward).x,
-            (cameraYaw * Vector3.forward).z) * Mathf.Rad2Deg), 360f);
-        Quaternion expectedOneStep = Quaternion.AngleAxis(1f, Vector3.up)
-            * Quaternion.AngleAxis(1f, Vector3.right) * Quaternion.Euler(0f, roundedYaw, 0f);
+        Quaternion expectedOneStep = capturedBase * Quaternion.AngleAxis(1f, Vector3.right)
+            * Quaternion.AngleAxis(1f, Vector3.up);
         Assert.That(Quaternion.Angle(expectedOneStep, ghost.rotation), Is.LessThan(0.1f),
             "Up and Ctrl+Right produce one X and one Y degree before the .35-second repeat delay.");
         Vector3 shownPosition = ghost.position;

@@ -1,9 +1,10 @@
 using UnityEngine;
 
-/// <summary>Deterministic world-axis placement rotation, independent of quaternion accumulation.</summary>
+/// <summary>Timed placement input accumulated as rotations about the object's current local axes.</summary>
 public sealed class SingleCarryPlacementRotationState
 {
     private const double HoldRepeatDelaySeconds = 0.35d;
+
     private struct AxisState
     {
         public int Direction;
@@ -14,29 +15,38 @@ public sealed class SingleCarryPlacementRotationState
     private AxisState xAxis;
     private AxisState zAxis;
     private AxisState yAxis;
-    private int worldXDegrees;
-    private int worldZDegrees;
-    private int worldYDegrees;
+    private Quaternion localRotation = Quaternion.identity;
 
-    public int WorldXDegrees => worldXDegrees;
-    public int WorldZDegrees => worldZDegrees;
-    public int WorldYDegrees => worldYDegrees;
+    public Quaternion LocalRotation => localRotation;
 
-    /// <summary>Consume an input edge. A newly pressed or reversed direction always moves one degree immediately.</summary>
     public void SetInput(Vector2 input, bool controlModifier, double timestamp)
-    {
-        SetAxis(ref xAxis, Sign(input.y), timestamp, true);
-        SetAxis(ref zAxis, controlModifier ? 0 : -Sign(input.x), timestamp, false);
-        SetAxis(ref yAxis, controlModifier ? Sign(input.x) : 0, timestamp, false, true);
-    }
+        => Update(input, controlModifier, timestamp, 90f);
 
-    /// <summary>Advance repeat timers and recover a missed input edge from the current action value.</summary>
+    public void SetInput(Vector2 input, bool controlModifier, double timestamp, float repeatDegreesPerSecond)
+        => Update(input, controlModifier, timestamp, repeatDegreesPerSecond);
+
     public void Advance(Vector2 input, bool controlModifier, double now, float repeatDegreesPerSecond = 90f)
+        => Update(input, controlModifier, now, repeatDegreesPerSecond);
+
+    private void Update(Vector2 input, bool controlModifier, double timestamp, float repeatDegreesPerSecond)
     {
-        SetInput(input, controlModifier, now);
-        AdvanceAxis(ref xAxis, now, repeatDegreesPerSecond, true);
-        AdvanceAxis(ref zAxis, now, repeatDegreesPerSecond, false);
-        AdvanceAxis(ref yAxis, now, repeatDegreesPerSecond, false, true);
+        // Drain events strictly before the new sample. Events at the sample are handled below
+        // in X, then horizontal order, so a newly pressed X step wins a simultaneous tie.
+        while (true)
+        {
+            double nextX = NextRepeat(xAxis, repeatDegreesPerSecond);
+            double nextZ = NextRepeat(zAxis, repeatDegreesPerSecond);
+            double nextY = NextRepeat(yAxis, repeatDegreesPerSecond);
+            double next = System.Math.Min(nextX, System.Math.Min(nextZ, nextY));
+            if (next >= timestamp - 0.000001d || double.IsPositiveInfinity(next)) break;
+            if (nextX <= next + 0.000001d) ApplyRepeat(ref xAxis, Vector3.right);
+            if (nextZ <= next + 0.000001d) ApplyRepeat(ref zAxis, Vector3.forward);
+            if (nextY <= next + 0.000001d) ApplyRepeat(ref yAxis, Vector3.up);
+        }
+
+        UpdateAxis(ref xAxis, Sign(input.y), timestamp, repeatDegreesPerSecond, Vector3.right);
+        UpdateAxis(ref zAxis, controlModifier ? 0 : -Sign(input.x), timestamp, repeatDegreesPerSecond, Vector3.forward);
+        UpdateAxis(ref yAxis, controlModifier ? Sign(input.x) : 0, timestamp, repeatDegreesPerSecond, Vector3.up);
     }
 
     public void ResetRepeatState()
@@ -49,57 +59,39 @@ public sealed class SingleCarryPlacementRotationState
     public void Reset()
     {
         ResetRepeatState();
-        worldXDegrees = 0;
-        worldZDegrees = 0;
-        worldYDegrees = 0;
+        localRotation = Quaternion.identity;
     }
 
-    public Quaternion BuildWorldRotation(Quaternion cameraYaw)
+    private void UpdateAxis(ref AxisState axis, int direction, double timestamp, float rate, Vector3 localAxis)
     {
-        Vector3 forward = Vector3.ProjectOnPlane(cameraYaw * Vector3.forward, Vector3.up);
-        float yaw = forward.sqrMagnitude < 0.000001f
-            ? 0f
-            : Mathf.Repeat(Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg, 360f);
-        int roundedYaw = Mathf.FloorToInt(yaw + 0.5f) % 360;
-        Quaternion baseYaw = Quaternion.Euler(0f, roundedYaw, 0f);
-        Quaternion worldX = Quaternion.AngleAxis(worldXDegrees, Vector3.right);
-        Quaternion worldZ = Quaternion.AngleAxis(worldZDegrees, Vector3.forward);
-        Quaternion worldY = Quaternion.AngleAxis(worldYDegrees, Vector3.up);
-        return worldY * worldX * worldZ * baseYaw;
+        if (axis.Direction != direction)
+        {
+            axis.Direction = direction;
+            axis.PressedAt = direction == 0 ? 0d : timestamp;
+            axis.RepeatsApplied = 0;
+            if (direction != 0) ApplyStep(localAxis, direction);
+            return;
+        }
+
+        while (NextRepeat(axis, rate) <= timestamp + 0.000001d)
+            ApplyRepeat(ref axis, localAxis);
     }
 
-    private void SetAxis(ref AxisState axis, int direction, double timestamp, bool isX, bool isY = false)
+    private static double NextRepeat(AxisState axis, float rate)
     {
-        if (axis.Direction == direction) return;
-        axis.Direction = direction;
-        axis.PressedAt = direction == 0 ? 0d : timestamp;
-        axis.RepeatsApplied = 0;
-        if (direction == 0) return;
-        if (isX) worldXDegrees = WrapDegrees(worldXDegrees + direction);
-        else if (isY) worldYDegrees = WrapDegrees(worldYDegrees + direction);
-        else worldZDegrees = WrapDegrees(worldZDegrees + direction);
+        if (axis.Direction == 0 || float.IsNaN(rate) || float.IsInfinity(rate) || rate <= 0f)
+            return double.PositiveInfinity;
+        return axis.PressedAt + HoldRepeatDelaySeconds + axis.RepeatsApplied / (double)rate;
     }
 
-    private void AdvanceAxis(ref AxisState axis, double now, float repeatDegreesPerSecond, bool isX, bool isY = false)
+    private void ApplyRepeat(ref AxisState axis, Vector3 localAxis)
     {
-        if (axis.Direction == 0 || repeatDegreesPerSecond <= 0f) return;
-        double elapsedAfterDelay = now - axis.PressedAt - HoldRepeatDelaySeconds;
-        if (elapsedAfterDelay < -0.000001d) return;
-        int desiredRepeats = 1 + Mathf.FloorToInt((float)(System.Math.Max(0d, elapsedAfterDelay) * repeatDegreesPerSecond + 0.00001d));
-        int delta = desiredRepeats - axis.RepeatsApplied;
-        if (delta <= 0) return;
-        axis.RepeatsApplied = desiredRepeats;
-        int step = axis.Direction * delta;
-        if (isX) worldXDegrees = WrapDegrees(worldXDegrees + step);
-        else if (isY) worldYDegrees = WrapDegrees(worldYDegrees + step);
-        else worldZDegrees = WrapDegrees(worldZDegrees + step);
+        axis.RepeatsApplied++;
+        ApplyStep(localAxis, axis.Direction);
     }
 
-    private static int WrapDegrees(int degrees)
-    {
-        int wrapped = degrees % 360;
-        return wrapped < 0 ? wrapped + 360 : wrapped;
-    }
+    private void ApplyStep(Vector3 axis, int direction)
+        => localRotation = (localRotation * Quaternion.AngleAxis(direction, axis)).normalized;
 
     private static int Sign(float value) => value > 0.01f ? 1 : value < -0.01f ? -1 : 0;
 }
