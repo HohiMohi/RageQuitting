@@ -18,6 +18,7 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
 #endif
     [SerializeField, Min(0.1f)] private float placementDistance = 2f;
     [SerializeField, Min(0f)] private float rotationDegreesPerSecond = 90f;
+    [SerializeField, Min(0f)] private float physicalDeckPanelTargetRange = 5f;
     private PlayerInputNew input;
     private PlayerInteractionNew interaction;
     private PlayerHealth health;
@@ -62,6 +63,9 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
     private string placementResultMessage;
     private int worldRenderLayer = -1;
     private BridgeDeckPanelPlacementGuidance panelPlacementGuidance;
+    private BridgeDeckPanelPlacementTarget lockedPanelTarget;
+    private bool hasLockedPanelTarget;
+    private BridgeDeckPanelPlacementHudState panelHudState;
 
     public bool IsActive { get; private set; }
     public bool IsRequestPending => requestPending;
@@ -71,7 +75,9 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
     public SingleCarryPlacementGeometryStatus LastGeometryStatus { get; private set; }
     public SingleCarryPlacementValidationResult LastValidation { get; private set; }
     public bool IsCurrentPlacementValid => IsActive && LastValidation.IsValid;
-    public string PanelMountingGuidanceLabel => panelPlacementGuidance != null ? panelPlacementGuidance.Label : string.Empty;
+    public string PanelMountingGuidanceLabel => IsHoldingAreaPanel && panelPlacementGuidance != null
+        ? panelPlacementGuidance.Label : string.Empty;
+    internal BridgeDeckPanelPlacementHudState PanelPlacementHudState => panelHudState;
     public bool IsHoldingAreaPanel => heldObject != null && heldObject.TryGetComponent(out BridgeDeckAreaPanel _);
     public float PlacementDistance => IsNetworkSessionListening() && networkPreview != null
         ? networkPreview.PlacementDistance : placementDistance;
@@ -220,6 +226,7 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
         enteredInNetworkSession = IsNetworkSessionListening();
         heldSourceOwnershipTracked = false;
         IsActive = true;
+        SelectPanelTargetAtEntry();
         if (cameraFeedbackComposer != null) cameraFeedbackComposer.SetPlacementModeSuppressed(true);
         UpdatePlacementCameraNoiseMute();
         interaction.CancelBucketActionHoldForPlacement();
@@ -269,6 +276,7 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
         {
             hasLastRenderedPose = false;
             ClearPanelMountingPreview();
+            SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden);
             LastValidation = new SingleCarryPlacementValidationResult(SingleCarryPlacementValidationStatus.UnsupportedGeometry);
             ghost.SetPlacementValid(false);
             if (ghost.Root != null)
@@ -360,6 +368,7 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
             rotationState.ResetRepeatState();
             placementResultMessage = null;
             ClearPanelMountingPreview();
+            SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden);
             PublishPreviewState(poseToCommit.Position, poseToCommit.Rotation, LastValidation.IsValid);
             if (useSurfaceAnchor)
                 networkPreview.RequestNetworkSurfacePlacement(source, pendingRequestId, anchoredSurfaceReference,
@@ -618,6 +627,9 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
         IsActive = false;
         requestPending = false;
         pendingRequestId = 0;
+        lockedPanelTarget = default;
+        hasLockedPanelTarget = false;
+        SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden);
         enteredInNetworkSession = false;
         heldSourceOwnershipTracked = false;
         placementResultMessage = null;
@@ -702,11 +714,13 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
         if (heldObject == null || !heldObject.TryGetComponent(out MountableBridgeComponent panel) || !panel.IsPhysicalDeckPanel)
         {
             ClearPanelMountingPreview();
+            SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden);
             return;
         }
 
         if (heldObject.TryGetComponent(out BridgeDeckAreaPanel areaPanel))
         {
+            SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden);
             string message = BridgeDeckAreaRequirement.GetPlacementCandidateMessage(areaPanel,
                 pose.Position, pose.Rotation, out bool areaScope, out bool stageActive);
             if (areaScope)
@@ -721,16 +735,110 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
         }
 
         if (!heldObject.TryGetComponent(out BridgeDeckPanelMounting marker))
-        { ClearPanelMountingPreview(); return; }
+        { ClearPanelMountingPreview(); SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden); return; }
 
-        if (!BridgeDeckPanelSectionNetworkState.TryAssessPlacementPreview(panel, pose.Position,
-                pose.Rotation, out BridgeDeckPanelPlacementAssessment assessment))
+        if (!hasLockedPanelTarget)
         {
-            ClearPanelMountingPreview("Mount: No slot");
+            ClearPanelMountingPreview();
+            SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden);
+            return;
+        }
+        if (!BridgeDeckPanelSectionNetworkState.TryAssessPlacementAtTarget(panel, lockedPanelTarget,
+                pose.Position, pose.Rotation, out BridgeDeckPanelPlacementAssessment assessment))
+        {
+            ClearPanelMountingPreview();
+            SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden);
             return;
         }
         if (panelPlacementGuidance == null) panelPlacementGuidance = new BridgeDeckPanelPlacementGuidance(this);
-        panelPlacementGuidance.Refresh(assessment, pose.Position, aimCamera, worldRenderLayer);
+        if ((BridgeDeckPanelPlacementFailure)assessment.Failure == BridgeDeckPanelPlacementFailure.SlotOccupied)
+        {
+            panelPlacementGuidance.Clear();
+            SetPanelHudState(new BridgeDeckPanelPlacementHudState(BridgeDeckPanelPlacementHudKind.Occupied,
+                BridgeDeckPanelPlacementHudBlockReason.None, 0, 0, 0, 0, false, false, false, false));
+            return;
+        }
+
+        BridgeDeckPanelPlacementFailure failure = (BridgeDeckPanelPlacementFailure)assessment.Failure;
+        bool poseNeedsCorrection = assessment.HorizontalOutside || assessment.HeightOutside || assessment.OrientationOutside;
+        if (failure == BridgeDeckPanelPlacementFailure.NeighborPenetration || !poseNeedsCorrection
+            && (!LastValidation.IsValid || !CanConfirmPlacement))
+        {
+            panelPlacementGuidance.Clear();
+            BridgeDeckPanelPlacementHudBlockReason reason = !CanConfirmPlacement
+                ? BridgeDeckPanelPlacementHudBlockReason.ConfirmationUnavailable
+                : BridgeDeckPanelPlacementHudBlockReason.PhysicalPlacementBlocked;
+            SetPanelHudState(BridgeDeckPanelPlacementHudState.Blocked(reason));
+            return;
+        }
+
+        BridgeDeckPanelMinimumCorrection correction = BridgeDeckPanelStage2Assessment.GetMinimumCorrection(
+            lockedPanelTarget.Site.transform, pose.Position, pose.Rotation, transform,
+            lockedPanelTarget.Profile.PhysicalPanelUsesDirectionalHorizontalTolerance,
+            lockedPanelTarget.Profile.PhysicalPanelMaximumAlongOffset,
+            lockedPanelTarget.Profile.PhysicalPanelMaximumAcrossOffset,
+            lockedPanelTarget.Profile.PhysicalPanelMaximumHorizontalOffset,
+            lockedPanelTarget.Profile.PhysicalPanelMaximumHeightError,
+            lockedPanelTarget.Profile.PhysicalPanelMaximumOrientationErrorDegrees);
+        Vector3 moveRight = Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized;
+        Vector3 moveForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+        Vector3 worldCorrection = moveRight * correction.RightMeters + moveForward * correction.ForwardMeters
+            + Vector3.up * correction.HeightMeters;
+        panelPlacementGuidance.Refresh(assessment, pose.Position, aimCamera, worldRenderLayer, worldCorrection);
+        if (!poseNeedsCorrection && LastValidation.IsValid && CanConfirmPlacement)
+        {
+            SetPanelHudState(new BridgeDeckPanelPlacementHudState(BridgeDeckPanelPlacementHudKind.Aligned,
+                BridgeDeckPanelPlacementHudBlockReason.None, 0, 0, 0, 0, false, false, false, false));
+            return;
+        }
+        SetPanelHudState(CreateCorrectionHudState(correction));
+    }
+
+    private void SelectPanelTargetAtEntry()
+    {
+        lockedPanelTarget = default;
+        hasLockedPanelTarget = false;
+        SetPanelHudState(BridgeDeckPanelPlacementHudState.Hidden);
+        if (heldObject == null || !heldObject.TryGetComponent(out MountableBridgeComponent panel)
+            || !panel.IsPhysicalDeckPanel || heldObject.TryGetComponent(out BridgeDeckAreaPanel _)) return;
+        hasLockedPanelTarget = BridgeDeckPanelSectionNetworkState.TrySelectNearestFreePlacementTarget(panel,
+            transform.position, physicalDeckPanelTargetRange, out lockedPanelTarget);
+    }
+
+    private static BridgeDeckPanelPlacementHudState CreateCorrectionHudState(BridgeDeckPanelMinimumCorrection correction)
+    {
+        int right = QuantizeCentimeters(correction.RightMeters, out bool rightSubCentimeter);
+        int forward = QuantizeCentimeters(correction.ForwardMeters, out bool forwardSubCentimeter);
+        int height = QuantizeCentimeters(correction.HeightMeters, out bool heightSubCentimeter);
+        if (right == 0 && forward == 0 && height == 0
+            && correction.LocalYRotationDegrees == 0 && !correction.ResetTiltRequired)
+            return BridgeDeckPanelPlacementHudState.Blocked(BridgeDeckPanelPlacementHudBlockReason.PhysicalPlacementBlocked);
+        return new BridgeDeckPanelPlacementHudState(BridgeDeckPanelPlacementHudKind.Corrections,
+            BridgeDeckPanelPlacementHudBlockReason.None, right, forward, height,
+            correction.LocalYRotationDegrees, rightSubCentimeter, forwardSubCentimeter,
+            heightSubCentimeter, correction.ResetTiltRequired);
+    }
+
+    private static int QuantizeCentimeters(float meters, out bool subCentimeter)
+    {
+        float magnitude = Mathf.Abs(meters);
+        if (magnitude <= 0.00001f)
+        {
+            subCentimeter = false;
+            return 0;
+        }
+        if (magnitude < 0.00999f)
+        {
+            subCentimeter = true;
+            return meters < 0f ? -1 : 1;
+        }
+        subCentimeter = false;
+        return Mathf.RoundToInt(meters * 100f);
+    }
+
+    private void SetPanelHudState(BridgeDeckPanelPlacementHudState state)
+    {
+        panelHudState = state;
     }
 
     private void ClearPanelMountingPreview(string message = null)

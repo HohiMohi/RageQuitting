@@ -13,6 +13,7 @@ using UnityEngine.TestTools;
 public sealed class BridgeDeckPanelStage4NetworkPlayModeTests
 {
     private const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
+    private const BindingFlags PublicInstance = BindingFlags.Instance | BindingFlags.Public;
     private readonly List<GameObject> roots = new();
     private readonly List<NetworkManager> managers = new();
     private NetworkManager priorSingleton;
@@ -183,6 +184,10 @@ public sealed class BridgeDeckPanelStage4NetworkPlayModeTests
         ulong networkId = sectionObject.NetworkObjectId;
         yield return Until(() => Find(client, networkId) != null, "remote section replica");
         Component clientState = Find(client, networkId).GetComponent(state.GetType());
+        MethodInfo isSlotComplete = state.GetType().GetMethod("IsSlotComplete", PublicInstance);
+        Assert.That(isSlotComplete, Is.Not.Null);
+        Assert.That((bool)isSlotComplete.Invoke(clientState, new object[] { 1 }), Is.False,
+            "The remote HUD sees a free slot before the completion payload arrives.");
 
         object payload = System.Activator.CreateInstance(System.Type.GetType(
             "BridgeDeckPanelReplicatedState, Assembly-CSharp"));
@@ -204,6 +209,8 @@ public sealed class BridgeDeckPanelStage4NetworkPlayModeTests
             "The server owns writes to the completed panel list.");
         yield return Until(() => ReadCount(clientState) == 1, "remote completion payload");
         Assert.That(ReadComplete(clientState, 0), Is.True);
+        Assert.That((bool)isSlotComplete.Invoke(clientState, new object[] { 1 }), Is.True,
+            "The locked-target occupancy query observes the replicated completion on a remote client.");
 
         lateJoin = CreateManager("Stage 4 completion wire late join", port);
         Assert.That(lateJoin.StartClient(), Is.True);

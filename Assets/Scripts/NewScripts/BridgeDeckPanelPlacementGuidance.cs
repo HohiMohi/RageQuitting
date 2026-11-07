@@ -12,23 +12,13 @@ internal sealed class BridgeDeckPanelPlacementGuidance
     private LineRenderer arrow;
     private MaterialPropertyBlock arrowProperties;
     private string label = string.Empty;
-    private BridgeDeckPanelPlacementFailure lastFailure;
-    private int lastAlongCentimeters = int.MinValue;
-    private int lastAcrossCentimeters = int.MinValue;
-    private int lastHeightCentimeters = int.MinValue;
-    private int lastAngleDegrees = int.MinValue;
-    private bool lastHorizontalOutside;
-    private bool lastAlongOutside;
-    private bool lastAcrossOutside;
-    private bool lastHeightOutside;
-    private bool lastOrientationOutside;
 
     public string Label => label;
 
     public BridgeDeckPanelPlacementGuidance(Object owner) => this.owner = owner;
 
     public void Refresh(BridgeDeckPanelPlacementAssessment result, Vector3 candidatePosition,
-        Camera aimCamera, int renderLayer)
+        Camera aimCamera, int renderLayer, Vector3 worldCorrection)
     {
         if (outline != result.Outline)
         {
@@ -38,12 +28,6 @@ internal sealed class BridgeDeckPanelPlacementGuidance
         if (outline != null)
             outline.SetPlacementFeedback(owner, result.Failure == BridgeDeckPanelPlacementFailure.None);
 
-        int alongCm = Mathf.RoundToInt(-result.AlongMeters * 100f);
-        int acrossCm = Mathf.RoundToInt(-result.AcrossMeters * 100f);
-        int heightCm = Mathf.RoundToInt(-result.HeightMeters * 100f);
-        int angleDegrees = Mathf.RoundToInt(result.OrientationDegrees);
-        UpdateLabel(result, alongCm, acrossCm, heightCm, angleDegrees);
-
         if (!result.HorizontalOutside && !result.HeightOutside
             || outline == null || aimCamera == null || renderLayer < 0)
         {
@@ -51,19 +35,14 @@ internal sealed class BridgeDeckPanelPlacementGuidance
             return;
         }
 
-        Transform slot = outline.transform.parent;
-        if (slot == null) { HideArrow(); return; }
-        Vector3 correction = Vector3.zero;
-        if (result.AlongOutside) correction += slot.right * -result.AlongMeters;
-        if (result.AcrossOutside) correction += slot.forward * -result.AcrossMeters;
-        if (result.HeightOutside) correction += slot.up * -result.HeightMeters;
-        if (correction.sqrMagnitude < 0.000001f)
+        if (outline.transform.parent == null) { HideArrow(); return; }
+        if (worldCorrection.sqrMagnitude < 0.000001f)
         {
             HideArrow();
             return;
         }
         Vector3 start = candidatePosition + Vector3.up * 0.12f;
-        Vector3 end = start + correction.normalized * Mathf.Clamp(correction.magnitude, 0.2f, 0.8f);
+        Vector3 end = start + worldCorrection.normalized * Mathf.Clamp(worldCorrection.magnitude, 0.2f, 0.8f);
         outline.TryGetComponent(out LineRenderer outlineLine);
         ShowArrow(start, end, renderLayer, outlineLine != null ? outlineLine.sharedMaterial : null,
             aimCamera.transform.forward);
@@ -81,10 +60,6 @@ internal sealed class BridgeDeckPanelPlacementGuidance
         ClearOutlineRequest();
         HideArrow();
         label = message ?? string.Empty;
-        lastFailure = BridgeDeckPanelPlacementFailure.SectionNotConfigured;
-        lastAlongCentimeters = lastAcrossCentimeters = lastHeightCentimeters = lastAngleDegrees = int.MinValue;
-        lastHorizontalOutside = lastHeightOutside = lastOrientationOutside = false;
-        lastAlongOutside = lastAcrossOutside = false;
     }
 
     public void Dispose()
@@ -94,41 +69,6 @@ internal sealed class BridgeDeckPanelPlacementGuidance
         arrowObject = null;
         arrow = null;
         arrowProperties = null;
-    }
-
-    private void UpdateLabel(BridgeDeckPanelPlacementAssessment result, int alongCm, int acrossCm,
-        int heightCm, int angleDegrees)
-    {
-        if (result.Failure == lastFailure && alongCm == lastAlongCentimeters
-            && acrossCm == lastAcrossCentimeters && heightCm == lastHeightCentimeters
-            && angleDegrees == lastAngleDegrees && result.HorizontalOutside == lastHorizontalOutside
-            && result.AlongOutside == lastAlongOutside && result.AcrossOutside == lastAcrossOutside
-            && result.HeightOutside == lastHeightOutside && result.OrientationOutside == lastOrientationOutside) return;
-        lastFailure = result.Failure;
-        lastAlongCentimeters = alongCm;
-        lastAcrossCentimeters = acrossCm;
-        lastHeightCentimeters = heightCm;
-        lastAngleDegrees = angleDegrees;
-        lastHorizontalOutside = result.HorizontalOutside;
-        lastAlongOutside = result.AlongOutside;
-        lastAcrossOutside = result.AcrossOutside;
-        lastHeightOutside = result.HeightOutside;
-        lastOrientationOutside = result.OrientationOutside;
-
-        if (result.Failure == BridgeDeckPanelPlacementFailure.SlotOccupied)
-            label = "Mount: Slot occupied";
-        else if (result.Failure == BridgeDeckPanelPlacementFailure.NeighborPenetration)
-            label = "Mount: Adjacent overlap";
-        else if (result.HorizontalOutside || result.HeightOutside || result.OrientationOutside)
-        {
-            string correction = string.Empty;
-            if (result.AlongOutside) correction += $"Along {(alongCm > 0 ? "+" : string.Empty)}{alongCm}cm";
-            if (result.AcrossOutside) correction += $"{(correction.Length > 0 ? " " : string.Empty)}Across {(acrossCm > 0 ? "+" : string.Empty)}{acrossCm}cm";
-            if (result.HeightOutside) correction += $"{(correction.Length > 0 ? " " : string.Empty)}Height {(heightCm > 0 ? "+" : string.Empty)}{heightCm}cm";
-            if (result.OrientationOutside) correction += $"{(correction.Length > 0 ? " " : string.Empty)}Angle {angleDegrees}°";
-            label = $"Mount: {correction}";
-        }
-        else label = "Mount: Aligned";
     }
 
     private void ShowArrow(Vector3 start, Vector3 end, int renderLayer, Material sharedMaterial,

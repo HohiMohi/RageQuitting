@@ -645,8 +645,7 @@ Dolna/górna wysokość lokalna to `0.008/0.208 m`, szerokość dolna/górna
 Podczas F używa pozy kandydata oraz tych samych testów pozy, zajętości i
 penetracji rzeczywistych colliderów dzieci co ocena odłożonej płyty. Zielony oznacza
 wyrównaną pozycję, pomarańczowy problem mocowania; ogólne `free/blocked` jest
-oddzielne. Pokazywana korekta Along/Across/Height ma znak `+/-` i cm, kąt jest w
-stopniach; przyczynami są `Slot occupied`, `Adjacent overlap` lub `No slot`.
+oddzielne. Historyczny podgląd F z Etapu 2 pokazywał korektę Along/Across/Height ze znakiem `+/-` i cm oraz kąt w stopniach; przyczynami były `Slot occupied`, `Adjacent overlap` lub `No slot`.
 Lokalna strzałka świata długości `0.2–0.8 m` pokazuje korektę, ale znika dla
 poprawnej pozy, korekty wyłącznie kątowej i braku slotu. Po E strzałka znika;
 HUD i ramka oceny odłożonej płyty są widoczne tylko, gdy gracz wskazuje tę płytę.
@@ -669,6 +668,29 @@ inicjalizacji Unity Services w smoke nie jest gwarantowana. Pełna ręczna
 checklista perspektywy, korekt 5/10 cm, wysokości 3 cm, kąta 3°, obrotu 180°,
 penetracji 1 mm, E w wolnej lecz niewyrównanej przestrzeni, sprzątania Esc/zmiany
 slotu oraz zgodności host/klient znajduje się w [Mounting-Nails](Mounting-Nails.md#fizyczne-płyty--etap-2).
+
+### Pasek dopasowania fizycznej płyty w trybie F — 2026-11-07
+
+W trybie F dla fizycznych paneli slotowych pasek u góry, wyśrodkowany, pokazuje
+najmniejsze korekty potrzebne do wejścia w tolerancję. Pasek pokazuje lewo/prawo oraz
+przód/tył względem WASD, wysokość oraz najkrótszą korektę lokalnego obrotu Y do
+orientacji 0° lub 180°.
+
+Podczas sesji F płyta nie przesuwa się ani nie obraca automatycznie. Wskazówka F → F
+informuje, że wyjście i ponowne wejście przywraca bazową orientację płyty. Zielone
+`Aligned` pojawia się tylko przy poprawnym i niezablokowanym dopasowaniu. Luźna płyta
+może blokować slot.
+
+Przy wejściu do F raz wybierany jest najbliższy zgodny, nieukończony slot w zasięgu
+5 m w 3D od gracza. Zasięg konfiguruje pole Inspector `Physical Deck Panel Target
+Range` na `PlayerSingleCarryPlacementController` w `PlayerNew`. Poza zasięgiem pasek
+jest ukryty aż do ponownego wejścia F. Pasek prowadzi do wybranego slotu przez całą
+sesję. Zajęty slot pokazuje `Slot occupied`. Aby wybrać inny, naciśnij F dwa razy.
+
+Przy stanie pending pasek znika, a po odmowie wraca z tym samym celem. Ocena paska
+jest lokalna. Ukończenie przez zdalnych graczy nadal pochodzi z istniejącego
+replikowanego stanu. E nadal podlega ogólnej walidacji miejsca. Wariant obszarowy ma
+osobny tekst. Gwoździe i autorytatywne ukończenie pozostają niezależne od paska.
 
 ### Fizyczne płyty mostu — Etap 3: reset młotem (18.10.2026)
 

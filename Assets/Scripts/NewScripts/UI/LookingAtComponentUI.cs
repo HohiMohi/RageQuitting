@@ -11,6 +11,7 @@ public class LookingAtComponentUI : MonoBehaviour
     [SerializeField] private UnityEngine.UI.Image assemblingProgressBar;
     [SerializeField] private GameObject progressCircleHolder;
     [SerializeField] private int maxPromptLines = 3;
+    [SerializeField] private BridgeDeckPanelPlacementHud panelPlacementHud;
 
     private PlayerInputNew playerInput;
     private PlayerHealth playerHealth;
@@ -592,6 +593,9 @@ public class LookingAtComponentUI : MonoBehaviour
         string confirmHint = placementController != null ? placementController.PlacementConfirmationHint : "E Placement unavailable";
         string mountingGuidance = placementController != null ? placementController.PanelMountingGuidanceLabel : string.Empty;
         bool waitingForServer = placementController != null && placementController.IsRequestPending;
+        if (panelPlacementHud != null)
+            panelPlacementHud.SetState(placementController != null
+                ? placementController.PanelPlacementHudState : BridgeDeckPanelPlacementHudState.Hidden);
         if (cachedPlacementHudText == null || cachedPlacementHudStatus != status || cachedPlacementHudConfirmHint != confirmHint
             || cachedPlacementHudMounting != mountingGuidance || cachedPlacementHudPending != waitingForServer)
         {
@@ -665,6 +669,7 @@ public class LookingAtComponentUI : MonoBehaviour
 
     private void Hide()
     {
+        if (panelPlacementHud != null) panelPlacementHud.SetState(BridgeDeckPanelPlacementHudState.Hidden);
         ClearPanelPlacementFeedback();
         ResetCrowbarPresentation();
         ResetSawPresentation();

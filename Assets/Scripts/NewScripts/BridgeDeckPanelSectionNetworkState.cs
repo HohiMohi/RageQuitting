@@ -48,6 +48,20 @@ internal readonly struct BridgeDeckPanelPlacementAssessment
     }
 }
 
+internal readonly struct BridgeDeckPanelPlacementTarget
+{
+    public readonly BridgeDeckPanelSectionNetworkState Section;
+    public readonly int SlotIndex;
+    public readonly BridgeDeckPanelConstructionSite Site;
+    public readonly BridgeDeckPanelSlotOutline Outline;
+    public readonly BridgeDeckPanelConstructionWorkflowSO Profile;
+
+    public BridgeDeckPanelPlacementTarget(BridgeDeckPanelSectionNetworkState section, int slotIndex,
+        BridgeDeckPanelConstructionSite site, BridgeDeckPanelSlotOutline outline,
+        BridgeDeckPanelConstructionWorkflowSO profile)
+    { Section = section; SlotIndex = slotIndex; Site = site; Outline = outline; Profile = profile; }
+}
+
 /// <summary>Replicated assessment for one physical panel; network id distinguishes same-prefab panels.</summary>
 public struct BridgeDeckPanelReplicatedState : INetworkSerializable, System.IEquatable<BridgeDeckPanelReplicatedState>
 {
@@ -327,34 +341,71 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
         }
     }
 
-    internal static bool TryAssessPlacementPreview(MountableBridgeComponent panel, Vector3 candidatePosition,
-        Quaternion candidateRotation, out BridgeDeckPanelPlacementAssessment assessment)
+    internal static bool TrySelectNearestFreePlacementTarget(MountableBridgeComponent panel,
+        Vector3 playerPosition, float maximumDistance, out BridgeDeckPanelPlacementTarget target)
+    {
+        target = default;
+        if (panel == null || !panel.IsPhysicalDeckPanel || !panel.TryGetComponent(out BridgeDeckPanelMounting marker)
+            || marker.TryGetComponent(out BridgeDeckAreaPanel _)) return false;
+        float maxDistanceSquared = Mathf.Max(0f, maximumDistance) * Mathf.Max(0f, maximumDistance);
+        float closest = maxDistanceSquared;
+        bool found = false;
+        for (int s = 0; s < ActiveSections.Count; s++)
+        {
+            BridgeDeckPanelSectionNetworkState candidate = ActiveSections[s];
+            if (candidate == null || !candidate.isActiveAndEnabled || !candidate.gameObject.activeInHierarchy
+                || !IsCompatibleNetworkScope(candidate, marker)) continue;
+            candidate.EnsureInitialized();
+            if (candidate.section == null || candidate.workflow == null) continue;
+            IReadOnlyList<BridgeDeckPanelConstructionSite> slots = candidate.section.PanelSlots;
+            if (slots == null) continue;
+            for (int i = 0; i < slots.Count; i++)
+            {
+                BridgeDeckPanelConstructionSite slot = slots[i];
+                if (slot == null || !slot.isActiveAndEnabled || !slot.gameObject.activeInHierarchy
+                    || !slot.UsesPhysicalPanelPlacement) continue;
+                float distance = (playerPosition - slot.transform.position).sqrMagnitude;
+                if (distance > closest || found && distance >= closest) continue;
+                if (IsCompletedSlotClaimed(candidate, i)) continue;
+                closest = distance;
+                BridgeDeckPanelSlotOutline outline = slot.GetComponentInChildren<BridgeDeckPanelSlotOutline>(true);
+                target = new BridgeDeckPanelPlacementTarget(candidate, i, slot, outline, candidate.workflow);
+                found = true;
+            }
+        }
+        return found;
+    }
+
+    internal static bool TryAssessPlacementAtTarget(MountableBridgeComponent panel,
+        BridgeDeckPanelPlacementTarget target, Vector3 candidatePosition, Quaternion candidateRotation,
+        out BridgeDeckPanelPlacementAssessment assessment)
     {
         assessment = default;
-        if (panel == null || !panel.IsPhysicalDeckPanel) return false;
-        if (!panel.TryGetComponent(out BridgeDeckPanelMounting marker)) return false;
+        if (target.Section == null || target.Site == null
+            || target.Section.GetSlot(target.SlotIndex) != target.Site
+            || panel == null || !panel.TryGetComponent(out BridgeDeckPanelMounting marker)
+            || !IsCompatibleNetworkScope(target.Section, marker)) return false;
+        target.Section.EnsureInitialized();
+        if (!target.Section.isActiveAndEnabled || !target.Section.gameObject.activeInHierarchy
+            || !target.Site.isActiveAndEnabled || !target.Site.gameObject.activeInHierarchy
+            || target.Section.workflow != target.Profile || target.Site.gameObject.scene != target.Section.gameObject.scene
+            || !target.Site.UsesPhysicalPanelPlacement) return false;
+        return target.Section.TryAssessPlacementAtSlot(panel, target.SlotIndex, candidatePosition,
+            candidateRotation, target.Outline, out assessment);
+    }
 
-        BridgeDeckPanelSectionNetworkState bestSection = null;
-        BridgeDeckPanelConstructionSite site = null;
-        float closest = float.PositiveInfinity;
-        for (int i = 0; i < ActiveSections.Count; i++)
-        {
-            BridgeDeckPanelSectionNetworkState candidate = ActiveSections[i];
-            if (candidate == null || !IsCompatibleNetworkScope(candidate, marker)) continue;
-            candidate.EnsureInitialized();
-            if (candidate.section == null) continue;
-            int slotIndex = candidate.FindNearestSlot(candidatePosition);
-            BridgeDeckPanelConstructionSite candidateSite = candidate.GetSlot(slotIndex);
-            if (candidateSite == null) continue;
-            float distance = (candidatePosition - candidateSite.transform.position).sqrMagnitude;
-            if (distance >= closest) continue;
-            closest = distance;
-            bestSection = candidate;
-            site = candidateSite;
-        }
-        if (bestSection == null || site == null || bestSection.workflow == null) return false;
+    internal bool TryAssessPlacementAtSlot(MountableBridgeComponent panel, int slotIndex,
+        Vector3 candidatePosition, Quaternion candidateRotation,
+        BridgeDeckPanelSlotOutline cachedOutline,
+        out BridgeDeckPanelPlacementAssessment assessment)
+    {
+        assessment = default;
+        if (panel == null || !panel.IsPhysicalDeckPanel || !panel.TryGetComponent(out BridgeDeckPanelMounting marker)) return false;
+        BridgeDeckPanelConstructionSite site = GetSlot(slotIndex);
+        if (site == null || workflow == null) return false;
 
-        BridgeDeckPanelConstructionWorkflowSO profile = bestSection.workflow;
+        BridgeDeckPanelConstructionWorkflowSO profile = workflow;
+        bool occupied = IsCompletedSlotClaimed(this, slotIndex);
         BridgeDeckPanelStage2Assessment.GetPoseError(site.transform, candidatePosition, candidateRotation,
             out float alongMeters, out float acrossMeters, out float heightMeters, out float orientationDegrees);
         bool alongOutside = Mathf.Abs(alongMeters) > profile.PhysicalPanelMaximumAlongOffset;
@@ -374,16 +425,14 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
             : BridgeDeckPanelStage2Assessment.EvaluatePose(candidatePosition, candidateRotation, site.transform,
                 profile.PhysicalPanelMaximumHorizontalOffset, profile.PhysicalPanelMaximumHeightError,
                 profile.PhysicalPanelMaximumOrientationErrorDegrees);
-        BridgeDeckPanelPlacementFailure failure = ToPlacementFailure(poseFailure);
-        if (poseFailure == BridgeDeckPanelPoseFailure.None)
+        BridgeDeckPanelPlacementFailure failure = occupied
+            ? BridgeDeckPanelPlacementFailure.SlotOccupied : ToPlacementFailure(poseFailure);
+        if (!occupied && poseFailure == BridgeDeckPanelPoseFailure.None)
         {
-            int slotIndex = bestSection.FindNearestSlot(candidatePosition);
-            if (bestSection.IsClaimedByAnotherSlot(marker, slotIndex)) failure = BridgeDeckPanelPlacementFailure.SlotOccupied;
-            else if (!bestSection.HasAcceptableNeighborPenetrationAtPose(panel, candidatePosition, candidateRotation))
+            if (!HasAcceptableNeighborPenetrationAtPose(panel, candidatePosition, candidateRotation))
                 failure = BridgeDeckPanelPlacementFailure.NeighborPenetration;
         }
-        BridgeDeckPanelSlotOutline outline = site.GetComponentInChildren<BridgeDeckPanelSlotOutline>(true);
-        assessment = new BridgeDeckPanelPlacementAssessment(outline, failure, alongMeters, acrossMeters,
+        assessment = new BridgeDeckPanelPlacementAssessment(cachedOutline, failure, alongMeters, acrossMeters,
             heightMeters, orientationDegrees, horizontalOutside, alongOutside, acrossOutside,
             heightOutside, orientationOutside);
         return true;
@@ -675,6 +724,13 @@ public sealed class BridgeDeckPanelSectionNetworkState : NetworkBehaviour
         if (site == null) return false;
         BridgeComponent bridge = site.GetComponent<BridgeComponent>();
         return site.IsComplete || bridge != null && bridge.StartFullyCompleted;
+    }
+
+    private static bool IsCompletedSlotClaimed(BridgeDeckPanelSectionNetworkState sectionState, int slotIndex)
+    {
+        if (sectionState == null || sectionState.IsLegacySlotClaimed(slotIndex)
+            || sectionState.IsSlotComplete(slotIndex)) return true;
+        return false;
     }
 
     private bool HasClaim(BridgeDeckPanelMounting marker, int slotIndex, bool checkSlot)

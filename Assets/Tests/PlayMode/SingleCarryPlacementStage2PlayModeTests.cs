@@ -19,6 +19,7 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
     private GameObject previewSectionRoot;
     private GameObject previewSlot;
     private GameObject previewSecondSlot;
+    private GameObject loosePanelBlocker;
     private GameObject testVirtualCameraObject;
     private Component testVirtualCameraNoise;
 
@@ -183,10 +184,12 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         InputSystem.Update();
         yield return null;
 
-        QueueKeys("Escape");
+        QueueKeys("F");
         yield return null;
         QueueKeys();
         yield return null;
+        Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.False,
+            "The first F press exits placement mode before F is pressed again.");
         QueueKeys("F");
         yield return null;
         ghostRoot = (GameObject)ghostType.GetProperty("Root").GetValue(ghostField.GetValue(controller));
@@ -404,7 +407,7 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         previewSlot = UnityEngine.Object.Instantiate(slotPrefab);
         Assert.That(previewSlot, Is.Not.Null);
         previewSlot.transform.SetParent(previewSectionRoot.transform, false);
-        previewSlot.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        previewSlot.transform.SetPositionAndRotation(new Vector3(0f, 100f, 0f), Quaternion.identity);
         Component slotBridge = previewSlot.GetComponent(Resolve("BridgeComponent, Assembly-CSharp"));
         if (slotBridge != null) ((Behaviour)slotBridge).enabled = false;
         Component site = previewSlot.GetComponent(siteType);
@@ -420,7 +423,7 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
             "Assets/Prefabs/New/BridgeComponents/WoodenDeckPanelMountable.prefab");
         heldObject = UnityEngine.Object.Instantiate(panelPrefab);
         heldObject.name = "F preview physical panel";
-        heldObject.transform.position = new Vector3(10f, 0f, 0f);
+        heldObject.transform.position = new Vector3(10f, 100f, 0f);
         Type mountableType = Resolve("MountableBridgeComponent, Assembly-CSharp");
         Component mountable = heldObject.GetComponent(mountableType);
         mountableType.GetField("isPhysicalDeckPanel", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(mountable, true);
@@ -429,7 +432,7 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         GameObject playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/PlayerNew.prefab");
         player = UnityEngine.Object.Instantiate(playerPrefab);
         player.name = "F preview panel player";
-        player.transform.position = new Vector3(0f, 100f, 0f);
+        player.transform.position = new Vector3(20f, 100f, -3f);
         Component interaction = player.GetComponent(interactionType);
         Component controller = player.GetComponent(controllerType);
         mountableType.GetMethod("PickedUp").Invoke(mountable, new object[] { player.transform });
@@ -450,9 +453,24 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         QueueKeys();
         yield return null;
         Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.True);
+        AssertHudState(controller, "Hidden", "An F entry outside the configured range does not acquire a slot.");
+        player.transform.position = new Vector3(1.5f, 100f, -3f);
+        yield return null;
+        yield return null;
+        AssertHudState(controller, "Hidden", "Moving into range cannot automatically acquire a slot while F mode stays active.");
+        QueueKeys("F");
+        yield return null;
+        QueueKeys();
+        yield return null;
+        Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.False);
+        QueueKeys("F");
+        yield return null;
+        QueueKeys();
+        yield return null;
+        AssertHudState(controller, "Aligned", "A new F entry chooses the nearest compatible free slot.");
         Assert.That((bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller), Is.True,
             "A free-space candidate remains generically placeable.");
-        Assert.That(controllerType.GetProperty("PanelMountingGuidanceLabel").GetValue(controller), Is.EqualTo("Mount: Aligned"));
+        Assert.That(GetHudText(player, "statusText"), Is.EqualTo("Aligned"));
         LineRenderer outline = previewSlot.GetComponentInChildren(outlineType, true).GetComponent<LineRenderer>();
         object guidance;
         GameObject arrowObject;
@@ -478,9 +496,10 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         yield return null;
         yield return null;
         LineRenderer secondOutline = previewSecondSlot.GetComponentInChildren(outlineType, true).GetComponent<LineRenderer>();
-        Assert.That(controllerType.GetProperty("PanelMountingGuidanceLabel").GetValue(controller), Is.EqualTo("Mount: Aligned"));
-        AssertOutlineColor(outline, 1f, 1f, 1f, "Switching candidate slots clears the old outline feedback.");
-        AssertOutlineColor(secondOutline, 0.18f, 0.95f, 0.25f);
+        AssertHudState(controller, "Corrections", "The F entry keeps its original slot when aiming at a second slot.");
+        Assert.That(GetHudText(player, "rightText"), Does.Contain("Left"));
+        AssertOutlineColor(outline, 1f, 0.55f, 0.1f, "The locked slot remains highlighted while the aim moves elsewhere.");
+        AssertOutlineColor(secondOutline, 1f, 1f, 1f, "A second slot is never auto-selected during refresh.");
         testAimCameraObject.transform.SetPositionAndRotation(site.transform.position - site.transform.forward * cameraToPlacementDistance,
             Quaternion.LookRotation(site.transform.forward, site.transform.up));
         Physics.SyncTransforms();
@@ -491,7 +510,8 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         Physics.SyncTransforms();
         yield return null;
         yield return null;
-        Assert.That(controllerType.GetProperty("PanelMountingGuidanceLabel").GetValue(controller), Is.EqualTo("Mount: Height +4cm"));
+        AssertHudState(controller, "Corrections");
+        Assert.That(GetHudText(player, "heightText"), Does.Contain("Raise"));
         guidance = controllerType.GetField("panelPlacementGuidance", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
         arrowObject = (GameObject)guidance.GetType().GetField("arrowObject", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(guidance);
         LineRenderer arrowLine = arrowObject.GetComponent<LineRenderer>();
@@ -504,7 +524,7 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         Physics.SyncTransforms();
         yield return null;
         yield return null;
-        Assert.That(controllerType.GetProperty("PanelMountingGuidanceLabel").GetValue(controller), Is.EqualTo("Mount: Angle 6°"));
+        Assert.That(GetHudText(player, "rotationText"), Is.EqualTo("F → F"));
         Assert.That(arrowObject.activeInHierarchy, Is.False, "Orientation-only guidance does not display a translation arrow.");
         SetLocalRotationForFixture(controller, Quaternion.identity);
         yield return null;
@@ -516,7 +536,8 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         yield return null;
         Assert.That((bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller), Is.True,
             "Mounting misalignment must not change the free-space ghost verdict.");
-        Assert.That(controllerType.GetProperty("PanelMountingGuidanceLabel").GetValue(controller), Is.EqualTo("Mount: Along +8cm"));
+        AssertHudState(controller, "Corrections");
+        Assert.That(GetHudText(player, "rightText"), Does.Contain("Right"));
         AssertOutlineColor(outline, 1f, 0.55f, 0.1f);
         guidance = controllerType.GetField("panelPlacementGuidance", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
         arrowObject = (GameObject)guidance.GetType().GetField("arrowObject", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(guidance);
@@ -530,10 +551,47 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         Assert.That(controllerType.GetProperty("CanConfirmPlacement").GetValue(controller), Is.True);
         Assert.That(controllerType.GetProperty("PlacementConfirmationHint").GetValue(controller), Is.EqualTo("E Place"));
 
-        QueueKeys("Escape");
+        loosePanelBlocker = UnityEngine.Object.Instantiate(panelPrefab);
+        loosePanelBlocker.name = "Loose physical panel blocking aligned preview";
+        loosePanelBlocker.transform.SetPositionAndRotation(site.transform.position + Vector3.up * 0.14f, site.transform.rotation);
+        Component blockerMountable = loosePanelBlocker.GetComponent(mountableType);
+        mountableType.GetField("isPhysicalDeckPanel", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(blockerMountable, true);
+        Rigidbody blockerBody = loosePanelBlocker.GetComponent<Rigidbody>();
+        blockerBody.isKinematic = true;
+        blockerBody.useGravity = false;
+        testAimCameraObject.transform.SetPositionAndRotation(site.transform.position - site.transform.forward * cameraToPlacementDistance,
+            Quaternion.LookRotation(site.transform.forward, site.transform.up));
+        Physics.SyncTransforms();
+        yield return null;
+        yield return null;
+        AssertHudState(controller, "Blocked", "A loose physical panel blocks an otherwise aligned target pose.");
+        Assert.That(GetHudText(player, "statusText"), Does.Contain("BLOCKED"));
+        UnityEngine.Object.DestroyImmediate(loosePanelBlocker);
+        Physics.SyncTransforms();
+        yield return null;
+        yield return null;
+
+        siteType.GetMethod("ApplyPhysicalPanelCompletion", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(site, null);
+        testAimCameraObject.transform.SetPositionAndRotation(secondSite.transform.position - secondSite.transform.forward * cameraToPlacementDistance,
+            Quaternion.LookRotation(secondSite.transform.forward, secondSite.transform.up));
+        Physics.SyncTransforms();
+        yield return null;
+        yield return null;
+        AssertHudState(controller, "Occupied", "The locked completed slot reports occupied even while the ghost is aimed at another slot.");
+        Assert.That(GetHudText(player, "statusText"), Is.EqualTo("Slot occupied  ·  F, then F to select another slot"));
+        Component hud = player.GetComponentInChildren(Resolve("BridgeDeckPanelPlacementHud, Assembly-CSharp"), true);
+        object statusText = hud.GetType().GetField("statusText", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(hud);
+        RectTransform statusTextRect = (RectTransform)statusText.GetType().GetProperty("rectTransform").GetValue(statusText);
+        Assert.That(statusTextRect.rect.width, Is.GreaterThanOrEqualTo(420f), "The full occupied reselect instruction has enough label width.");
+        AssertOutlineColor(outline, 1f, 1f, 1f, "Occupied feedback clears the selected slot outline.");
+
+        QueueKeys("F");
+        yield return null;
+        QueueKeys();
         yield return null;
         Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.False,
-            "Esc cancels F mode and clears panel-specific guidance.");
+            "The first F press exits placement mode before the next F press reselects a target.");
         Assert.That(arrowObject.activeInHierarchy, Is.False);
         AssertOutlineColor(outline, 1f, 1f, 1f);
 
@@ -545,6 +603,8 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         yield return null;
         QueueKeys();
         yield return null;
+        Assert.That(GetLockedSlotIndex(controller), Is.EqualTo(1),
+            "A completed first slot is skipped when F is pressed again and the next free slot is selected.");
         Assert.That((bool)controllerType.GetProperty("IsActive").GetValue(controller), Is.True);
         Assert.That((bool)controllerType.GetProperty("IsCurrentPlacementValid").GetValue(controller), Is.True);
         Assert.That(controllerType.GetProperty("CanConfirmPlacement").GetValue(controller), Is.True);
@@ -558,6 +618,13 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         Assert.That(heldBody.useGravity, Is.False);
         Assert.That(mountableType.GetMethod("CanReleaseSingleCarryPlacement").Invoke(mountable, new object[] { interaction }), Is.True,
             "The physical panel’s normal offline release prerequisites must remain satisfied after the cancel/re-enter cycle.");
+        testAimCameraObject.transform.SetPositionAndRotation(site.transform.position - site.transform.forward * cameraToPlacementDistance,
+            Quaternion.LookRotation(site.transform.forward, site.transform.up));
+        Physics.SyncTransforms();
+        yield return null;
+        yield return null;
+        AssertHudState(controller, "Corrections", "The free-space E placement remains available while the locked slot is misaligned.");
+        Assert.That((bool)controllerType.GetProperty("CanConfirmPlacement").GetValue(controller), Is.True);
         Type ghostType = Resolve("SingleCarryPlacementGhost, Assembly-CSharp");
         FieldInfo ghostField = controllerType.GetField("ghost", BindingFlags.Instance | BindingFlags.NonPublic);
         GameObject configuredGhost = (GameObject)ghostType.GetProperty("Root").GetValue(ghostField.GetValue(controller));
@@ -601,6 +668,7 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         if (previewSectionRoot != null) UnityEngine.Object.DestroyImmediate(previewSectionRoot);
         if (previewSlot != null && previewSectionRoot == null) UnityEngine.Object.DestroyImmediate(previewSlot);
         if (previewSecondSlot != null && previewSectionRoot == null) UnityEngine.Object.DestroyImmediate(previewSecondSlot);
+        if (loosePanelBlocker != null) UnityEngine.Object.DestroyImmediate(loosePanelBlocker);
         if (testVirtualCameraObject != null) UnityEngine.Object.DestroyImmediate(testVirtualCameraObject);
         if (profile != null) UnityEngine.Object.DestroyImmediate(profile);
         if (keyboard != null) InputSystem.RemoveDevice(keyboard);
@@ -716,6 +784,30 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
     }
 
     private static Type Resolve(string name) => Type.GetType(name);
+
+    private static void AssertHudState(Component controller, string expected, string message = null)
+    {
+        PropertyInfo stateProperty = controller.GetType().GetProperty("PanelPlacementHudState",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        object state = stateProperty.GetValue(controller);
+        string actual = state.GetType().GetField("Kind", BindingFlags.Instance | BindingFlags.Public).GetValue(state).ToString();
+        Assert.That(actual, Is.EqualTo(expected), message);
+    }
+
+    private static int GetLockedSlotIndex(Component controller)
+    {
+        object target = controller.GetType().GetField("lockedPanelTarget", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+        return (int)target.GetType().GetField("SlotIndex", BindingFlags.Instance | BindingFlags.Public).GetValue(target);
+    }
+
+    private static string GetHudText(GameObject playerRoot, string fieldName)
+    {
+        Type hudType = Resolve("BridgeDeckPanelPlacementHud, Assembly-CSharp");
+        Component hud = playerRoot.GetComponentInChildren(hudType, true);
+        Assert.That(hud, Is.Not.Null);
+        object text = hudType.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(hud);
+        return (string)text.GetType().GetProperty("text").GetValue(text);
+    }
 
     private static void SetLocalRotationForFixture(Component controller, Quaternion rotation)
     {

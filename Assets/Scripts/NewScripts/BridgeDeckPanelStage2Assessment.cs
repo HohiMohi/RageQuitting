@@ -30,9 +30,128 @@ public enum BridgeDeckPanelNailRejection : byte
     OnQuarterBoundary
 }
 
+internal readonly struct BridgeDeckPanelMinimumCorrection
+{
+    public readonly float RightMeters;
+    public readonly float ForwardMeters;
+    public readonly float HeightMeters;
+    public readonly int LocalYRotationDegrees;
+    public readonly bool ResetTiltRequired;
+
+    public BridgeDeckPanelMinimumCorrection(float rightMeters, float forwardMeters, float heightMeters,
+        int localYRotationDegrees, bool resetTiltRequired)
+    {
+        RightMeters = rightMeters;
+        ForwardMeters = forwardMeters;
+        HeightMeters = heightMeters;
+        LocalYRotationDegrees = localYRotationDegrees;
+        ResetTiltRequired = resetTiltRequired;
+    }
+}
+
 /// <summary>Pure, deterministic rules for evaluating a physical deck panel and its four nail quarters.</summary>
 public static class BridgeDeckPanelStage2Assessment
 {
+    /// <summary>Returns the shortest position correction into the valid pose region and a validated integer yaw correction.</summary>
+    internal static BridgeDeckPanelMinimumCorrection GetMinimumCorrection(Transform slot, Vector3 panelPosition,
+        Quaternion panelRotation, Transform movementBasis, bool directionalHorizontal, float maximumAlong,
+        float maximumAcross, float maximumRadial, float maximumHeight, float maximumOrientationDegrees)
+    {
+        if (slot == null || movementBasis == null) return default;
+        Vector3 delta = panelPosition - slot.position;
+        float along = Vector3.Dot(delta, slot.right.normalized);
+        float across = Vector3.Dot(delta, slot.forward.normalized);
+        float allowedAlong = Mathf.Max(0f, directionalHorizontal ? maximumAlong : maximumRadial);
+        float allowedAcross = Mathf.Max(0f, directionalHorizontal ? maximumAcross : maximumRadial);
+        float correctionAlong;
+        float correctionAcross;
+        if (directionalHorizontal)
+        {
+            correctionAlong = Mathf.Clamp(along, -allowedAlong, allowedAlong) - along;
+            correctionAcross = Mathf.Clamp(across, -allowedAcross, allowedAcross) - across;
+        }
+        else
+        {
+            Vector2 radial = new(along, across);
+            Vector2 clamped = radial.magnitude > allowedAlong && radial.sqrMagnitude > 0f
+                ? radial.normalized * allowedAlong : radial;
+            correctionAlong = clamped.x - along;
+            correctionAcross = clamped.y - across;
+        }
+
+        float height = Vector3.Dot(delta, slot.up.normalized);
+        float correctionHeight = Mathf.Clamp(height, -Mathf.Max(0f, maximumHeight),
+            Mathf.Max(0f, maximumHeight)) - height;
+        Vector3 worldCorrection = slot.right.normalized * correctionAlong
+            + slot.forward.normalized * correctionAcross;
+        Vector3 horizontalCorrection = Vector3.ProjectOnPlane(worldCorrection, Vector3.up);
+        Vector3 movementRight = Vector3.ProjectOnPlane(movementBasis.right, Vector3.up).normalized;
+        Vector3 movementForward = Vector3.ProjectOnPlane(movementBasis.forward, Vector3.up).normalized;
+        float right = Vector3.Dot(horizontalCorrection, movementRight);
+        float forward = Vector3.Dot(horizontalCorrection, movementForward);
+
+        Quaternion relative = Quaternion.Inverse(slot.rotation) * panelRotation;
+        float swingTwistMagnitude = Mathf.Sqrt(relative.y * relative.y + relative.w * relative.w);
+        int bestDelta = 0;
+        int bestMagnitude = int.MaxValue;
+        bool found = false;
+        if (Quaternion.Angle(relative, Quaternion.identity) <= maximumOrientationDegrees
+            || Quaternion.Angle(relative, Quaternion.AngleAxis(180f, Vector3.up)) <= maximumOrientationDegrees)
+        {
+            found = true;
+            bestMagnitude = 0;
+        }
+        else if (swingTwistMagnitude > 0f && maximumOrientationDegrees >= 0f)
+        {
+            float threshold = Mathf.Cos(maximumOrientationDegrees * Mathf.Deg2Rad * 0.5f);
+            float twistHalfAngle = Mathf.Atan2(relative.y, relative.w) * Mathf.Rad2Deg;
+            for (int target = 0; target < 2; target++)
+            {
+                float center = Mathf.DeltaAngle(0f, 2f * ((target == 0 ? 0f : 90f) - twistHalfAngle));
+                float intervalHalfWidth = threshold <= swingTwistMagnitude
+                    ? 2f * Mathf.Acos(Mathf.Clamp(threshold / swingTwistMagnitude, -1f, 1f)) * Mathf.Rad2Deg
+                    : 0f;
+                ConsiderLocalYawCandidate(relative, center, intervalHalfWidth, maximumOrientationDegrees,
+                    ref bestDelta, ref bestMagnitude, ref found);
+            }
+        }
+        return new BridgeDeckPanelMinimumCorrection(right, forward, correctionHeight,
+            found ? bestDelta : 0, !found);
+    }
+
+    private static void ConsiderLocalYawCandidate(Quaternion relative, float center, float halfWidth,
+        float maximumOrientationDegrees, ref int bestDelta, ref int bestMagnitude, ref bool found)
+    {
+        // The closest integer in the valid interval is either near its center or one of its boundaries.
+        int roundedCenter = Mathf.RoundToInt(center);
+        int lowerBoundary = Mathf.CeilToInt(center - halfWidth);
+        int upperBoundary = Mathf.FloorToInt(center + halfWidth);
+        ConsiderLocalYaw(relative, roundedCenter, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+        ConsiderLocalYaw(relative, roundedCenter - 1, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+        ConsiderLocalYaw(relative, roundedCenter + 1, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+        ConsiderLocalYaw(relative, lowerBoundary, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+        ConsiderLocalYaw(relative, lowerBoundary + 1, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+        ConsiderLocalYaw(relative, lowerBoundary - 1, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+        ConsiderLocalYaw(relative, upperBoundary, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+        ConsiderLocalYaw(relative, upperBoundary - 1, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+        ConsiderLocalYaw(relative, upperBoundary + 1, maximumOrientationDegrees, ref bestDelta, ref bestMagnitude, ref found);
+    }
+
+    private static void ConsiderLocalYaw(Quaternion relative, int candidateDegrees, float maximumOrientationDegrees,
+        ref int bestDelta, ref int bestMagnitude, ref bool found)
+    {
+        int signedDelta = Mathf.RoundToInt(Mathf.DeltaAngle(0f, candidateDegrees));
+        Quaternion candidate = relative * Quaternion.AngleAxis(signedDelta, Vector3.up);
+        float error = Mathf.Min(Quaternion.Angle(candidate, Quaternion.identity),
+            Quaternion.Angle(candidate, Quaternion.AngleAxis(180f, Vector3.up)));
+        if (error > maximumOrientationDegrees) return;
+        int magnitude = Mathf.Abs(signedDelta);
+        if (magnitude >= bestMagnitude) return;
+        bestMagnitude = magnitude;
+        bestDelta = signedDelta;
+        found = true;
+    }
+
     public static BridgeDeckPanelPoseFailure EvaluatePose(Transform panel, Transform slot,
         float maximumHorizontalOffset, float maximumHeightError, float maximumOrientationErrorDegrees)
     {
