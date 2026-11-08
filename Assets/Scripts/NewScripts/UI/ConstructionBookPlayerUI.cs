@@ -7,15 +7,14 @@ using UnityEngine.UI;
 [RequireComponent(typeof(PlayerInputNew), typeof(PlayerHealth), typeof(NetworkObject))]
 public sealed class PlayerConstructionBookUI : MonoBehaviour
 {
-    private const float PageTurnDuration = 0.15f;
-    private const float PageSlideDistance = 24f;
+    // Matches the controller's turn cadence (0.35 s) so held A/D never cuts a turn short.
+    private const float PageTurnDuration = 0.34f;
 
     private PlayerInputNew input;
     private PlayerHealth health;
     private ConstructionBookController book;
-    private CanvasGroup group;   // fades the page contents during a page turn
+    private CanvasGroup group;   // page contents of the book
     private RectTransform panel; // full-screen root, hidden while the book is closed
-    private RectTransform pages; // page contents that slide during a page turn
     private ConstructionBookScreenView view;
     private bool open;
     private bool presentationDirty;
@@ -98,8 +97,8 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
             StopCoroutine(transition);
             transition = null;
         }
+        if (view != null) view.EndPageTurn();
         if (group != null) group.alpha = 1f;
-        if (pages != null) pages.anchoredPosition = Vector2.zero;
     }
 
     private void HandleUiLeft(object sender, EventArgs args) { if (book != null) book.RequestTurn(-1, transform); }
@@ -108,14 +107,14 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
     private void OnPageChanged(int index, bool snap)
     {
         if (!open) return;
-        if (snap)
+        int shownIndex = view.PageIndex;
+        ResetTransition(); // a turn still in flight lands immediately
+        if (snap || shownIndex < 0 || index == shownIndex)
         {
-            ResetTransition();
             Refresh();
             return;
         }
-        if (transition != null) StopCoroutine(transition);
-        transition = StartCoroutine(SlideFade());
+        transition = StartCoroutine(TurnPage(index > shownIndex));
     }
     private void OnPresentationChanged()
     {
@@ -124,14 +123,16 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
         else Refresh();
     }
     private void OnBookDespawned() => Close();
-    private IEnumerator SlideFade()
+    private IEnumerator TurnPage(bool forward)
     {
-        // Only the page contents turn; the book, its signs and the hints stay put.
-        const float half = PageTurnDuration * 0.5f;
-        for (float t = 0; t < half; t += Time.unscaledDeltaTime) { group.alpha = 1f - t / half; pages.anchoredPosition = Vector2.left * PageSlideDistance * t / half; yield return null; }
-        Refresh(); pages.anchoredPosition = Vector2.right * PageSlideDistance;
-        for (float t = 0; t < half; t += Time.unscaledDeltaTime) { group.alpha = t / half; pages.anchoredPosition = Vector2.Lerp(Vector2.right * PageSlideDistance, Vector2.zero, t / half); yield return null; }
-        group.alpha = 1f; pages.anchoredPosition = Vector2.zero; transition = null;
+        view.BeginPageTurn(forward, Refresh);
+        for (float t = 0f; t < PageTurnDuration; t += Time.unscaledDeltaTime)
+        {
+            view.SetPageTurnProgress(t / PageTurnDuration);
+            yield return null;
+        }
+        view.EndPageTurn();
+        transition = null;
         if (presentationDirty) { presentationDirty = false; Refresh(); }
     }
     private void Refresh()
@@ -153,7 +154,7 @@ public sealed class PlayerConstructionBookUI : MonoBehaviour
         GameObject panelGo = new GameObject("ConstructionBookPanel", typeof(RectTransform)); panelGo.transform.SetParent(canvasGo.transform, false);
         panel = panelGo.GetComponent<RectTransform>(); panel.anchorMin = Vector2.zero; panel.anchorMax = Vector2.one; panel.offsetMin = panel.offsetMax = Vector2.zero;
         view = panelGo.AddComponent<ConstructionBookScreenView>(); view.Build();
-        group = view.PagesGroup; pages = view.Pages;
+        group = view.PagesGroup;
         view.PreviousButton.onClick.AddListener(() => { if (book != null) book.RequestTurn(-1, transform); });
         view.NextButton.onClick.AddListener(() => { if (book != null) book.RequestTurn(1, transform); });
         view.CloseButton.onClick.AddListener(Close);

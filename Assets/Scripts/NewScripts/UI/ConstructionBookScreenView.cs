@@ -29,11 +29,22 @@ public sealed class ConstructionBookScreenView : MonoBehaviour, IConstructionBoo
 
     private const float DisabledButtonAlpha = 0.45f, DisabledKeyHintAlpha = 0.4f;
 
+    // Parchment of each page cut out of the book painting (PageLeft/PageRight.png), in design pixels.
+    private static readonly Rect LeftSheetRect = new Rect(312f, 82f, 640f, 752f);
+    private static readonly Rect RightSheetRect = new Rect(964f, 82f, 648f, 752f);
+    private const float SheetLift = 0.035f, SheetShade = 0.45f, UncoveredPageShade = 0.22f;
+
     public RectTransform Pages { get; private set; }
     public CanvasGroup PagesGroup { get; private set; }
     public Button CloseButton { get; private set; }
     public Button PreviousButton { get; private set; }
     public Button NextButton { get; private set; }
+    /// <summary>Spread index currently drawn on the pages, or -1 before the first render.</summary>
+    public int PageIndex { get; private set; } = -1;
+
+    private RectTransform leftPage;
+    private RectTransform rightPage;
+    private PageTurn turn;
 
     private TextMeshProUGUI title;
     private Image partImage;
@@ -75,8 +86,10 @@ public sealed class ConstructionBookScreenView : MonoBehaviour, IConstructionBoo
         Pages.anchorMax = Vector2.one;
         Pages.offsetMin = Pages.offsetMax = Vector2.zero;
         PagesGroup = Pages.gameObject.AddComponent<CanvasGroup>();
-        BuildLeftPage(Pages);
-        BuildRightPage(Pages);
+        leftPage = AddPageLayer("LeftPage");
+        rightPage = AddPageLayer("RightPage");
+        BuildLeftPage(leftPage);
+        BuildRightPage(rightPage);
 
         // One right-pointing plank is mirrored for every sign, as in Figma.
         CloseButton = AddBannerButton("CloseButton", frame, "CLOSE", 24f, 20f, 227f, 83f, 32f,
@@ -98,6 +111,71 @@ public sealed class ConstructionBookScreenView : MonoBehaviour, IConstructionBoo
         SetNavigationState(NextButton, nextGroup, nextKeyHint, canGoNext);
     }
 
+    /// <summary>
+    /// Starts a page turn: freezes the spread on screen, calls <paramref name="renderNextSpread"/> to draw the next spread
+    /// underneath and lifts the old page over the spine. Drive it with <see cref="SetPageTurnProgress"/> and finish it
+    /// with <see cref="EndPageTurn"/>.
+    /// </summary>
+    public void BeginPageTurn(bool forward, Action renderNextSpread)
+    {
+        EndPageTurn();
+        RectTransform from = forward ? rightPage : leftPage;
+        RectTransform to = forward ? leftPage : rightPage;
+        RectTransform oldFrom = Freeze(from);
+        RectTransform oldTo = Freeze(to);
+        renderNextSpread?.Invoke();
+        RectTransform newTo = Freeze(to);
+        // The next spread's landing page stays hidden until the turning sheet has covered the old one.
+        SetPageLayerVisible(to, false);
+
+        // Siblings after the live pages: old landing page, shadows on both pages, then the turning sheet.
+        turn = new PageTurn
+        {
+            Target = to,
+            OldTo = oldTo,
+            UncoveredShadow = AddPageShadow(forward),
+            CoveredShadow = AddPageShadow(!forward),
+            SheetFrom = AddTurningSheet(forward, oldFrom),
+            SheetTo = AddTurningSheet(!forward, newTo),
+        };
+        SetPageTurnProgress(0f);
+    }
+
+    /// <summary>0 = old page flat, 0.5 = sheet upright on the spine, 1 = new page flat.</summary>
+    public void SetPageTurnProgress(float progress)
+    {
+        if (turn == null) return;
+        float t = Mathf.Clamp01(progress);
+        float angle = t * t * (3f - 2f * t) * Mathf.PI;
+        float cos = Mathf.Cos(angle);
+        float sin = Mathf.Sin(angle);
+        // Squashing the sheet towards its spine edge reads as the page rotating about the spine.
+        float lift = 1f + SheetLift * sin;
+        bool firstHalf = cos >= 0f;
+        turn.SheetFrom.Root.gameObject.SetActive(firstHalf);
+        turn.SheetTo.Root.gameObject.SetActive(!firstHalf);
+        turn.SheetFrom.Root.localScale = new Vector3(Mathf.Max(cos, 0f), lift, 1f);
+        turn.SheetTo.Root.localScale = new Vector3(Mathf.Max(-cos, 0f), lift, 1f);
+        Color sheetShade = new Color(0f, 0f, 0f, SheetShade * sin);
+        turn.SheetFrom.Shade.color = sheetShade;
+        turn.SheetTo.Shade.color = sheetShade;
+        turn.UncoveredShadow.color = new Color(0f, 0f, 0f, UncoveredPageShade * Mathf.Max(cos, 0f));
+        turn.CoveredShadow.color = new Color(0f, 0f, 0f, UncoveredPageShade * Mathf.Max(-cos, 0f));
+    }
+
+    /// <summary>Completes a running page turn immediately and shows the live spread.</summary>
+    public void EndPageTurn()
+    {
+        if (turn == null) return;
+        if (turn.Target != null) SetPageLayerVisible(turn.Target, true);
+        DestroyDetached(turn.OldTo);
+        DestroyDetached(turn.UncoveredShadow);
+        DestroyDetached(turn.CoveredShadow);
+        DestroyDetached(turn.SheetFrom.Root);
+        DestroyDetached(turn.SheetTo.Root);
+        turn = null;
+    }
+
     public void RenderWithCompletionSummary(ConstructionBookCatalogSO.Entry entry, int count, int pageIndex, int pageCount,
         IReadOnlyList<ConstructionBookMaterialLine> materials, bool materialsAvailable,
         IReadOnlyList<ConstructionBookRosterMember> roster, ulong localClientId,
@@ -106,7 +184,8 @@ public sealed class ConstructionBookScreenView : MonoBehaviour, IConstructionBoo
     {
         if (Pages == null) Build();
 
-        title.text = entry != null ? entry.title ?? string.Empty : "Data unavailable";
+        PageIndex = pageIndex;
+        title.text =entry != null ? entry.title ?? string.Empty : "Data unavailable";
         Sprite part = entry != null ? entry.partSprite : null;
         partImage.sprite = ConstructionBookScreenTheme.HasArt(part) ? part : null;
         partImage.enabled = partImage.sprite != null;
@@ -396,6 +475,88 @@ public sealed class ConstructionBookScreenView : MonoBehaviour, IConstructionBoo
         return button;
     }
 
+    private sealed class PageTurn
+    {
+        public RectTransform Target;
+        public RectTransform OldTo;
+        public Image UncoveredShadow;
+        public Image CoveredShadow;
+        public TurningSheet SheetFrom;
+        public TurningSheet SheetTo;
+    }
+
+    private readonly struct TurningSheet
+    {
+        public readonly RectTransform Root;
+        public readonly Image Shade;
+        public TurningSheet(RectTransform root, Image shade) { Root = root; Shade = shade; }
+    }
+
+    private RectTransform AddPageLayer(string name)
+    {
+        RectTransform layer = NewRect(name, Pages);
+        layer.anchorMin = Vector2.zero;
+        layer.anchorMax = Vector2.one;
+        layer.offsetMin = layer.offsetMax = Vector2.zero;
+        layer.gameObject.AddComponent<CanvasGroup>();
+        return layer;
+    }
+
+    private static void SetPageLayerVisible(RectTransform layer, bool visible)
+    {
+        CanvasGroup group = layer.GetComponent<CanvasGroup>();
+        group.alpha = visible ? 1f : 0f;
+        group.interactable = visible;
+        group.blocksRaycasts = visible;
+    }
+
+    /// <summary>A non-interactive snapshot of a page layer, drawn while the live layer shows the next spread.</summary>
+    private static RectTransform Freeze(RectTransform layer)
+    {
+        RectTransform copy = Instantiate(layer, layer.parent);
+        copy.name = layer.name + "Turning";
+        CanvasGroup group = copy.GetComponent<CanvasGroup>();
+        group.alpha = 1f;
+        group.interactable = false;
+        group.blocksRaycasts = false;
+        return copy;
+    }
+
+    private Image AddPageShadow(bool rightPage)
+    {
+        Rect page = rightPage ? RightSheetRect : LeftSheetRect;
+        Image shadow = AddImage("PageShadow", Pages, rightPage ? "PageRight" : "PageLeft", page.x, page.y, page.width, page.height);
+        shadow.color = Color.clear;
+        return shadow;
+    }
+
+    /// <summary>One side of the turning page: the cut-out parchment hinged on the spine, carrying a frozen page layer.</summary>
+    private TurningSheet AddTurningSheet(bool rightPage, RectTransform content)
+    {
+        Rect page = rightPage ? RightSheetRect : LeftSheetRect;
+        string paper = rightPage ? "PageRight" : "PageLeft";
+        RectTransform root = Place(NewRect("TurningPage", Pages), page.x, page.y, page.width, page.height);
+        root.pivot = new Vector2(rightPage ? 0f : 1f, 0.5f);
+        root.anchoredPosition = new Vector2(rightPage ? page.x : page.x + page.width, -(page.y + page.height * 0.5f));
+        AddImage("Paper", root, paper, 0f, 0f, page.width, page.height);
+        // The frozen layer is a full design frame, so offset it to line up with the live page underneath.
+        RectTransform holder = Place(NewRect("Content", root), -page.x, -page.y, DesignSize.x, DesignSize.y);
+        content.SetParent(holder, false);
+        Image shade = AddImage("Shade", root, paper, 0f, 0f, page.width, page.height);
+        shade.color = Color.clear;
+        return new TurningSheet(root, shade);
+    }
+
+    private static void DestroyDetached(Component target)
+    {
+        if (target == null) return;
+        GameObject go = target.gameObject;
+        go.SetActive(false);
+        // Detach first so nothing in this frame still finds the old toggles under the book.
+        go.transform.SetParent(null, false);
+        Destroy(go);
+    }
+
     private static void AddDashedRule(RectTransform parent, float y, float width)
     {
         Image rule = AddImage("Rule", parent, "Dash", 0f, y, width, RuleThickness);
@@ -470,12 +631,6 @@ public sealed class ConstructionBookScreenView : MonoBehaviour, IConstructionBoo
     private static void Clear(RectTransform root)
     {
         for (int i = root.childCount - 1; i >= 0; i--)
-        {
-            Transform child = root.GetChild(i);
-            child.gameObject.SetActive(false);
-            // Detach first so a second render in the same frame never sees the old toggles.
-            child.SetParent(null, false);
-            Destroy(child.gameObject);
-        }
+            DestroyDetached(root.GetChild(i));
     }
 }
