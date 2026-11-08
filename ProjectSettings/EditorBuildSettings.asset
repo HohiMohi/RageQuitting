@@ -24,6 +24,9 @@ EditorBuildSettings:
     path: Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity
     guid: f7947f5956982c2429fa33af42c763bd
   - enabled: 1
+    path: Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02_Copy.unity
+    guid: c5b3907d0591438e991d0bca5c56eb4f
+  - enabled: 1
     path: Assets/Experiments/BridgeDeckAreaV1/Scenes/TutorialDeckAreaV1.unity
     guid: 20005dbd7b08c6b4c8de8731d8addb4c
   m_configObjects:
