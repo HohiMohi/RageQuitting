@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class ConstructionBookView : MonoBehaviour
+public sealed class ConstructionBookView : MonoBehaviour, IConstructionBookView
 {
     private const float StepsHeadingSize = 28f;
     private const float InstructionSize = 22f;

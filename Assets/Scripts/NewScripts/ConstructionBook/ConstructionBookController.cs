@@ -419,7 +419,12 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
 
     public void PopulateView(ConstructionBookView view, Func<bool> additionalInteractionBlock)
     {
-        if (view == null) return;
+        PopulateView((IConstructionBookView)view, additionalInteractionBlock);
+    }
+
+    public void PopulateView(IConstructionBookView view, Func<bool> additionalInteractionBlock)
+    {
+        if (view == null || view is UnityEngine.Object unityView && unityView == null) return;
         int count = spreads.Count > 0 ? spreads[Mathf.Clamp(displayedIndex, 0, spreads.Count - 1)].RequiredCount : 0;
         string completionSummary = string.Empty;
         bool perStockPlate = false;
@@ -451,7 +456,7 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
         NetworkManager manager = Unity.Netcode.NetworkManager.Singleton;
         ulong localId = manager != null && manager.IsListening ? manager.LocalClientId : 0;
         view.RenderWithCompletionSummary(currentEntry, count, Mathf.Max(0, displayedIndex), spreads.Count, currentMaterials, currentMaterialsAvailable, roster, localId, IsAssigned,
-            RequestAssignment, () => IsPageTransitioning || additionalInteractionBlock != null && additionalInteractionBlock(), view == worldView,
+            RequestAssignment, () => IsPageTransitioning || additionalInteractionBlock != null && additionalInteractionBlock(), ReferenceEquals(view, worldView),
             completionSummary, perStockPlate);
     }
 
