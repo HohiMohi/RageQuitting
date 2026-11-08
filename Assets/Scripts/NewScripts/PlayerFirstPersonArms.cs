@@ -16,6 +16,7 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     [SerializeField] private PlayerInteractionNew playerInteraction;
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private PlayerInventory playerInventory;
+    [SerializeField] private PlayerTemporaryStatusController temporaryStatusController;
     [SerializeField] private PlayerTurnFeedback playerTurnFeedback;
     [SerializeField] private PlayerCameraFeedbackComposer cameraFeedbackComposer;
     [SerializeField] private AudioSource toolAudioSource;
@@ -61,8 +62,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
     private Transform armsRoot;
     private Transform leftArmRoot;
     private Transform leftHandVisual;
+    private Transform rightHandVisual;
     private Transform rightArmRoot;
     private Transform rightToolAnchor;
+    private Vector3 leftHandBaseScale;
+    private Vector3 rightHandBaseScale;
     private Transform spiritLevelToolAnchor;
     private bool spiritLevelMeasurementActive;
     private float spiritLevelPoseBlend;
@@ -221,6 +225,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             playerInventory = GetComponent<PlayerInventory>();
         }
 
+        if (temporaryStatusController == null)
+        {
+            TryGetComponent(out temporaryStatusController);
+        }
+
         if (playerTurnFeedback == null)
         {
             playerTurnFeedback = GetComponent<PlayerTurnFeedback>();
@@ -285,7 +294,9 @@ public class PlayerFirstPersonArms : NetworkBehaviour
         armsRoot.localRotation = Quaternion.Euler(rootLocalEulerAngles);
 
         leftArmRoot = CreateArm("Left", -armSpacing, out leftHandVisual);
-        rightArmRoot = CreateArm("Right", armSpacing, out _);
+        rightArmRoot = CreateArm("Right", armSpacing, out rightHandVisual);
+        leftHandBaseScale = leftHandVisual != null ? leftHandVisual.localScale : Vector3.one;
+        rightHandBaseScale = rightHandVisual != null ? rightHandVisual.localScale : Vector3.one;
         rightToolAnchor = CreateToolAnchor(rightArmRoot);
         spiritLevelToolAnchor = CreateSpiritLevelToolAnchor();
         RefreshToolVisual();
@@ -562,6 +573,11 @@ public class PlayerFirstPersonArms : NetworkBehaviour
 
     private void UpdatePose(float deltaTime)
     {
+        bool crushedHands = temporaryStatusController != null && temporaryStatusController.IsCrushedHands;
+        if (leftHandVisual != null)
+            leftHandVisual.localScale = ScaleHand(leftHandBaseScale, crushedHands);
+        if (rightHandVisual != null)
+            rightHandVisual.localScale = ScaleHand(rightHandBaseScale, crushedHands);
         float moveAmount = locomotionAmount;
         bool isSprinting = sprintBlend > 0.5f && moveAmount > 0.01f;
         bool isCarrying = playerInteraction != null && playerInteraction.IsHoldingObject;
@@ -638,6 +654,9 @@ public class PlayerFirstPersonArms : NetworkBehaviour
             profiledRightArmEuler,
             profiledLeftArmWeight);
     }
+
+    private static Vector3 ScaleHand(Vector3 original, bool crushedHands) => crushedHands
+        ? new Vector3(original.x, original.y * 0.33f, original.z) : original;
 
     private void GetProfiledActionPose(
         out Vector3 toolPosition,

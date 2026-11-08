@@ -415,6 +415,7 @@ public partial class PlayerActionController
     {
         NetworkManager manager = NetworkManager;
         if (manager == null || !manager.IsServer || !manager.IsListening || !IsSpawned
+            || IsWorldActionBlocked(sender)
             || sender != OwnerClientId || attempt == 0
             || !IsNewerRequestSequence(attempt, lastServerCrowbarAttempt)) return;
         lastServerCrowbarAttempt = attempt;
@@ -474,7 +475,8 @@ public partial class PlayerActionController
     private void RefreshCrowbarExtractionServerRpc(uint attempt, ulong nailId, Vector3 aimOrigin,
         Vector3 aimDirection, ServerRpcParams rpcParams = default)
     {
-        if (rpcParams.Receive.SenderClientId != OwnerClientId || attempt != activeCrowbarAttempt
+        if (IsWorldActionBlocked(rpcParams.Receive.SenderClientId)
+            || rpcParams.Receive.SenderClientId != OwnerClientId || attempt != activeCrowbarAttempt
             || serverCrowbarNail == null || serverCrowbarNail.NetworkObjectId != nailId
             || !ValidateServerCrowbarAim(serverCrowbarNail, aimOrigin, aimDirection))
         {
@@ -516,7 +518,8 @@ public partial class PlayerActionController
     private void RequestCrowbarExtractionCommitServerRpc(uint attempt, ulong nailId,
         Vector3 aimOrigin, Vector3 aimDirection, ServerRpcParams rpcParams = default)
     {
-        if (rpcParams.Receive.SenderClientId != OwnerClientId || attempt == 0
+        if (IsWorldActionBlocked(rpcParams.Receive.SenderClientId)
+            || rpcParams.Receive.SenderClientId != OwnerClientId || attempt == 0
             || attempt != activeCrowbarAttempt) return;
         if (serverCrowbarNail == null)
         {

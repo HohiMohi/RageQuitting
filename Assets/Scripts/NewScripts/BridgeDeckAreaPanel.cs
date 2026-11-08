@@ -474,7 +474,7 @@ public sealed class BridgeDeckAreaPanel : NetworkBehaviour, IInteractionPromptPr
         Vector3 rayDirection, uint sequence, ServerRpcParams rpcParams = default)
     {
         ulong senderClientId = rpcParams.Receive.SenderClientId;
-        if (!IsServer || NetworkManager == null || completionCommitted || sequence == 0
+        if (!IsServer || NetworkManager == null || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, senderClientId) || completionCommitted || sequence == 0
             || !NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(actorNetworkObjectId, out NetworkObject actor)
             || actor == null || actor.OwnerClientId != senderClientId
             || !actor.TryGetComponent(out PlayerActionController controller)
@@ -532,7 +532,7 @@ public sealed class BridgeDeckAreaPanel : NetworkBehaviour, IInteractionPromptPr
         uint sequence, ServerRpcParams rpcParams = default)
     {
         ulong sender = rpcParams.Receive.SenderClientId;
-        if (!IsServer || sequence == 0 || localState.OperatorClientId != sender
+        if (!IsServer || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, sender) || sequence == 0 || localState.OperatorClientId != sender
             || localState.OperatorNetworkObjectId != actorNetworkObjectId
             || localState.OperatorRequestSequence != sequence) return;
         if (!NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(actorNetworkObjectId, out NetworkObject actor)

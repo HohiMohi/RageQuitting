@@ -38,6 +38,7 @@ public class MountingNailStage1PlayModeTests
         Assert.That(nailObject.GetComponent<Rigidbody>().isKinematic, Is.True);
         Assert.That(nailObject.GetComponent<Rigidbody>().useGravity, Is.False);
 
+        yield return WaitForPlacementLockExpiry();
         ActualPickup();
         AssertState("Held", "Pickup cancels Prepared immediately without an exit impulse.");
         Assert.That((bool)InteractionType().GetMethod("DropObject").Invoke(interaction, null), Is.True);
@@ -82,6 +83,7 @@ public class MountingNailStage1PlayModeTests
 
         target.transform.position = new Vector3(10f, 15f, 0f);
         Physics.SyncTransforms();
+        yield return WaitForPlacementLockExpiry();
         ActualPickup();
         contactPosition = PositionForFace(target.transform.position, 0.5f, GetFloat(Profile(), "LengthMeters"), true, 0.005f);
         Assert.That(Commit(contactPosition, Quaternion.identity), Is.True);
@@ -97,6 +99,7 @@ public class MountingNailStage1PlayModeTests
 
         target.transform.rotation = Quaternion.identity;
         Physics.SyncTransforms();
+        yield return WaitForPlacementLockExpiry();
         ActualPickup();
         contactPosition = PositionForFace(target.transform.position, 0.5f, GetFloat(Profile(), "LengthMeters"), true, 0.005f);
         Assert.That(Commit(contactPosition, Quaternion.identity), Is.True);
@@ -106,6 +109,7 @@ public class MountingNailStage1PlayModeTests
 
         target.GetComponent<Collider>().enabled = true;
         Physics.SyncTransforms();
+        yield return WaitForPlacementLockExpiry();
         ActualPickup();
         Assert.That(Commit(contactPosition, Quaternion.identity), Is.True);
         float timeout = GetFloat(Profile(), "PreparedTimeoutSeconds");
@@ -117,6 +121,40 @@ public class MountingNailStage1PlayModeTests
         }
         AssertState("Loose", "Prepared timeout is enforced by the authority clock.");
 #endif
+    }
+
+    [UnityTest]
+    public IEnumerator AcceptedCommitAndSuccessfulHammerEmbeddingApplyCrushedHandsOnce()
+    {
+#if !UNITY_EDITOR
+        Assert.Ignore("Uses the project's authored Unity prefab assets.");
+        yield break;
+#else
+        SetupFixture();
+        Physics.SyncTransforms();
+        ActualPickup();
+        Vector3 contactPosition = PositionForFace(target.transform.position, 0.5f,
+            GetFloat(Profile(), "LengthMeters"), true, 0.005f);
+        Assert.That(Commit(contactPosition, Quaternion.identity), Is.True);
+        AssertState("Prepared");
+
+        Component statusController = player.GetComponent(System.Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp"));
+        PropertyInfo currentStatus = statusController.GetType().GetProperty("CurrentStatus");
+        Assert.That(currentStatus.GetValue(statusController).ToString(), Is.EqualTo("PlacementLock"));
+        System.Type itemType = System.Type.GetType("EquippableItemType, Assembly-CSharp");
+        object wrongTool = System.Enum.Parse(itemType, "Axe");
+        MethodInfo hammerHit = NailType().GetMethod("TryApplyHammerHit", InstancePublic);
+        Assert.That((bool)hammerHit.Invoke(nail, new[] { wrongTool }), Is.False);
+        Assert.That(currentStatus.GetValue(statusController).ToString(), Is.EqualTo("PlacementLock"),
+            "A rejected non-hammer hit cannot cause hand injury.");
+
+        object hammer = System.Enum.Parse(itemType, "IndustrialHammer");
+        Assert.That((bool)hammerHit.Invoke(nail, new[] { hammer }), Is.True);
+        AssertState("EmbeddedSingle", "The valid first embedding hit consumes the prepared nail.");
+        Assert.That(currentStatus.GetValue(statusController).ToString(), Is.EqualTo("CrushedHands"),
+            "A successful prepared embedding immediately transitions the placer to CrushedHands.");
+#endif
+        yield return null;
     }
 
     [UnityTest]
@@ -329,6 +367,8 @@ public class MountingNailStage1PlayModeTests
         target = GameObject.CreatePrimitive(PrimitiveType.Cube);
         target.transform.position = new Vector3(10f, 15f, 0f);
         interaction = player.GetComponent(InteractionType());
+        Component statusController = player.GetComponent(System.Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp"));
+        statusController.GetType().GetField("placementLockDurationSeconds", InstanceNonPublic).SetValue(statusController, 0.005f);
         resource = nailObject.GetComponent(ResourceType());
         nail = nailObject.GetComponent(NailType());
         Assert.That(interaction, Is.Not.Null);
@@ -338,6 +378,17 @@ public class MountingNailStage1PlayModeTests
 
     private void ActualPickup() => ResourceType().GetMethod("PickedUp", InstancePublic)
         .Invoke(resource, new object[] { player.transform });
+
+    private IEnumerator WaitForPlacementLockExpiry()
+    {
+        Component statusController = player.GetComponent(System.Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp"));
+        float deadline = Time.realtimeSinceStartup + 2f;
+        while (statusController.GetType().GetProperty("CurrentStatus").GetValue(statusController).ToString() != "None"
+            && Time.realtimeSinceStartup < deadline)
+            yield return null;
+        Assert.That(statusController.GetType().GetProperty("CurrentStatus").GetValue(statusController).ToString(),
+            Is.EqualTo("None"), "The short fixture placement lock must expire before the next nail action.");
+    }
 
     private bool Commit(Vector3 position, Quaternion rotation) => (bool)InteractionType()
         .GetMethod("TryReleaseSingleCarryPlacement", InstancePublic)

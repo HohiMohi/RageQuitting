@@ -64,6 +64,7 @@ public sealed class CrowbarStage4PlayModeTests
         fixtureCrowbar.GetType().GetField("actionProfile", PublicInstance).SetValue(fixtureCrowbar, fixtureProfile);
         crowbar = fixtureCrowbar;
         player = new GameObject("Crowbar Stage 4 local input player");
+        player.AddComponent(Type.GetType("Unity.Netcode.NetworkObject, Unity.Netcode.Runtime"));
         player.AddComponent(PlayerInputType);
         inventory = player.AddComponent(InventoryType);
         Component interaction = player.AddComponent(InteractionType);

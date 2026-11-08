@@ -39,10 +39,19 @@ powinny być używane do trwałej konfiguracji.
 
 ### Kary ruchu
 
+
 Kary pochodzą z inventory, single-carry, shared-carry i niesienia gracza.
 System składa mnożniki, zamiast nadpisywać `MoveSpeed`. Shared-carry może
 dodatkowo sterować staminą, jeśli liczba player-holderów jest mniejsza od
 wymaganej.
+
+### Blokady akcji i status `CrushedHands`
+
+Każde zaakceptowane umieszczenie F→E rozpoczyna konfigurowaną blokadę trwającą domyślnie `1 s`, obejmującą ruch, sprint, skok, kamerę oraz akcje w świecie. Grawitacja i impulsy fizyczne nadal działają. Blokada nie wyłącza menu UI. Zwykłe przenoszenie bez zatwierdzonego placementu nie uruchamia tego efektu.
+
+Obrażenie wymaga skutecznego osadzenia świeżo przygotowanego gwoździa ściśle przed upływem sekundowej blokady umieszczenia. Ten termin jest niezależny od istniejącego terminu `Prepared`. Takie osadzenie kończy blokadę i nakłada `CrushedHands` na konfigurowalne domyślne `15 s`. Może je spowodować dowolny atakujący. Zwykłe kopnięcie luźnego gwoździa i późne trafienie nadal działają według reguł gwoździa, ale nie powodują obrażeń statusowych. Status pozostawia ruch i rozglądanie, ale blokuje akcje w świecie. Przy wejściu wykonuje jedno upuszczenie narzędzi z obu zajętych slotów oraz niesionego obiektu, bez rzutu. Utrzymuje ręce FPP spłaszczone aż do przywrócenia. Faktyczny respawn wywołuje `ResetTemporaryStatuses`, a ożywienie przez sojusznika zachowuje pozostały czas.
+
+`PlayerNew` konfiguruje nowy status w Inspectorze. Serwer jest autorytetem timera i efektu. Owner widzi potwierdzone przez serwer podniesienie, zamianę slotów i upuszczenie. Oba sloty ekwipunku replikują się razem. Upuszczenie uwzględnia oba sloty, ale dwu-slotowe narzędzie jest upuszczane tylko raz.
 
 ## Kamera i obrót ciała
 

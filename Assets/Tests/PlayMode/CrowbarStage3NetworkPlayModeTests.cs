@@ -82,11 +82,18 @@ public class CrowbarStage3NetworkPlayModeTests
         yield return Until(() => client.SpawnManager.SpawnedObjects.ContainsKey(serverActor.NetworkObjectId), "owner player replica");
         GameObject clientActorObject = client.SpawnManager.SpawnedObjects[serverActor.NetworkObjectId].gameObject;
         Component clientInventory = clientActorObject.GetComponent(Type.GetType("PlayerInventory, Assembly-CSharp"));
+        Component clientAction = clientActorObject.GetComponent(Type.GetType("PlayerActionController, Assembly-CSharp"));
         Component serverInventory = serverActor.GetComponent(Type.GetType("PlayerInventory, Assembly-CSharp"));
-        Assert.That(clientInventory.GetType().GetMethod("AddItem").Invoke(clientInventory, new object[] { crowbarAsset }), Is.EqualTo(true));
+        Assert.That(serverInventory.GetType().GetMethod("AddItem").Invoke(serverInventory, new object[] { crowbarAsset }), Is.EqualTo(true),
+            "Seed the server-owned inventory fixture directly.");
         yield return Until(() => (int)serverInventory.GetType().GetMethod("GetNetworkSlotItemTypeValue").Invoke(serverInventory, new object[] { 0 }) == 11,
             "Crowbar inventory slot replicates to the authoritative server");
         Assert.That(serverInventory.GetType().GetMethod("GetSelectedItemForServerValidation").Invoke(serverInventory, null), Is.SameAs(crowbarAsset));
+        yield return Until(() => (int)clientInventory.GetType().GetMethod("GetNetworkSlotItemTypeValue").Invoke(clientInventory, new object[] { 0 }) == 11
+            && clientInventory.GetType().GetMethod("GetCurrentSelectedItem").Invoke(clientInventory, null) == crowbarAsset,
+            "the owner's confirmed Crowbar inventory and selected item");
+        yield return Until(() => (bool)clientAction.GetType().GetProperty("IsSpawned").GetValue(clientAction),
+            "owner action controller initialization");
 
         NetworkObject serverCrowbar = Spawn(crowbarPrefab, new Vector3(203f, 10f, 200f));
         yield return Until(() => client.SpawnManager.SpawnedObjects.ContainsKey(serverCrowbar.NetworkObjectId), "actual Crowbar prefab replication");
@@ -97,7 +104,6 @@ public class CrowbarStage3NetworkPlayModeTests
 
         Component clientInteraction = clientActorObject.GetComponent(Type.GetType("PlayerInteractionNew, Assembly-CSharp"));
         clientInteraction.GetType().GetField("_currentTarget", PrivateInstance).SetValue(clientInteraction, clientHealth);
-        Component clientAction = clientActorObject.GetComponent(Type.GetType("PlayerActionController, Assembly-CSharp"));
         Rigidbody clientTargetBody = clientTargetObject.GetComponent<Rigidbody>();
         Assert.That(clientAction.GetType().GetMethod("PerformAction", PublicInstance).Invoke(clientAction, null), Is.EqualTo(true),
             "The owner invokes the normal PlayerActionController path; its combat impact uses the real ServerRpc.");

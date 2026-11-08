@@ -149,6 +149,7 @@ namespace StarterAssets
 		private StarterAssetsInputs _input;
 		private GameObject _mainCamera;
 		private PlayerInputNew _playerInputNew;
+		private PlayerTemporaryStatusController _temporaryStatusController;
 		private PlayerInteractionNew _playerInteractionNew;
 		private PlayerInventory _playerInventory;
 		private PlayerHealth _playerHealth;
@@ -211,6 +212,7 @@ namespace StarterAssets
 				_mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
 			}
             _playerInputNew = GetComponent<PlayerInputNew>();
+			TryGetComponent(out _temporaryStatusController);
 			_playerInputNew.OnSprint += PlayerInputNew_OnSprint;
 			_playerInputNew.OnJump += PlayerInputNew_OnJump;
 			_playerHealth = GetComponent<PlayerHealth>();
@@ -465,6 +467,11 @@ namespace StarterAssets
 
 		private void CameraRotation()
 		{
+			if (_temporaryStatusController != null && _temporaryStatusController.BlocksControls)
+			{
+				return;
+			}
+
 			if (_wheelbarrowController != null && _wheelbarrowController.BlocksCameraRotation)
 			{
 				return;
@@ -576,6 +583,15 @@ namespace StarterAssets
 				_isSprinting = false;
 				_isJumpPerformed = false;
 				_horizontalVelocity = Vector3.zero;
+				return;
+			}
+
+			if (_temporaryStatusController != null && _temporaryStatusController.BlocksControls)
+			{
+				_isSprinting = false;
+				_isJumpPerformed = false;
+				_horizontalVelocity = Vector3.zero;
+				_controller.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
 				return;
 			}
 			if (_playerInputNew != null && _playerInputNew.IsSingleCarryPlacementActive)
@@ -877,7 +893,8 @@ namespace StarterAssets
 				return;
 			}
 
-			bool canJump = !IsDowned() && (_playerInteractionNew == null ||
+			bool canJump = (_temporaryStatusController == null || !_temporaryStatusController.BlocksControls)
+				&& !IsDowned() && (_playerInteractionNew == null ||
 				(!_playerInteractionNew.IsSharedCarryMovementActive && !_playerInteractionNew.IsFlexibleSaplingInteractionActive));
 			if (!canJump)
 			{

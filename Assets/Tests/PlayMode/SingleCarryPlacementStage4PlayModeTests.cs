@@ -138,6 +138,7 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
         Assert.That(Quaternion.Angle(item.transform.rotation, shownRotation), Is.LessThan(0.5f),
             "The release applies no ordinary-drop spin.");
 
+        yield return WaitForTemporaryStatusExpiry(player);
         resource.GetType().GetMethod("PickedUp").Invoke(resource, new object[] { player.transform });
         QueueKeys();
         yield return null;
@@ -559,6 +560,18 @@ public class SingleCarryPlacementStage4PlayModeTests : InputTestFixture
             startedHost.NetworkConfig.PlayerPrefab = previousPlayerPrefab;
         restoreHostConfiguration = false;
         hostTransportToRestore = null;
+    }
+
+    private static IEnumerator WaitForTemporaryStatusExpiry(GameObject playerRoot)
+    {
+        Type statusType = TypeByName("PlayerTemporaryStatusController, Assembly-CSharp");
+        Component status = playerRoot.GetComponent(statusType);
+        PropertyInfo currentStatus = statusType.GetProperty("CurrentStatus");
+        float deadline = Time.realtimeSinceStartup + 2f;
+        while (currentStatus.GetValue(status).ToString() != "None" && Time.realtimeSinceStartup < deadline)
+            yield return null;
+        Assert.That(currentStatus.GetValue(status).ToString(), Is.EqualTo("None"),
+            "The post-placement lock must expire before the next independent placement action.");
     }
 
     private static Type TypeByName(string name) => Type.GetType(name);

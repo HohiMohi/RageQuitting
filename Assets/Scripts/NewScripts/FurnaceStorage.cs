@@ -271,26 +271,30 @@ public class FurnaceStorage : BaseStorageNew
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void ToggleFurnaceServerRpc()
+    private void ToggleFurnaceServerRpc(ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         ToggleFurnaceServer();
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void BellowsPressServerRpc()
+    private void BellowsPressServerRpc(ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         ApplyPressureDeltaServer(1f);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void VentilationGrilleCloseServerRpc()
+    private void VentilationGrilleCloseServerRpc(ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         ApplyPressureDeltaServer(-1f);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void KindlingUseServerRpc()
+    private void KindlingUseServerRpc(ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         SetFurnaceOnFireServer();
     }
 

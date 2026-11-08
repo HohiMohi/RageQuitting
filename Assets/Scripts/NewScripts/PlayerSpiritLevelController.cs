@@ -127,7 +127,7 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
     [ServerRpc]
     private void BeginMeasurementServerRpc(int componentId, int pointId, sbyte requestedViewSign, ServerRpcParams rpcParams = default)
     {
-        if (rpcParams.Receive.SenderClientId != OwnerClientId || pointId < 0 ||
+        if (rpcParams.Receive.SenderClientId != OwnerClientId || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId) || pointId < 0 ||
             !TryResolvePoint(componentId, pointId, out SpiritLevelMeasurementPoint point) ||
             !point.IsAvailable)
         {

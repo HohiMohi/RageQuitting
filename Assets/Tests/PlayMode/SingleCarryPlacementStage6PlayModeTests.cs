@@ -1507,17 +1507,16 @@ public class SingleCarryPlacementStage6PlayModeTests
         RigidbodyConstraints bridgeOriginalConstraints = RigidbodyConstraints.None;
 
         Component serverInventory = host.ConnectedClients[owner.LocalClientId].PlayerObject.GetComponent(InventoryType);
-        Component ownerInventory = owner.LocalClient.PlayerObject.GetComponent(InventoryType);
-        Assert.That((bool)InventoryType.GetMethod("AddItem").Invoke(ownerInventory, new[] { toolAsset }), Is.True,
-            "Seed the remote owner's inventory through its normal owner-side AddItem path.");
+        yield return PickupNetworkedEquippable(host, owner, toolPrefab, "two-slot hammer pickup");
+        yield return AssertRejectedPickupWhenOwnerCacheClaimsSpace(host, owner, axePrefab, "full inventory rejection");
         yield return Until(() => (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(serverInventory, new object[] { 0 })
                 == (int)EquippableItemProfileType.GetField("itemType").GetValue(toolAsset)
             && (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(serverInventory, new object[] { 1 }) == -2,
             "server inventory slot replication");
         FieldInfo inventoryItemsField = InventoryType.GetField("inventoryItems", BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.That(inventoryItemsField.GetValue(serverInventory), Is.Not.Null);
-        Assert.That(((Array)inventoryItemsField.GetValue(serverInventory)).GetValue(0), Is.Null,
-            "The server must exercise replicated slot state rather than a populated private inventory array.");
+        Assert.That(((Array)inventoryItemsField.GetValue(serverInventory)).GetValue(0), Is.SameAs(toolAsset),
+            "The authoritative server keeps the actual inventory item alongside its replicated slot pair.");
         Assert.That((int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(serverInventory, new object[] { 1 }),
             Is.EqualTo(-2), "The reserved slot must not become a duplicate drop.");
 
@@ -1725,8 +1724,30 @@ public class SingleCarryPlacementStage6PlayModeTests
         // A scene/manual player despawn must expire the same-frame snapshot without treating
         // it as a network disconnect. Keep this observer connected and confirm no Axe is emitted.
         Component observerServerInventory = host.ConnectedClients[observer.LocalClientId].PlayerObject.GetComponent(InventoryType);
+        yield return PickupNetworkedEquippable(host, observer, axePrefab, "observer axe pickup");
+        yield return PickupNetworkedEquippable(host, observer, pickaxePrefab, "observer pickaxe pickup", 1);
         Component observerOwnerInventory = observer.LocalClient.PlayerObject.GetComponent(InventoryType);
-        Assert.That((bool)InventoryType.GetMethod("AddItem").Invoke(observerOwnerInventory, new[] { axeAsset }), Is.True);
+        int axeTypeValue = (int)EquippableItemProfileType.GetField("itemType").GetValue(axeAsset);
+        int pickaxeTypeValue = (int)EquippableItemProfileType.GetField("itemType").GetValue(pickaxeAsset);
+        yield return Until(() => (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerOwnerInventory, new object[] { 0 }) == axeTypeValue
+            && (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerOwnerInventory, new object[] { 1 }) == pickaxeTypeValue,
+            "owner receives both confirmed tools before swap");
+        observer.SetSingleton();
+        InventoryType.GetMethod("SwapItems", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(observerOwnerInventory, null);
+        host.SetSingleton();
+        yield return Until(() => (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerServerInventory, new object[] { 0 }) == pickaxeTypeValue
+            && (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerServerInventory, new object[] { 1 }) == axeTypeValue,
+            "server confirms owner swap");
+        yield return Until(() => (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerOwnerInventory, new object[] { 0 }) == pickaxeTypeValue
+            && (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerOwnerInventory, new object[] { 1 }) == axeTypeValue,
+            "owner receives confirmed swapped pair before drop");
+        observer.SetSingleton();
+        InventoryType.GetMethod("RemoveItem", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(observerOwnerInventory, null);
+        host.SetSingleton();
+        yield return Until(() => (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerServerInventory, new object[] { 0 }) == axeTypeValue
+            && (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerServerInventory, new object[] { 1 }) == -1
+            && CountDroppedTool(host, pickaxeAsset) == 1,
+            "server confirms owner drop and spawns the selected tool");
         yield return Until(() => (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(observerServerInventory, new object[] { 0 })
             == (int)EquippableItemProfileType.GetField("itemType").GetValue(axeAsset), "manual-despawn inventory replication");
         NetworkObject manuallyDespawnedPlayer = host.ConnectedClients[observer.LocalClientId].PlayerObject;
@@ -1739,19 +1760,20 @@ public class SingleCarryPlacementStage6PlayModeTests
 
         // A later owner's two occupied one-slot tools both return; empty/reserved slots do not.
         Component secondServerInventory = host.ConnectedClients[inventoryOwner.LocalClientId].PlayerObject.GetComponent(InventoryType);
-        Component secondOwnerInventory = inventoryOwner.LocalClient.PlayerObject.GetComponent(InventoryType);
-        Assert.That((bool)InventoryType.GetMethod("AddItem").Invoke(secondOwnerInventory, new[] { axeAsset }), Is.True);
-        Assert.That((bool)InventoryType.GetMethod("AddItem").Invoke(secondOwnerInventory, new[] { pickaxeAsset }), Is.True);
+        yield return PickupNetworkedEquippable(host, inventoryOwner, axePrefab, "first same-type axe pickup");
+        yield return PickupNetworkedEquippable(host, inventoryOwner, axePrefab, "second same-type axe pickup");
         yield return Until(() => (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(secondServerInventory, new object[] { 0 })
                 == (int)EquippableItemProfileType.GetField("itemType").GetValue(axeAsset)
             && (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(secondServerInventory, new object[] { 1 })
-                == (int)EquippableItemProfileType.GetField("itemType").GetValue(pickaxeAsset),
-            "both actual one-slot tools replicate to server slots");
+                == (int)EquippableItemProfileType.GetField("itemType").GetValue(axeAsset),
+            "both same-type one-slot tools replicate to server slots");
         ulong secondOwnerId = inventoryOwner.LocalClientId;
         host.DisconnectClient(secondOwnerId);
         yield return Until(() => host.ConnectedClientsIds.Count == 2, "second actual client disconnect");
-        yield return Until(() => CountDroppedTool(host, axeAsset) == 1 && CountDroppedTool(host, pickaxeAsset) == 1,
-            "both occupied one-slot tools drop exactly once");
+        yield return Until(() => CountDroppedTool(host, axeAsset) == 2,
+            "both occupied same-type one-slot tools drop exactly once");
+        Assert.That(CountDroppedTool(host, pickaxeAsset), Is.EqualTo(1),
+            "The already-confirmed normal Pickaxe drop remains the only Pickaxe after the unrelated Axe disconnect.");
         Assert.That(CountDroppedTool(host, toolAsset), Is.EqualTo(1), "The earlier reserved two-slot tool remains exactly once.");
 #endif
     }
@@ -2616,6 +2638,70 @@ public class SingleCarryPlacementStage6PlayModeTests
         }
         throw new InvalidOperationException("No free Stage6 fixture port in the dedicated 46006–46105 range.");
     }
+
+    private IEnumerator PickupNetworkedEquippable(NetworkManager host, NetworkManager owner, GameObject prefab, string label, int expectedSlot = 0)
+    {
+        GameObject source = UnityEngine.Object.Instantiate(prefab);
+        runtimeObjects.Add(source);
+        source.transform.position = host.ConnectedClients[owner.LocalClientId].PlayerObject.transform.position;
+        NetworkObject sourceNetworkObject = source.GetComponent<NetworkObject>();
+        Assert.That(sourceNetworkObject, Is.Not.Null, label + " prefab must have a NetworkObject.");
+        spawnedObjects.Add(sourceNetworkObject);
+        sourceNetworkObject.Spawn();
+        ulong sourceId = sourceNetworkObject.NetworkObjectId;
+        yield return Until(() => owner.SpawnManager.SpawnedObjects.ContainsKey(sourceId), label + " source mirror");
+
+        owner.SetSingleton();
+        GameObject ownerSource = owner.SpawnManager.SpawnedObjects[sourceId].gameObject;
+        Component ownerItem = ownerSource.GetComponent(EquippableItemType);
+        Assert.That(ownerItem, Is.Not.Null, label + " source mirror must expose EquippableItem.");
+        object itemProfile = EquippableItemType.GetMethod("GetEquippableItemSO").Invoke(ownerItem, null);
+        int expectedType = (int)EquippableItemProfileType.GetField("itemType").GetValue(itemProfile);
+        EquippableItemType.GetMethod("Interact").Invoke(ownerItem, new object[] { owner.LocalClient.PlayerObject.transform });
+        host.SetSingleton();
+
+        Component serverInventory = host.ConnectedClients[owner.LocalClientId].PlayerObject.GetComponent(InventoryType);
+        yield return Until(() => !host.SpawnManager.SpawnedObjects.ContainsKey(sourceId)
+            && (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(serverInventory, new object[] { expectedSlot }) == expectedType,
+            label + " server acceptance, inventory update, and world-item despawn");
+        Component ownerInventory = owner.LocalClient.PlayerObject.GetComponent(InventoryType);
+        yield return Until(() => (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(ownerInventory, new object[] { expectedSlot }) == expectedType,
+            label + " confirmed owner inventory replication");
+    }
+
+    private IEnumerator AssertRejectedPickupWhenOwnerCacheClaimsSpace(NetworkManager host, NetworkManager owner, GameObject prefab, string label)
+    {
+        GameObject source = UnityEngine.Object.Instantiate(prefab);
+        runtimeObjects.Add(source);
+        source.transform.position = host.ConnectedClients[owner.LocalClientId].PlayerObject.transform.position;
+        NetworkObject sourceNetworkObject = source.GetComponent<NetworkObject>();
+        spawnedObjects.Add(sourceNetworkObject);
+        sourceNetworkObject.Spawn();
+        ulong sourceId = sourceNetworkObject.NetworkObjectId;
+        yield return Until(() => owner.SpawnManager.SpawnedObjects.ContainsKey(sourceId), label + " source mirror");
+
+        owner.SetSingleton();
+        Component ownerInventory = owner.LocalClient.PlayerObject.GetComponent(InventoryType);
+        Array localSlots = (Array)InventoryType.GetField("inventoryItems", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(ownerInventory);
+        Array.Clear(localSlots, 0, localSlots.Length);
+        InventoryType.GetField("_currentInventoryOccupiedSlots", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(ownerInventory, 0);
+        Component ownerItem = owner.SpawnManager.SpawnedObjects[sourceId].GetComponent(EquippableItemType);
+        EquippableItemType.GetMethod("Interact").Invoke(ownerItem, new object[] { owner.LocalClient.PlayerObject.transform });
+        host.SetSingleton();
+
+        yield return new WaitForSecondsRealtime(.15f);
+        Assert.That(host.SpawnManager.SpawnedObjects.ContainsKey(sourceId), Is.True,
+            "The server must keep the world tool when its authoritative inventory is full, even if the owner cache claims space.");
+        Component serverInventory = host.ConnectedClients[owner.LocalClientId].PlayerObject.GetComponent(InventoryType);
+        int slot0 = (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(serverInventory, new object[] { 0 });
+        int slot1 = (int)InventoryType.GetMethod("GetNetworkSlotItemTypeValue").Invoke(serverInventory, new object[] { 1 });
+        Type stateType = Type.GetType("InventorySlotsState, Assembly-CSharp");
+        object state = Activator.CreateInstance(stateType, new object[] { slot0, slot1 });
+        InventoryType.GetMethod("ApplyReplicatedInventory", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(ownerInventory, new[] { state });
+        sourceNetworkObject.Despawn(true);
+    }
+
     private static IEnumerator Until(Func<bool> condition, string label)
     {
         float deadline = Time.realtimeSinceStartup + 15f;

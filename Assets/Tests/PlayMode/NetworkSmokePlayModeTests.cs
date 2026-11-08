@@ -37,7 +37,8 @@ namespace RageQuitting.Tests.PlayMode
                 "[Netcode] [PlayerNew][PlayerRopeConstraintController][isActiveAndEnabled: False] Disabled NetworkBehaviours will be excluded from spawning and synchronization!",
                 "[Netcode] [PlayerNew][PlayerRopeUI][isActiveAndEnabled: False] Disabled NetworkBehaviours will be excluded from spawning and synchronization!",
                 "[Netcode] [PlayerNew][PlayerSpiritLevelController][isActiveAndEnabled: False] Disabled NetworkBehaviours will be excluded from spawning and synchronization!",
-                "[Netcode] [PlayerNew][PlayerConcreteTrapController][isActiveAndEnabled: False] Disabled NetworkBehaviours will be excluded from spawning and synchronization!"
+                "[Netcode] [PlayerNew][PlayerConcreteTrapController][isActiveAndEnabled: False] Disabled NetworkBehaviours will be excluded from spawning and synchronization!",
+                "[Netcode] [PlayerNew][PlayerTemporaryStatusController][isActiveAndEnabled: False] Disabled NetworkBehaviours will be excluded from spawning and synchronization!"
             });
 
         private readonly object callbackGate = new object();
@@ -190,6 +191,7 @@ namespace RageQuitting.Tests.PlayMode
                 AssertHostState(networkManager);
                 yield return WaitForLocalPlayer(networkManager, "Tutorial scene load");
                 AssertLocalPlayer(networkManager);
+                AssertTemporaryStatusController(networkManager.LocalClient.PlayerObject);
                 yield return WaitForCondition(
                     () =>
                     {
@@ -214,6 +216,7 @@ namespace RageQuitting.Tests.PlayMode
                 yield return WaitForLocalPlayer(networkManager, "host restart in Tutorial scene");
                 AssertHostState(networkManager);
                 AssertLocalPlayer(networkManager);
+                AssertTemporaryStatusController(networkManager.LocalClient.PlayerObject);
 
                 networkManager.Shutdown();
                 yield return null;
@@ -317,6 +320,19 @@ namespace RageQuitting.Tests.PlayMode
             Assert.That(playerObject.IsPlayerObject, Is.True);
             Assert.That(playerObject.IsSpawned, Is.True);
             Assert.That(playerObject.OwnerClientId, Is.EqualTo(manager.LocalClientId));
+        }
+
+        private static void AssertTemporaryStatusController(NetworkObject playerObject)
+        {
+            System.Type statusType = System.Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp");
+            Assert.That(statusType, Is.Not.Null, "The runtime temporary status type must be available.");
+            Component statusController = playerObject.GetComponent(statusType);
+            Assert.That(statusController, Is.Not.Null, "The spawned player must carry its status controller.");
+            Behaviour statusBehaviour = statusController as Behaviour;
+            Assert.That(statusBehaviour, Is.Not.Null);
+            Assert.That(statusBehaviour.enabled, Is.True, "The actual player status NetworkBehaviour must stay enabled.");
+            Assert.That((bool)statusType.GetProperty("IsSpawned").GetValue(statusController), Is.True,
+                "The actual player's status NetworkBehaviour must spawn and synchronize.");
         }
 
         private void InitiateShutdown()

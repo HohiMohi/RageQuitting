@@ -258,7 +258,8 @@ public sealed partial class PlayerSingleCarryPlacementNetworkPreview : NetworkBe
     {
         SingleCarryPlacementNetworkResult result = ValidateAndCommitPlacement(sourceReference,
             requestId, position, rotation, new Ray(rayOrigin, rayDirection), rpc.Receive.SenderClientId);
-        PlacementResultClientRpc(requestId, result, CreateTargetClientRpcParams(rpc.Receive.SenderClientId));
+        PlacementResultClientRpc(requestId, result, CapturePlayerStatusSnapshot(),
+            CreateTargetClientRpcParams(rpc.Receive.SenderClientId));
     }
 
     [ServerRpc(RequireOwnership = true)]
@@ -272,14 +273,18 @@ public sealed partial class PlayerSingleCarryPlacementNetworkPreview : NetworkBe
             targetReference, requestId, localPosition, localRotation, localSurfacePoint, localSurfaceNormal,
             physicalRootPath, physicalRootHasRigidbody, position, rotation,
             new Ray(rayOrigin, rayDirection), rpc.Receive.SenderClientId);
-        PlacementResultClientRpc(requestId, result, CreateTargetClientRpcParams(rpc.Receive.SenderClientId));
+        PlacementResultClientRpc(requestId, result, CapturePlayerStatusSnapshot(),
+            CreateTargetClientRpcParams(rpc.Receive.SenderClientId));
     }
 
     [ClientRpc]
     private void PlacementResultClientRpc(ulong requestId, SingleCarryPlacementNetworkResult result,
-        ClientRpcParams rpc = default)
+        PlayerTemporaryStatusSnapshot statusSnapshot, ClientRpcParams rpc = default)
     {
-        if (IsOwner) ReportPlacementResult(requestId, result);
+        if (!IsOwner) return;
+        if (TryGetComponent(out PlayerTemporaryStatusController statusController))
+            statusController.ApplyServerSnapshot(statusSnapshot);
+        ReportPlacementResult(requestId, result);
     }
 
     private void ReportPlacementResult(ulong requestId, SingleCarryPlacementNetworkResult result)
@@ -324,6 +329,8 @@ public sealed partial class PlayerSingleCarryPlacementNetworkPreview : NetworkBe
 #endif
         NetworkManager manager = NetworkManager;
         if (!IsServer || manager == null || !manager.IsListening || requestId == 0)
+            return SingleCarryPlacementNetworkResult.InvalidRequest;
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(manager, senderClientId))
             return SingleCarryPlacementNetworkResult.InvalidRequest;
         if (requestId <= lastProcessedPlacementRequestId)
             return SingleCarryPlacementNetworkResult.StaleRequest;
@@ -502,10 +509,18 @@ public sealed partial class PlayerSingleCarryPlacementNetworkPreview : NetworkBe
                 expectedPose.Position, expectedPose.Rotation))
             return SingleCarryPlacementNetworkResult.IneligibleHolder;
 
+        if (holder.TryGetComponent(out PlayerTemporaryStatusController statusController))
+            statusController.BeginPlacementLock();
         state.Value = default;
         if (source.TryGetComponent(out ISingleCarryPlacementCommitListener commitListener))
             commitListener.OnSingleCarryPlacementCommitted(holder);
         return SingleCarryPlacementNetworkResult.Accepted;
+    }
+
+    private PlayerTemporaryStatusSnapshot CapturePlayerStatusSnapshot()
+    {
+        return TryGetComponent(out PlayerTemporaryStatusController statusController)
+            ? statusController.CaptureSnapshot() : default;
     }
 
     private ClientRpcParams CreateTargetClientRpcParams(ulong clientId) => new ClientRpcParams

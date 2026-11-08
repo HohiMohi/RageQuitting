@@ -138,6 +138,15 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         && baseResourceSO.baseResourceDestructionRecipeArray.Length > 0;
     public bool IsHeldBy(ulong clientId) => holderClientIds.Contains(clientId) ||
         (!IsNetworkSessionActive() && isPickedUp && clientId == NoHolderClientId);
+
+    public static bool ReleaseHeldObjectForTemporaryStatus(NetworkManager manager, ulong clientId)
+    {
+        if (manager == null || !manager.IsServer
+            || !HeldResourceByClientId.TryGetValue(clientId, out BaseResourceNew resource)
+            || resource == null || resource.NetworkManager != manager || !resource.IsSpawned)
+            return false;
+        return resource.TryCompleteNetworkDrop(clientId, resource.transform.position, resource.transform.rotation);
+    }
     public void ClearHolderCollisionOverride(Transform holderRoot)
     {
         if (_sharedCarryCollisionController != null)
@@ -209,6 +218,8 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
         {
             return;
         }
+        if (parent.TryGetComponent(out PlayerTemporaryStatusController statusController)
+            && statusController.BlocksActions) return;
 
         if (IsNetworkSessionActive())
         {
@@ -775,7 +786,8 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     private bool TryCompleteNetworkPickup(ulong ownerClientId, Vector3 bodyAnchorLocalOffset, float playerControllerRadius)
     {
-        if (!CanBePickedUp)
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, ownerClientId)
+            || !CanBePickedUp)
         {
             RejectPickupClientRpc(SharedCarryPickupFailureReason.Generic, CreateTargetClientRpcParams(ownerClientId));
             return false;
@@ -939,7 +951,8 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
 
     private bool TryCompleteSingleCarryThrow(ulong holderClientId)
     {
-        if (!IsServer || !IsSpawned || NetworkManager == null || !NetworkManager.IsListening
+        if (!IsServer || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, holderClientId)
+            || !IsSpawned || NetworkManager == null || !NetworkManager.IsListening
             || NetworkManager.ShutdownInProgress || !CanEnterSingleCarryPlacement || !CanBeCarried
             || IsSecuredForTransport || AllowsMultipleCarriers() || !isPickedUp
             || holderClientIds.Count != 1 || !holderClientIds.Contains(holderClientId)
@@ -1201,6 +1214,10 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
             return;
         }
 
+        if (playerNetworkObject.OwnerClientId != serverRpcParams.Receive.SenderClientId
+            || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager,
+                serverRpcParams.Receive.SenderClientId)) return;
+
         TryCompleteNetworkPickup(playerNetworkObject.OwnerClientId, bodyAnchorLocalOffset, playerControllerRadius);
     }
 
@@ -1213,6 +1230,8 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [ServerRpc(RequireOwnership = false)]
     private void RequestSingleCarryThrowServerRpc(ServerRpcParams serverRpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager,
+                serverRpcParams.Receive.SenderClientId)) return;
         TryCompleteSingleCarryThrow(serverRpcParams.Receive.SenderClientId);
     }
 
@@ -1229,8 +1248,16 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestDamageServerRpc(int toolType, float damage)
+    private void RequestDamageServerRpc(int toolType, float damage, ServerRpcParams serverRpcParams = default)
     {
+        ulong senderClientId = serverRpcParams.Receive.SenderClientId;
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, senderClientId)
+            || !NetworkManager.ConnectedClients.TryGetValue(senderClientId, out NetworkClient sender)
+            || sender.PlayerObject == null
+            || !sender.PlayerObject.TryGetComponent(out PlayerInventory inventory)
+            || inventory.GetSelectedItemForServerValidation() == null
+            || inventory.GetSelectedItemForServerValidation().itemType != (EquippableItemType)toolType)
+            return;
         ApplyDamageServer((EquippableItemType)toolType, damage);
     }
 
@@ -1878,6 +1905,7 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
     [ServerRpc(RequireOwnership = false)]
     private void SubmitSharedCarryInputServerRpc(Vector3 worldTranslationInput, Vector3 worldLateralInput, float directYawInput, ServerRpcParams serverRpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, serverRpcParams.Receive.SenderClientId)) return;
         SetSharedCarryInput(serverRpcParams.Receive.SenderClientId, worldTranslationInput, worldLateralInput, directYawInput);
     }
     private void SetupLocalSharedCarryPickup(PlayerInteractionNew playerInteraction)

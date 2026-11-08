@@ -77,6 +77,7 @@ public sealed class BridgeDeckPanelStage1PlayModeTests
         Assert.That(panel.transform.position, Is.EqualTo(releasePosition));
         Assert.That(Quaternion.Angle(panel.transform.rotation, releaseRotation), Is.LessThan(0.01f));
 
+        yield return WaitForTemporaryStatusExpiry(player);
         mountableType.GetMethod("PickedUp").Invoke(mountable, new object[] { player.transform });
         Assert.That(interactionType.GetMethod("GetPickedUpGameObject").Invoke(interaction, null), Is.SameAs(panel));
         Vector3 preThrowVelocity = body.linearVelocity;
@@ -469,6 +470,18 @@ public sealed class BridgeDeckPanelStage1PlayModeTests
             if (input.inputIsActive) input.DeactivateInput();
             input.actions.Disable();
         }
+    }
+
+    private static IEnumerator WaitForTemporaryStatusExpiry(GameObject playerRoot)
+    {
+        System.Type statusType = System.Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp");
+        Component status = playerRoot.GetComponent(statusType);
+        PropertyInfo currentStatus = statusType.GetProperty("CurrentStatus");
+        float deadline = Time.realtimeSinceStartup + 2f;
+        while (currentStatus.GetValue(status).ToString() != "None" && Time.realtimeSinceStartup < deadline)
+            yield return null;
+        Assert.That(currentStatus.GetValue(status).ToString(), Is.EqualTo("None"),
+            "The post-placement lock must expire before the next independent pickup action.");
     }
 
     private GameObject CreateIsolatedPlayerPrefab(GameObject productionPrefab)

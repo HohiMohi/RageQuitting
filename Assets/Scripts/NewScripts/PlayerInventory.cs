@@ -11,6 +11,20 @@ public enum InventorySlotState
     Reserved
 }
 
+public struct InventorySlotsState : INetworkSerializable, IEquatable<InventorySlotsState>
+{
+    public int Slot0;
+    public int Slot1;
+
+    public InventorySlotsState(int slot0, int slot1) { Slot0 = slot0; Slot1 = slot1; }
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref Slot0);
+        serializer.SerializeValue(ref Slot1);
+    }
+    public bool Equals(InventorySlotsState other) => Slot0 == other.Slot0 && Slot1 == other.Slot1;
+}
+
 public class PlayerInventory : NetworkBehaviour
 {
     private const int ReservedSlotItemTypeValue = -2;
@@ -36,13 +50,8 @@ public class PlayerInventory : NetworkBehaviour
     [SerializeField] private int _currentInventoryOccupiedSlots = 0;
     private float inventoryMovementSpeedPenalty = 0;
 
-    private readonly NetworkVariable<int> slot0ItemType = new NetworkVariable<int>(
-        EmptySlotItemTypeValue,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server);
-
-    private readonly NetworkVariable<int> slot1ItemType = new NetworkVariable<int>(
-        EmptySlotItemTypeValue,
+    private readonly NetworkVariable<InventorySlotsState> networkSlots = new NetworkVariable<InventorySlotsState>(
+        new InventorySlotsState(EmptySlotItemTypeValue, EmptySlotItemTypeValue),
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
@@ -75,14 +84,14 @@ public class PlayerInventory : NetworkBehaviour
     }
     private void Start()
     {
+        if (IsNetworkStateActive() && !IsOwner) return;
         playerInputNew.OnSwapItems += PlayerInputNew_OnSwapItems;
         playerInputNew.OnDropItem += PlayerInputNew_OnDropItem;
     }
 
     public override void OnNetworkSpawn()
     {
-        slot0ItemType.OnValueChanged += InventorySlotNetworkValue_OnValueChanged;
-        slot1ItemType.OnValueChanged += InventorySlotNetworkValue_OnValueChanged;
+        networkSlots.OnValueChanged += InventorySlotsNetworkValue_OnValueChanged;
 
         UnsubscribeDisconnectRecovery();
         disconnectRecoveryManager = null;
@@ -100,18 +109,24 @@ public class PlayerInventory : NetworkBehaviour
                 disconnectRecoveryManager.OnClientDisconnectCallback += NetworkManager_OnClientDisconnectCallback;
             }
 
-            SetNetworkSlotValues(GetSlotItemTypeValue(0), GetSlotItemTypeValue(1));
+            bool needsPublish = GetSlotItemTypeValue(0) != networkSlots.Value.Slot0 || GetSlotItemTypeValue(1) != networkSlots.Value.Slot1;
+            if (needsPublish)
+                SetNetworkSlotValues(GetSlotItemTypeValue(0), GetSlotItemTypeValue(1));
+            else
+                NotifyInventorySlotsChanged();
         }
-
-        NotifyInventorySlotsChanged();
+        else
+        {
+            ApplyReplicatedInventory(networkSlots.Value);
+            NotifyInventorySlotsChanged();
+        }
     }
 
     public override void OnNetworkDespawn()
     {
         ClearHeldObjectCollisionOverrides(transform);
         CaptureDisconnectRecoverySnapshot();
-        slot0ItemType.OnValueChanged -= InventorySlotNetworkValue_OnValueChanged;
-        slot1ItemType.OnValueChanged -= InventorySlotNetworkValue_OnValueChanged;
+        networkSlots.OnValueChanged -= InventorySlotsNetworkValue_OnValueChanged;
     }
 
     private void OnDestroy()
@@ -146,8 +161,8 @@ public class PlayerInventory : NetworkBehaviour
         disconnectSnapshotClientId = NetworkObject.OwnerClientId;
         disconnectSnapshotPosition = transform.position;
         disconnectSnapshotRotation = transform.rotation;
-        disconnectSnapshotSlot0 = slot0ItemType.Value;
-        disconnectSnapshotSlot1 = slot1ItemType.Value;
+        disconnectSnapshotSlot0 = networkSlots.Value.Slot0;
+        disconnectSnapshotSlot1 = networkSlots.Value.Slot1;
     }
 
     private void NetworkManager_OnClientDisconnectCallback(ulong clientId)
@@ -268,18 +283,28 @@ public class PlayerInventory : NetworkBehaviour
 
     private void PlayerInputNew_OnDropItem(object sender, EventArgs e)
     {
+        if (IsNetworkStateActive() && !IsOwner
+            || playerInputNew != null && playerInputNew.IsWorldActionBlocked) return;
         if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         RemoveItem();
     }
 
     private void PlayerInputNew_OnSwapItems(object sender, EventArgs e)
     {
+        if (IsNetworkStateActive() && !IsOwner
+            || playerInputNew != null && playerInputNew.IsWorldActionBlocked) return;
         if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         SwapItems();
     }
 
     public bool AddItem(EquippableItemSO item)
     {
+        if (IsNetworkStateActive() && !IsServer)
+        {
+            Debug.LogWarning("PlayerInventory: Network inventory additions are server-authoritative.");
+            return false;
+        }
+
         if (CanAddItem(item))
         {
             inventoryItems[_currentInventoryOccupiedSlots] = item;
@@ -310,48 +335,55 @@ public class PlayerInventory : NetworkBehaviour
 
     private bool RemoveItem()
     {
-        if (_currentInventoryOccupiedSlots > 0)
+        if (IsNetworkStateActive() && !IsServer)
         {
-            _currentInventoryOccupiedSlots -= inventoryItems[_selectedItemIndex].inventorySlotsRequired;
-            EquippableItemSO itemToRemove = inventoryItems[_selectedItemIndex];
-            inventoryItems[_selectedItemIndex] = inventoryItems[1]; // Assign the second item to the first slot
-            DropItemInWorld(itemToRemove);
-            OnInventoryUpdated?.Invoke(this, new OnInventoryUpdateArgs
-            {
-                itemSlotIndex = 0,
-                itemInSlot = inventoryItems[0]
-            });
-            if (_currentInventoryOccupiedSlots > 0)
-            {
-                inventoryItems[1] = null; // Clear the second slot
-                OnInventoryUpdated?.Invoke(this, new OnInventoryUpdateArgs
-                {
-                    itemSlotIndex = 1,
-                    itemInSlot = null
-                });
-            }
-            OnSelectedItemChanged?.Invoke(this, new OnSelectedItemChangedEventArgs
-            {
-                selectedItem = GetCurrentSelectedItem()
-            });
-            CalculateInventoryMovementSpeedPenalty();
-            MovementSpeedPenaltyUpdated?.Invoke(this, new MovementSpeedPenaltyUpdatedEventArgs
-            {
-                currentMovementSpeedPenaltyMultiplier = inventoryMovementSpeedPenalty
-            });
-            PublishInventorySlotsChanged();
-            return true; // Item removed successfully
+            InventorySlotsState expected = networkSlots.Value;
+            RequestInventoryActionServerRpc(0, expected.Slot0, expected.Slot1);
+            return true;
         }
-        else
-        {
-            Debug.Log("Invalid item index. Cannot remove item.");
-            return false; // Invalid index
-        }
+        return RemoveSelectedItemAndDrop();
     }
 
     private void SwapItems()
     {
-        if (_currentInventoryOccupiedSlots > 1 && inventoryItems[0] != null && inventoryItems[1] != null)
+        if (IsNetworkStateActive() && !IsServer)
+        {
+            InventorySlotsState expected = networkSlots.Value;
+            RequestInventoryActionServerRpc(1, expected.Slot0, expected.Slot1);
+            return;
+        }
+        SwapItemsAuthority();
+    }
+
+    private bool RemoveSelectedItemAndDrop()
+    {
+        if (_currentInventoryOccupiedSlots <= 0 || inventoryItems[0] == null)
+            return false;
+        EquippableItemSO item = inventoryItems[0];
+        NetworkObject dropper = NetworkObject;
+        bool spawned = IsNetworkStateActive()
+            ? EquippableItem.SpawnNetworkedDrop(item, dropper)
+            : TryDropOffline(item, dropper);
+        if (!spawned) return false;
+
+        inventoryItems[0] = inventoryItems.Length > 1 ? inventoryItems[1] : null;
+        if (inventoryItems.Length > 1) inventoryItems[1] = null;
+        RecountInventory();
+        NotifyInventoryContentChanged(0);
+        if (inventoryItems.Length > 1) NotifyInventoryContentChanged(1);
+        PublishInventorySlotsChanged();
+        return true;
+    }
+
+    private bool TryDropOffline(EquippableItemSO item, NetworkObject dropper)
+    {
+        if (item == null || item.equippableItemPrefab == null || dropper == null) return false;
+        return EquippableItem.DropItem(item, dropper);
+    }
+
+    private void SwapItemsAuthority()
+    {
+        if (inventoryItems.Length > 1 && _currentInventoryOccupiedSlots > 1 && inventoryItems[0] != null && inventoryItems[1] != null)
         {
             // Swap the items in the inventory
             EquippableItemSO temp = inventoryItems[0];
@@ -379,6 +411,69 @@ public class PlayerInventory : NetworkBehaviour
             Debug.Log("Not enough items to swap.");
         }
     }
+
+    private void RecountInventory()
+    {
+        _currentInventoryOccupiedSlots = 0;
+        for (int i = 0; i < inventoryItems.Length; i++)
+            if (inventoryItems[i] != null) _currentInventoryOccupiedSlots += inventoryItems[i].inventorySlotsRequired;
+        CalculateInventoryMovementSpeedPenalty();
+        OnSelectedItemChanged?.Invoke(this, new OnSelectedItemChangedEventArgs { selectedItem = GetCurrentSelectedItem() });
+        MovementSpeedPenaltyUpdated?.Invoke(this, new MovementSpeedPenaltyUpdatedEventArgs
+            { currentMovementSpeedPenaltyMultiplier = inventoryMovementSpeedPenalty });
+    }
+
+    private void NotifyInventoryContentChanged(int slot)
+    {
+        OnInventoryUpdated?.Invoke(this, new OnInventoryUpdateArgs { itemSlotIndex = slot, itemInSlot = inventoryItems[slot] });
+    }
+
+    internal bool DropAllInventoryForAuthority()
+    {
+        if (IsNetworkStateActive() && !IsServer) return false;
+        bool changed = false;
+        NetworkObject dropper = NetworkObject;
+        EquippableItemSO[] survivors = new EquippableItemSO[inventoryItems.Length];
+        int survivorCount = 0;
+        for (int i = 0; i < inventoryItems.Length; i++)
+        {
+            EquippableItemSO item = inventoryItems[i];
+            if (item == null) continue;
+            bool dropped = IsNetworkStateActive()
+                ? EquippableItem.SpawnNetworkedDrop(item, dropper)
+                : TryDropOffline(item, dropper);
+            if (dropped) changed = true;
+            else survivors[survivorCount++] = item;
+        }
+        if (changed)
+        {
+            Array.Clear(inventoryItems, 0, inventoryItems.Length);
+            Array.Copy(survivors, inventoryItems, survivorCount);
+            RecountInventory();
+            NotifyInventoryContentChanged(0);
+            if (inventoryItems.Length > 1) NotifyInventoryContentChanged(1);
+            PublishInventorySlotsChanged();
+        }
+        return changed;
+    }
+
+    [ServerRpc]
+    private void RequestInventoryActionServerRpc(int action, int expectedSlot0, int expectedSlot1, ServerRpcParams rpcParams = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager,
+                rpcParams.Receive.SenderClientId)
+            || !IsRequestingClientOwner(rpcParams.Receive.SenderClientId)
+            || networkSlots.Value.Slot0 != expectedSlot0 || networkSlots.Value.Slot1 != expectedSlot1) return;
+        if (action == 0) RemoveSelectedItemAndDrop();
+        else if (action == 1) SwapItemsAuthority();
+    }
+
+    private bool IsRequestingClientOwner(ulong clientId)
+    {
+        return IsServer && NetworkManager != null
+            && NetworkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient client)
+            && client.PlayerObject == NetworkObject;
+    }
     public void CalculateInventoryMovementSpeedPenalty()
     {
         float movementSpeedPenalty = 0;
@@ -394,7 +489,8 @@ public class PlayerInventory : NetworkBehaviour
 
     public bool CanAddItem(EquippableItemSO item)
     {
-        return item != null && _inventorySlots - _currentInventoryOccupiedSlots >= item.inventorySlotsRequired;
+        return item != null && item.inventorySlotsRequired > 0
+            && _inventorySlots - _currentInventoryOccupiedSlots >= item.inventorySlotsRequired;
     }
 
     public EquippableItemSO GetCurrentSelectedItem()
@@ -456,7 +552,7 @@ public class PlayerInventory : NetworkBehaviour
                 : InventorySlotState.Empty;
         }
 
-        int networkValue = slotIndex == 0 ? slot0ItemType.Value : slot1ItemType.Value;
+        int networkValue = slotIndex == 0 ? networkSlots.Value.Slot0 : networkSlots.Value.Slot1;
         if (networkValue == ReservedSlotItemTypeValue)
         {
             return InventorySlotState.Reserved;
@@ -476,7 +572,7 @@ public class PlayerInventory : NetworkBehaviour
     {
         if (IsNetworkStateActive())
         {
-            return slotIndex == 0 ? slot0ItemType.Value : slot1ItemType.Value;
+            return slotIndex == 0 ? networkSlots.Value.Slot0 : networkSlots.Value.Slot1;
         }
 
         return GetSlotItemTypeValue(slotIndex);
@@ -484,52 +580,12 @@ public class PlayerInventory : NetworkBehaviour
 
     public bool IsNetworkStateActive()
     {
-        return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
-    }
-
-    private void DropItemInWorld(EquippableItemSO itemToDrop)
-    {
-        NetworkObject dropper = GetComponent<NetworkObject>();
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
-        {
-            if (IsServer)
-            {
-                EquippableItem.SpawnNetworkedDrop(itemToDrop, dropper);
-            }
-            else
-            {
-                DropItemServerRpc((int)itemToDrop.itemType);
-            }
-
-            return;
-        }
-
-        EquippableItem.DropItem(itemToDrop, dropper);
-    }
-
-    [ServerRpc]
-    private void DropItemServerRpc(int itemTypeValue, ServerRpcParams rpcParams = default)
-    {
-        EquippableItemSO itemToDrop = GetEquippableItemSO((EquippableItemType)itemTypeValue);
-        if (itemToDrop == null)
-        {
-            Debug.LogWarning($"PlayerInventory: Could not find equippable item for type {(EquippableItemType)itemTypeValue}.");
-            return;
-        }
-
-        if (NetworkManager.Singleton == null
-            || !NetworkManager.Singleton.ConnectedClients.TryGetValue(rpcParams.Receive.SenderClientId, out NetworkClient client)
-            || client.PlayerObject == null
-            || client.PlayerObject != NetworkObject)
-        {
-            return;
-        }
-
-        EquippableItem.SpawnNetworkedDrop(itemToDrop, client.PlayerObject);
+        return NetworkManager != null && NetworkManager.IsListening && IsSpawned;
     }
 
     public EquippableItemSO GetEquippableItemSO(EquippableItemType itemType)
     {
+        if (equippableItemCatalog == null) return null;
         foreach (EquippableItemSO item in equippableItemCatalog)
         {
             if (item != null && item.itemType == itemType)
@@ -541,30 +597,45 @@ public class PlayerInventory : NetworkBehaviour
         return null;
     }
 
-    private void InventorySlotNetworkValue_OnValueChanged(int previousValue, int newValue)
+    private void InventorySlotsNetworkValue_OnValueChanged(InventorySlotsState previousValue, InventorySlotsState newValue)
     {
+        if (!IsServer)
+            ApplyReplicatedInventory(newValue);
         NotifyInventorySlotsChanged();
+    }
+
+    private void ApplyReplicatedInventory(InventorySlotsState state)
+    {
+        int old0 = GetSlotItemTypeValue(0);
+        int old1 = GetSlotItemTypeValue(1);
+        inventoryItems[0] = ResolveNetworkItem(state.Slot0);
+        if (inventoryItems.Length > 1) inventoryItems[1] = ResolveNetworkItem(state.Slot1);
+        RecountInventory();
+        if (old0 != state.Slot0) NotifyInventoryContentChanged(0);
+        if (inventoryItems.Length > 1 && old1 != state.Slot1) NotifyInventoryContentChanged(1);
+    }
+
+    private EquippableItemSO ResolveNetworkItem(int value)
+    {
+        return value >= 0 ? GetEquippableItemSO((EquippableItemType)value) : null;
     }
 
     private void PublishInventorySlotsChanged()
     {
-        NotifyInventorySlotsChanged();
-
         if (!IsNetworkStateActive())
         {
+            NotifyInventorySlotsChanged();
             return;
         }
 
-        int slot0Value = GetSlotItemTypeValue(0);
-        int slot1Value = GetSlotItemTypeValue(1);
-
         if (IsServer)
         {
-            SetNetworkSlotValues(slot0Value, slot1Value);
-        }
-        else if (IsOwner)
-        {
-            PublishInventorySlotsServerRpc(slot0Value, slot1Value);
+            int slot0 = GetSlotItemTypeValue(0);
+            int slot1 = GetSlotItemTypeValue(1);
+            if (slot0 == networkSlots.Value.Slot0 && slot1 == networkSlots.Value.Slot1)
+                NotifyInventorySlotsChanged();
+            else
+                SetNetworkSlotValues(slot0, slot1);
         }
     }
 
@@ -615,13 +686,7 @@ public class PlayerInventory : NetworkBehaviour
 
     private void SetNetworkSlotValues(int slot0Value, int slot1Value)
     {
-        slot0ItemType.Value = slot0Value;
-        slot1ItemType.Value = slot1Value;
-    }
-
-    [ServerRpc]
-    private void PublishInventorySlotsServerRpc(int slot0Value, int slot1Value)
-    {
-        SetNetworkSlotValues(slot0Value, slot1Value);
+        if (IsServer)
+            networkSlots.Value = new InventorySlotsState(slot0Value, slot1Value);
     }
 }

@@ -13,7 +13,10 @@ public class PlayerInputNew : NetworkBehaviour
     private bool inputInitialized;
     private bool singleCarryPlacementActive;
     private bool actionAltHeld;
+    private bool actionHeld;
+    private bool interactHeld;
     private PlayerSingleCarryPlacementController placementController;
+    private PlayerTemporaryStatusController temporaryStatusController;
 
     public EventHandler<OnSprintArgs> OnSprint;
 
@@ -49,9 +52,20 @@ public class PlayerInputNew : NetworkBehaviour
     public event Action<Vector2, bool, double> OnSingleCarryPlacementRotationChanged;
 
     public bool IsSingleCarryPlacementActive => singleCarryPlacementActive;
-    public bool IsSingleCarryPlacementMovementBlocked => singleCarryPlacementActive
-        && placementController != null && placementController.IsRequestPending;
+    public bool IsSingleCarryPlacementMovementBlocked
+    {
+        get
+        {
+            if (!singleCarryPlacementActive || placementController == null || !placementController.IsRequestPending)
+                return false;
+            return temporaryStatusController == null || temporaryStatusController
+                .ShouldKeepPendingPlacementMovementBlocked(placementController.PendingRequestStatusRevision);
+        }
+    }
     public bool IsLocalGameplayInputActive => IsInputActive() && !IsUIOpened;
+    public bool IsWorldActionBlocked => temporaryStatusController != null && temporaryStatusController.BlocksActions;
+    public bool IsMovementInputBlocked => temporaryStatusController != null && temporaryStatusController.BlocksControls
+        || IsSingleCarryPlacementMovementBlocked;
 
     [SerializeField]
     private bool IsUIOpened;
@@ -87,6 +101,15 @@ public class PlayerInputNew : NetworkBehaviour
         IsUIOpened = false;
     }
 
+    protected void Update()
+    {
+        if (singleCarryPlacementActive && placementController != null && placementController.IsRequestPending
+            && temporaryStatusController != null
+            && !temporaryStatusController.ShouldKeepPendingPlacementMovementBlocked(
+                placementController.PendingRequestStatusRevision))
+            OnForcedSingleCarryPlacementExit?.Invoke(this, EventArgs.Empty);
+    }
+
     private void Start()
     {
         if (ShouldRunAsLocalPlayer() && !inputInitialized)
@@ -115,6 +138,9 @@ public class PlayerInputNew : NetworkBehaviour
         }
 
         inputInitialized = true;
+        TryGetComponent(out temporaryStatusController);
+        if (temporaryStatusController != null)
+            temporaryStatusController.StatusChanged += TemporaryStatusChanged;
         playerGameInputActions = new PlayerGameInputActions();
 
         playerGameInputActions.Game.Jump.performed += Jump_performed;
@@ -163,6 +189,11 @@ public class PlayerInputNew : NetworkBehaviour
     private void DisposeInput()
     {
         CancelActionAltHold();
+        if (temporaryStatusController != null)
+        {
+            temporaryStatusController.StatusChanged -= TemporaryStatusChanged;
+            temporaryStatusController = null;
+        }
         if (singleCarryPlacementActive)
             OnForcedSingleCarryPlacementExit?.Invoke(this, EventArgs.Empty);
         singleCarryPlacementActive = false;
@@ -259,7 +290,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void DropItem_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive)
+        if (IsUIOpened || singleCarryPlacementActive || IsWorldActionBlocked)
         {
             return;
         }
@@ -269,7 +300,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void ToggleBridgeRequirements_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive)
+        if (IsUIOpened || singleCarryPlacementActive || IsWorldActionBlocked)
         {
             return;
         }
@@ -279,13 +310,13 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void BridgeRequirementsScroll_performed(InputAction.CallbackContext context)
     {
-        if (singleCarryPlacementActive) return;
+        if (singleCarryPlacementActive || IsWorldActionBlocked) return;
         RouteBridgeRequirementsScroll(context.ReadValue<Vector2>());
     }
 
     private void RouteBridgeRequirementsScroll(Vector2 scroll)
     {
-        if (IsUIOpened || !IsInputActive()) return;
+        if (IsUIOpened || !IsInputActive() || IsWorldActionBlocked) return;
         if (Mathf.Abs(scroll.y) > 0.001f)
         {
             OnBridgeRequirementsScroll?.Invoke(scroll);
@@ -300,7 +331,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void SwapItems_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive)
+        if (IsUIOpened || singleCarryPlacementActive || IsWorldActionBlocked)
         {
             return;
         }
@@ -310,7 +341,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Action_canceled(InputAction.CallbackContext context)
     {
-        OnActionCanceled?.Invoke(this, EventArgs.Empty);
+        CancelActionHold();
     }
 
     private void ActionAlt_canceled(InputAction.CallbackContext context)
@@ -320,7 +351,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void ActionAlt_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive)
+        if (IsUIOpened || singleCarryPlacementActive || IsWorldActionBlocked)
         {
             return;
         }
@@ -338,32 +369,77 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Action_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive)
+        if (IsUIOpened || singleCarryPlacementActive || IsWorldActionBlocked)
         {
             return;
         }
 
+        actionHeld = true;
         OnAction?.Invoke(this, EventArgs.Empty);
     }
 
-    private void Interact_performed(InputAction.CallbackContext context)
+    private void CancelActionHold()
     {
-        if (singleCarryPlacementActive)
+        if (!actionHeld) return;
+        actionHeld = false;
+        OnActionCanceled?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void TemporaryStatusChanged(PlayerTemporaryStatusSnapshot snapshot)
+    {
+        if (singleCarryPlacementActive && placementController != null && placementController.IsRequestPending
+            && snapshot.Revision > placementController.PendingRequestStatusRevision
+            && snapshot.Status != PlayerTemporaryStatusKind.PlacementLock)
+            OnForcedSingleCarryPlacementExit?.Invoke(this, EventArgs.Empty);
+
+        if (IsWorldActionBlocked)
         {
-            OnConfirmSingleCarryPlacement?.Invoke(this, EventArgs.Empty);
+            CancelActionHold();
+            CancelInteractHold();
+            CancelActionAltHold();
+        }
+
+        if (IsTemporaryControlBlocked())
+        {
+            OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
             return;
         }
+
+        bool sprintHeld = !IsUIOpened && !singleCarryPlacementActive
+            && playerGameInputActions != null && playerGameInputActions.Game.Sprint.IsPressed();
+        OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = sprintHeld });
+    }
+
+    private bool IsTemporaryControlBlocked() =>
+        temporaryStatusController != null && temporaryStatusController.BlocksControls;
+
+    private void Interact_performed(InputAction.CallbackContext context)
+    {
         if (IsUIOpened)
         {
             OnUI_Interact?.Invoke(this, EventArgs.Empty);
             return;
         }
 
+        if (IsWorldActionBlocked) return;
+        if (singleCarryPlacementActive)
+        {
+            OnConfirmSingleCarryPlacement?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+        interactHeld = true;
         OnInteract?.Invoke(this, EventArgs.Empty);
     }
 
     private void Interact_canceled(InputAction.CallbackContext context)
     {
+        CancelInteractHold();
+    }
+
+    private void CancelInteractHold()
+    {
+        if (!interactHeld) return;
+        interactHeld = false;
         OnInteractCanceled?.Invoke(this, EventArgs.Empty);
     }
 
@@ -377,7 +453,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Sprint_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive)
+        if (IsUIOpened || singleCarryPlacementActive || IsTemporaryControlBlocked())
         {
             return;
         }
@@ -390,7 +466,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Jump_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive)
+        if (IsUIOpened || singleCarryPlacementActive || IsTemporaryControlBlocked())
         {
             return;
         }
@@ -410,7 +486,8 @@ public class PlayerInputNew : NetworkBehaviour
         if (isOpen)
         {
             OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
-            OnActionCanceled?.Invoke(this, EventArgs.Empty);
+            CancelActionHold();
+            CancelInteractHold();
             CancelActionAltHold();
         }
 
@@ -419,31 +496,31 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void SingleCarryPlacementToggle_performed(InputAction.CallbackContext context)
     {
-        if (!isActiveAndEnabled || !IsInputActive() || IsUIOpened) return;
+        if (!isActiveAndEnabled || !IsInputActive() || IsUIOpened || IsWorldActionBlocked) return;
         OnToggleSingleCarryPlacement?.Invoke(this, EventArgs.Empty);
     }
 
     private void SingleCarryPlacementRotation_performed(InputAction.CallbackContext context)
     {
-        if (!isActiveAndEnabled || !IsInputActive()) return;
+        if (!isActiveAndEnabled || !IsInputActive() || IsWorldActionBlocked) return;
         RaisePlacementRotationChanged();
     }
 
     private void SingleCarryPlacementRotation_started(InputAction.CallbackContext context)
     {
-        if (!isActiveAndEnabled || !IsInputActive()) return;
+        if (!isActiveAndEnabled || !IsInputActive() || IsWorldActionBlocked) return;
         RaisePlacementRotationChanged();
     }
 
     private void SingleCarryPlacementRotation_canceled(InputAction.CallbackContext context)
     {
-        if (!isActiveAndEnabled || !IsInputActive()) return;
+        if (!isActiveAndEnabled || !IsInputActive() || IsWorldActionBlocked) return;
         RaisePlacementRotationChanged();
     }
 
     private void SingleCarryPlacementControlModifier_changed(InputAction.CallbackContext context)
     {
-        if (!isActiveAndEnabled || !IsInputActive()) return;
+        if (!isActiveAndEnabled || !IsInputActive() || IsWorldActionBlocked) return;
         RaisePlacementRotationChanged();
     }
 
@@ -468,17 +545,18 @@ public class PlayerInputNew : NetworkBehaviour
 
     public void SetSingleCarryPlacementActive(bool active)
     {
+        if (active && IsWorldActionBlocked) return;
         singleCarryPlacementActive = active;
         if (!active) return;
         OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
-        OnActionCanceled?.Invoke(this, EventArgs.Empty);
+        CancelActionHold();
         CancelActionAltHold();
-        OnInteractCanceled?.Invoke(this, EventArgs.Empty);
+        CancelInteractHold();
     }
 
     public Vector2 GetLookDeltaValue()
     {
-        if (!IsInputActive() || IsUIOpened)
+        if (!IsInputActive() || IsUIOpened || IsTemporaryControlBlocked())
         {
             return Vector2.zero;
         }
@@ -494,19 +572,19 @@ public class PlayerInputNew : NetworkBehaviour
 
     public Vector2 GetSingleCarryPlacementRotationInput()
     {
-        return singleCarryPlacementActive && singleCarryPlacementRotationAction != null
+        return singleCarryPlacementActive && !IsWorldActionBlocked && singleCarryPlacementRotationAction != null
             ? singleCarryPlacementRotationAction.ReadValue<Vector2>() : Vector2.zero;
     }
 
     public bool IsSingleCarryPlacementControlModifierPressed()
     {
-        return singleCarryPlacementActive && singleCarryPlacementControlModifierAction != null
+        return singleCarryPlacementActive && !IsWorldActionBlocked && singleCarryPlacementControlModifierAction != null
             && IsPlacementControlModifierControlPressed();
     }
 
     public Vector2 GetLookDeltaValueForMinigames()
     {
-        if (!IsInputActive())
+        if (!IsInputActive() || IsWorldActionBlocked)
         {
             return Vector2.zero;
         }
@@ -517,7 +595,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     public Vector2 GetMoveVectorValue()
     {
-        if (!IsInputActive() || IsUIOpened || IsSingleCarryPlacementMovementBlocked)
+        if (!IsInputActive() || IsUIOpened || IsMovementInputBlocked)
         {
             return Vector2.zero;
         }

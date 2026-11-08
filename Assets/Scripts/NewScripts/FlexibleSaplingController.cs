@@ -1079,6 +1079,7 @@ public sealed class FlexibleSaplingController : NetworkBehaviour, IInteractableN
     [ServerRpc(RequireOwnership = false)]
     private void RequestJoinServerRpc(ulong playerObjectId, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         if (NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(playerObjectId, out NetworkObject playerObject) && playerObject.OwnerClientId == rpcParams.Receive.SenderClientId)
         {
             TryJoinServer(rpcParams.Receive.SenderClientId, playerObject);
@@ -1091,6 +1092,7 @@ public sealed class FlexibleSaplingController : NetworkBehaviour, IInteractableN
     [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Reliable)]
     private void SubmitPullServerRpc(int sideValue, float delta, int sequence, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         if (Enum.IsDefined(typeof(FlexibleSaplingGripSide), sideValue))
         {
             ApplyPullInput(rpcParams.Receive.SenderClientId, (FlexibleSaplingGripSide)sideValue, delta, sequence);
@@ -1100,6 +1102,7 @@ public sealed class FlexibleSaplingController : NetworkBehaviour, IInteractableN
     [ServerRpc(RequireOwnership = false)]
     private void RequestStumpHitServerRpc(int toolValue, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         if (toolValue != (int)EquippableItemType.Shovel || !TryGetPlayerObject(rpcParams.Receive.SenderClientId, out NetworkObject player) || Vector3.Distance(player.transform.position, transform.position) > 3f)
         {
             return;

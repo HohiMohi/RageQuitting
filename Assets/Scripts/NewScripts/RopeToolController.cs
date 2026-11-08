@@ -307,6 +307,11 @@ public sealed class RopeToolController : NetworkBehaviour
         if (chargeHeld)
         {
             chargeHeld = false;
+            if (input != null && input.IsWorldActionBlocked)
+            {
+                RequestAction(RopeInputAction.CancelCharge, 0f, Vector3.zero);
+                return;
+            }
             float charge = profile != null ? Mathf.Clamp01((Time.unscaledTime - chargeStartedAt) / profile.fullChargeDuration) : 0f;
             RequestAction(RopeInputAction.Throw, charge, GetThrowDirection());
         }
@@ -976,12 +981,22 @@ public sealed class RopeToolController : NetworkBehaviour
     [ServerRpc]
     private void RopeActionServerRpc(RopeInputAction action, float value, Vector3 direction, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager,
+                rpcParams.Receive.SenderClientId)
+            && action is not RopeInputAction.CancelCharge and not RopeInputAction.StopReel
+                and not RopeInputAction.StopPayOut and not RopeInputAction.Deactivate)
+            return;
         ApplyAction(action, value, direction, rpcParams.Receive.SenderClientId);
     }
 
     private void ApplyAction(RopeInputAction action, float value, Vector3 direction, ulong senderClientId)
     {
         if (IsNetworkActive && senderClientId != OwnerClientId) return;
+        if ((input != null && input.IsWorldActionBlocked
+                || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, senderClientId))
+            && action is not RopeInputAction.CancelCharge and not RopeInputAction.StopReel
+                and not RopeInputAction.StopPayOut and not RopeInputAction.Deactivate)
+            return;
         if (concreteTrap != null && concreteTrap.IsTrapped && action != RopeInputAction.Deactivate) return;
         if (action == RopeInputAction.Activate)
         {
@@ -1005,6 +1020,10 @@ public sealed class RopeToolController : NetworkBehaviour
             case RopeInputAction.BeginCharge when CurrentState == RopeState.Ready:
                 chargeStartedAt = Time.unscaledTime;
                 SetState(RopeState.Charging);
+                break;
+            case RopeInputAction.CancelCharge when CurrentState == RopeState.Charging:
+                chargeHeld = false;
+                SetState(RopeState.Ready);
                 break;
             case RopeInputAction.Throw when CurrentState == RopeState.Charging:
                 float serverCharge = Mathf.Clamp01((Time.unscaledTime - chargeStartedAt) / profile.fullChargeDuration);
@@ -1260,7 +1279,8 @@ public sealed class RopeToolController : NetworkBehaviour
     private bool CanUseLocally()
     {
         return IsOwnerOrSingleplayer() && IsRopeSelected() && health != null && !health.IsDowned &&
-            (concreteTrap == null || !concreteTrap.IsTrapped) && !input.IsGameplayUiOpen;
+            (concreteTrap == null || !concreteTrap.IsTrapped) && !input.IsGameplayUiOpen
+            && !input.IsWorldActionBlocked;
     }
 
     internal void CancelForConcreteTrap()
@@ -1471,6 +1491,7 @@ public sealed class RopeToolController : NetworkBehaviour
         StopReel,
         BeginPayOut,
         StopPayOut,
+        CancelCharge,
         Detach,
         Deactivate
     }

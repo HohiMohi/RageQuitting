@@ -265,20 +265,36 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestDepositCementServerRpc(ulong resourceId, ServerRpcParams rpcParams = default) => DepositCementServer(rpcParams.Receive.SenderClientId, resourceId);
+    private void RequestDepositCementServerRpc(ulong resourceId, ServerRpcParams rpcParams = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
+        DepositCementServer(rpcParams.Receive.SenderClientId, resourceId);
+    }
     [ServerRpc(RequireOwnership = false)]
-    private void RequestBeginCrankServerRpc(ServerRpcParams rpcParams = default) => TryBeginCrankServer(rpcParams.Receive.SenderClientId);
+    private void RequestBeginCrankServerRpc(ServerRpcParams rpcParams = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
+        TryBeginCrankServer(rpcParams.Receive.SenderClientId);
+    }
     [ServerRpc(RequireOwnership = false)]
-    private void RequestCrankDeltaServerRpc(float degrees, float inputMaximumDegrees, ServerRpcParams rpcParams = default) =>
+    private void RequestCrankDeltaServerRpc(float degrees, float inputMaximumDegrees, ServerRpcParams rpcParams = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         ApplyCrankDelta(degrees, inputMaximumDegrees, rpcParams.Receive.SenderClientId);
+    }
     [ServerRpc(RequireOwnership = false)]
     private void RequestReleaseCrankServerRpc(ServerRpcParams rpcParams = default) => ReleaseCrank(rpcParams.Receive.SenderClientId, false);
     [ServerRpc(RequireOwnership = false)]
-    private void RequestToggleModeServerRpc(ServerRpcParams rpcParams = default) => ToggleMode(rpcParams.Receive.SenderClientId);
+    private void RequestToggleModeServerRpc(ServerRpcParams rpcParams = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
+        ToggleMode(rpcParams.Receive.SenderClientId);
+    }
 
     private bool DepositCementServer(ulong clientId, ulong resourceId)
     {
-        if (NetworkManager == null || !NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(resourceId, out NetworkObject resourceObject) ||
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, clientId)
+            || NetworkManager == null || !NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(resourceId, out NetworkObject resourceObject) ||
             !resourceObject.TryGetComponent(out BaseResourceNew resource) || resource.GetBaseResourceSO() != cementBagResource ||
             !resource.IsHeldBy(clientId) || !TryGetPlayer(clientId, out PlayerInteractionNew player)) return false;
         return DepositCementLocal(player, resource);
@@ -286,6 +302,8 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
 
     private bool DepositCementLocal(PlayerInteractionNew player, BaseResourceNew resource)
     {
+        if (player != null && player.TryGetComponent(out PlayerTemporaryStatusController statusController)
+            && statusController.BlocksActions) return false;
         int bagVolume = profile != null ? profile.CementBagVolume : 3;
         if (!HasSimulationAuthority() || Mode != ConcreteMixerMode.Mixing || isDumping ||
             BatchState == ConcreteMixerBatchState.ConcreteReady || BatchState == ConcreteMixerBatchState.RuinedMix ||
@@ -298,7 +316,9 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
 
     private void TryBeginCrankServer(ulong clientId)
     {
-        if (!IsCrankAvailable || !ValidateCrankOwner(clientId, out _))
+        if (!IsCrankAvailable || !ValidateCrankOwner(clientId, out PlayerInteractionNew player)
+            || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, clientId)
+            || player.TryGetComponent(out PlayerTemporaryStatusController statusController) && statusController.BlocksActions)
         {
             CrankDeniedClientRpc("Crank is unavailable", Target(clientId));
             return;
@@ -313,7 +333,9 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
     private void ApplyCrankDelta(float requestedDegrees, float inputMaximumDegrees, ulong clientId)
     {
         if (!HasSimulationAuthority() || CrankOwner != clientId || Mode != ConcreteMixerMode.Mixing ||
-            BatchState != ConcreteMixerBatchState.Mixing || !ValidateCrankOwner(clientId, out _)) return;
+            BatchState != ConcreteMixerBatchState.Mixing || !ValidateCrankOwner(clientId, out PlayerInteractionNew player)
+            || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, clientId)
+            || player.TryGetComponent(out PlayerTemporaryStatusController statusController) && statusController.BlocksActions) return;
         float maximumSpeed = profile != null ? profile.MaximumCrankAngularSpeed : 240f;
         float elapsed = Mathf.Clamp(Time.time - lastAcceptedCrankInputTime, 0.01f, 0.2f);
         float accepted = Mathf.Min(Mathf.Max(0f, requestedDegrees), maximumSpeed * (elapsed + 0.025f));
@@ -334,7 +356,9 @@ public class ConcreteMixerController : NetworkBehaviour, IInteractableNew, IInte
 
     private void ToggleMode(ulong clientId)
     {
-        if (!HasSimulationAuthority() || !TryGetPlayer(clientId, out PlayerInteractionNew player) || !IsPlayerNear(player, transform)) return;
+        if (!HasSimulationAuthority() || !TryGetPlayer(clientId, out PlayerInteractionNew player) || !IsPlayerNear(player, transform)
+            || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, clientId)
+            || player.TryGetComponent(out PlayerTemporaryStatusController statusController) && statusController.BlocksActions) return;
         if (Mode == ConcreteMixerMode.Mixing)
         {
             SetMode(ConcreteMixerMode.Pouring);

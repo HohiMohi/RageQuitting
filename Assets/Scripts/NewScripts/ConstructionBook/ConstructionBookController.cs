@@ -258,11 +258,16 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestTurnServerRpc(int delta, ServerRpcParams rpcParams = default) => TryQueueTurnServer(delta, rpcParams.Receive.SenderClientId);
+    private void RequestTurnServerRpc(int delta, ServerRpcParams rpcParams = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
+        TryQueueTurnServer(delta, rpcParams.Receive.SenderClientId);
+    }
 
     private void TryQueueTurnServer(int delta, ulong sender)
     {
-        if (!TryValidateSender(delta, sender, out _)) return;
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, sender)
+            || !TryValidateSender(delta, sender, out _)) return;
         int target = currentIndex.Value + delta;
         if (target < 0 || target >= spreads.Count) return;
         serverTurnQueue.TryEnqueue(sender, delta);
@@ -549,12 +554,14 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     [ServerRpc(RequireOwnership = false)]
     private void SetAssignmentServerRpc(int spreadIndex, int stepIndex, ulong clientId, bool desiredAssigned, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         TryApplyAssignmentRequest(spreadIndex, stepIndex, clientId, desiredAssigned, rpcParams.Receive.SenderClientId);
     }
 
     private void TryApplyAssignmentRequest(int spreadIndex, int stepIndex, ulong clientId, bool desiredAssigned, ulong sender)
     {
-        if (!TryValidateSender(sender, out NetworkClient client) || client.PlayerObject == null) return;
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, sender)
+            || !TryValidateSender(sender, out NetworkClient client) || client.PlayerObject == null) return;
         PlayerHealth health = client.PlayerObject.GetComponent<PlayerHealth>();
         if (health == null || health.IsDowned) return;
         if (!connectedPlayerIds.Contains(clientId)) return;

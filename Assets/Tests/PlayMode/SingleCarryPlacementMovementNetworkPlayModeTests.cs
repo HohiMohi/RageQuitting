@@ -24,6 +24,7 @@ public sealed partial class SingleCarryPlacementMovementNetworkPlayModeTests
     private static readonly Type PreviewType = Type.GetType("PlayerSingleCarryPlacementNetworkPreview, Assembly-CSharp");
     private static readonly Type ResourceType = Type.GetType("BaseResourceNew, Assembly-CSharp");
     private static readonly Type FirstPersonType = Type.GetType("StarterAssets.FirstPersonController, Assembly-CSharp");
+    private static readonly Type TemporaryStatusType = Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp");
     private static readonly Type PickableType = Type.GetType("IPIckableNew, Assembly-CSharp");
     private readonly List<NetworkManager> managers = new List<NetworkManager>();
     private readonly List<GameObject> roots = new List<GameObject>();
@@ -530,6 +531,9 @@ public sealed partial class SingleCarryPlacementMovementNetworkPlayModeTests
             source.Despawn(true);
             yield return WaitUntil(() => Find(owner, acceptedDirectionSourceId) == null,
                 $"accepted {directionCase.label} source cleanup");
+            Component status = ownerPlayer.GetComponent(TemporaryStatusType);
+            yield return WaitUntil(() => status.GetType().GetProperty("CurrentStatus").GetValue(status).ToString() == "None",
+                $"placement action lock expiry after {directionCase.label}");
             source = SpawnBoardFor(host, new Vector3(20f, 4f, 20f));
             yield return WaitUntil(() => Find(owner, source.NetworkObjectId) != null,
                 $"next direction source replication after {directionCase.label}");

@@ -789,6 +789,7 @@ GameObject:
   - component: {fileID: 7651847357888764348}
   - component: {fileID: 8320973776022288631}
   - component: {fileID: 8027790039480312009}
+  - component: {fileID: 5155037308530081396}
   m_Layer: 8
   m_Name: PlayerNew
   m_TagString: Player
@@ -1263,6 +1264,7 @@ MonoBehaviour:
   playerInteraction: {fileID: 1047544986995738481}
   playerHealth: {fileID: 6339126401750945372}
   playerInventory: {fileID: 4354115525238422459}
+  temporaryStatusController: {fileID: 0}
   playerTurnFeedback: {fileID: 0}
   cameraFeedbackComposer: {fileID: 0}
   toolAudioSource: {fileID: 0}
@@ -1747,6 +1749,21 @@ MonoBehaviour:
   placementDistance: 2
   rotationDegreesPerSecond: 90
   physicalDeckPanelTargetRange: 5
+--- !u!114 &5155037308530081396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1958055688446606850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7144c2bfe33463eb852d1352f2a911a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTemporaryStatusController
+  ShowTopMostFoldoutHeaderGroup: 1
+  placementLockDurationSeconds: 1
+  crushedHandsDurationSeconds: 15
 --- !u!1 &2125495619788192507
 GameObject:
   m_ObjectHideFlags: 0

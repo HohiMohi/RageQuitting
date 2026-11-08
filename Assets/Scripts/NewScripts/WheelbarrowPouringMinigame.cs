@@ -105,8 +105,7 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestJoinServerRpc(bool left, ServerRpcParams rpc = default) =>
-        Join(rpc.Receive.SenderClientId, left, null);
+    private void RequestJoinServerRpc(bool left, ServerRpcParams rpc = default) => Join(rpc.Receive.SenderClientId, left, null);
 
     public bool CanOfferJoin(Transform interactor, bool left)
     {
@@ -154,6 +153,9 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
         else if (IsSideOccupied(preferLeft)) return false;
 
         Transform playerTransform = ResolvePlayerTransform(clientId, suppliedPlayerTransform);
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, clientId)
+            || playerTransform != null && playerTransform.TryGetComponent(out PlayerTemporaryStatusController statusController)
+                && statusController.BlocksActions) return false;
         if (!ValidateJoinPosition(clientId, preferLeft, solo, playerTransform)) return false;
 
         if (solo)
@@ -341,7 +343,11 @@ public class WheelbarrowPouringMinigame : NetworkBehaviour
         SetCursors(left, right);
     }
 
-    [ServerRpc(RequireOwnership = false)] public void SubmitCursorDeltaServerRpc(float delta, ServerRpcParams rpc = default) => SubmitCursorDelta(delta, rpc.Receive.SenderClientId);
+    [ServerRpc(RequireOwnership = false)] public void SubmitCursorDeltaServerRpc(float delta, ServerRpcParams rpc = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpc.Receive.SenderClientId)) return;
+        SubmitCursorDelta(delta, rpc.Receive.SenderClientId);
+    }
 
     private void Update()
     {

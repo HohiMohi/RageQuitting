@@ -46,6 +46,7 @@ public partial class PlayerActionController : NetworkBehaviour
     private PlayerInputNew _playerInputNew;
     private NetworkObject _networkObject;
     private PlayerHealth _playerHealth;
+    private PlayerTemporaryStatusController _temporaryStatusController;
     private PlayerInteractionNew _playerInteraction;
     private PlayerConcreteTrapController _concreteTrap;
     private ActionImpactEffectSpawner _impactEffectSpawner;
@@ -106,6 +107,9 @@ public partial class PlayerActionController : NetworkBehaviour
         _playerInputNew = GetComponent<PlayerInputNew>();
         _networkObject = GetComponent<NetworkObject>();
         _playerHealth = GetComponent<PlayerHealth>();
+        _temporaryStatusController = GetComponent<PlayerTemporaryStatusController>();
+        if (_temporaryStatusController != null)
+            _temporaryStatusController.StatusChanged += TemporaryStatusChanged;
         _playerInteraction = GetComponent<PlayerInteractionNew>();
         _concreteTrap = GetComponent<PlayerConcreteTrapController>();
         _impactEffectSpawner = GetComponent<ActionImpactEffectSpawner>();
@@ -138,6 +142,8 @@ public partial class PlayerActionController : NetworkBehaviour
             _playerInputNew.OnActionAltCanceled -= HandleActionAltCanceled;
             _playerInputNew.OnActionCanceled -= HandleActionCanceled;
         }
+        if (_temporaryStatusController != null)
+            _temporaryStatusController.StatusChanged -= TemporaryStatusChanged;
         if (_inventory != null) _inventory.OnSelectedItemChanged -= Inventory_OnSelectedItemChanged;
         CancelSawCuttingImmediately();
         CleanupSawCuttingVisuals();
@@ -164,8 +170,24 @@ public partial class PlayerActionController : NetworkBehaviour
         CancelSawCuttingImmediately();
     }
 
+    private bool IsWorldActionBlocked() => _temporaryStatusController != null
+        && _temporaryStatusController.BlocksActions;
+
+    private bool IsWorldActionBlocked(ulong senderClientId) =>
+        PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, senderClientId);
+
+    private void TemporaryStatusChanged(PlayerTemporaryStatusSnapshot snapshot)
+    {
+        if (!IsWorldActionBlocked()) return;
+        performAction = false;
+        CancelSawCuttingImmediately();
+        CancelCrowbarExtractionImmediately();
+        CancelCurrentAction();
+    }
+
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (IsWorldActionBlocked()) return;
         if (IsSawSelected()) return;
         if (IsCrowbarSelected())
         {
@@ -195,6 +217,7 @@ public partial class PlayerActionController : NetworkBehaviour
 
     private void HandleAction(object sender, EventArgs e)
     {
+        if (IsWorldActionBlocked()) return;
         if (IsSawSelected())
         {
             performAction = false;
@@ -236,6 +259,7 @@ public partial class PlayerActionController : NetworkBehaviour
 
     public bool PerformAction()
     {
+        if (IsWorldActionBlocked()) return false;
         if (IsSawSelected()) return false;
         if (IsCrowbarExtractionActiveOrPending) return false;
         EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
@@ -746,7 +770,8 @@ public partial class PlayerActionController : NetworkBehaviour
         int requestedItemTypeValue,
         ServerRpcParams serverRpcParams = default)
     {
-        if (serverRpcParams.Receive.SenderClientId != OwnerClientId ||
+        if (IsWorldActionBlocked(serverRpcParams.Receive.SenderClientId)
+            || serverRpcParams.Receive.SenderClientId != OwnerClientId ||
             NetworkManager.Singleton == null ||
             !NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
                 targetNetworkObjectId,
@@ -763,7 +788,8 @@ public partial class PlayerActionController : NetworkBehaviour
         Vector3 aimDirection, uint sequence, ServerRpcParams serverRpcParams = default)
     {
         NetworkManager manager = NetworkManager;
-        if (manager == null || !manager.IsServer) return;
+        if (manager == null || !manager.IsServer
+            || IsWorldActionBlocked(serverRpcParams.Receive.SenderClientId)) return;
         manager.SpawnManager.SpawnedObjects.TryGetValue(nailNetworkObjectId, out NetworkObject nailNetworkObject);
         TryApplyMountingNailImpactServer(serverRpcParams.Receive.SenderClientId, nailNetworkObject,
             aimOrigin, aimDirection, sequence);
@@ -774,7 +800,8 @@ public partial class PlayerActionController : NetworkBehaviour
         Vector3 aimDirection, uint sequence, ServerRpcParams serverRpcParams = default)
     {
         NetworkManager manager = NetworkManager;
-        if (manager == null || !manager.IsServer) return;
+        if (manager == null || !manager.IsServer
+            || IsWorldActionBlocked(serverRpcParams.Receive.SenderClientId)) return;
         manager.SpawnManager.SpawnedObjects.TryGetValue(panelNetworkObjectId, out NetworkObject panelNetworkObject);
         TryApplyPanelHammerImpactServer(serverRpcParams.Receive.SenderClientId, panelNetworkObject,
             aimOrigin, aimDirection, sequence);
@@ -784,7 +811,8 @@ public partial class PlayerActionController : NetworkBehaviour
         Vector3 aimOrigin, Vector3 aimDirection, uint sequence)
     {
         NetworkManager manager = NetworkManager;
-        if (manager == null || !manager.IsServer || senderClientId != OwnerClientId
+        if (manager == null || !manager.IsServer || IsWorldActionBlocked(senderClientId)
+            || senderClientId != OwnerClientId
             || sequence == 0 || !IsNewerRequestSequence(sequence, lastServerMountingNailImpactSequence)) return false;
         lastServerMountingNailImpactSequence = sequence;
         if (panelNetworkObject == null || !panelNetworkObject.IsSpawned || panelNetworkObject == NetworkObject
@@ -831,7 +859,8 @@ public partial class PlayerActionController : NetworkBehaviour
         Vector3 aimOrigin, Vector3 aimDirection, uint sequence)
     {
         NetworkManager manager = NetworkManager;
-        if (manager == null || !manager.IsServer || senderClientId != OwnerClientId
+        if (manager == null || !manager.IsServer || IsWorldActionBlocked(senderClientId)
+            || senderClientId != OwnerClientId
             || sequence == 0 || !IsNewerRequestSequence(sequence, lastServerMountingNailImpactSequence)) return false;
         lastServerMountingNailImpactSequence = sequence;
         if (nailNetworkObject == null || !nailNetworkObject.IsSpawned || nailNetworkObject == NetworkObject
@@ -898,7 +927,7 @@ public partial class PlayerActionController : NetworkBehaviour
         NetworkObject targetNetworkObject,
         EquippableItemType requestedItemType)
     {
-        if (targetNetworkObject == null ||
+        if (IsWorldActionBlocked() || targetNetworkObject == null ||
             targetNetworkObject == NetworkObject ||
             _inventory == null || _concreteTrap != null && _concreteTrap.IsTrapped
             || serverCrowbarNail != null)

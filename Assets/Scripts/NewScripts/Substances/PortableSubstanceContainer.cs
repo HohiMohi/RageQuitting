@@ -388,6 +388,7 @@ public class PortableSubstanceContainer : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestContextActionServerRpc(byte kind, ulong targetId, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         ExecuteContextAction(rpcParams.Receive.SenderClientId, (ContextTargetKind)kind, targetId);
     }
 
@@ -395,6 +396,7 @@ public class PortableSubstanceContainer : NetworkBehaviour
     private void RequestContextActionWithAimRayServerRpc(byte kind, ulong targetId, Vector3 rayOrigin,
         Vector3 rayDirection, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         if (!IsFinite(rayOrigin) || !IsUnitDirection(rayDirection)) return;
         ExecuteContextAction(rpcParams.Receive.SenderClientId, (ContextTargetKind)kind, targetId,
             new Ray(rayOrigin, rayDirection), true);
@@ -847,6 +849,7 @@ public class PortableSubstanceContainer : NetworkBehaviour
     private void SetBucketActionCollectionIntentServerRpc(bool held, ServerRpcParams rpcParams = default)
     {
         ulong senderClientId = rpcParams.Receive.SenderClientId;
+        if (held && PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, senderClientId)) return;
         if (held)
         {
             if (!ValidateHolder(senderClientId, out PlayerInteractionNew player)) return;

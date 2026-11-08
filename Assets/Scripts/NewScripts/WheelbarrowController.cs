@@ -2566,7 +2566,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestRoleServerRpc(byte role, ServerRpcParams rpc = default) => AssignRole(rpc.Receive.SenderClientId, (WheelbarrowOccupantRole)role);
+    private void RequestRoleServerRpc(byte role, ServerRpcParams rpc = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpc.Receive.SenderClientId)) return;
+        AssignRole(rpc.Receive.SenderClientId, (WheelbarrowOccupantRole)role);
+    }
 
     private bool AssignRole(ulong clientId, WheelbarrowOccupantRole role)
     {
@@ -2892,7 +2896,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestLoadResourceServerRpc(ulong resourceId, ServerRpcParams rpc = default) => LoadResourceServer(rpc.Receive.SenderClientId, resourceId);
+    private void RequestLoadResourceServerRpc(ulong resourceId, ServerRpcParams rpc = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpc.Receive.SenderClientId)) return;
+        LoadResourceServer(rpc.Receive.SenderClientId, resourceId);
+    }
 
     private bool LoadResourceServer(ulong clientId, ulong resourceId)
     {
@@ -2930,7 +2938,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestUnloadResourceServerRpc(ServerRpcParams rpc = default) => UnloadLastResourceServer(rpc.Receive.SenderClientId);
+    private void RequestUnloadResourceServerRpc(ServerRpcParams rpc = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpc.Receive.SenderClientId)) return;
+        UnloadLastResourceServer(rpc.Receive.SenderClientId);
+    }
 
     private bool UnloadLastResourceServer(ulong clientId)
     {
@@ -3179,6 +3191,7 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
     [ServerRpc(RequireOwnership = false)]
     private void RequestRemoveDownedPassengerServerRpc(ServerRpcParams rpc = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpc.Receive.SenderClientId)) return;
         if (TryGetPlayer(rpc.Receive.SenderClientId, out NetworkObject player))
             TryRemoveDownedPassenger(player.GetComponent<PlayerInteractionNew>());
     }
@@ -3191,7 +3204,11 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         else BeginRightingServerRpc();
     }
 
-    [ServerRpc(RequireOwnership = false)] private void BeginRightingServerRpc(ServerRpcParams rpc = default) => BeginRighting(rpc.Receive.SenderClientId);
+    [ServerRpc(RequireOwnership = false)] private void BeginRightingServerRpc(ServerRpcParams rpc = default)
+    {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpc.Receive.SenderClientId)) return;
+        BeginRighting(rpc.Receive.SenderClientId);
+    }
     [ServerRpc(RequireOwnership = false)] public void CancelRightingServerRpc(ServerRpcParams rpc = default) { if (rightingClient == rpc.Receive.SenderClientId) CancelRighting(); }
 
     private void BeginRighting(ulong clientId)

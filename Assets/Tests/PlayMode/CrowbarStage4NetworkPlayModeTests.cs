@@ -136,8 +136,9 @@ public sealed class CrowbarStage4NetworkPlayModeTests
             ConfigureInputDevices(clientPlayerInput);
             ResetOwnedInputDevices();
         }
-        Assert.That(clientInventory.GetType().GetMethod("AddItem", PublicInstance).Invoke(clientInventory, new object[] { crowbarAsset }), Is.True);
         Component serverInventory = serverActor.GetComponent(inventoryType);
+        Assert.That(serverInventory.GetType().GetMethod("AddItem", PublicInstance).Invoke(serverInventory, new object[] { crowbarAsset }), Is.True,
+            "Seed the server-owned inventory fixture directly.");
         ReplaceCrowbarInInventoryCatalog(serverInventory, fixtureCrowbar);
         yield return Until(() => serverInventory.GetType().GetMethod("GetSelectedItemForServerValidation", PublicInstance).Invoke(serverInventory, null) == crowbarAsset,
             "server selected Crowbar replication");

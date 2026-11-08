@@ -34,6 +34,12 @@ Gwoźdź jest osobnym `SingleMountingNail` prefabem, resource i profilem, korzys
 
 Stany gwoździa to `Loose`, `Held`, `Prepared`, `Partial`, `EmbeddedSingle` i `EmbeddedPair`. Stan `EmbeddedPair` oznacza końcowe zatwierdzenie połączenia oryginalnej pary. Przygotowanie może nastąpić wyłącznie w callbacku `ISingleCarryPlacementCommitListener` po zaakceptowanym placement F/E: offline po sprzątnięciu holdera, online po zatwierdzeniu przez serwer i sprzątnięciu. `ISingleCarryPlaceable` zachowuje kompatybilność. Drop, Esc, anulowanie i odrzucone żądanie nie przygotowują gwoździa. Nieprawidłowy kontakt albo kierunek nie blokuje poprawnego placement — w takim przypadku gwóźdź pozostaje `Loose`.
 
+## Przygotowanie gwoździa i status `CrushedHands`
+
+Każde zaakceptowane umieszczenie F→E rozpoczyna konfigurowaną blokadę, domyślnie `1 s`, na ruch, sprint, skok, kamerę i akcje w świecie. Grawitacja i impulsy pozostają aktywne, a menu jest niezależne. Obrażenie wymaga skutecznego osadzenia tego samego świeżo przygotowanego gwoździa ściśle przed upływem sekundowej blokady umieszczenia, niezależnie od istniejącego terminu `Prepared`. Osadzenie przez dowolnego atakującego kończy blokadę i nakłada `CrushedHands` (domyślnie `15 s`, konfigurowalne). Zwykłe kopnięcie luźnego gwoździa i późne trafienie nadal działają według reguł gwoździa, ale nie powodują obrażeń statusowych.
+
+Status zachowuje ruch i rozglądanie, blokuje akcje w świecie, wykonuje jedno upuszczenie narzędzi z obu zajętych slotów oraz niesionego obiektu bez rzutu, a dłonie FPP pozostają spłaszczone do przywrócenia. Faktyczny respawn resetuje tymczasowe statusy, a revive przez sojusznika nie zeruje timera. Konfiguracja komponentu znajduje się na `PlayerNew` w Inspectorze. Serwer autorytatywnie rozstrzyga status i timer. Owner widzi serwerowo potwierdzone podniesienie, zamianę slotów i upuszczenie, a oba sloty ekwipunku replikują się razem. Dwu-slotowe narzędzie jest upuszczane tylko raz.
+
 ## Sterowanie i kontakt — etap 1
 
 F rozpoczyna preview placementu, E zatwierdza, a Esc anuluje. Strzałki obracają gwóźdź w lokalnych osiach X/Z z prędkością 90°/s, korzystając z istniejącego controllera. Czubek `Tip` w lokalnym +Z musi znaleźć się najwyżej 2 cm przed przecinaną solidną powierzchnią. Wykrywanie pomija własne collidery i triggery. Nie ma wymogu pionowego ustawienia ani automatycznego obrotu. Po zaakceptowanym placement z poprawnym kontaktem stan `Prepared` zamraża pozę także na ścianie lub suficie. Zaakceptowany placement bez poprawnego kontaktu pozostawia gwóźdź w stanie `Loose`.

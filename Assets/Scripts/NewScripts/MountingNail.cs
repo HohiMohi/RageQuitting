@@ -101,6 +101,8 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
     private double preparedDeadline;
     private float nextRemainingSync;
     private bool impulseApplied;
+    private PlayerTemporaryStatusController preparedByStatusController;
+    private ulong preparedPlacementRevision;
     private bool subscribed;
     private MountingNailState offlineState;
     private int offlineHitCount;
@@ -202,6 +204,7 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
     private void OnDisable()
     {
         ActiveNails.Remove(this);
+        ClearPreparedPlayerAssociation();
         OnExtractionLifecycleEnded();
         StateOrAttachmentChanged?.Invoke(this);
     }
@@ -243,6 +246,7 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
 
     public override void OnNetworkSpawn()
     {
+        ClearPreparedPlayerAssociation();
         if (IsServer)
         {
             extractionSnapshot.Value = default;
@@ -265,6 +269,7 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
 
     public override void OnNetworkDespawn()
     {
+        ClearPreparedPlayerAssociation();
         OnExtractionLifecycleEnded();
         ReleaseFirstTargetFollow();
         ReleasePairConnection();
@@ -274,6 +279,7 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
 
     public override void OnDestroy()
     {
+        ClearPreparedPlayerAssociation();
         OnExtractionLifecycleEnded();
         ReleaseFirstTargetFollow();
         ReleasePairConnection();
@@ -398,6 +404,7 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
         preparedTarget = ResolveTargetRoot(surface);
         surfaceStartPosition = preparedTarget.position;
         surfaceStartRotation = preparedTarget.rotation;
+        AssociatePreparedPlayer(holder);
         preparedDeadline = Time.timeAsDouble + profile.PreparedTimeoutSeconds;
         impulseApplied = false;
         if (IsNetworkSessionActive())
@@ -407,6 +414,28 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
         }
         else offlineState = MountingNailState.Prepared;
         ApplyPhysicsForState(MountingNailState.Prepared);
+    }
+
+    private void AssociatePreparedPlayer(PlayerInteractionNew holder)
+    {
+        ClearPreparedPlayerAssociation();
+        if (holder == null || !holder.TryGetComponent(out preparedByStatusController)) return;
+        preparedPlacementRevision = preparedByStatusController.CurrentRevision;
+    }
+
+    private void ApplyPreparedInjury()
+    {
+        PlayerTemporaryStatusController statusController = preparedByStatusController;
+        ulong expectedPlacementRevision = preparedPlacementRevision;
+        if (statusController != null)
+            statusController.TryApplyCrushedHands(expectedPlacementRevision);
+        ClearPreparedPlayerAssociation();
+    }
+
+    private void ClearPreparedPlayerAssociation()
+    {
+        preparedByStatusController = null;
+        preparedPlacementRevision = 0;
     }
 
     public void OnResourcePickedUpChanged(bool isPickedUp)
@@ -480,6 +509,7 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
 
     private void ExitPreparedWithImpulse()
     {
+        ClearPreparedPlayerAssociation();
         Collider lastSurface = preparedSurface;
         Vector3 nailAxis = tip != null ? tip.forward.normalized : transform.forward;
         Vector3 lateral = lastSurface != null
@@ -511,6 +541,9 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
 
     private void SetState(MountingNailState state)
     {
+        if (State == MountingNailState.Prepared
+            && (state == MountingNailState.Loose || state == MountingNailState.Held))
+            ClearPreparedPlayerAssociation();
         if (IsNetworkSessionActive())
         {
             if (!IsServer) return;
@@ -568,6 +601,7 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
             else SetState(required == 1 ? MountingNailState.EmbeddedSingle : MountingNailState.Partial);
             ApplyPhysicsForState(State);
             FollowEmbeddedTarget();
+            ApplyPreparedInjury();
             return true;
         }
 

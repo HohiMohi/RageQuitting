@@ -109,15 +109,14 @@ public class MountingNailStage1NetworkPlayModeTests
         Component ownerPreview = ownerPlayerObject.GetComponent(System.Type.GetType("PlayerSingleCarryPlacementNetworkPreview, Assembly-CSharp"));
         Assert.That(ownerPreview, Is.Not.Null);
         Transform aimAnchor = (Transform)interactionType.GetProperty("SingleCarryPlacementAimAnchor").GetValue(serverPlayer);
-        NetworkTransform authoritativeTransform = serverPlayer.GetComponent<NetworkTransform>();
+        Component authoritativeTransform = serverPlayer.GetComponent(System.Type.GetType("ClientNetworkTransform, Assembly-CSharp"));
+        MethodInfo getLatestAuthoritativePose = authoritativeTransform.GetType().GetMethod("TryGetLatestAuthoritativeWorldPose");
+        object[] authoritativePose = { Vector3.zero, Quaternion.identity };
+        yield return Until(() => (bool)getLatestAuthoritativePose.Invoke(authoritativeTransform, authoritativePose),
+            "complete owner-authoritative world pose received by host");
         Vector3 anchorLocalOffset = serverPlayer.transform.InverseTransformPoint(aimAnchor.position);
-        Vector3 authoritativePosition = authoritativeTransform.GetSpaceRelativePosition(true);
-        Quaternion authoritativeRotation = authoritativeTransform.GetSpaceRelativeRotation(true);
-        if (authoritativeTransform.InLocalSpace && serverPlayer.transform.parent != null)
-        {
-            authoritativePosition = serverPlayer.transform.parent.TransformPoint(authoritativePosition);
-            authoritativeRotation = serverPlayer.transform.parent.rotation * authoritativeRotation;
-        }
+        Vector3 authoritativePosition = (Vector3)authoritativePose[0];
+        Quaternion authoritativeRotation = (Quaternion)authoritativePose[1];
         Vector3 trustedAimOrigin = authoritativePosition
             + authoritativeRotation * Vector3.Scale(anchorLocalOffset, serverPlayer.transform.localScale);
         Vector3 aimDirection = authoritativeRotation * Vector3.forward;

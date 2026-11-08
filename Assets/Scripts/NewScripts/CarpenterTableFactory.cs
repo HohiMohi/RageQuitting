@@ -348,6 +348,7 @@ public class CarpenterTableFactory : BaseFactory
     [ServerRpc(RequireOwnership = false)]
     private void RequestBeginDimensionAdjustmentServerRpc(int dimensionValue, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         if (TryParseDimension(dimensionValue, out ComponentDimension dimension))
         {
             TryBeginDimensionAdjustmentServer(dimension, rpcParams.Receive.SenderClientId);
@@ -357,6 +358,7 @@ public class CarpenterTableFactory : BaseFactory
     [ServerRpc(RequireOwnership = false)]
     private void RequestSetDimensionStepServerRpc(int dimensionValue, int stepIndex, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         if (!TryParseDimension(dimensionValue, out ComponentDimension dimension))
         {
             return;

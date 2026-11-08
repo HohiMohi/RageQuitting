@@ -185,7 +185,8 @@ public class MountingNailStage2NetworkPlayModeTests
             new object[] { aimRay.origin, aimRay.direction }), Is.True,
             "The normal owner's camera ray origin must pass server anchor validation before RPC probes.");
         ScriptableObject hammerForOwner = hammer;
-        Assert.That(AddItem(ownerInventory, hammerForOwner), Is.True, "Owner equips the production IndustrialHammer through PlayerInventory.");
+        Assert.That(AddItem(serverInventory, hammerForOwner), Is.True,
+            "Seed the remote player's authoritative server inventory through PlayerInventory.");
         yield return Until(() => ItemType(GetSelectedServerItem(serverInventory)) == "IndustrialHammer", "replicated hammer inventory");
         Assert.That(State(clientNail), Is.EqualTo("Prepared"), "Owner receives no predicted hit before the strike phase.");
 

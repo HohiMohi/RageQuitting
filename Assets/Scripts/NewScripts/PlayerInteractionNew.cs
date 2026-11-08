@@ -14,6 +14,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private PlayerInputNew _playerInputNew;
     private PlayerHealth _playerHealth;
     private PlayerInventory _playerInventory;
+    private PlayerTemporaryStatusController temporaryStatusController;
 
     [Header("Interaction Parameters")]
     private IInteractableNew _currentInteractable = null;
@@ -155,6 +156,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         _playerInputNew.OnActionAltCanceled += HandleActionAltCanceled;
         OnHeldObjectChanged += HandleBucketActionHeldObjectChanged;
         _playerHealth = GetComponent<PlayerHealth>();
+        TryGetComponent(out temporaryStatusController);
         flexibleSaplingUI = GetComponent<PlayerFlexibleSaplingUI>();
         wheelbarrowController = GetComponent<PlayerWheelbarrowController>();
         concreteTrapController = GetComponent<PlayerConcreteTrapController>();
@@ -186,7 +188,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
     private void HandleActionAlt(object sender, EventArgs e)
     {
         if (!isActiveAndEnabled || _playerInputNew == null || !_playerInputNew.IsLocalGameplayInputActive ||
-            _playerInputNew.IsSingleCarryPlacementActive) return;
+            _playerInputNew.IsSingleCarryPlacementActive || _playerInputNew.IsWorldActionBlocked) return;
 
         // Alternate input is reserved for the Crowbar extraction controller while the tool is selected.
         EquippableItemSO selected = _playerInventory != null ? _playerInventory.GetCurrentSelectedItem() : null;
@@ -399,6 +401,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private void HandleInteract(object sender, EventArgs e)
     {
+        if (_playerInputNew != null && _playerInputNew.IsWorldActionBlocked) return;
         if (concreteTrapController != null && concreteTrapController.BlocksGameplayInput) return;
         if (wheelbarrowController != null && wheelbarrowController.TryHandleInteractPressed())
         {
@@ -623,6 +626,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     private bool DropObjectInternal(bool allowThrow)
     {
+        if (allowThrow && _playerInputNew != null && _playerInputNew.IsWorldActionBlocked)
+            return false;
         if (_pickedUpGameObject != null)
         {
             GameObject droppedGo = _pickedUpGameObject;
@@ -1136,7 +1141,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         Vector3 position, Quaternion rotation)
     {
         NetworkManager manager = NetworkManager.Singleton;
-        if (manager != null && manager.IsListening || expectedObject == null || expectedPlaceable == null
+        if (manager != null && manager.IsListening || temporaryStatusController != null
+            && temporaryStatusController.BlocksActions || expectedObject == null || expectedPlaceable == null
             || _pickedUpGameObject != expectedObject || pickedUpObject == null
             || !ReferenceEquals(pickedUpObject, expectedPlaceable)
             || pickedUpObjectSelfPositioned || sharedCarryMovementActive
@@ -1167,6 +1173,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         SetHoldedItemProperties(null);
         OnHeldObjectChanged?.Invoke(this, EventArgs.Empty);
         OnInteractionPerformed?.Invoke(this, EventArgs.Empty);
+        if (temporaryStatusController != null) temporaryStatusController.BeginPlacementLock();
         if (expectedObject.TryGetComponent(out ISingleCarryPlacementCommitListener commitListener))
             commitListener.OnSingleCarryPlacementCommitted(this);
         return true;

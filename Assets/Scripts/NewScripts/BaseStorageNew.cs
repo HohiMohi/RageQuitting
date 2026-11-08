@@ -431,14 +431,16 @@ public class BaseStorageNew : NetworkBehaviour, IInteractableNew
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestStoreBaseResourceServerRpc(int resourceIndex, int amount)
+    private void RequestStoreBaseResourceServerRpc(int resourceIndex, int amount, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         AddBaseResourceAmountByIndex(resourceIndex, amount);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestRemoveBaseResourceServerRpc(int resourceIndex, int amount)
+    private void RequestRemoveBaseResourceServerRpc(int resourceIndex, int amount, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         TryRemoveBaseResourceAmountByIndex(resourceIndex, amount);
     }
 

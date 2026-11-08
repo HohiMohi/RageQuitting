@@ -114,7 +114,8 @@ public sealed class SawCuttingNetworkPlayModeTests
         InteractionType.GetMethod("SetAimCamera", PublicInstance).Invoke(
             ownerActor.GetComponent(InteractionType), new object[] { ownerCamera });
         ConfigureInputDevices(ownerInput, ownerMouse, ownerKeyboard);
-        Assert.That((bool)InventoryType.GetMethod("AddItem", PublicInstance).Invoke(ownerInventory, new[] { sawItem }), Is.True);
+        Assert.That((bool)InventoryType.GetMethod("AddItem", PublicInstance).Invoke(serverActor.GetComponent(InventoryType), new[] { sawItem }), Is.True,
+            "Seed the server-owned inventory fixture directly.");
         yield return Until(() => ActionType.GetProperty("SelectedSawProfile", PublicInstance)
                 .GetValue(serverActor.GetComponent(ActionType)) != null, "server-side selected Saw profile");
 

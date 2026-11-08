@@ -218,14 +218,16 @@ public class BaseFactory : NetworkBehaviour, IInteractableNew
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestSelectComponentServerRpc(int mountableBridgeComponentSOIndex)
+    private void RequestSelectComponentServerRpc(int mountableBridgeComponentSOIndex, ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         TrySetSelectedComponentIndexServer(mountableBridgeComponentSOIndex);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestStartProductionServerRpc()
+    private void RequestStartProductionServerRpc(ServerRpcParams rpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, rpcParams.Receive.SenderClientId)) return;
         TryStartProductionServer();
     }
 

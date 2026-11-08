@@ -254,7 +254,7 @@ public class PlayerNetworkSetup : NetworkBehaviour
         SetComponentEnabled<PlayerInteractionNew>(false);
         // The server needs the remote owner's controller for authoritative RPC validation; this replica has no local input.
         SetComponentEnabled<PlayerActionController>(IsServer);
-        SetComponentEnabled<PlayerInventory>(false);
+        // Inventory is a replicated server-authoritative NetworkBehaviour and must stay enabled on every peer.
         SetComponentEnabled<PlayerMovementFeedback>(false);
         SetComponentEnabled<PlayerTargetHighlightController>(false);
         SetComponentEnabled<PlayerSharedCarryAnchorPreview>(false);

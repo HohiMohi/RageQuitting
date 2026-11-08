@@ -54,6 +54,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     private DownedPlayerCarryable downedPlayerCarryable;
     private PlayerWaterExposureController waterExposureController;
     private PlayerConcreteTrapController concreteTrapController;
+    private PlayerTemporaryStatusController temporaryStatusController;
 
     public event EventHandler OnHealthChanged;
     public event EventHandler OnDownedStateChanged;
@@ -85,6 +86,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
         waterExposureController = GetComponent<PlayerWaterExposureController>();
         concreteTrapController = GetComponent<PlayerConcreteTrapController>();
+        TryGetComponent(out temporaryStatusController);
         currentHealthLocal = maxHealth;
     }
 
@@ -271,7 +273,9 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 
     public void RequestRevive(NetworkObject reviver)
     {
-        if (!CanBeRevived)
+        if (!CanBeRevived || reviver != null
+            && reviver.TryGetComponent(out PlayerTemporaryStatusController reviverStatus)
+            && reviverStatus.BlocksActions)
         {
             return;
         }
@@ -530,6 +534,11 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
             return;
         }
 
+        if (NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(reviverNetworkObjectId,
+                out NetworkObject reviver)
+            && PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, reviver.OwnerClientId))
+            return;
+
         RestoreFullHealth();
     }
 
@@ -550,6 +559,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         Transform playerTransform = transform;
         ForceDropIfCarried();
         playerTransform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
+        if (temporaryStatusController != null) temporaryStatusController.ResetTemporaryStatuses();
         RestoreFullHealth();
         TeleportOwnerClientRpc(spawnPoint.position, spawnPoint.rotation, CreateTargetClientRpcParams(OwnerClientId));
     }
@@ -563,6 +573,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
             TeleportLocally(spawnPoint.position, spawnPoint.rotation);
         }
 
+        if (temporaryStatusController != null) temporaryStatusController.ResetTemporaryStatuses();
         RestoreFullHealth();
     }
 

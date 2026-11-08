@@ -45,6 +45,7 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
     private Ray lastRenderedAimRay;
     private bool hasLastRenderedPose;
     private bool requestPending;
+    private ulong pendingStatusRevision;
     private bool rotationBlockedUntilNeutral;
     private ulong pendingRequestId;
     private ulong lastRequestId;
@@ -69,6 +70,7 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
 
     public bool IsActive { get; private set; }
     public bool IsRequestPending => requestPending;
+    public ulong PendingRequestStatusRevision => pendingStatusRevision;
     public bool CanConfirmPlacement => !requestPending && (!IsNetworkSessionListening() || IsNetworkPlacementAvailable());
     public string PlacementConfirmationHint => requestPending ? "Waiting for server" : CanConfirmPlacement
         ? "E Place" : "E Unavailable in multiplayer";
@@ -359,6 +361,9 @@ public sealed partial class PlayerSingleCarryPlacementController : MonoBehaviour
             lastRequestId = lastRequestId == ulong.MaxValue ? 1 : lastRequestId + 1;
             pendingRequestId = lastRequestId;
             requestPending = true;
+            pendingStatusRevision = interaction != null
+                && interaction.TryGetComponent(out PlayerTemporaryStatusController statusController)
+                ? statusController.CurrentRevision : 0;
             if (firstPersonController != null) firstPersonController.StopHorizontalMovementForPlacement();
 #if UNITY_EDITOR && RQ_SINGLE_CARRY_DIAGNOSTICS
             RecordDiagnosticPlacementRequest(pendingRequestId, poseToCommit.Position, poseToCommit.Rotation,

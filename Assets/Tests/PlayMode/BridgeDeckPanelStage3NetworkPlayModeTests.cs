@@ -252,9 +252,8 @@ public sealed class BridgeDeckPanelStage3NetworkPlayModeTests
         Component serverInventory = hostOwnerPlayer.GetComponent(System.Type.GetType("PlayerInventory, Assembly-CSharp"));
         Component serverAction = hostOwnerPlayer.GetComponent(System.Type.GetType("PlayerActionController, Assembly-CSharp"));
         Assert.That(ownerAction, Is.Not.Null);
-        ownerInventory.GetType().GetMethod("AddItem", PublicInstance).Invoke(ownerInventory, new object[] { hammer });
-        serverInventory.GetType().GetMethod("SetNetworkSlotValues", PrivateInstance).Invoke(serverInventory,
-            new object[] { (int)System.Enum.Parse(System.Type.GetType("EquippableItemType, Assembly-CSharp"), "IndustrialHammer"), -1 });
+        Assert.That((bool)serverInventory.GetType().GetMethod("AddItem", PublicInstance).Invoke(serverInventory, new object[] { hammer }), Is.True,
+            "Seed the authoritative inventory on the server.");
         yield return Until(() => SelectedServerItemType(serverInventory) == "IndustrialHammer",
             "server-selected hammer");
 

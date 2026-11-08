@@ -638,6 +638,7 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
         Assert.That(arrowObject.activeInHierarchy, Is.False, "Placement exit cleans the correction arrow.");
         AssertOutlineColor(outline, 1f, 1f, 1f);
 
+        yield return WaitForTemporaryStatusExpiry(player);
         mountableType.GetMethod("PickedUp").Invoke(mountable, new object[] { player.transform });
         yield return null;
         QueueKeys("F");
@@ -784,6 +785,18 @@ public class SingleCarryPlacementStage2PlayModeTests : InputTestFixture
     }
 
     private static Type Resolve(string name) => Type.GetType(name);
+
+    private static IEnumerator WaitForTemporaryStatusExpiry(GameObject playerRoot)
+    {
+        Type statusType = Resolve("PlayerTemporaryStatusController, Assembly-CSharp");
+        Component status = playerRoot.GetComponent(statusType);
+        PropertyInfo currentStatus = statusType.GetProperty("CurrentStatus");
+        float deadline = Time.realtimeSinceStartup + 2f;
+        while (currentStatus.GetValue(status).ToString() != "None" && Time.realtimeSinceStartup < deadline)
+            yield return null;
+        Assert.That(currentStatus.GetValue(status).ToString(), Is.EqualTo("None"),
+            "The post-placement lock must expire before the next independent placement action.");
+    }
 
     private static void AssertHudState(Component controller, string expected, string message = null)
     {

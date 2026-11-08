@@ -166,6 +166,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
         {
             return;
         }
+        if (parent.TryGetComponent(out PlayerTemporaryStatusController statusController)
+            && statusController.BlocksActions) return;
 
         if (IsNetworkSessionActive())
         {
@@ -563,7 +565,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     private bool TryCompleteNetworkPickup(ulong ownerClientId, Vector3 bodyAnchorLocalOffset, float playerControllerRadius)
     {
-        if (!CanBePickedUp)
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, ownerClientId)
+            || !CanBePickedUp)
         {
             RejectPickupClientRpc(SharedCarryPickupFailureReason.Generic, CreateTargetClientRpcParams(ownerClientId));
             return false;
@@ -726,7 +729,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
 
     private bool TryCompleteSingleCarryThrow(ulong holderClientId)
     {
-        if (!IsServer || !IsSpawned || NetworkManager == null || !NetworkManager.IsListening
+        if (!IsServer || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, holderClientId)
+            || !IsSpawned || NetworkManager == null || !NetworkManager.IsListening
             || NetworkManager.ShutdownInProgress || !CanEnterSingleCarryPlacement || AllowsMultipleCarriers()
             || !isPickedUp || holderClientIds.Count != 1 || !holderClientIds.Contains(holderClientId)
             || npcHolderActorIds.Count != 0 || externalCarryActor != null || _rigidbody == null
@@ -861,6 +865,10 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
             return;
         }
 
+        if (playerNetworkObject.OwnerClientId != serverRpcParams.Receive.SenderClientId
+            || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager,
+                serverRpcParams.Receive.SenderClientId)) return;
+
         TryCompleteNetworkPickup(playerNetworkObject.OwnerClientId, bodyAnchorLocalOffset, playerControllerRadius);
     }
 
@@ -873,6 +881,8 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     [ServerRpc(RequireOwnership = false)]
     private void RequestSingleCarryThrowServerRpc(ServerRpcParams serverRpcParams = default)
     {
+        if (PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager,
+                serverRpcParams.Receive.SenderClientId)) return;
         TryCompleteSingleCarryThrow(serverRpcParams.Receive.SenderClientId);
     }
 
@@ -1686,6 +1696,15 @@ public class MountableBridgeComponent : NetworkBehaviour, IPIckableNew, IInterac
     public bool IsHeldBy(ulong clientId)
     {
         return holderClientIds.Contains(clientId);
+    }
+
+    public static bool ReleaseHeldObjectForTemporaryStatus(NetworkManager manager, ulong clientId)
+    {
+        if (manager == null || !manager.IsServer
+            || !HeldComponentByClientId.TryGetValue(clientId, out MountableBridgeComponent bridge)
+            || bridge == null || bridge.NetworkManager != manager || !bridge.IsSpawned)
+            return false;
+        return bridge.TryCompleteNetworkDrop(clientId, bridge.transform.position, bridge.transform.rotation);
     }
 
     public void PrepareForMountingRemoval()

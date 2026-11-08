@@ -253,6 +253,7 @@ public partial class PlayerActionController
     {
         hitPoint = default;
         if (target == null || !IsServer || NetworkManager == null || OwnerClientId != senderClientId
+            || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, senderClientId)
             || _inventory == null || _playerHealth != null && _playerHealth.IsDowned
             || _concreteTrap != null && _concreteTrap.BlocksGameplayInput
             || !CanUseSawPrimaryInput()

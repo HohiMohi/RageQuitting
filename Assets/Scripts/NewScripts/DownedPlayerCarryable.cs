@@ -7,6 +7,19 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     private const ulong NoCarrierNetworkObjectId = ulong.MaxValue;
     private static readonly Dictionary<ulong, DownedPlayerCarryable> CarriedPlayerByCarrierNetworkObjectId = new Dictionary<ulong, DownedPlayerCarryable>();
 
+    public static bool ReleaseCarriedPlayerForTemporaryStatus(NetworkManager manager, ulong carrierClientId)
+    {
+        if (manager == null || !manager.IsServer
+            || !manager.ConnectedClients.TryGetValue(carrierClientId, out NetworkClient client)
+            || client.PlayerObject == null
+            || !CarriedPlayerByCarrierNetworkObjectId.TryGetValue(client.PlayerObject.NetworkObjectId,
+                out DownedPlayerCarryable carriedPlayer)
+            || carriedPlayer == null || carriedPlayer.NetworkManager != manager || !carriedPlayer.IsSpawned)
+            return false;
+        carriedPlayer.ForceDrop();
+        return !carriedPlayer.IsCarried;
+    }
+
     [SerializeField] private float movementSpeedPenalty = 0.35f;
     [SerializeField] private Vector3 carriedPlayerLocalOffset = new Vector3(0f, 0f, 0.25f);
     [SerializeField] private Vector3 dropOffset = new Vector3(0f, 0f, 1f);
@@ -132,7 +145,9 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     public bool TryRequestPickup(Transform carrier)
     {
-        if (carrier == null || !CanBeCarried)
+        if (carrier == null || !CanBeCarried
+            || carrier.TryGetComponent(out PlayerTemporaryStatusController statusController)
+                && statusController.BlocksActions)
         {
             return false;
         }
@@ -268,6 +283,8 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
 
     public void RequestRevive(Transform reviver)
     {
+        if (reviver != null && reviver.TryGetComponent(out PlayerTemporaryStatusController statusController)
+            && statusController.BlocksActions) return;
         if (playerHealth == null
             || !playerHealth.CanBeRevived
             || reviver == null
@@ -724,13 +741,17 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestPickupServerRpc(ulong carrierNetworkObjectId)
+    private void RequestPickupServerRpc(ulong carrierNetworkObjectId, ServerRpcParams rpcParams = default)
     {
         if (NetworkManager.Singleton == null ||
             !NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(carrierNetworkObjectId, out NetworkObject carrierNetworkObject))
         {
             return;
         }
+
+        if (carrierNetworkObject.OwnerClientId != rpcParams.Receive.SenderClientId
+            || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager.Singleton,
+                rpcParams.Receive.SenderClientId)) return;
 
         TryCompleteNetworkPickup(carrierNetworkObject);
     }
