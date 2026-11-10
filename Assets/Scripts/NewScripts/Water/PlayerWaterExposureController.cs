@@ -15,6 +15,7 @@ public class PlayerWaterExposureController : NetworkBehaviour
     private PlayerStaminaController stamina;
     private FirstPersonController firstPersonController;
     private DownedPlayerCarryable downedCarryable;
+    private PlayerTemporaryStatusController temporaryStatusController;
     private WaterExposureState localState;
     private float nextServerCheckTime;
     private WaterBody currentWaterBody;
@@ -33,6 +34,7 @@ public class PlayerWaterExposureController : NetworkBehaviour
         stamina = GetComponent<PlayerStaminaController>();
         firstPersonController = GetComponent<FirstPersonController>();
         downedCarryable = GetComponent<DownedPlayerCarryable>();
+        TryGetComponent(out temporaryStatusController);
     }
     private void Update()
     {
@@ -65,6 +67,13 @@ public class PlayerWaterExposureController : NetworkBehaviour
     }
     private void EvaluateServerExposure()
     {
+        if (temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured)
+        {
+            stateNetwork.Value = WaterExposureState.None;
+            if (stamina != null) stamina.SetAuthoritativeDrainSource(StaminaDrainSource.Water, 0f);
+            ResetHazardTimers(true);
+            return;
+        }
         EvaluateExposure(out WaterExposureState state, out WaterBody body);
         currentWaterBody = body;
         stateNetwork.Value = state;
@@ -72,6 +81,13 @@ public class PlayerWaterExposureController : NetworkBehaviour
     }
     private void EvaluateLocalExposure()
     {
+        if (temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured)
+        {
+            localState = WaterExposureState.None;
+            if (stamina != null) stamina.SetAuthoritativeDrainSource(StaminaDrainSource.Water, 0f);
+            ResetHazardTimers(false);
+            return;
+        }
         EvaluateExposure(out localState, out WaterBody body);
         currentWaterBody = body;
         ApplyHazardState(localState, body, false);

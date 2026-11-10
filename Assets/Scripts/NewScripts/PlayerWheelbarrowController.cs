@@ -58,6 +58,13 @@ public class PlayerWheelbarrowController : MonoBehaviour
         }
     }
     public bool BlocksStandardMovement => CurrentRole != WheelbarrowOccupantRole.None;
+    public bool IsPassenger => CurrentRole == WheelbarrowOccupantRole.Passenger;
+
+    public bool ReleaseDriverForTumbleweedCapture()
+    {
+        return CurrentRole == WheelbarrowOccupantRole.Driver && current != null
+            && current.ReleaseDriverForTumbleweedCapture(LocalClientId);
+    }
     public bool BlocksCameraRotation => CurrentRole == WheelbarrowOccupantRole.PourLeft || CurrentRole == WheelbarrowOccupantRole.PourRight;
     private ulong LocalClientId => networkObject != null ? networkObject.OwnerClientId : 0;
     private bool IsLocalPlayer => networkObject == null || !IsNetworkActive || networkObject.IsOwner;

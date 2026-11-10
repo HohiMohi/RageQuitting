@@ -35,6 +35,7 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
         NetworkVariableWritePermission.Server);
 
     private PlayerHealth playerHealth;
+    private PlayerTemporaryStatusController temporaryStatusController;
     private CharacterController characterController;
     private PlayerConcreteTrapController concreteTrapController;
     private bool isCarriedLocal;
@@ -49,10 +50,10 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     public bool IsCarriedByNPC => IsCarried && TryResolveCarrierTransform(GetCarrierNetworkObjectId(), out Transform carrier)
         && carrier.TryGetComponent(out NPCCarrier _);
     public bool CanBeCarried => CanBeCarriedByHuman;
-    public bool CanBeCarriedByHuman => !IsCarried && (concreteTrapController != null && concreteTrapController.IsTrapped
+    public bool CanBeCarriedByHuman => !IsCarried && (temporaryStatusController == null || !temporaryStatusController.IsTumbleweedCaptured) && (concreteTrapController != null && concreteTrapController.IsTrapped
         ? concreteTrapController.IsEjected
         : playerHealth != null && playerHealth.IsDowned);
-    public bool CanBeCarriedByNpc => !IsCarried && playerHealth != null && playerHealth.IsDowned &&
+    public bool CanBeCarriedByNpc => !IsCarried && playerHealth != null && (temporaryStatusController == null || !temporaryStatusController.IsTumbleweedCaptured) && playerHealth.IsDowned &&
         (concreteTrapController == null || !concreteTrapController.IsTrapped);
     public string HeldObjectDisplayName => concreteTrapController != null && concreteTrapController.IsEjected
         ? "Concrete-trapped player"
@@ -62,6 +63,7 @@ public class DownedPlayerCarryable : NetworkBehaviour, IPIckableNew, IInteractab
     private void Awake()
     {
         playerHealth = GetComponent<PlayerHealth>();
+        TryGetComponent(out temporaryStatusController);
         characterController = GetComponent<CharacterController>();
         concreteTrapController = GetComponent<PlayerConcreteTrapController>();
     }

@@ -9,7 +9,8 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     {
         None = 0,
         NpcCarry = 1 << 0,
-        ConcreteTrap = 1 << 1
+        ConcreteTrap = 1 << 1,
+        TumbleweedCapture = 1 << 2
     }
 
     [Header("Health")]
@@ -72,10 +73,11 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
     public bool IsRespawnTimerPausedByConcreteTrap =>
         (ActiveRespawnPauseReasons & RespawnPauseReason.ConcreteTrap) != 0;
     public bool CanBeRevived => IsDowned
+        && (temporaryStatusController == null || !temporaryStatusController.IsTumbleweedCaptured)
         && !IsCarriedByNPC
         && (concreteTrapController == null || !concreteTrapController.IsTrapped)
         && (waterExposureController == null || !waterExposureController.IsInUnsafeWater);
-    public bool CanRespawn => IsDowned && !IsCarriedByNPC &&
+    public bool CanRespawn => IsDowned && !IsCarriedByNPC && (temporaryStatusController == null || !temporaryStatusController.IsTumbleweedCaptured) &&
         (concreteTrapController == null || !concreteTrapController.IsTrapped) && GetRespawnTimeRemaining() <= 0f;
 
     private bool IsNetworkStateActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
@@ -218,6 +220,9 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         SetRespawnPauseReason(RespawnPauseReason.ConcreteTrap, false);
     }
 
+    public void PauseRespawnTimerForTumbleweedCapture() => SetRespawnPauseReason(RespawnPauseReason.TumbleweedCapture, true);
+    public void ResumeRespawnTimerAfterTumbleweedCapture() => SetRespawnPauseReason(RespawnPauseReason.TumbleweedCapture, false);
+
     private void SetRespawnPauseReason(RespawnPauseReason reason, bool active)
     {
         if (reason == RespawnPauseReason.None || active && !IsDowned) return;
@@ -324,6 +329,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 
     public void RestoreFullHealth()
     {
+        if (temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured) return;
         ForceDropIfCarried();
 
         if (IsNetworkStateActive)
@@ -389,7 +395,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 
     private void ApplyDamageNetwork(float damage)
     {
-        if (damage <= 0f || isDownedNetwork.Value)
+        if (damage <= 0f || isDownedNetwork.Value || temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured)
         {
             return;
         }
@@ -407,7 +413,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 
     private void ApplyDamageLocal(float damage)
     {
-        if (damage <= 0f || isDownedLocal)
+        if (damage <= 0f || isDownedLocal || temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured)
         {
             return;
         }

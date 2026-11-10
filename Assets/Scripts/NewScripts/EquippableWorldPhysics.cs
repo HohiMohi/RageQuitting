@@ -14,6 +14,11 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
     private const string InteractableLayerName = "Interactable";
 
     private readonly NetworkVariable<bool> returningNetwork = new NetworkVariable<bool>();
+    private readonly NetworkVariable<bool> tumbleweedCapturedNetwork = new NetworkVariable<bool>();
+    private readonly NetworkVariable<double> tumbleweedImmuneUntilNetwork = new NetworkVariable<double>();
+    private readonly NetworkVariable<ulong> tumbleweedNetworkId = new(ulong.MaxValue);
+    private readonly NetworkVariable<int> tumbleweedSlotNetwork = new(-1);
+    private readonly NetworkVariable<double> tumbleweedReleaseAtNetwork = new(0d);
     private readonly List<Collider> itemColliders = new List<Collider>(4);
     private readonly List<Collider> pickupInteractionColliders = new List<Collider>(4);
     private readonly List<Collider> ignoredDropperColliders = new List<Collider>(4);
@@ -37,6 +42,15 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
 
     public Rigidbody PhysicsBody => body;
     public bool IsReturning => IsSpawned ? returningNetwork.Value : returnRoutine != null;
+    public bool IsTumbleweedCaptured => IsSpawned ? tumbleweedCapturedNetwork.Value : tumbleweedCapturedLocal;
+    private bool tumbleweedCapturedLocal;
+    private double tumbleweedImmuneUntilLocal;
+    private readonly List<bool> tumbleweedPreviousColliderStates = new();
+    public bool IsTumbleweedImmune => IsSpawned ? tumbleweedImmuneUntilNetwork.Value > GetTumbleweedTime() : tumbleweedImmuneUntilLocal > Time.timeAsDouble;
+    public int TumbleweedSlot => IsSpawned ? tumbleweedSlotNetwork.Value : tumbleweedSlotLocal;
+    public double TumbleweedReleaseAt => IsSpawned ? tumbleweedReleaseAtNetwork.Value : tumbleweedReleaseAtLocal;
+    private int tumbleweedSlotLocal = -1;
+    private double tumbleweedReleaseAtLocal;
     public EquippableWorldPhysicsProfileSO Profile => profile;
     public Transform ColliderShapeRoot => ResolveColliderShapeRoot();
 
@@ -73,12 +87,17 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
         returningNetwork.OnValueChanged += ReturningNetwork_OnValueChanged;
         ConfigureAuthority();
         ApplyReturningState(returningNetwork.Value);
+        tumbleweedCapturedNetwork.OnValueChanged += TumbleweedCapturedChanged;
+        ApplyTumbleweedCapturedState(tumbleweedCapturedNetwork.Value);
+        if (IsServer) tumbleweedImmuneUntilNetwork.Value = 0d;
     }
 
     public override void OnNetworkDespawn()
     {
         returningNetwork.OnValueChanged -= ReturningNetwork_OnValueChanged;
+        tumbleweedCapturedNetwork.OnValueChanged -= TumbleweedCapturedChanged;
         RestoreDropperCollisions();
+        tumbleweedPreviousColliderStates.Clear();
     }
 
     private void FixedUpdate()
@@ -163,7 +182,7 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
 
     public void ReturnToRespawnPoint()
     {
-        if (!HasPhysicsAuthority() || IsReturning)
+        if (!HasPhysicsAuthority() || IsReturning || IsTumbleweedCaptured)
         {
             return;
         }
@@ -174,6 +193,63 @@ public sealed class EquippableWorldPhysics : NetworkBehaviour
         }
 
         returnRoutine = StartCoroutine(ReturnToRespawnPointRoutine());
+    }
+
+    public void SetTumbleweedCaptured(bool captured) => SetTumbleweedCaptured(captured, ulong.MaxValue, -1, 0d);
+
+    public void SetTumbleweedCaptured(bool captured, ulong weedId, int slot, double releaseAt)
+    {
+        if (!HasPhysicsAuthority()) return;
+        if (IsSpawned && IsNetworkSessionActive())
+        {
+            tumbleweedCapturedNetwork.Value = captured;
+            tumbleweedNetworkId.Value = captured ? weedId : ulong.MaxValue;
+            tumbleweedSlotNetwork.Value = captured ? slot : -1;
+            tumbleweedReleaseAtNetwork.Value = captured ? releaseAt : 0d;
+            // NetworkVariable callbacks perform the transition immediately on this peer.
+        }
+        else
+        {
+            tumbleweedCapturedLocal = captured;
+            tumbleweedNetworkIdLocal = captured ? weedId : ulong.MaxValue;
+            tumbleweedSlotLocal = captured ? slot : -1;
+            tumbleweedReleaseAtLocal = captured ? releaseAt : 0d;
+            ApplyTumbleweedCapturedState(captured);
+        }
+    }
+
+    private ulong tumbleweedNetworkIdLocal = ulong.MaxValue;
+
+    public void SetTumbleweedReleaseImmunity(float seconds)
+    {
+        double until = GetTumbleweedTime() + Mathf.Max(0f, seconds);
+        if (IsSpawned && IsNetworkSessionActive()) tumbleweedImmuneUntilNetwork.Value = until;
+        else tumbleweedImmuneUntilLocal = until;
+    }
+
+    private double GetTumbleweedTime() => IsSpawned && IsNetworkSessionActive()
+        ? NetworkManager.ServerTime.Time : Time.timeAsDouble;
+
+    private void TumbleweedCapturedChanged(bool previous, bool current) => ApplyTumbleweedCapturedState(current);
+
+    private void ApplyTumbleweedCapturedState(bool captured)
+    {
+        if (body == null) return;
+        if (captured)
+        {
+            if (!body.isKinematic) { body.linearVelocity = Vector3.zero; body.angularVelocity = Vector3.zero; body.isKinematic = true; }
+            tumbleweedPreviousColliderStates.Clear();
+            for (int i = 0; i < itemColliders.Count; i++)
+            {
+                Collider collider = itemColliders[i];
+                tumbleweedPreviousColliderStates.Add(collider != null && collider.enabled);
+                if (collider != null) collider.enabled = false;
+            }
+            return;
+        }
+        for (int i = 0; i < itemColliders.Count && i < tumbleweedPreviousColliderStates.Count; i++)
+            if (itemColliders[i] != null) itemColliders[i].enabled = tumbleweedPreviousColliderStates[i] && !IsReturning;
+        tumbleweedPreviousColliderStates.Clear();
     }
 
     public Bounds GetWorldColliderBounds()

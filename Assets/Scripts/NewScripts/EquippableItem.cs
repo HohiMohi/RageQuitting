@@ -22,7 +22,7 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
             return;
 
         if (MountingNailSceneState.IsTargetConnected(transform)
-            || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && worldPhysics.IsReturning)
+            || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && (worldPhysics.IsReturning || worldPhysics.IsTumbleweedCaptured))
             || !interactor.TryGetComponent(out PlayerInventory playerInventory)
             || !playerInventory.CanAddItem(equippableItemSO))
         {
@@ -159,7 +159,7 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
             && (!interactor.TryGetComponent(out PlayerTemporaryStatusController statusController)
                 || !statusController.BlocksActions)
             && !MountingNailSceneState.IsTargetConnected(transform)
-            && (!TryGetComponent(out EquippableWorldPhysics worldPhysics) || !worldPhysics.IsReturning)
+            && (!TryGetComponent(out EquippableWorldPhysics worldPhysics) || !worldPhysics.IsReturning && !worldPhysics.IsTumbleweedCaptured)
             && interactor.TryGetComponent(out PlayerInventory playerInventory)
             && playerInventory.AddItem(equippableItemSO))
         {
@@ -172,7 +172,7 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
     {
         if (!IsServer || PlayerTemporaryStatusController.IsWorldActionBlockedForClient(NetworkManager, ownerClientId)
             || MountingNailSceneState.IsTargetConnected(transform)
-            || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && worldPhysics.IsReturning)
+            || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && (worldPhysics.IsReturning || worldPhysics.IsTumbleweedCaptured))
             || !interactor.TryGetComponent(out PlayerInventory playerInventory)
             || !playerInventory.AddItem(equippableItemSO))
         {
@@ -218,7 +218,7 @@ public class EquippableItem : NetworkBehaviour, IInteractableNew
                 serverRpcParams.Receive.SenderClientId)
             || Vector3.Distance(interactorNetworkObject.transform.position, transform.position) > 3f
             || MountingNailSceneState.IsTargetConnected(transform)
-            || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && worldPhysics.IsReturning)
+            || (TryGetComponent(out EquippableWorldPhysics worldPhysics) && (worldPhysics.IsReturning || worldPhysics.IsTumbleweedCaptured))
             || !interactorNetworkObject.TryGetComponent(out PlayerInventory playerInventory)
             || !playerInventory.CanAddItem(equippableItemSO))
         {

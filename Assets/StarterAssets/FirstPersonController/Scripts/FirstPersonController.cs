@@ -401,6 +401,14 @@ namespace StarterAssets
 
         private void Update()
 		{
+			bool tumbleweedCaptured = _temporaryStatusController != null && _temporaryStatusController.IsTumbleweedCaptured;
+			if (tumbleweedCaptured)
+			{
+				_verticalVelocity = 0f;
+				_horizontalVelocity = Vector3.zero;
+				_isSprinting = false;
+				return;
+			}
 			RefreshLooseSoilImmersion();
 			if (_playerActionController != null && _playerActionController.IsCrowbarExtractionActiveOrPending)
 				_isSprinting = false;

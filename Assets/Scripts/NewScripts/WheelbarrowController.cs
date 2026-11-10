@@ -652,6 +652,19 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         return null;
     }
 
+    public static WheelbarrowController FindForPlayer(ulong clientId, NetworkManager manager)
+    {
+        foreach (WheelbarrowController wheelbarrow in Instances)
+        {
+            if (wheelbarrow == null || wheelbarrow.DriverClientId != clientId
+                && wheelbarrow.PassengerClientId != clientId) continue;
+            if (manager != null && wheelbarrow.IsSpawned && wheelbarrow.NetworkManager == manager)
+                return wheelbarrow;
+            if (manager == null && !wheelbarrow.IsSpawned) return wheelbarrow;
+        }
+        return null;
+    }
+
     public override void OnNetworkSpawn()
     {
         cargoNetwork.OnListChanged += OnCargoChanged;
@@ -2822,6 +2835,18 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         SetDriver(NoClient);
         SetState(WheelbarrowState.Free);
         BeginSafeExit(clientId);
+        return true;
+    }
+
+    public bool ReleaseDriverForTumbleweedCapture(ulong clientId)
+    {
+        if (!HasAuthority || DriverClientId != clientId || State != WheelbarrowState.Driven) return false;
+        ReclaimPhysicsAuthority(true);
+        SetOccupantCollisionIgnored(clientId, false);
+        SetDriver(NoClient);
+        SetState(WheelbarrowState.Free);
+        throttleInput = 0f;
+        steeringInput = 0f;
         return true;
     }
 

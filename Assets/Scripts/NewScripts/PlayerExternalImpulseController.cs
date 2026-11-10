@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerExternalImpulseController : NetworkBehaviour, IExternalImpulseReceiver
 {
     private PlayerInteractionNew playerInteraction;
+    private PlayerTemporaryStatusController temporaryStatusController;
     private Vector3 externalVelocity;
     private float horizontalDeceleration;
     private float gravityMultiplier = 1f;
@@ -20,10 +21,12 @@ public class PlayerExternalImpulseController : NetworkBehaviour, IExternalImpuls
     private void Awake()
     {
         playerInteraction = GetComponent<PlayerInteractionNew>();
+        TryGetComponent(out temporaryStatusController);
     }
 
     public bool TryApplyExternalImpulse(ExternalImpulseData impulse, NetworkObject source)
     {
+        if (temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured) return false;
         if (!impulse.IsValid)
         {
             return false;
@@ -46,7 +49,8 @@ public class PlayerExternalImpulseController : NetworkBehaviour, IExternalImpuls
 
     internal bool ApplyServerAuthorizedImpulse(ExternalImpulseData impulse)
     {
-        if (!impulse.IsValid || (IsNetworkSessionActive() && !IsOwner))
+        if (!impulse.IsValid || (temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured)
+            || (IsNetworkSessionActive() && !IsOwner))
         {
             return false;
         }
@@ -57,6 +61,7 @@ public class PlayerExternalImpulseController : NetworkBehaviour, IExternalImpuls
 
     public Vector3 TickImpulse(float deltaTime, bool grounded)
     {
+        if (temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured) { ClearImpulse(); return Vector3.zero; }
         if (!IsImpulseActive)
         {
             return Vector3.zero;
@@ -153,7 +158,7 @@ public class PlayerExternalImpulseController : NetworkBehaviour, IExternalImpuls
     [ClientRpc]
     private void ApplyExternalImpulseClientRpc(ExternalImpulseData impulse, ClientRpcParams clientRpcParams = default)
     {
-        if (IsOwner)
+        if (IsOwner && (temporaryStatusController == null || !temporaryStatusController.IsTumbleweedCaptured))
         {
             ApplyImpulseLocally(impulse);
         }

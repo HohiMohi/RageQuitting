@@ -43,6 +43,19 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
 
     private readonly NetworkVariable<PlayerTemporaryStatusSnapshot> replicatedStatus = new(
         default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    private readonly NetworkVariable<ulong> tumbleweedNetworkId = new(ulong.MaxValue);
+    private readonly NetworkVariable<double> tumbleweedReleaseAt = new(0d);
+    private readonly NetworkVariable<int> tumbleweedSlot = new(-1);
+    private readonly NetworkVariable<Vector3> tumbleweedOffset = new(Vector3.zero);
+    private readonly NetworkVariable<Quaternion> tumbleweedRelativeRotation = new(Quaternion.identity);
+    private double tumbleweedImmuneUntil;
+    private PlayerTransportCollisionController transportCollision;
+    private bool transportSuppressed;
+    private PlayerNetworkSetup networkSetup;
+    private bool releasePosePending;
+    private Vector3 pendingReleasePosition;
+    private Quaternion pendingReleaseRotation;
+    private Vector3 pendingReleaseVelocity;
 
     private PlayerTemporaryStatusSnapshot offlineStatus;
     private PlayerTemporaryStatusSnapshot appliedStatus;
@@ -60,9 +73,19 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
         }
     }
 
-    public bool BlocksControls => CurrentStatus == PlayerTemporaryStatusKind.PlacementLock;
-    public bool BlocksActions => CurrentStatus != PlayerTemporaryStatusKind.None;
+    public bool BlocksControls => CurrentStatus == PlayerTemporaryStatusKind.PlacementLock || IsTumbleweedCaptured;
+    public bool BlocksActions => CurrentStatus != PlayerTemporaryStatusKind.None || IsTumbleweedCaptured;
     public bool IsCrushedHands => CurrentStatus == PlayerTemporaryStatusKind.CrushedHands;
+    public bool IsTumbleweedCaptured => IsNetworkStateActive ? tumbleweedNetworkId.Value != ulong.MaxValue : offlineTumbleweedCaptured;
+    private bool offlineTumbleweedCaptured;
+    private double offlineTumbleweedReleaseAt;
+    private ulong offlineTumbleweedNetworkId = ulong.MaxValue;
+    private Vector3 offlineTumbleweedOffset;
+    private int offlineTumbleweedSlot = -1;
+    private Quaternion offlineTumbleweedRelativeRotation = Quaternion.identity;
+    public double TumbleweedReleaseAt => IsNetworkStateActive ? tumbleweedReleaseAt.Value : offlineTumbleweedReleaseAt;
+    public int TumbleweedSlot => IsNetworkStateActive ? tumbleweedSlot.Value : offlineTumbleweedSlot;
+    public bool IsTumbleweedImmune => tumbleweedImmuneUntil > GetCurrentTime();
     public ulong CurrentRevision => CurrentSnapshot.Revision;
     public float RemainingSeconds => GetRemainingSeconds(CurrentSnapshot);
     public float PlacementLockDurationSeconds => NormalizeDuration(placementLockDurationSeconds);
@@ -95,6 +118,9 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
             subscribed = false;
         }
 
+        if (IsServer && IsTumbleweedCaptured) EndTumbleweedCapture(0f);
+        tumbleweedImmuneUntil = 0d;
+
         ClearLocalLifecycleState();
     }
 
@@ -111,13 +137,18 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
 
     private void Update()
     {
+        SyncCaptureCollisionState();
         if (!IsNetworkStateActive)
         {
+            FollowTumbleweed(offlineTumbleweedNetworkId, offlineTumbleweedOffset, offlineTumbleweedRelativeRotation);
             if (offlineStatus.Status != PlayerTemporaryStatusKind.None
                 && offlineStatus.ExpiresAt <= GetCurrentTime())
                 WriteStatus(PlayerTemporaryStatusKind.None, 0f);
             return;
         }
+
+        if (IsTumbleweedCaptured) FollowTumbleweed(tumbleweedNetworkId.Value, tumbleweedOffset.Value, tumbleweedRelativeRotation.Value);
+        if (releasePosePending && !IsTumbleweedCaptured) ApplyPendingReleasePose();
 
         if (IsServer && replicatedStatus.Value.Status != PlayerTemporaryStatusKind.None
             && replicatedStatus.Value.ExpiresAt <= GetCurrentTime())
@@ -127,7 +158,7 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
     /// <summary>Starts or refreshes the short lock after an accepted placement.</summary>
     public bool BeginPlacementLock()
     {
-        if (!HasAuthority()) return false;
+        if (!HasAuthority() || IsTumbleweedCaptured) return false;
 
         PlayerTemporaryStatusSnapshot current = CurrentSnapshot;
         if (IsSnapshotActive(current) && current.Status == PlayerTemporaryStatusKind.CrushedHands)
@@ -137,10 +168,108 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
         return true;
     }
 
+    public bool BeginTumbleweedCapture(ulong weedNetworkId, int slot, float durationSeconds, Vector3 offset, Quaternion relativeRotation)
+    {
+        if (!HasAuthority() || IsTumbleweedCaptured || IsTumbleweedImmune) return false;
+        double releaseAt = GetCurrentTime() + Mathf.Max(0.1f, durationSeconds);
+        if (IsNetworkStateActive) { tumbleweedNetworkId.Value = weedNetworkId; tumbleweedSlot.Value = slot; tumbleweedReleaseAt.Value = releaseAt; tumbleweedOffset.Value = offset; tumbleweedRelativeRotation.Value = relativeRotation; }
+        else { offlineTumbleweedCaptured = true; offlineTumbleweedNetworkId = weedNetworkId; offlineTumbleweedSlot = slot; offlineTumbleweedReleaseAt = releaseAt; offlineTumbleweedOffset = offset; offlineTumbleweedRelativeRotation = relativeRotation; }
+        if (IsNetworkStateActive)
+        {
+            BaseResourceNew.ReleaseHeldObjectForTemporaryStatus(NetworkManager, OwnerClientId);
+            MountableBridgeComponent.ReleaseHeldObjectForTemporaryStatus(NetworkManager, OwnerClientId);
+            DownedPlayerCarryable.ReleaseCarriedPlayerForTemporaryStatus(NetworkManager, OwnerClientId);
+        }
+        else if (TryGetComponent(out PlayerInteractionNew interaction)) interaction.DropHeldObjectForStateChange();
+        return true;
+    }
+
+    public bool EndTumbleweedCapture(float immunitySeconds = 5f)
+    {
+        if (!HasAuthority() || !IsTumbleweedCaptured) return false;
+        if (IsNetworkStateActive) { tumbleweedNetworkId.Value = ulong.MaxValue; tumbleweedSlot.Value = -1; tumbleweedReleaseAt.Value = 0d; }
+        else { offlineTumbleweedCaptured = false; offlineTumbleweedNetworkId = ulong.MaxValue; offlineTumbleweedSlot = -1; offlineTumbleweedReleaseAt = 0d; }
+        tumbleweedImmuneUntil = GetCurrentTime() + Mathf.Max(0f, immunitySeconds);
+        return true;
+    }
+
+    public void ApplyTumbleweedReleasePose(Vector3 position, Quaternion rotation, Vector3 velocity)
+    {
+        if (IsNetworkStateActive)
+        {
+            if (!IsServer) return;
+            if (IsOwner) QueueTumbleweedReleasePose(position, rotation, velocity);
+            else ApplyTumbleweedReleasePoseRpc(position, rotation, velocity);
+            return;
+        }
+        QueueTumbleweedReleasePose(position, rotation, velocity);
+    }
+
+    [Rpc(SendTo.Owner)]
+    private void ApplyTumbleweedReleasePoseRpc(Vector3 position, Quaternion rotation, Vector3 velocity)
+    {
+        QueueTumbleweedReleasePose(position, rotation, velocity);
+    }
+
+    private void QueueTumbleweedReleasePose(Vector3 position, Quaternion rotation, Vector3 velocity)
+    {
+        pendingReleasePosition = position;
+        pendingReleaseRotation = rotation;
+        pendingReleaseVelocity = velocity;
+        releasePosePending = true;
+        if (!IsTumbleweedCaptured) ApplyPendingReleasePose();
+    }
+
+    private void ApplyPendingReleasePose()
+    {
+        releasePosePending = false;
+        ApplyTumbleweedReleasePoseLocal(pendingReleasePosition, pendingReleaseRotation, pendingReleaseVelocity);
+    }
+
+    private void ApplyTumbleweedReleasePoseLocal(Vector3 position, Quaternion rotation, Vector3 velocity)
+    {
+        transform.SetPositionAndRotation(position, rotation);
+        if (TryGetComponent(out StarterAssets.FirstPersonController firstPerson))
+        {
+            firstPerson.ResetMovementAfterForcedPlacement();
+            firstPerson.ResetLookRotationState();
+            firstPerson.ApplyRopeReleaseVelocity(velocity);
+        }
+    }
+
+    private void SyncCaptureCollisionState()
+    {
+        if (networkSetup == null) TryGetComponent(out networkSetup);
+        if (networkSetup != null)
+        {
+            networkSetup.SetTumbleweedCameraSuppressed(IsTumbleweedCaptured && (!IsNetworkStateActive || IsOwner));
+        }
+        if (transportCollision == null) TryGetComponent(out transportCollision);
+        if (transportCollision == null) return;
+        if (IsTumbleweedCaptured)
+        {
+            transportCollision.BeginTransport(this);
+            transportSuppressed = true;
+        }
+        else if (transportSuppressed)
+        {
+            transportCollision.EndTransport(this);
+            transportSuppressed = false;
+        }
+    }
+
+    private void FollowTumbleweed(ulong id, Vector3 offset, Quaternion relativeRotation)
+    {
+        if (id == ulong.MaxValue || NetworkManager == null || NetworkManager.SpawnManager == null
+            || !NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(id, out NetworkObject weed)) return;
+        transform.SetPositionAndRotation(weed.transform.position + weed.transform.rotation * offset,
+            weed.transform.rotation * relativeRotation);
+    }
+
     /// <summary>Applies the injury once, and releases the player's inventory at its onset.</summary>
     internal bool TryApplyCrushedHands(ulong expectedPlacementRevision)
     {
-        if (!HasAuthority()) return false;
+        if (!HasAuthority() || IsTumbleweedCaptured) return false;
 
         PlayerTemporaryStatusSnapshot current = CurrentSnapshot;
         if (expectedPlacementRevision == 0 || current.Revision != expectedPlacementRevision
@@ -177,6 +306,7 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
 
     internal bool ShouldKeepPendingPlacementMovementBlocked(ulong requestStartRevision)
     {
+        if (IsTumbleweedCaptured) return true;
         PlayerTemporaryStatusSnapshot current = CurrentSnapshot;
         return current.Revision <= requestStartRevision
             || IsSnapshotActive(current) && current.Status == PlayerTemporaryStatusKind.PlacementLock;

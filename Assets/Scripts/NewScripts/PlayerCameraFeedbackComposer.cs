@@ -15,6 +15,7 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
     private Vector3 actionPositionOffset;
     private Vector3 actionEulerOffset;
     private bool placementModeSuppressed;
+    private PlayerTemporaryStatusController temporaryStatus;
 
     public Transform OutputTarget
     {
@@ -42,6 +43,7 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
 
     private void Awake()
     {
+        temporaryStatus = GetComponent<PlayerTemporaryStatusController>();
         EnsureOutputTarget();
         ApplyOffsets();
     }
@@ -117,8 +119,8 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
     {
         if (baseCameraTarget == null)
         {
-            StarterAssets.FirstPersonController controller = GetComponent<StarterAssets.FirstPersonController>();
-            if (controller != null && controller.CinemachineCameraTarget != null)
+            if (TryGetComponent(out StarterAssets.FirstPersonController controller)
+                && controller.CinemachineCameraTarget != null)
             {
                 baseCameraTarget = controller.CinemachineCameraTarget.transform;
             }
@@ -149,9 +151,10 @@ public class PlayerCameraFeedbackComposer : MonoBehaviour
             return;
         }
 
-        outputTarget.localPosition = damagePositionOffset + (placementModeSuppressed
+        bool transportLocked = temporaryStatus != null && temporaryStatus.IsTumbleweedCaptured;
+        outputTarget.localPosition = transportLocked ? Vector3.zero : damagePositionOffset + (placementModeSuppressed
             ? Vector3.zero : movementPositionOffset + turnPositionOffset + actionPositionOffset);
-        outputTarget.localRotation = Quaternion.Euler(damageEulerOffset + (placementModeSuppressed
+        outputTarget.localRotation = transportLocked ? Quaternion.identity : Quaternion.Euler(damageEulerOffset + (placementModeSuppressed
             ? Vector3.zero : movementEulerOffset + turnEulerOffset + actionEulerOffset));
     }
 }

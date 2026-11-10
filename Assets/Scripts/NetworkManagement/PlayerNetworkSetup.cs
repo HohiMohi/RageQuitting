@@ -13,6 +13,9 @@ public class PlayerNetworkSetup : NetworkBehaviour
     private bool setupCompleted;
     private static CinemachineVirtualCamera sharedVirtualCamera;
     private Coroutine delayedCameraBindingCoroutine;
+    private CinemachineBasicMultiChannelPerlin tumbleweedNoise;
+    private bool previousTumbleweedNoiseEnabled;
+    private bool tumbleweedCameraSuppressed;
 
     public GameObject PlayerBodyVisual => playerBodyVisual;
 
@@ -30,6 +33,26 @@ public class PlayerNetworkSetup : NetworkBehaviour
     public void SetPlayerBodyVisual(GameObject visual)
     {
         playerBodyVisual = visual;
+    }
+
+    public void SetTumbleweedCameraSuppressed(bool suppressed)
+    {
+        if (tumbleweedCameraSuppressed == suppressed) return;
+        if (suppressed)
+        {
+            CinemachineVirtualCamera virtualCamera = sharedVirtualCamera != null
+                ? sharedVirtualCamera : FindActiveSceneVirtualCamera();
+            tumbleweedNoise = virtualCamera != null
+                ? virtualCamera.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>() : null;
+            previousTumbleweedNoiseEnabled = tumbleweedNoise != null && tumbleweedNoise.enabled;
+            if (tumbleweedNoise != null) tumbleweedNoise.enabled = false;
+            tumbleweedCameraSuppressed = true;
+            return;
+        }
+
+        if (tumbleweedNoise != null) tumbleweedNoise.enabled = previousTumbleweedNoiseEnabled;
+        tumbleweedNoise = null;
+        tumbleweedCameraSuppressed = false;
     }
 
     public override void OnNetworkSpawn()
@@ -56,6 +79,7 @@ public class PlayerNetworkSetup : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        SetTumbleweedCameraSuppressed(false);
         StopDelayedCameraBinding();
         if (IsOwner)
         {
