@@ -1239,8 +1239,6 @@ MonoBehaviour:
   movementRadius: 0.65
   acceleration: 4.4
   maximumSpeed: 5
-  windDirectionChangeInterval: 2.5
-  edgeSteeringStrength: 3
   rollingTorque: 1.8
   hopImpulse: 1.1
   hopIntervalMinimum: 2.8

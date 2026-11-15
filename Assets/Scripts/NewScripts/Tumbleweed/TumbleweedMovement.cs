@@ -11,8 +11,6 @@ public sealed class TumbleweedMovement : NetworkBehaviour
     [SerializeField, Min(0.1f)] private float movementRadius = 0.65f;
     [SerializeField, Min(0f)] private float acceleration = 2.2f;
     [SerializeField, Min(0.1f)] private float maximumSpeed = 2.4f;
-    [SerializeField, Min(0.1f)] private float windDirectionChangeInterval = 2.5f;
-    [SerializeField, Min(0f)] private float edgeSteeringStrength = 3f;
     private Bounds worldBounds;
     private bool hasWorldBounds;
 
@@ -38,8 +36,10 @@ public sealed class TumbleweedMovement : NetworkBehaviour
     private readonly List<Collider> ignoredColliders = new List<Collider>(16);
     private Vector3 recoveryPosition;
     private Quaternion recoveryRotation;
-    private Vector3 windDirection;
-    private float nextWindChangeTime;
+    private Vector3 heading;
+    private Vector3 strongestBlockingNormal;
+    private float strongestBlockingDot = -0.05f;
+    private bool hasBlockingContact;
     private float nextHopTime;
     private bool offlinePhysicsInitialized;
 
@@ -56,9 +56,8 @@ public sealed class TumbleweedMovement : NetworkBehaviour
         recoveryPosition = transform.position;
         recoveryRotation = transform.rotation;
         ResolveWorldBoundsFromScene();
-        windDirection = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
-        if (windDirection.sqrMagnitude < 0.001f) ChooseWindDirection();
-        else nextWindChangeTime = Time.fixedTime + windDirectionChangeInterval;
+        Vector3 planarForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+        heading = planarForward.sqrMagnitude < 0.001f ? Vector3.forward : planarForward.normalized;
         ScheduleHop();
     }
 
@@ -99,16 +98,15 @@ public sealed class TumbleweedMovement : NetworkBehaviour
             return;
         }
 
-        if (now >= nextWindChangeTime)
-        {
-            ChooseWindDirection();
-        }
-
+        ApplyPendingBlockingBounce();
         if (OutsideWorldBounds(body.position))
         {
+            ReflectHeadingAtExceededBounds(body.position);
             RecoverToLastSafePosition();
             return;
         }
+
+        ReflectHeadingAtPredictiveBounds(body.position);
 
         WaterBody water = null;
         Vector3 waterProbe = body.position - Vector3.up * movementRadius * 0.75f;
@@ -121,24 +119,19 @@ public sealed class TumbleweedMovement : NetworkBehaviour
             recoveryRotation = body.rotation;
         }
 
-        Vector3 planarDirection = GetSteeringDirection(body.position);
-        Vector3 movementAcceleration = planarDirection * acceleration;
+        Vector3 movementAcceleration = heading * acceleration;
         if (hasGroundSupport)
         {
-            movementAcceleration = GetLandAcceleration(planarDirection, groundSupportHit);
+            movementAcceleration = GetLandAcceleration(heading, groundSupportHit);
         }
         body.AddForce(movementAcceleration, ForceMode.Acceleration);
 
+        ConstrainPlanarVelocityToHeading();
         Vector3 planarVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
-        if (planarVelocity.sqrMagnitude > maximumSpeed * maximumSpeed)
-        {
-            body.linearVelocity = Vector3.ClampMagnitude(planarVelocity, maximumSpeed)
-                + Vector3.up * body.linearVelocity.y;
-        }
 
         if (onWater && water != null)
         {
-            ApplyWaterFloat(water, planarDirection);
+            ApplyWaterFloat(water, heading);
         }
         else if (now >= nextHopTime && hasGroundSupport)
         {
@@ -154,23 +147,6 @@ public sealed class TumbleweedMovement : NetworkBehaviour
     }
 
 
-    private Vector3 GetSteeringDirection(Vector3 position)
-    {
-        Vector3 towardSafeInterior = Vector3.zero;
-        float margin = movementRadius + collisionFilterExtraRadius;
-        if (hasWorldBounds)
-        {
-            if (position.x < worldBounds.min.x + margin) towardSafeInterior.x += 1f;
-            if (position.x > worldBounds.max.x - margin) towardSafeInterior.x -= 1f;
-            if (position.z < worldBounds.min.z + margin) towardSafeInterior.z += 1f;
-            if (position.z > worldBounds.max.z - margin) towardSafeInterior.z -= 1f;
-        }
-
-        Vector3 steering = windDirection + towardSafeInterior.normalized * edgeSteeringStrength;
-        steering.y = 0f;
-        return steering.sqrMagnitude > 0.001f ? steering.normalized : windDirection;
-    }
-
     private void ApplyWaterFloat(WaterBody water, Vector3 steeringDirection)
     {
         float targetHeight = GetWaterFloatTarget(water, steeringDirection);
@@ -183,41 +159,139 @@ public sealed class TumbleweedMovement : NetworkBehaviour
     private float GetWaterFloatTarget(WaterBody water, Vector3 steeringDirection)
     {
         float normalFloatHeight = water.SurfaceHeight + waterFloatHeight;
-        Vector3 direction = steeringDirection;
-        if (direction.sqrMagnitude < 0.001f)
-        {
-            return normalFloatHeight;
-        }
+        if (!TryFindWaterBankSupport(water, steeringDirection, out RaycastHit ground)) return normalFloatHeight;
+
+        float bankFloatHeight = Mathf.Max(ground.point.y, water.SurfaceHeight) + movementRadius + 0.03f;
+        return Mathf.Max(normalFloatHeight, bankFloatHeight);
+    }
+
+    private bool TryFindWaterBankSupport(WaterBody water, Vector3 direction, out RaycastHit ground)
+    {
+        ground = default;
+        direction = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
+        if (direction.sqrMagnitude < 0.001f) return false;
 
         Vector3 bankSample = body.position + direction * (movementRadius * 2f);
         bankSample.y = water.SurfaceHeight;
-        if (water.Contains(bankSample) || OutsideWorldBounds(bankSample))
-        {
-            return normalFloatHeight;
-        }
+        if (water.Contains(bankSample) || OutsideWorldBounds(bankSample)) return false;
 
         float maximumBankRise = movementRadius;
         const float maximumBankDrop = 0.25f;
         float rayStartHeight = maximumBankRise + 0.25f;
         Vector3 rayOrigin = bankSample + Vector3.up * rayStartHeight;
         float rayDistance = rayStartHeight + maximumBankDrop;
-        if (!Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit ground, rayDistance,
+        if (!Physics.Raycast(rayOrigin, Vector3.down, out ground, rayDistance,
                 Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)
             || !(ground.collider is TerrainCollider)
             || ground.collider.gameObject.scene != gameObject.scene
             || ground.normal.y < 0.7f)
         {
-            return normalFloatHeight;
+            return false;
         }
 
-        if (ground.point.y < water.SurfaceHeight - maximumBankDrop
-            || ground.point.y > water.SurfaceHeight + maximumBankRise)
+        return ground.point.y >= water.SurfaceHeight - maximumBankDrop
+            && ground.point.y <= water.SurfaceHeight + maximumBankRise;
+    }
+
+    private bool IsEligibleShorelineTerrain(Collider candidate)
+    {
+        if (!(candidate is TerrainCollider)
+            || candidate.gameObject.scene != gameObject.scene)
         {
-            return normalFloatHeight;
+            return false;
         }
 
-        float bankFloatHeight = Mathf.Max(ground.point.y, water.SurfaceHeight) + movementRadius + 0.03f;
-        return Mathf.Max(normalFloatHeight, bankFloatHeight);
+        Vector3 waterProbe = body.position - Vector3.up * movementRadius * 0.75f;
+        return WaterBody.TryGetContaining(waterProbe, out WaterBody water)
+            && TryFindWaterBankSupport(water, heading, out RaycastHit support)
+            && support.collider == candidate;
+    }
+
+    private void ConstrainPlanarVelocityToHeading()
+    {
+        Vector3 velocity = body.linearVelocity;
+        float forwardSpeed = Mathf.Clamp(
+            Vector3.Dot(Vector3.ProjectOnPlane(velocity, Vector3.up), heading), 0f, maximumSpeed);
+        body.linearVelocity = heading * forwardSpeed + Vector3.up * velocity.y;
+    }
+
+    private void ApplyPendingBlockingBounce()
+    {
+        Vector3 normal = strongestBlockingNormal;
+        bool shouldBounce = hasBlockingContact;
+        strongestBlockingNormal = Vector3.zero;
+        strongestBlockingDot = -0.05f;
+        hasBlockingContact = false;
+
+        if (shouldBounce) ReflectFromPlanarNormal(normal);
+    }
+
+    private void ReflectFromPlanarNormal(Vector3 normal)
+    {
+        normal = Vector3.ProjectOnPlane(normal, Vector3.up).normalized;
+        if (normal.sqrMagnitude < 0.001f) return;
+
+        heading = Vector3.ProjectOnPlane(Vector3.Reflect(heading, normal), Vector3.up).normalized;
+        Vector3 velocity = body.linearVelocity;
+        Vector3 planarVelocity = Vector3.ProjectOnPlane(velocity, Vector3.up);
+        if (Vector3.Dot(planarVelocity, normal) < 0f)
+        {
+            planarVelocity = Vector3.Reflect(planarVelocity, normal);
+        }
+        body.linearVelocity = planarVelocity + Vector3.up * velocity.y;
+        ConstrainPlanarVelocityToHeading();
+    }
+
+    private void ReflectHeadingAtPredictiveBounds(Vector3 position)
+    {
+        if (!hasWorldBounds) return;
+        float predictionDistance = maximumSpeed * Time.fixedDeltaTime + 0.01f;
+        Vector3 predicted = position + heading * predictionDistance;
+        float minimumX = worldBounds.min.x + movementRadius;
+        float maximumX = worldBounds.max.x - movementRadius;
+        float minimumZ = worldBounds.min.z + movementRadius;
+        float maximumZ = worldBounds.max.z - movementRadius;
+
+        if (heading.x < 0f && predicted.x < minimumX) ReflectFromPlanarNormal(Vector3.right);
+        else if (heading.x > 0f && predicted.x > maximumX) ReflectFromPlanarNormal(Vector3.left);
+        if (heading.z < 0f && predicted.z < minimumZ) ReflectFromPlanarNormal(Vector3.forward);
+        else if (heading.z > 0f && predicted.z > maximumZ) ReflectFromPlanarNormal(Vector3.back);
+    }
+
+    private void ReflectHeadingAtExceededBounds(Vector3 position)
+    {
+        if (!hasWorldBounds) return;
+        float minimumX = worldBounds.min.x + movementRadius;
+        float maximumX = worldBounds.max.x - movementRadius;
+        float minimumZ = worldBounds.min.z + movementRadius;
+        float maximumZ = worldBounds.max.z - movementRadius;
+
+        if (position.x < minimumX)
+        {
+            if (heading.x < 0f) ReflectFromPlanarNormal(Vector3.right);
+            else if (heading.x == 0f) SetHeadingInwardAtBoundary(Vector3.right);
+        }
+        else if (position.x > maximumX)
+        {
+            if (heading.x > 0f) ReflectFromPlanarNormal(Vector3.left);
+            else if (heading.x == 0f) SetHeadingInwardAtBoundary(Vector3.left);
+        }
+
+        if (position.z < minimumZ)
+        {
+            if (heading.z < 0f) ReflectFromPlanarNormal(Vector3.forward);
+            else if (heading.z == 0f) SetHeadingInwardAtBoundary(Vector3.forward);
+        }
+        else if (position.z > maximumZ)
+        {
+            if (heading.z > 0f) ReflectFromPlanarNormal(Vector3.back);
+            else if (heading.z == 0f) SetHeadingInwardAtBoundary(Vector3.back);
+        }
+    }
+
+    private void SetHeadingInwardAtBoundary(Vector3 inward)
+    {
+        heading = (heading + inward * 0.1f).normalized;
     }
 
     private Vector3 GetLandAcceleration(Vector3 desiredDirection, RaycastHit groundSupport)
@@ -286,7 +360,6 @@ public sealed class TumbleweedMovement : NetworkBehaviour
         }
 
         Physics.SyncTransforms();
-        ChooseWindDirection();
         ScheduleHop();
         // Keep this NetworkObject alive so future capture state and references survive recovery.
     }
@@ -351,15 +424,6 @@ public sealed class TumbleweedMovement : NetworkBehaviour
         if (!ignoredColliders.Contains(other)) ignoredColliders.Add(other);
     }
 
-    private void ChooseWindDirection()
-    {
-        Vector2 direction = Random.insideUnitCircle;
-        windDirection = direction.sqrMagnitude > 0.01f
-            ? new Vector3(direction.x, 0f, direction.y).normalized
-            : Vector3.forward;
-        nextWindChangeTime = Time.fixedTime + windDirectionChangeInterval * Random.Range(0.65f, 1.35f);
-    }
-
     private void ResolveWorldBoundsFromScene()
     {
         Scene ownerScene = gameObject.scene;
@@ -399,23 +463,56 @@ public sealed class TumbleweedMovement : NetworkBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (!HasServerAuthority || collision.contactCount == 0 || collision.collider == null)
-        {
-            return;
-        }
+        CollectBlockingContact(collision);
+    }
 
-        if (collision.collider.GetComponentInParent<PlayerNew>() != null
+    private void OnCollisionStay(Collision collision)
+    {
+        CollectBlockingContact(collision);
+    }
+
+    private void CollectBlockingContact(Collision collision)
+    {
+        if (!HasServerAuthority
+            || collision.contactCount == 0
+            || collision.collider == null
+            || collision.collider.GetComponentInParent<PlayerNew>() != null
             || collision.collider.GetComponentInParent<EquippableItem>() != null)
         {
             return;
         }
 
-        Vector3 normal = collision.GetContact(0).normal;
-        body.AddForce(Vector3.ProjectOnPlane(normal, Vector3.up) * 0.45f, ForceMode.Impulse);
+        Vector3 blockingNormal = Vector3.zero;
+        float blockingDot = -0.05f;
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            Vector3 contactNormal = collision.GetContact(i).normal;
+            if (contactNormal.y >= 0.7f) continue;
+
+            Vector3 planarNormal = Vector3.ProjectOnPlane(contactNormal, Vector3.up);
+            if (planarNormal.sqrMagnitude < 0.001f) continue;
+            planarNormal.Normalize();
+
+            float headingIntoFace = Vector3.Dot(heading, planarNormal);
+            if (headingIntoFace >= blockingDot) continue;
+
+            blockingNormal = planarNormal;
+            blockingDot = headingIntoFace;
+        }
+
+        if (blockingDot >= -0.05f || IsEligibleShorelineTerrain(collision.collider)
+            || blockingDot >= strongestBlockingDot) return;
+
+        strongestBlockingNormal = blockingNormal;
+        strongestBlockingDot = blockingDot;
+        hasBlockingContact = true;
     }
 
     private void OnDisable()
     {
+        hasBlockingContact = false;
+        strongestBlockingNormal = Vector3.zero;
+        strongestBlockingDot = -0.05f;
         if (movementCollider == null)
         {
             ignoredColliders.Clear();

@@ -370,9 +370,6 @@ namespace RageQuitting.Tests.PlayMode
                 new Vector3(5f, surfaceHeight + 0.26f, -24f), Vector3.forward);
             Rigidbody middleBody = middleBall.GetComponent<Rigidbody>();
             yield return Until(() => !middleBody.isKinematic, "offline midriver ball dynamics");
-            Component middleMovement = middleBall.GetComponent(TypeByName("TumbleweedMovement"));
-            Set(middleMovement, "windDirection", Vector3.forward);
-            Set(middleMovement, "nextWindChangeTime", Time.fixedTime + 60f);
             middleBody.linearVelocity = Vector3.zero;
             yield return new WaitForSecondsRealtime(0.6f);
             Assert.That(middleBody.position.y, Is.InRange(surfaceHeight + 0.18f, surfaceHeight + 0.38f),
@@ -385,8 +382,6 @@ namespace RageQuitting.Tests.PlayMode
             Rigidbody wallBody = wallBall.GetComponent<Rigidbody>();
             Component wallMovement = wallBall.GetComponent(TypeByName("TumbleweedMovement"));
             yield return Until(() => !wallBody.isKinematic, "offline wall-check ball dynamics");
-            Set(wallMovement, "windDirection", Vector3.right);
-            Set(wallMovement, "nextWindChangeTime", Time.fixedTime + 60f);
             wallBody.constraints |= RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionZ;
             GameObject wall = scope.Own(new GameObject("Tumbleweed test wall beside east bank"));
             SceneManager.MoveGameObjectToScene(wall, stage02Scene);
@@ -414,7 +409,7 @@ namespace RageQuitting.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Stage02TumbleweedMaintainsWindAcrossTheCampAndBridgeDryBowls()
+        public IEnumerator Stage02TumbleweedMaintainsHeadingAcrossTheCampAndBridgeDryBowls()
         {
 #if !UNITY_EDITOR
             Assert.Ignore("Loads the authored Stage02 terrain and Tumbleweed prefab through the Editor.");
@@ -430,6 +425,111 @@ namespace RageQuitting.Tests.PlayMode
                 3.5f, "camp south bowl");
             yield return RunStage02DryBowlEscape(terrain, new Vector3(21.5f, 0f, 9f), Vector3.back,
                 4f, "bridge south bowl");
+#endif
+        }
+
+        [UnityTest]
+        public IEnumerator TumbleweedMaintainsSpawnHeadingAndRemovesLateralDriftForTenSeconds()
+        {
+#if !UNITY_EDITOR
+            Assert.Ignore("Uses the authored Tumbleweed prefab available only in the Editor.");
+            yield break;
+#else
+            AssertNoActiveSession();
+            CreateGround();
+            Vector3 start = new(0f, 0.65f, 0f);
+            Vector3 heading = Vector3.right;
+            GameObject ball = CreateMovingWeed(start, heading);
+            NetworkObject networkObject = ball.GetComponent<NetworkObject>();
+            Rigidbody body = ball.GetComponent<Rigidbody>();
+            Component movement = ball.GetComponent(TypeByName("TumbleweedMovement"));
+            yield return Until(() => !body.isKinematic, "offline straight-heading dynamics");
+
+            body.linearVelocity = heading * 1.2f + Vector3.forward;
+            yield return new WaitForFixedUpdate();
+            float startTime = Time.fixedTime;
+            while (Time.fixedTime - startTime < 10f) yield return null;
+
+            Vector3 displacement = body.position - start;
+            float forwardDistance = Vector3.Dot(displacement, heading);
+            Vector3 planarDisplacement = Vector3.ProjectOnPlane(displacement, Vector3.up);
+            Vector3 lateralDrift = planarDisplacement - heading * Vector3.Dot(planarDisplacement, heading);
+            float forwardSpeed = Vector3.Dot(Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up), heading);
+            float maximumSpeed = Get<float>(movement, "maximumSpeed");
+            Assert.That(forwardDistance, Is.GreaterThan(10f),
+                $"The ball should travel in its spawn direction for ten simulated seconds. displacement={displacement}.");
+            Assert.That(lateralDrift.magnitude, Is.LessThan(0.2f),
+                $"Off-heading velocity should not create lateral drift. drift={lateralDrift}.");
+            Assert.That(forwardSpeed, Is.InRange(0f, maximumSpeed + 0.1f),
+                "Forward speed remains nonnegative and respects the authored cap.");
+            Assert.That(Vector3.Dot(Get<Vector3>(movement, "heading"), heading), Is.GreaterThan(0.999f));
+            Assert.That(ball.GetComponent<NetworkObject>(), Is.SameAs(networkObject),
+                "Straight movement must keep the same NetworkObject alive.");
+#endif
+        }
+
+        [UnityTest]
+        public IEnumerator TumbleweedReflectsHeadOnAndAngledWallsButContinuesAlongGrazingFace()
+        {
+#if !UNITY_EDITOR
+            Assert.Ignore("Uses the authored Tumbleweed prefab available only in the Editor.");
+            yield break;
+#else
+            AssertNoActiveSession();
+            CreateGround();
+            yield return RunWallBounce(Vector3.right, new Vector3(2.5f, 1.5f, 0f), Quaternion.identity,
+                "head-on wall");
+            yield return RunWallBounce(Vector3.right, new Vector3(2.5f, 1.5f, 0f), Quaternion.Euler(0f, 45f, 0f),
+                "angled wall");
+
+            GameObject grazingWall = scope.Own(new GameObject("Tumbleweed grazing wall"));
+            SceneManager.MoveGameObjectToScene(grazingWall, scope.OwnedScene);
+            grazingWall.transform.position = new Vector3(0.72f, 1.5f, 0f);
+            BoxCollider grazingCollider = grazingWall.AddComponent<BoxCollider>();
+            grazingCollider.size = new Vector3(0.2f, 3f, 20f);
+            Physics.SyncTransforms();
+
+            Vector3 start = new(0f, 0.65f, -3f);
+            GameObject grazingBall = CreateMovingWeed(start, Vector3.forward);
+            Rigidbody grazingBody = grazingBall.GetComponent<Rigidbody>();
+            Component grazingMovement = grazingBall.GetComponent(TypeByName("TumbleweedMovement"));
+            yield return Until(() => !grazingBody.isKinematic, "grazing-contact dynamics");
+            grazingBody.linearVelocity = Vector3.forward * 1.5f;
+            float simulatedStart = Time.fixedTime;
+            while (Time.fixedTime - simulatedStart < 1.5f) yield return null;
+
+            Assert.That(Vector3.Dot(Get<Vector3>(grazingMovement, "heading"), Vector3.forward), Is.GreaterThan(0.98f),
+                "A grazing contact with a nearly perpendicular planar normal must not reverse heading.");
+            Assert.That(grazingBody.position.z, Is.GreaterThan(start.z + 1f),
+                "The ball should keep moving along the face it only grazes.");
+#endif
+        }
+
+        [UnityTest]
+        public IEnumerator Stage02MapEdgesAndCornersReflectHeadingAndKeepVerticalRecoveryDirectional()
+        {
+#if !UNITY_EDITOR
+            Assert.Ignore("Loads the authored Stage02 terrain and Tumbleweed prefab through the Editor.");
+            yield break;
+#else
+            AssertNoActiveSession();
+            yield return LoadStage02Scene();
+            yield return null;
+            Terrain terrain = (Terrain)FindSceneComponent(stage02Scene, typeof(Terrain));
+            Assert.That(terrain, Is.Not.Null);
+
+            GameObject edgeBall = CreateStage02MovementFixture(new Vector3(0f, 0f, 0f), Vector3.right);
+            Component edgeMovement = edgeBall.GetComponent(TypeByName("TumbleweedMovement"));
+            Bounds worldBounds = Get<Bounds>(edgeMovement, "worldBounds");
+            float movementRadius = Get<float>(edgeMovement, "movementRadius");
+            Object.Destroy(edgeBall);
+            yield return null;
+
+            yield return RunStage02BoundaryBounce(terrain,
+                new Vector3(worldBounds.max.x - movementRadius - 0.025f, 0f, 0f), Vector3.right, false);
+            yield return RunStage02BoundaryBounce(terrain,
+                new Vector3(worldBounds.max.x - movementRadius - 0.025f, 0f,
+                    worldBounds.max.z - movementRadius - 0.025f), new Vector3(1f, 0f, 1f), true);
 #endif
         }
 
@@ -726,6 +826,100 @@ namespace RageQuitting.Tests.PlayMode
             return ball;
         }
 
+        private GameObject CreateMovingWeed(Vector3 position, Vector3 direction)
+        {
+            GameObject ball = Object.Instantiate(LoadWeedPrefab(), position,
+                Quaternion.LookRotation(Vector3.ProjectOnPlane(direction, Vector3.up), Vector3.up));
+            scope.Own(ball);
+            if (ball.scene != scope.OwnedScene) SceneManager.MoveGameObjectToScene(ball, scope.OwnedScene);
+            return ball;
+        }
+
+        private IEnumerator RunWallBounce(Vector3 direction, Vector3 wallPosition, Quaternion wallRotation,
+            string label)
+        {
+            GameObject wall = scope.Own(new GameObject("Tumbleweed " + label));
+            SceneManager.MoveGameObjectToScene(wall, scope.OwnedScene);
+            wall.transform.SetPositionAndRotation(wallPosition, wallRotation);
+            BoxCollider collider = wall.AddComponent<BoxCollider>();
+            collider.size = new Vector3(0.2f, 3f, 8f);
+            Physics.SyncTransforms();
+
+            Vector3 start = new(0f, 0.65f, 0f);
+            Vector3 planarDirection = Vector3.ProjectOnPlane(direction, Vector3.up).normalized;
+            GameObject ball = CreateMovingWeed(start, planarDirection);
+            NetworkObject networkObject = ball.GetComponent<NetworkObject>();
+            Rigidbody body = ball.GetComponent<Rigidbody>();
+            Component movement = ball.GetComponent(TypeByName("TumbleweedMovement"));
+            yield return Until(() => !body.isKinematic, label + " ball dynamics");
+            body.linearVelocity = planarDirection * 2f;
+            Vector3 expectedHeading = Vector3.Reflect(
+                planarDirection, -(wallRotation * Vector3.right)).normalized;
+
+            Func<bool> reflected = () =>
+            {
+                Vector3 currentHeading = Get<Vector3>(movement, "heading");
+                return Vector3.Dot(currentHeading, expectedHeading) > 0.98f;
+            };
+            yield return Until(reflected, label + " reflection");
+
+            Vector3 reflectedHeading = Get<Vector3>(movement, "heading");
+            Assert.That(Vector3.Dot(reflectedHeading, expectedHeading), Is.GreaterThan(0.98f),
+                $"{label} should mirror the incoming heading across its contact normal. Expected {expectedHeading}, got {reflectedHeading}.");
+            float forwardSpeed = Vector3.Dot(Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up), reflectedHeading);
+            Assert.That(forwardSpeed, Is.GreaterThanOrEqualTo(0f),
+                "The velocity after reflection must point along the new heading.");
+            Assert.That(ball.GetComponent<NetworkObject>(), Is.SameAs(networkObject));
+            Object.Destroy(ball);
+            Object.Destroy(wall);
+            yield return null;
+        }
+
+        private IEnumerator RunStage02BoundaryBounce(Terrain terrain, Vector3 startXZ, Vector3 direction, bool corner)
+        {
+            Vector3 sample = new(startXZ.x, terrain.transform.position.y, startXZ.z);
+            float groundHeight = terrain.SampleHeight(sample) + terrain.transform.position.y;
+            Vector3 start = new(startXZ.x, groundHeight + 0.70f, startXZ.z);
+            GameObject ball = CreateStage02MovementFixture(start, direction);
+            NetworkObject networkObject = ball.GetComponent<NetworkObject>();
+            Rigidbody body = ball.GetComponent<Rigidbody>();
+            Component movement = ball.GetComponent(TypeByName("TumbleweedMovement"));
+            Bounds worldBounds = Get<Bounds>(movement, "worldBounds");
+            float movementRadius = Get<float>(movement, "movementRadius");
+            yield return Until(() => !body.isKinematic, "Stage02 virtual border ball dynamics");
+            body.linearVelocity = direction.normalized * 2f;
+
+            yield return Until(() =>
+            {
+                Vector3 currentHeading = Get<Vector3>(movement, "heading");
+                return currentHeading.x < -0.1f && (!corner || currentHeading.z < -0.1f);
+            }, corner ? "corner reflection" : "edge reflection");
+
+            Assert.That(body.position.x, Is.LessThanOrEqualTo(worldBounds.max.x - movementRadius + 0.02f));
+            Assert.That(body.position.z, Is.LessThanOrEqualTo(worldBounds.max.z - movementRadius + 0.02f));
+
+            Set(movement, "heading", Vector3.forward);
+            body.position = new Vector3(worldBounds.max.x + 1f, body.position.y, body.position.z);
+            body.linearVelocity = Vector3.forward;
+            Physics.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            Vector3 headingAfterTangentRecovery = Get<Vector3>(movement, "heading");
+            Assert.That(headingAfterTangentRecovery.x, Is.LessThan(0f),
+                "An actual X-boundary recovery adds an inward component to a tangent heading.");
+            Assert.That(headingAfterTangentRecovery.z, Is.GreaterThan(0f),
+                "A tangent recovery preserves its existing along-boundary direction.");
+            Assert.That(ball.GetComponent<NetworkObject>(), Is.SameAs(networkObject));
+
+            Set(movement, "heading", Vector3.forward);
+            body.position = new Vector3(body.position.x, worldBounds.min.y - 3f, body.position.z);
+            body.linearVelocity = Vector3.zero;
+            Physics.SyncTransforms();
+            yield return new WaitForFixedUpdate();
+            Assert.That(Vector3.Dot(Get<Vector3>(movement, "heading"), Vector3.forward), Is.GreaterThan(0.999f),
+                "A vertical-only recovery preserves the current planar heading.");
+            Assert.That(ball.GetComponent<NetworkObject>(), Is.SameAs(networkObject));
+        }
+
         private IEnumerator RunStage02BankApproach(Component water, Vector3 start, Vector3 direction,
             float targetX, bool eastward, string bankName)
         {
@@ -734,9 +928,6 @@ namespace RageQuitting.Tests.PlayMode
             Rigidbody body = ball.GetComponent<Rigidbody>();
             Component movement = ball.GetComponent(TypeByName("TumbleweedMovement"));
             yield return Until(() => !body.isKinematic, bankName + " bank ball dynamics");
-
-            Set(movement, "windDirection", direction);
-            Set(movement, "nextWindChangeTime", Time.fixedTime + 60f);
 
             body.linearVelocity = direction * 1.6f;
             body.angularVelocity = Vector3.zero;
@@ -773,8 +964,6 @@ namespace RageQuitting.Tests.PlayMode
             Component movement = ball.GetComponent(TypeByName("TumbleweedMovement"));
             yield return Until(() => !body.isKinematic, bowlName + " ball dynamics");
 
-            Set(movement, "windDirection", direction);
-            Set(movement, "nextWindChangeTime", Time.fixedTime + 120f);
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
 
