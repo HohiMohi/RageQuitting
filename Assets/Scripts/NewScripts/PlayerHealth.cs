@@ -567,6 +567,8 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         playerTransform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
         if (temporaryStatusController != null) temporaryStatusController.ResetTemporaryStatuses();
         RestoreFullHealth();
+        if (waterExposureController == null) TryGetComponent(out waterExposureController);
+        if (waterExposureController != null) waterExposureController.RefreshAfterRespawn();
         TeleportOwnerClientRpc(spawnPoint.position, spawnPoint.rotation, CreateTargetClientRpcParams(OwnerClientId));
     }
 
@@ -581,6 +583,8 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
 
         if (temporaryStatusController != null) temporaryStatusController.ResetTemporaryStatuses();
         RestoreFullHealth();
+        if (waterExposureController == null) TryGetComponent(out waterExposureController);
+        if (waterExposureController != null) waterExposureController.RefreshAfterRespawn();
     }
 
     private void ForceDropIfCarried()

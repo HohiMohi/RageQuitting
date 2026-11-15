@@ -218,6 +218,168 @@ public sealed class SingleCarryStage2RegressionPlayModeTests
     }
 
     [UnityTest]
+    public IEnumerator TemporaryMovementStatusScalesRealSharedCarryContribution()
+    {
+#if !UNITY_EDITOR
+        Assert.Ignore("This fixture loads production prefabs using the Unity Editor AssetDatabase.");
+        yield break;
+#else
+        Type interactionType = Type.GetType("PlayerInteractionNew, Assembly-CSharp");
+        Type inputType = Type.GetType("PlayerInputNew, Assembly-CSharp");
+        GameObject playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/PlayerNew.prefab");
+        GameObject sharedPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Prefabs/New/Resources/WoodenLogResource_prefab.prefab");
+        Assert.That(playerPrefab, Is.Not.Null);
+        Assert.That(sharedPrefab, Is.Not.Null);
+        CreateIsolatedPlayer(playerPrefab, new Vector3(0f, 100f, 0f),
+            "Single Carry Stage 2 status movement carrier", interactionType, inputType);
+        resource = UnityEngine.Object.Instantiate(sharedPrefab, new Vector3(0f, 100f, 0f), Quaternion.identity);
+        roots.Add(resource);
+        resourceComponent = resource.GetComponent(Type.GetType("BaseResourceNew, Assembly-CSharp"));
+        heldBody = resource.GetComponent<Rigidbody>();
+        Assert.That(resourceComponent, Is.Not.Null);
+        Assert.That(heldBody, Is.Not.Null);
+        Type billboardType = Type.GetType("LookAtCamera, Assembly-CSharp");
+        if (billboardType != null)
+            foreach (Component billboard in resource.GetComponentsInChildren(billboardType, true))
+                if (billboard is Behaviour behaviour) behaviour.enabled = false;
+        const ulong offlineHolder = ulong.MaxValue;
+        Transform bodyAnchor = (Transform)interaction.GetType().GetMethod("GetCarryBodyAnchor", PublicInstance)
+            .Invoke(interaction, null);
+        resource.transform.position = bodyAnchor.position;
+        IList holders = (IList)resourceComponent.GetType().GetField("holderClientIds", PrivateInstance).GetValue(resourceComponent);
+        IDictionary attachPoints = (IDictionary)resourceComponent.GetType().GetField("holderAttachLocalPoints", PrivateInstance).GetValue(resourceComponent);
+        IDictionary baseAttachPoints = (IDictionary)resourceComponent.GetType().GetField("holderBaseAttachLocalPoints", PrivateInstance).GetValue(resourceComponent);
+        IDictionary holderInputs = (IDictionary)resourceComponent.GetType().GetField("holderMoveInputs", PrivateInstance).GetValue(resourceComponent);
+        IDictionary lateralInputs = (IDictionary)resourceComponent.GetType().GetField("holderLateralInputs", PrivateInstance).GetValue(resourceComponent);
+        IDictionary yawInputs = (IDictionary)resourceComponent.GetType().GetField("holderYawInputs", PrivateInstance).GetValue(resourceComponent);
+        IDictionary lastInputTimes = (IDictionary)resourceComponent.GetType().GetField("holderLastInputTimes", PrivateInstance).GetValue(resourceComponent);
+        Vector3 attachLocalPoint = resource.transform.InverseTransformPoint(bodyAnchor.position);
+        holders.Add(offlineHolder);
+        attachPoints[offlineHolder] = attachLocalPoint;
+        baseAttachPoints[offlineHolder] = attachLocalPoint;
+        holderInputs[offlineHolder] = Vector3.zero;
+        lateralInputs[offlineHolder] = Vector3.zero;
+        yawInputs[offlineHolder] = 0f;
+        lastInputTimes[offlineHolder] = Time.time;
+        resourceComponent.GetType().GetMethod("SetPickedUpState", PrivateInstance).Invoke(resourceComponent, new object[] { true });
+        MethodInfo confirmPickup = Array.Find(interaction.GetType().GetMethods(PublicInstance), method =>
+            method.Name == "ConfirmPickedUpObject" && method.GetParameters().Length == 6);
+        confirmPickup.Invoke(interaction, new object[] { resource, resourceComponent, false, 0f, true, attachLocalPoint });
+        Assert.That(interaction.GetType().GetMethod("GetPickedUpGameObject", PublicInstance).Invoke(interaction, null),
+            Is.SameAs(resource), "The fixture holds the real shared-carry object through its production player interaction.");
+
+        Vector3 rawInput = Vector3.forward;
+        resourceComponent.GetType().GetMethod("SetSharedCarryInput", PrivateInstance)
+            .Invoke(resourceComponent, new object[] { offlineHolder, rawInput, Vector3.zero, 0f });
+        yield return new WaitForFixedUpdate();
+        float neutralMultiplierVelocity = Mathf.Abs(heldBody.linearVelocity.z);
+
+        heldBody.linearVelocity = Vector3.zero;
+        heldBody.angularVelocity = Vector3.zero;
+        Component status = player.GetComponent(Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp"));
+        object[] movementStatus = { 951, 10f, false, .5f, false, false, 0UL };
+        Assert.That((bool)status.GetType().GetMethod("TryApplyStatus").Invoke(status, movementStatus), Is.True);
+        resourceComponent.GetType().GetMethod("SetSharedCarryInput", PrivateInstance)
+            .Invoke(resourceComponent, new object[] { offlineHolder, rawInput, Vector3.zero, 0f });
+        yield return new WaitForFixedUpdate();
+        float scaledContributionVelocity = Mathf.Abs(heldBody.linearVelocity.z);
+        TestContext.WriteLine($"Shared carry forward response: neutral={neutralMultiplierVelocity:F5}m/s, multiplier-0.5={scaledContributionVelocity:F5}m/s");
+        Assert.That(neutralMultiplierVelocity, Is.GreaterThan(.001f), "Neutral status retains real human carry contribution.");
+        Assert.That(scaledContributionVelocity, Is.LessThan(neutralMultiplierVelocity * .85f)
+            .And.GreaterThan(neutralMultiplierVelocity * .25f),
+            "The authority physics loop applies a nonzero status multiplier once to human translation input.");
+
+        Cleanup();
+        yield return null;
+#endif
+    }
+
+    [UnityTest]
+    public IEnumerator TemporaryMovementStatusScalesRealMountableBridgeContribution()
+    {
+#if !UNITY_EDITOR
+        Assert.Ignore("This fixture loads production prefabs using the Unity Editor AssetDatabase.");
+        yield break;
+#else
+        Type interactionType = Type.GetType("PlayerInteractionNew, Assembly-CSharp");
+        Type inputType = Type.GetType("PlayerInputNew, Assembly-CSharp");
+        Type mountableType = Type.GetType("MountableBridgeComponent, Assembly-CSharp");
+        Type profileType = Type.GetType("MountableBridgeComponentSO, Assembly-CSharp");
+        GameObject playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/PlayerNew.prefab");
+        GameObject mountablePrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Prefabs/New/BridgeComponents/WoodenBasicRoadwayMountable.prefab");
+        Assert.That(playerPrefab, Is.Not.Null);
+        Assert.That(mountablePrefab, Is.Not.Null);
+        CreateIsolatedPlayer(playerPrefab, new Vector3(0f, 100f, 0f),
+            "Single Carry Stage 2 status bridge carrier", interactionType, inputType);
+        resource = UnityEngine.Object.Instantiate(mountablePrefab, new Vector3(0f, 100f, 15f), Quaternion.identity);
+        roots.Add(resource);
+        Component mountable = resource.GetComponent(mountableType);
+        Assert.That(mountable, Is.Not.Null);
+        UnityEngine.Object profileAsset = (UnityEngine.Object)mountableType.GetField("mountableBridgeComponentSO", PrivateInstance).GetValue(mountable);
+        Assert.That(profileAsset, Is.Not.Null);
+        UnityEngine.Object profileClone = UnityEngine.Object.Instantiate(profileAsset);
+        transientAssets.Add(profileClone);
+        profileType.GetField("allowMultipleCarriers", PublicInstance).SetValue(profileClone, true);
+        mountableType.GetField("mountableBridgeComponentSO", PrivateInstance).SetValue(mountable, profileClone);
+
+        Type billboardType = Type.GetType("LookAtCamera, Assembly-CSharp");
+        if (billboardType != null)
+            foreach (Component billboard in resource.GetComponentsInChildren(billboardType, true))
+                if (billboard is Behaviour behaviour) behaviour.enabled = false;
+        Rigidbody body = resource.GetComponent<Rigidbody>();
+        Assert.That(body, Is.Not.Null);
+        resourceComponent = null;
+        const ulong offlineHolder = ulong.MaxValue;
+        Transform bodyAnchor = (Transform)interaction.GetType().GetMethod("GetCarryBodyAnchor", PublicInstance)
+            .Invoke(interaction, null);
+        resource.transform.position = bodyAnchor.position;
+        IList holders = (IList)mountableType.GetField("holderClientIds", PrivateInstance).GetValue(mountable);
+        IDictionary attachPoints = (IDictionary)mountableType.GetField("holderAttachLocalPoints", PrivateInstance).GetValue(mountable);
+        IDictionary baseAttachPoints = (IDictionary)mountableType.GetField("holderBaseAttachLocalPoints", PrivateInstance).GetValue(mountable);
+        IDictionary holderInputs = (IDictionary)mountableType.GetField("holderMoveInputs", PrivateInstance).GetValue(mountable);
+        IDictionary lateralInputs = (IDictionary)mountableType.GetField("holderLateralInputs", PrivateInstance).GetValue(mountable);
+        IDictionary yawInputs = (IDictionary)mountableType.GetField("holderYawInputs", PrivateInstance).GetValue(mountable);
+        IDictionary lastInputTimes = (IDictionary)mountableType.GetField("holderLastInputTimes", PrivateInstance).GetValue(mountable);
+        Vector3 attachLocalPoint = resource.transform.InverseTransformPoint(bodyAnchor.position);
+        holders.Add(offlineHolder);
+        attachPoints[offlineHolder] = attachLocalPoint;
+        baseAttachPoints[offlineHolder] = attachLocalPoint;
+        holderInputs[offlineHolder] = Vector3.zero;
+        lateralInputs[offlineHolder] = Vector3.zero;
+        yawInputs[offlineHolder] = 0f;
+        lastInputTimes[offlineHolder] = Time.time;
+        mountableType.GetMethod("SetPickedUpState", PrivateInstance).Invoke(mountable, new object[] { true });
+        MethodInfo confirmPickup = Array.Find(interaction.GetType().GetMethods(PublicInstance), method =>
+            method.Name == "ConfirmPickedUpObject" && method.GetParameters().Length == 6);
+        confirmPickup.Invoke(interaction, new object[] { resource, mountable, false, 0f, true, attachLocalPoint });
+
+        Vector3 rawInput = Vector3.forward;
+        mountableType.GetMethod("SetSharedCarryInput", PrivateInstance)
+            .Invoke(mountable, new object[] { offlineHolder, rawInput, Vector3.zero, 0f });
+        yield return new WaitForFixedUpdate();
+        float neutralVelocity = Mathf.Abs(body.linearVelocity.z);
+        body.linearVelocity = Vector3.zero;
+        body.angularVelocity = Vector3.zero;
+        Component status = player.GetComponent(Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp"));
+        object[] movementStatus = { 952, 10f, false, .5f, false, false, 0UL };
+        Assert.That((bool)status.GetType().GetMethod("TryApplyStatus").Invoke(status, movementStatus), Is.True);
+        mountableType.GetMethod("SetSharedCarryInput", PrivateInstance)
+            .Invoke(mountable, new object[] { offlineHolder, rawInput, Vector3.zero, 0f });
+        yield return new WaitForFixedUpdate();
+        float scaledVelocity = Mathf.Abs(body.linearVelocity.z);
+        TestContext.WriteLine($"Mountable bridge forward response: neutral={neutralVelocity:F5}m/s, multiplier-0.5={scaledVelocity:F5}m/s");
+        Assert.That(neutralVelocity, Is.GreaterThan(.001f));
+        Assert.That(scaledVelocity, Is.LessThan(neutralVelocity * .85f).And.GreaterThan(neutralVelocity * .25f),
+            "The bridge authority physics loop applies the status multiplier once to human translation input.");
+
+        Cleanup();
+        yield return null;
+#endif
+    }
+
+    [UnityTest]
     public IEnumerator MountableBridgeSingleCarryPickupRestoresOriginalColliderSettings()
     {
 #if !UNITY_EDITOR

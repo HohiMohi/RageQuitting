@@ -1245,9 +1245,10 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         Vector3 groundForward = Vector3.ProjectOnPlane(transform.forward, groundNormal).normalized;
         if (groundForward.sqrMagnitude <= 0.0001f) groundForward = transform.forward;
         float forwardSpeed = Vector3.Dot(physicsBody.linearVelocity, groundForward);
-        float speedLimit = throttleInput >= 0f
+        float rolloverReferenceSpeed = throttleInput >= 0f
             ? (profile != null ? profile.MaximumForwardSpeed : 4f)
             : (profile != null ? profile.MaximumReverseSpeed : 2f);
+        float speedLimit = GetDriveSpeedCeiling(DriverClientId, throttleInput);
         bool hasThrottle = Mathf.Abs(throttleInput) > 0.01f;
         bool changingDirection = hasThrottle && Mathf.Abs(forwardSpeed) > 0.05f &&
             Mathf.Sign(throttleInput) != Mathf.Sign(forwardSpeed);
@@ -1267,9 +1268,20 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         ApplyDrivenLongitudinalGrip(groundForward, forwardSpeed, hasThrottle, changingDirection, belowSpeedLimit);
         ApplyDrivenYawControl(forwardSpeed, hasThrottle);
         ApplyDrivenLateralGrip();
-        ApplyCorneringRollover(forwardSpeed, speedLimit);
+        ApplyCorneringRollover(forwardSpeed, rolloverReferenceSpeed);
         ApplyDriverSupport();
         ApplyDriverStabilization();
+    }
+
+    private float GetDriveSpeedCeiling(ulong clientId, float throttle)
+    {
+        float speedLimit = throttle >= 0f
+            ? (profile != null ? profile.MaximumForwardSpeed : 4f)
+            : (profile != null ? profile.MaximumReverseSpeed : 2f);
+        if (clientId != NoClient && TryFindPlayerOnPeer(clientId, out NetworkObject driver)
+            && driver.TryGetComponent(out PlayerTemporaryStatusController temporaryStatus))
+            speedLimit *= temporaryStatus.MovementMultiplier;
+        return speedLimit;
     }
 
     private void UpdateSteeringAngle(bool hasThrottle)
@@ -2848,6 +2860,20 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
         throttleInput = 0f;
         steeringInput = 0f;
         return true;
+    }
+
+    /// <summary>Releases an injured driver while preserving the barrow's current momentum.</summary>
+    internal bool ReleaseDriverForCrushedHands(ulong clientId)
+    {
+        if (!HasAuthority || DriverClientId != clientId || State != WheelbarrowState.Driven) return false;
+
+        ReclaimPhysicsAuthority(true);
+        ResetDriveInput();
+        SetDriver(NoClient);
+        SetState(WheelbarrowState.Free);
+        bool exitStarted = BeginSafeExit(clientId, false, true);
+        if (!exitStarted) SetOccupantCollisionIgnored(clientId, false);
+        return exitStarted;
     }
 
     [ServerRpc(RequireOwnership = false)]

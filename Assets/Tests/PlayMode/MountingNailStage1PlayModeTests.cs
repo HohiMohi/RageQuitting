@@ -141,6 +141,11 @@ public class MountingNailStage1PlayModeTests
         Component statusController = player.GetComponent(System.Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp"));
         PropertyInfo currentStatus = statusController.GetType().GetProperty("CurrentStatus");
         Assert.That(currentStatus.GetValue(statusController).ToString(), Is.EqualTo("PlacementLock"));
+        MethodInfo applySynthetic = statusController.GetType().GetMethod("TryApplyStatus");
+        object[] syntheticArgs = { 701, 30f, false, 0.9f, false, false, 0UL };
+        Assert.That((bool)applySynthetic.Invoke(statusController, syntheticArgs), Is.True,
+            "An unrelated active status can coexist with the nail's placement token.");
+        ulong placementCommitId = (ulong)statusController.GetType().GetProperty("PlacementCommitId").GetValue(statusController);
         System.Type itemType = System.Type.GetType("EquippableItemType, Assembly-CSharp");
         object wrongTool = System.Enum.Parse(itemType, "Axe");
         MethodInfo hammerHit = NailType().GetMethod("TryApplyHammerHit", InstancePublic);
@@ -153,6 +158,9 @@ public class MountingNailStage1PlayModeTests
         AssertState("EmbeddedSingle", "The valid first embedding hit consumes the prepared nail.");
         Assert.That(currentStatus.GetValue(statusController).ToString(), Is.EqualTo("CrushedHands"),
             "A successful prepared embedding immediately transitions the placer to CrushedHands.");
+        Assert.That((ulong)statusController.GetType().GetProperty("PlacementCommitId").GetValue(statusController), Is.EqualTo(placementCommitId));
+        Assert.That((float)statusController.GetType().GetMethod("GetStatusRemainingSeconds").Invoke(statusController, new object[] { 701 }), Is.GreaterThan(0f),
+            "Injury preserves unrelated statuses and their timers.");
 #endif
         yield return null;
     }

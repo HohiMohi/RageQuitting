@@ -61,6 +61,7 @@ public static class PlayerConcreteTrapProbe
 
             Require(trap.IsInWheelbarrow && trap.IsSourcedBy(wheelbarrow),
                 $"Trap did not activate for {(concreteFirst ? "concrete-first" : "passenger-first")} order.");
+            RequireConcreteStatus(player, trap);
             Require(wheelbarrow.HasHardenedPassengerConcrete && !wheelbarrow.HasPourableConcrete,
                 "Hardened passenger concrete was still reported as pourable.");
         });
@@ -78,6 +79,8 @@ public static class PlayerConcreteTrapProbe
             Require((bool)RequireMethod(typeof(PlayerConcreteTrapController), "ActivateInWheelbarrow")
                 .Invoke(trap, new object[] { wheelbarrow }), "Pause probe could not activate the trap.");
             Invoke(typeof(PlayerHealth), health, "PauseRespawnTimerForNpcCarry");
+            Require(!health.CanBeRevived && !health.CanRespawn,
+                "A concrete-trapped player was revivable or respawnable while downed.");
             Require(health.IsRespawnTimerPausedByConcreteTrap && health.IsRespawnTimerPausedByNpcCarry,
                 $"Both respawn pause reasons were not retained: reasons={health.ActiveRespawnPauseReasons}, " +
                 $"downed={health.IsDowned}, trap={trap.State}.");
@@ -101,10 +104,17 @@ public static class PlayerConcreteTrapProbe
             wheelbarrow.SetEditorConcreteTrapProbePassenger(trap);
             setPassenger.Invoke(wheelbarrow, new object[] { trap.OwnerClientId });
             setConcrete.Invoke(wheelbarrow, new object[] { 1 });
+            RequireConcreteStatus(player, trap);
+            PlayerTemporaryStatusController status = player.GetComponent<PlayerTemporaryStatusController>();
+            ulong concreteInstance = GetConcreteStatusEntry(status).InstanceId;
+            ulong revisionBeforeWork = status.CurrentRevision;
 
             Invoke(typeof(PlayerConcreteTrapController), trap, "ApplyValidatedWork", 100f);
             Require(trap.State == PlayerConcreteTrapState.Collapsing && trap.IsAttachedToWheelbarrow,
                 "Trap did not enter attached Collapsing state.");
+            Require(GetConcreteStatusEntry(status).InstanceId == concreteInstance &&
+                    status.CurrentRevision == revisionBeforeWork,
+                "Progressing into Collapsing refreshed or rewrote the source-owned concrete status.");
 
             FieldInfo deadline = RequireField(typeof(PlayerConcreteTrapController), "collapseCompleteAt");
             deadline.SetValue(trap, 0d);
@@ -124,6 +134,9 @@ public static class PlayerConcreteTrapProbe
                 Invoke(typeof(PlayerConcreteTrapController), trap, "CompleteWheelbarrowEjection", wheelbarrow);
             Require(trap.State == PlayerConcreteTrapState.Collapsing && !trap.IsAttachedToWheelbarrow,
                 "Tipped ejection did not preserve Collapsing while clearing the source relation.");
+            Require(GetConcreteStatusEntry(status).InstanceId == concreteInstance &&
+                    status.CurrentRevision == revisionBeforeWork,
+                "Ejection changed the active concrete token or rewrote the registry snapshot.");
             Require(trap.Progress >= 100f && wheelbarrow.ConcreteLoads == 0,
                 "Tipped collapse lost work progress or left wheelbarrow concrete cargo.");
         });
@@ -196,6 +209,25 @@ public static class PlayerConcreteTrapProbe
                 serialized.FindProperty("hardenedConcreteMaterial").objectReferenceValue != null &&
                 serialized.FindProperty("crackMaterial").objectReferenceValue != null,
             "Player concrete trap prefab references are incomplete.");
+    }
+
+    private static void RequireConcreteStatus(GameObject player, PlayerConcreteTrapController trap)
+    {
+        PlayerTemporaryStatusController status = player.GetComponent<PlayerTemporaryStatusController>();
+        PlayerTemporaryStatusEntry entry = status != null ? GetConcreteStatusEntry(status) : default;
+        Require(trap.IsTrapped && status != null && status.IsConcreteTrapActive && entry.InstanceId != 0,
+            "Concrete trap state was not backed by an active registry instance.");
+        Require(status.BlocksMovement && status.BlocksActions && !status.BlocksLook && trap.BlocksGameplayInput,
+            "Concrete trap movement/action blockers or camera-look permission are incorrect.");
+    }
+
+    private static PlayerTemporaryStatusEntry GetConcreteStatusEntry(PlayerTemporaryStatusController status)
+    {
+        Type domainStatusType = Type.GetType("PlayerDomainStatusKind, Assembly-CSharp");
+        object concreteKind = Enum.Parse(domainStatusType, "ConcreteTrap");
+        MethodInfo method = typeof(PlayerTemporaryStatusController).GetMethod(
+            "GetDomainStatus", BindingFlags.Instance | BindingFlags.NonPublic);
+        return (PlayerTemporaryStatusEntry)method.Invoke(status, new[] { concreteKind });
     }
 
     private static void WithPair(Action<GameObject, WheelbarrowController, PlayerConcreteTrapController> action)

@@ -180,6 +180,17 @@ public sealed class LooseSoilStage3MovementPlayModeTests
         float composedSprintSpeed = (float)Get(controller, "HorizontalSpeed");
         float expectedComposed = baseSprint * .7f * .8f * Mathf.Lerp(1f, .65f, GetImmersion(CurrentFoot(character)));
         Assert.That(composedSprintSpeed, Is.EqualTo(expectedComposed).Within(.2f), "Held and inventory penalties multiply with soil without replacing either penalty.");
+
+        Component temporaryStatus = playerRoot.GetComponent(Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp"));
+        MethodInfo applyStatus = temporaryStatus.GetType().GetMethod("TryApplyStatus");
+        object[] movementStatus = { 701, 10f, false, .5f, false, false, 0UL };
+        Assert.That((bool)applyStatus.Invoke(temporaryStatus, movementStatus), Is.True);
+        Set(controller, "_horizontalVelocity", Vector3.zero);
+        yield return null;
+        yield return SettleMovement(.4f);
+        float statusSprintSpeed = (float)Get(controller, "HorizontalSpeed");
+        Assert.That(statusSprintSpeed, Is.EqualTo(expectedComposed * .5f).Within(.2f),
+            "A temporary status scales the real sprint target after held, inventory, and soil modifiers.");
         Assert.That((float)Get(controller, "_holdedItemMovementSpeedPenaltyMultiplier"), Is.EqualTo(.3f));
         Assert.That((float)Get(controller, "_inventoryItemMovementSpeedPenaltyMultiplier"), Is.EqualTo(.2f));
         Assert.That((float)Get(controller, "MoveSpeed"), Is.EqualTo(baseWalk));

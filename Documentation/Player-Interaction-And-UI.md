@@ -45,13 +45,22 @@ System składa mnożniki, zamiast nadpisywać `MoveSpeed`. Shared-carry może
 dodatkowo sterować staminą, jeśli liczba player-holderów jest mniejsza od
 wymaganej.
 
-### Blokady akcji i status `CrushedHands`
+### Statusy czasowe gracza i `CrushedHands`
 
-Każde zaakceptowane umieszczenie F→E rozpoczyna konfigurowaną blokadę trwającą domyślnie `1 s`, obejmującą ruch, sprint, skok, kamerę oraz akcje w świecie. Grawitacja i impulsy fizyczne nadal działają. Blokada nie wyłącza menu UI. Zwykłe przenoszenie bez zatwierdzonego placementu nie uruchamia tego efektu.
+`PlayerTemporaryStatusController` utrzymuje wspólny rejestr statusów autorytatywny dla serwera w grze sieciowej i lokalnie w trybie offline. Rejestr przechowuje osobną instancję każdego statusu danego typu. Ponowne nałożenie odświeża instancję, a różne typy działają równocześnie. Status może wygasnąć po czasie, po zdarzeniu albo po spełnieniu pierwszego z obu warunków. Odświeżenie zmienia identyfikator instancji, więc spóźnione zdarzenie nie usuwa nowszego statusu. Mnożniki statusów składają się, także dla prędkości chodzenia, wkładu gracza we wspólne noszenie i limitów prędkości taczki.
 
-Obrażenie wymaga skutecznego osadzenia świeżo przygotowanego gwoździa ściśle przed upływem sekundowej blokady umieszczenia. Ten termin jest niezależny od istniejącego terminu `Prepared`. Takie osadzenie kończy blokadę i nakłada `CrushedHands` na konfigurowalne domyślne `15 s`. Może je spowodować dowolny atakujący. Zwykłe kopnięcie luźnego gwoździa i późne trafienie nadal działają według reguł gwoździa, ale nie powodują obrażeń statusowych. Status pozostawia ruch i rozglądanie, ale blokuje akcje w świecie. Przy wejściu wykonuje jedno upuszczenie narzędzi z obu zajętych slotów oraz niesionego obiektu, bez rzutu. Utrzymuje ręce FPP spłaszczone aż do przywrócenia. Faktyczny respawn wywołuje `ResetTemporaryStatuses`, a ożywienie przez sojusznika zachowuje pozostały czas.
+Etap 1 wprowadza produkcyjne statusy `PlacementLock` i `CrushedHands`. Zatwierdzone umieszczenie F→E tworzy `PlacementLock` domyślnie na `1 s`. Blokuje ruch, sprint, skok, kamerę oraz akcje w świecie. Grawitacja i fizyczne impulsy nadal działają, a menu UI pozostaje dostępne. Zwykłe przenoszenie bez zatwierdzonego placementu nie uruchamia blokady. Osobny identyfikator placementu, niezależny od wersji snapshotu statusów, wiąże odpowiedź z właściwym umieszczeniem.
 
-`PlayerNew` konfiguruje nowy status w Inspectorze. Serwer jest autorytetem timera i efektu. Owner widzi potwierdzone przez serwer podniesienie, zamianę slotów i upuszczenie. Oba sloty ekwipunku replikują się razem. Upuszczenie uwzględnia oba sloty, ale dwu-slotowe narzędzie jest upuszczane tylko raz.
+Obrażenie wymaga skutecznego osadzenia świeżo przygotowanego gwoździa ściśle przed upływem sekundowej blokady placementu. Termin ten jest niezależny od istniejącego terminu `Prepared`. Każde zaakceptowane umieszczenie może spowodować najwyżej jedno zranienie. Trafienie kończy `PlacementLock` i nakłada `CrushedHands` domyślnie na `15 s`. Może je spowodować dowolny atakujący. Kopnięcie luźnego gwoździa i późne trafienie nadal podlegają zwykłym regułom gwoździa, ale nie powodują statusu. `CrushedHands` pozostawia ruch i rozglądanie, lecz blokuje akcje w świecie. Przerywa też trwające czynności trzymania i obsługi narzędzi. Przy wejściu wykonuje jedno upuszczenie narzędzi z obu zajętych slotów oraz niesionego obiektu, bez rzutu. Dwu-slotowe narzędzie jest upuszczane tylko raz. Ręce FPP pozostają spłaszczone do przywrócenia stanu.
+
+Wymuszone zakończenie prowadzenia taczki po stronie serwera odzyskuje kontrolę nad jej fizyką i zachowuje pęd taczki. Gracz trafia najpierw do pobliskiego bezpiecznego miejsca wyjścia, a jeśli go nie ma, do istniejącego technicznego punktu spawnu. Obie drogi zachowują status. Rzeczywisty respawn usuwa statusy Etapu 1 przez `ResetTemporaryStatuses`. Ożywienie przez sojusznika zachowuje pozostały czas. Klient otrzymuje potwierdzone przez serwer podniesienie, zamianę slotów i upuszczenie. Oba sloty ekwipunku replikują się razem. `PlayerNew` konfiguruje wartości w Inspectorze.
+
+Etap 2 używa tego samego rejestru dla statusów wody, uwięzienia w betonie i uwięzienia przez tumbleweed. Szczegóły ich timerów i reguł wejścia/wyjścia opisują poniższe sekcje. Geometria wody i stamina nadal należą do kontrolerów wody i staminy.
+
+### Uwięzienie przez tumbleweed
+
+Uwięzienie trwa od złapania do bezpiecznego uwolnienia po upływie czasu lub usunięcia źródła. Status jest związany z identyfikatorem epizodu i usuwa zagrożenie wodne. Blokuje ruch, rozglądanie i akcje. Pasażerowie są wyłączeni z przechwycenia. Przed złapaniem kierowcy serwer kończy prowadzenie i odzyskuje kontrolę nad fizyką taczki. Klient gracza ustawia pozycję uwolnienia przed przywróceniem sterowania. Ochrona przed ponownym złapaniem zaczyna odliczać przy uwolnieniu. Zachowuje pozostały czas przez ożywienie sojusznika i rzeczywisty respawn, a kończy się przy despawnie.
+
 
 ## Kamera i obrót ciała
 
@@ -151,17 +160,10 @@ gracza nie zatrzymuje timera.
 
 ### Uwięzienie w betonie taczki
 
-`PlayerConcreteTrapController` blokuje uwięzionemu graczowi ruch, skok,
-narzędzia, interakcje i samodzielne wyjście; aktywne pozostaje wyłącznie
-rozglądanie. Gracz nadal przyjmuje obrażenia. Woda zachowuje normalne zasady
-utonięcia i przejścia w downed, bez awaryjnego uwolnienia z betonu.
+`PlayerConcreteTrapController` stosuje status zdarzeniowy od chwili, gdy beton w taczce stwardnieje. Pozostaje aktywny przez wyrzucenie gracza i zawalenie betonu, a czyści się dopiero po zakończeniu zawalenia lub sprzątnięciu pułapki. Uwięzienie blokuje ruch, sprint, skok i akcje w świecie, lecz kamera pozostaje dostępna. Gracz nadal przyjmuje obrażenia. Woda zachowuje niezależne zasady zagrożenia i downed.
 
-Jeżeli uwięziony gracz jest downed, nie może zostać ożywiony ani użyć respawnu,
-dopóki beton nie zostanie usunięty. Countdown respawnu pauzuje przez niezależny
-powód pauzy i po uwolnieniu kontynuuje od zachowanej wartości; nie koliduje to z
-pauzą podczas carry przez NPC. Uwolnienie nie wykonuje revive: gracz pozostaje
-downed. Po rozbiciu betonu w ustawionej taczce gracz pozostaje pasażerem i może
-wysiąść standardową akcją.
+Jeżeli uwięziony gracz jest downed, nie może zostać ożywiony ani użyć respawnu, dopóki beton nie zostanie usunięty. Countdown respawnu pauzuje z osobnym powodem i po uwolnieniu kontynuuje od zachowanej wartości; nie koliduje to z pauzą podczas carry przez NPC. Uwolnienie nie wykonuje revive: gracz pozostaje downed. Po rozbiciu betonu w ustawionej taczce gracz pozostaje pasażerem i może wysiąść standardową akcją.
+
 
 ## Input
 
@@ -479,19 +481,17 @@ do użytkownika.
 
 ## Woda, stamina i utoniecie
 
-**Status:** zaimplementowane w `Tutorial_scene`; autorytet zagrozen i staminy nalezy do serwera.
+**Status:** zaimplementowane w `Tutorial_scene`; serwer autorytatywnie rozstrzyga zagrożenie i staminę w sieci. `PlayerWaterExposureController` obsługuje geometrię ekspozycji, a `PlayerStaminaController` pozostaje właścicielem stanu staminy. Koszty aktywnych źródeł sumują się, a `FirstPersonController` zachowuje kompatybilne właściwości delegujące do kontrolera staminy.
 
-`PlayerStaminaController` jest wspolnym zrodlem stanu staminy dla sprintu, carry, niedoborowego shared-carry i wody. Koszty aktywnych zrodel sumuja sie, a `FirstPersonController` zachowuje kompatybilne wlasciwosci delegujace do nowego kontrolera.
-
-`PlayerWaterExposureController` rozroznia bezpieczne brodzenie i niebezpieczna wode. W tutorialu woda zuzywa `1 stamina/s`; wartosc konfiguruje pole `staminaDrainPerSecond` w `TutorialRiverProfile`. Przy zerowej staminie rozpoczyna sie ostrzezenie trwajace `3 s`; pozostanie w wodzie konczy sie stanem downed. Brak bezpiecznego podloza albo przekroczenie bezpiecznej glebokosci brodzenia uruchamia niezalezny timer `2 s`.
+Woda zużywa `1 stamina/s` w tutorialu. Wartość pochodzi z `staminaDrainPerSecond` w `TutorialRiverProfile`. Zerowa stamina uruchamia status z ostrzeżeniem domyślnie przez `3 s`. Pozostanie w wodzie kończy się stanem downed. Brak bezpiecznego podłoża albo przekroczenie bezpiecznej głębokości brodzenia uruchamia osobny status z domyślnym terminem `2 s`. Oba zegary działają niezależnie.
 
 | Stan | Zachowanie |
 |---|---|
-| `Wading` | Gracz ma bezpieczne podloze, ale nadal placi koszt staminy wody. |
-| `Unsafe` | Brak bezpiecznego podloza lub przekroczona glebokosc; przy wlaczonej fladze `GameplayManager` odliczane sa `2 s`. |
-| Zero staminy | HUD pokazuje powod `Water`; po `3 s` serwer ustawia downed. |
-| Downed w wodzie | Cialo unosi sie przy powierzchni, revive jest zablokowany, pickup i respawn pozostaja dostepne. |
+| `Wading` | Gracz ma bezpieczne podłoże, ale nadal płaci koszt staminy wody. |
+| `Unsafe` | Brak bezpiecznego podłoża lub przekroczona głębokość; aktywny zegar zależy od flagi `GameplayManager`. |
+| Zero staminy | HUD pokazuje powód `Water`; po upływie profilu serwer ustawia downed. |
+| Downed w wodzie | Ciało unosi się przy powierzchni, revive jest zablokowany, pickup i respawn pozostają dostępne. |
 
-Wyjscie na bezpieczny brzeg resetuje oba timery. Przejscie w downed natychmiast zatrzymuje wodny drain i miganie HUD, ale pozostawia unoszenie ciala przy powierzchni. Carry powalonego gracza przez innego gracza pozostaje dozwolone, a drain carry sumuje sie z kosztem wody.
+Przekroczenie progu unsafe i wyczerpanie staminy uruchamiają osobne timery. Zmiana profilu wody zachowuje dotychczasowy czas ekspozycji dla każdego aktywnego zegara i przelicza jego termin. Wyłączenie flagi unsafe zatrzymuje i czyści tylko timer unsafe; pozostały timer działa dalej. Ponowne włączenie flagi rozpoczyna timer unsafe od początku. Ustanie jednego warunku czyści tylko jego timer. Wyjście na suchy ląd lub uwięzienie czyści oba, a uwięzienie natychmiast zatrzymuje wodny drain. Przejście w downed zatrzymuje drain oraz miganie HUD, ale pozostawia unoszenie ciała. Carry powalonego gracza przez innego gracza pozostaje dozwolone, a drain carry sumuje się z kosztem wody.
 
-`GameplayManager.EnableUnsupportedWaterDowning` pozwala scenowo wylaczyc tylko timer `Unsafe`. Nie wylacza kosztu staminy ani powalenia po jej wyczerpaniu. Ponowne wlaczenie flagi rozpoczyna timer od poczatku.
+Rzeczywisty respawn usuwa statusy Etapu 1 i wpisy wody, więc ocena zagrożenia rozpoczyna się od nowa.

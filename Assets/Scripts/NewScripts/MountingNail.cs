@@ -102,7 +102,7 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
     private float nextRemainingSync;
     private bool impulseApplied;
     private PlayerTemporaryStatusController preparedByStatusController;
-    private ulong preparedPlacementRevision;
+    private ulong preparedPlacementCommitId;
     private bool subscribed;
     private MountingNailState offlineState;
     private int offlineHitCount;
@@ -420,22 +420,22 @@ public sealed partial class MountingNail : NetworkBehaviour, ISingleCarryPlaceme
     {
         ClearPreparedPlayerAssociation();
         if (holder == null || !holder.TryGetComponent(out preparedByStatusController)) return;
-        preparedPlacementRevision = preparedByStatusController.CurrentRevision;
+        preparedPlacementCommitId = preparedByStatusController.PlacementCommitId;
     }
 
     private void ApplyPreparedInjury()
     {
         PlayerTemporaryStatusController statusController = preparedByStatusController;
-        ulong expectedPlacementRevision = preparedPlacementRevision;
+        ulong expectedPlacementCommitId = preparedPlacementCommitId;
         if (statusController != null)
-            statusController.TryApplyCrushedHands(expectedPlacementRevision);
+            statusController.TryApplyCrushedHands(expectedPlacementCommitId);
         ClearPreparedPlayerAssociation();
     }
 
     private void ClearPreparedPlayerAssociation()
     {
         preparedByStatusController = null;
-        preparedPlacementRevision = 0;
+        preparedPlacementCommitId = 0;
     }
 
     public void OnResourcePickedUpChanged(bool isPickedUp)

@@ -1651,9 +1651,18 @@ public class BaseResourceNew : NetworkBehaviour, IInteractableNew, IPIckableNew,
                 holderYawInput = 0f;
             }
 
+            bool hasBodyAnchor = TryGetHolderBodyAnchor(holderClientId, out Transform bodyAnchor);
+            PlayerTemporaryStatusController status = hasBodyAnchor
+                ? bodyAnchor.GetComponentInParent<PlayerTemporaryStatusController>()
+                : null;
+            if (status == null && holderClientId != NoHolderClientId
+                && TryGetPlayerObject(holderClientId, out NetworkObject holderPlayerObject))
+                holderPlayerObject.TryGetComponent(out status);
+            if (status != null)
+                status.ApplySharedCarryInputModifiers(ref holderInput, ref holderLateralInput, ref holderYawInput);
+
             combinedInput += holderInput;
-            if (TryGetHolderBodyAnchor(holderClientId, out Transform bodyAnchor)
-                && holderAttachLocalPoints.TryGetValue(holderClientId, out Vector3 attachLocalPoint))
+            if (hasBodyAnchor && holderAttachLocalPoints.TryGetValue(holderClientId, out Vector3 attachLocalPoint))
             {
                 holderLateralInput = UpdateSpatialOrbitForHolder(holderClientId, bodyAnchor, holderLateralInput, Time.fixedDeltaTime);
                 attachLocalPoint = holderAttachLocalPoints[holderClientId];

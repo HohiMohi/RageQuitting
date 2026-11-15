@@ -4,6 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(NetworkObject), typeof(PlayerHealth), typeof(DownedPlayerCarryable))]
+[RequireComponent(typeof(PlayerTemporaryStatusController))]
 [DefaultExecutionOrder(1100)]
 public sealed class PlayerConcreteTrapController : NetworkBehaviour
 {
@@ -29,6 +30,8 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
         NoWheelbarrowNetworkObjectId,
         0f);
     private PlayerHealth playerHealth;
+    private PlayerTemporaryStatusController temporaryStatusController;
+    private ulong concreteStatusInstanceId;
     private DownedPlayerCarryable carryable;
     private PlayerInteractionNew interaction;
     private PlayerActionController actionController;
@@ -45,26 +48,27 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
     public PlayerConcreteTrapNetworkState CurrentState => IsNetworkStateActive ? trapStateNetwork.Value : localState;
     public PlayerConcreteTrapState State => CurrentState.State;
     public float Progress => CurrentState.Progress;
-    public bool IsTrapped => State != PlayerConcreteTrapState.None;
-    public bool IsInWheelbarrow => State == PlayerConcreteTrapState.InWheelbarrow;
-    public bool IsEjected => State == PlayerConcreteTrapState.Ejected;
-    public bool IsAttachedToWheelbarrow =>
+    public bool IsTrapped => temporaryStatusController != null && temporaryStatusController.IsConcreteTrapActive;
+    public bool IsInWheelbarrow => IsTrapped && State == PlayerConcreteTrapState.InWheelbarrow;
+    public bool IsEjected => IsTrapped && State == PlayerConcreteTrapState.Ejected;
+    public bool IsAttachedToWheelbarrow => IsTrapped &&
         (State is PlayerConcreteTrapState.InWheelbarrow or PlayerConcreteTrapState.Collapsing) &&
         (CurrentState.SourceWheelbarrowNetworkObjectId != NoWheelbarrowNetworkObjectId || localSourceWheelbarrow != null);
     public bool BlocksGameplayInput => IsTrapped;
     public HardenedConcreteBreakProfileSO BreakProfile => breakProfile;
     public EquippableItemType RequiredTool => ResolveRequiredTool();
     public bool CanAcceptBreakInteraction => CanReceiveWork();
-    public bool CanBeCarriedByHuman => State == PlayerConcreteTrapState.Ejected &&
+    public bool CanBeCarriedByHuman => IsTrapped && State == PlayerConcreteTrapState.Ejected &&
         (carryable == null || !carryable.IsCarried);
 
     private bool IsNetworkStateActive =>
-        NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
+        NetworkManager != null && NetworkManager.IsListening && IsSpawned;
 
     private void Awake()
     {
         ActiveControllers.Add(this);
         playerHealth = GetComponent<PlayerHealth>();
+        temporaryStatusController = GetComponent<PlayerTemporaryStatusController>();
         carryable = GetComponent<DownedPlayerCarryable>();
         interaction = GetComponent<PlayerInteractionNew>();
         actionController = GetComponent<PlayerActionController>();
@@ -100,15 +104,35 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         trapStateNetwork.OnValueChanged += ApplyState;
-        ApplyState(default, trapStateNetwork.Value);
+        if (IsServer && trapStateNetwork.Value.State != PlayerConcreteTrapState.None)
+        {
+            trapStateNetwork.Value = new PlayerConcreteTrapNetworkState(
+                PlayerConcreteTrapState.None, NoWheelbarrowNetworkObjectId, 0f);
+        }
+        PlayerConcreteTrapNetworkState current = trapStateNetwork.Value;
+        localSourceWheelbarrow = null;
+        concreteStatusInstanceId = 0;
+        collapseCompleteAt = current.State == PlayerConcreteTrapState.Collapsing
+            ? GetSynchronizedTime() + ResolveCollapseDuration()
+            : 0d;
+        ApplyState(current, current);
     }
 
     public override void OnNetworkDespawn()
     {
         trapStateNetwork.OnValueChanged -= ApplyState;
-        if (IsServer && trapStateNetwork.Value.State != PlayerConcreteTrapState.None)
-            ResolveSourceWheelbarrow(trapStateNetwork.Value)?.ClearHardenedPassengerConcreteForDisconnect(this);
+        PlayerConcreteTrapNetworkState previous = CurrentState;
+        if (IsServer && previous.State != PlayerConcreteTrapState.None)
+            ResolveSourceWheelbarrow(previous)?.ClearHardenedPassengerConcreteForDisconnect(this);
+        if (!IsNetworkStateActive || IsServer) ClearConcreteStatus();
         nextWorkTimeByClient.Clear();
+        localState = new PlayerConcreteTrapNetworkState(
+            PlayerConcreteTrapState.None, NoWheelbarrowNetworkObjectId, 0f);
+        localSourceWheelbarrow = null;
+        concreteStatusInstanceId = 0;
+        collapseCompleteAt = 0d;
+        if (visualRoot != null) visualRoot.SetActive(false);
+        if (target != null) target.SetTargetEnabled(false);
     }
 
     private void Update()
@@ -165,12 +189,16 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
 
         carryable?.ForceDrop();
         localSourceWheelbarrow = wheelbarrow;
-        SetState(new PlayerConcreteTrapNetworkState(
+        if (!SetState(new PlayerConcreteTrapNetworkState(
             PlayerConcreteTrapState.InWheelbarrow,
             wheelbarrow.NetworkObject != null && wheelbarrow.NetworkObject.IsSpawned
                 ? wheelbarrow.NetworkObject.NetworkObjectId
                 : NoWheelbarrowNetworkObjectId,
-            0f));
+            0f)))
+        {
+            localSourceWheelbarrow = null;
+            return false;
+        }
         return true;
     }
 
@@ -182,11 +210,11 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
         PlayerConcreteTrapState nextState = State == PlayerConcreteTrapState.Collapsing
             ? PlayerConcreteTrapState.Collapsing
             : PlayerConcreteTrapState.Ejected;
-        localSourceWheelbarrow = null;
-        SetState(new PlayerConcreteTrapNetworkState(
+        if (!SetState(new PlayerConcreteTrapNetworkState(
             nextState,
             NoWheelbarrowNetworkObjectId,
-            Progress));
+            Progress))) return false;
+        localSourceWheelbarrow = null;
         wheelbarrow.ClearHardenedPassengerConcreteAfterEjection(this);
         return true;
     }
@@ -196,11 +224,11 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
         if (IsNetworkStateActive && !IsServer) return;
         if (wheelbarrow != null && IsAttachedToWheelbarrow && IsSourcedBy(wheelbarrow))
             wheelbarrow.ClearHardenedPassengerConcreteForDisconnect(this);
-        localSourceWheelbarrow = null;
-        SetState(new PlayerConcreteTrapNetworkState(
+        if (!SetState(new PlayerConcreteTrapNetworkState(
             PlayerConcreteTrapState.None,
             NoWheelbarrowNetworkObjectId,
-            0f));
+            0f))) return;
+        localSourceWheelbarrow = null;
     }
 
     public bool IsSourcedBy(WheelbarrowController wheelbarrow)
@@ -221,7 +249,7 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
             return;
         }
 
-        if (IsServer) TryApplyBreakWorkServer(NetworkManager.Singleton.LocalClientId, requestedItem.itemType);
+        if (IsServer) TryApplyBreakWorkServer(NetworkManager.LocalClientId, requestedItem.itemType);
         else RequestBreakWorkServerRpc((int)requestedItem.itemType);
     }
 
@@ -234,8 +262,8 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
     private bool TryApplyBreakWorkServer(ulong senderClientId, EquippableItemType requestedToolType)
     {
         if (!IsServer || senderClientId == OwnerClientId || State is PlayerConcreteTrapState.None or PlayerConcreteTrapState.Collapsing ||
-            NetworkManager.Singleton == null ||
-            !NetworkManager.Singleton.ConnectedClients.TryGetValue(senderClientId, out NetworkClient client) ||
+            NetworkManager == null ||
+            !NetworkManager.ConnectedClients.TryGetValue(senderClientId, out NetworkClient client) ||
             client.PlayerObject == null) return false;
 
         NetworkObject actor = client.PlayerObject;
@@ -268,6 +296,7 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
 
     private bool CanReceiveWork()
     {
+        if (!IsTrapped) return false;
         if (State == PlayerConcreteTrapState.InWheelbarrow)
         {
             WheelbarrowController source = ResolveSourceWheelbarrow(CurrentState);
@@ -292,19 +321,61 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
     private void CompleteCollapse()
     {
         if (State != PlayerConcreteTrapState.Collapsing) return;
-        ResolveSourceWheelbarrow(CurrentState)?.CompleteHardenedPassengerConcreteBreak(this);
+        WheelbarrowController source = ResolveSourceWheelbarrow(CurrentState);
+        if (source != null && !IsSourcedBy(source)) return;
+        source?.CompleteHardenedPassengerConcreteBreak(this);
+        if (!SetState(new PlayerConcreteTrapNetworkState(PlayerConcreteTrapState.None, NoWheelbarrowNetworkObjectId, 0f)))
+            return;
         localSourceWheelbarrow = null;
         collapseCompleteAt = 0d;
-        SetState(new PlayerConcreteTrapNetworkState(PlayerConcreteTrapState.None, NoWheelbarrowNetworkObjectId, 0f));
     }
 
-    private void SetState(PlayerConcreteTrapNetworkState next)
+    private bool SetState(PlayerConcreteTrapNetworkState next)
     {
         next.Progress = Mathf.Clamp(next.Progress, 0f, ResolveWorkRequired());
         PlayerConcreteTrapNetworkState previous = CurrentState;
+        if (!SyncConcreteStatus(next)) return false;
         localState = next;
         if (IsNetworkStateActive && IsServer) trapStateNetwork.Value = next;
         else ApplyState(previous, next);
+        return true;
+    }
+
+    private bool SyncConcreteStatus(PlayerConcreteTrapNetworkState next)
+    {
+        if (temporaryStatusController == null) TryGetComponent(out temporaryStatusController);
+        if (temporaryStatusController == null || IsNetworkStateActive && !IsServer) return false;
+        if (next.State == PlayerConcreteTrapState.None)
+        {
+            if (!temporaryStatusController.IsConcreteTrapActive)
+            {
+                concreteStatusInstanceId = 0;
+                return true;
+            }
+            return temporaryStatusController.ClearDomainStatus(
+                PlayerDomainStatusKind.ConcreteTrap, ref concreteStatusInstanceId);
+        }
+
+        if (temporaryStatusController.IsConcreteTrapActive)
+        {
+            ulong registeredInstance = temporaryStatusController
+                .GetDomainStatus(PlayerDomainStatusKind.ConcreteTrap).InstanceId;
+            if (concreteStatusInstanceId == 0) concreteStatusInstanceId = registeredInstance;
+            return registeredInstance != 0 && registeredInstance == concreteStatusInstanceId;
+        }
+        return temporaryStatusController.SetDomainStatus(
+            PlayerDomainStatusKind.ConcreteTrap,
+            ref concreteStatusInstanceId,
+            0d,
+            0f,
+            0);
+    }
+
+    private void ClearConcreteStatus()
+    {
+        if (temporaryStatusController == null) TryGetComponent(out temporaryStatusController);
+        if (temporaryStatusController != null && temporaryStatusController.IsConcreteTrapActive)
+            temporaryStatusController.ClearDomainStatus(PlayerDomainStatusKind.ConcreteTrap, ref concreteStatusInstanceId);
     }
 
     private void ApplyState(PlayerConcreteTrapNetworkState previous, PlayerConcreteTrapNetworkState current)
@@ -322,15 +393,16 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
             target.SetTargetEnabled(current.State is PlayerConcreteTrapState.InWheelbarrow or PlayerConcreteTrapState.Ejected);
         UpdateCrackVisuals(current.Progress);
 
-        if (active && IsOwnerOrLocal())
+        bool justActivated = previous.State == PlayerConcreteTrapState.None && active;
+        if (justActivated && IsOwnerOrLocal())
         {
-            interaction?.DropHeldObjectForStateChange();
-            actionController?.CancelActionForStateChange();
+            if (interaction != null) interaction.DropHeldObjectForStateChange();
+            if (actionController != null) actionController.CancelActionForStateChange();
         }
-        if (active)
+        if (justActivated)
         {
-            spiritLevelController?.CancelForConcreteTrap();
-            ropeToolController?.CancelForConcreteTrap();
+            if (spiritLevelController != null) spiritLevelController.CancelForConcreteTrap();
+            if (ropeToolController != null) ropeToolController.CancelForConcreteTrap();
         }
         if (!active && previous.State != PlayerConcreteTrapState.None) collapseCompleteAt = 0d;
         UpdateHealthPause();
@@ -351,8 +423,8 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
     {
         if (!IsNetworkStateActive) return localSourceWheelbarrow;
         if (state.SourceWheelbarrowNetworkObjectId == NoWheelbarrowNetworkObjectId) return null;
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.SpawnManager != null &&
-            NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
+        if (NetworkManager != null && NetworkManager.SpawnManager != null &&
+            NetworkManager.SpawnManager.SpawnedObjects.TryGetValue(
                 state.SourceWheelbarrowNetworkObjectId,
                 out NetworkObject source))
             return source.GetComponent<WheelbarrowController>();
@@ -472,8 +544,8 @@ public sealed class PlayerConcreteTrapController : NetworkBehaviour
 
     private double GetSynchronizedTime()
     {
-        return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening
-            ? NetworkManager.Singleton.ServerTime.Time
+        return NetworkManager != null && NetworkManager.IsListening
+            ? NetworkManager.ServerTime.Time
             : Time.timeAsDouble;
     }
 }

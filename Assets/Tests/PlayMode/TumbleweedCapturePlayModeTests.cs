@@ -288,6 +288,72 @@ namespace RageQuitting.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator CrushedHandsReleasesAndForcesOutAnOfflineWheelbarrowDriverOnce()
+        {
+#if !UNITY_EDITOR
+            Assert.Ignore("Loads the authored wheelbarrow prefab through the Editor AssetDatabase.");
+            yield break;
+#else
+            AssertNoActiveSession();
+            GameObject target = CreatePlayerFixture("Crushed hands wheelbarrow driver", Vector3.zero);
+            Behaviour playerInput = (Behaviour)target.AddComponent(TypeByName("PlayerInputNew"));
+            playerInput.enabled = false;
+            target.AddComponent(TypeByName("PlayerInteractionNew"));
+            GameObject wheelbarrowPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Prefabs/New/Wheelbarrow.prefab");
+            Assert.That(wheelbarrowPrefab, Is.Not.Null);
+            GameObject wheelbarrow = Object.Instantiate(wheelbarrowPrefab, new Vector3(10f, 0f, 0f), Quaternion.identity);
+            scope.Own(wheelbarrow);
+            SceneManager.MoveGameObjectToScene(wheelbarrow, scope.OwnedScene);
+            Component controller = wheelbarrow.GetComponent(TypeByName("WheelbarrowController"));
+            Component status = target.GetComponent(TypeByName("PlayerTemporaryStatusController"));
+            ulong clientId = target.GetComponent<NetworkObject>().OwnerClientId;
+            Set(controller, "localDriver", clientId);
+            Set(controller, "localState", Enum.Parse(TypeByName("WheelbarrowState"), "Driven"));
+
+            MethodInfo getSpeedCeiling = controller.GetType().GetMethod("GetDriveSpeedCeiling", Instance);
+            float neutralForwardCeiling = (float)getSpeedCeiling.Invoke(controller, new object[] { clientId, 1f });
+            float neutralReverseCeiling = (float)getSpeedCeiling.Invoke(controller, new object[] { clientId, -1f });
+            object[] movementStatus = { 951, 10f, false, .5f, false, false, 0UL };
+            Assert.That((bool)status.GetType().GetMethod("TryApplyStatus").Invoke(status, movementStatus), Is.True);
+            Assert.That((float)getSpeedCeiling.Invoke(controller, new object[] { clientId, 1f }),
+                Is.EqualTo(neutralForwardCeiling * .5f).Within(.0001f));
+            Assert.That((float)getSpeedCeiling.Invoke(controller, new object[] { clientId, -1f }),
+                Is.EqualTo(neutralReverseCeiling * .5f).Within(.0001f),
+                "The driver's status scales both forward and reverse propulsion ceilings.");
+
+            Assert.That(CallResult(status, "BeginPlacementLock"), Is.True);
+            ulong commitId = Get<ulong>(status, "PlacementCommitId");
+            Rigidbody wheelbarrowBody = wheelbarrow.GetComponent<Rigidbody>();
+            Vector3 velocityBeforeInjury = new(1.25f, .3f, -.4f);
+            wheelbarrowBody.linearVelocity = velocityBeforeInjury;
+            MethodInfo applyInjury = status.GetType().GetMethod("TryApplyCrushedHands", Instance);
+            Assert.That((bool)applyInjury.Invoke(status, new object[] { commitId }), Is.True);
+            Assert.That(Vector3.Distance(wheelbarrowBody.linearVelocity, velocityBeforeInjury), Is.LessThan(.0001f),
+                "Forced driver release preserves wheelbarrow linear momentum.");
+            Assert.That(Get<ulong>(controller, "DriverClientId"), Is.EqualTo(ulong.MaxValue));
+            Assert.That(Get(controller, "State").ToString(), Is.EqualTo("Free"));
+            Assert.That(CallResult(controller, "GetRole", clientId).ToString(), Is.EqualTo("None"));
+            Assert.That((bool)applyInjury.Invoke(status, new object[] { commitId }), Is.False,
+                "A stale duplicate injury cannot start a second forced exit.");
+            Assert.That(Get(controller, "pendingSafeExits").GetType().GetProperty("Count").GetValue(
+                Get(controller, "pendingSafeExits")), Is.EqualTo(1),
+                "The first injury starts the existing forced safe-exit transaction.");
+            IDictionary pendingExits = (IDictionary)Get(controller, "pendingSafeExits");
+            object pendingExit = pendingExits[clientId];
+            Set(pendingExit, "PlacementConfirmed", false);
+            Set(pendingExit, "PlacementRequested", false);
+            float fallbackDelay = Get<float>(Get(controller, "profile"), "ForcedExitFallbackDelay");
+            Set(pendingExit, "OperationStartedAt", Time.time - fallbackDelay - .1f);
+            controller.GetType().GetMethod("ProcessPendingSafeExits", Instance).Invoke(controller, null);
+            Assert.That(pendingExits.Count, Is.Zero, "The existing forced fallback completes the pending exit at spawn.");
+            Assert.That(Get<bool>(status, "IsCrushedHands"), Is.True,
+                "Technical transport fallback teleports the player without resetting active injury status.");
+            yield return null;
+#endif
+        }
+
+        [UnityTest]
         public IEnumerator PassengerIsExcludedAndDriverIsReleasedBeforeCaptureCommits()
         {
 #if !UNITY_EDITOR
@@ -543,16 +609,19 @@ namespace RageQuitting.Tests.PlayMode
             AssertNoActiveSession();
             CreateGround();
             GameObject weedPrefab = LoadWeedPrefab();
+            GameObject wheelbarrowPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Prefabs/New/Wheelbarrow.prefab");
+            Assert.That(wheelbarrowPrefab, Is.Not.Null);
             playerPrefab = CreateNetworkPlayerPrefab();
             GameObject itemPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/Prefabs/New/EquippableItems/EquippableItem.prefab");
             Assert.That(itemPrefab, Is.Not.Null);
             ushort port = ReservePort();
-            host = CreateManager("Tumbleweed loopback host", port, weedPrefab, itemPrefab);
+            host = CreateManager("Tumbleweed loopback host", port, weedPrefab, itemPrefab, wheelbarrowPrefab);
             Assert.That(host.StartHost(), Is.True);
             host.SetSingleton();
             yield return Until(() => host.IsListening && host.LocalClient?.PlayerObject != null, "host player spawn");
-            owner = CreateManager("Tumbleweed remote owner", port, weedPrefab, itemPrefab);
+            owner = CreateManager("Tumbleweed remote owner", port, weedPrefab, itemPrefab, wheelbarrowPrefab);
             Assert.That(owner.StartClient(), Is.True);
             owner.SetSingleton();
             yield return Until(() => owner.IsConnectedClient && owner.LocalClient?.PlayerObject != null
@@ -564,6 +633,22 @@ namespace RageQuitting.Tests.PlayMode
             owner.LocalClient.PlayerObject.transform.position = new Vector3(5f, 0f, 0f);
             yield return Until(() => Vector3.Distance(remotePlayer.transform.position, new Vector3(5f, 0f, 0f)) < 0.3f,
                 "remote owner position reaches the server");
+            GameObject wheelbarrow = Object.Instantiate(wheelbarrowPrefab, new Vector3(5f, 0f, 0f), Quaternion.identity);
+            scope.Own(wheelbarrow);
+            SceneManager.MoveGameObjectToScene(wheelbarrow, scope.OwnedScene);
+            NetworkObject wheelbarrowNetwork = wheelbarrow.GetComponent<NetworkObject>();
+            wheelbarrowNetwork.Spawn();
+            Component hostWheelbarrowController = wheelbarrow.GetComponent(TypeByName("WheelbarrowController"));
+            yield return Until(() => FindSpawnedNetworkObject(owner, wheelbarrowNetwork.NetworkObjectId) != null,
+                "remote wheelbarrow replica");
+            Component ownerWheelbarrowController = FindSpawnedNetworkObject(owner, wheelbarrowNetwork.NetworkObjectId)
+                .GetComponent(TypeByName("WheelbarrowController"));
+            Assert.That((bool)CallResult(ownerWheelbarrowController, "RequestEnterDriver",
+                owner.LocalClient.PlayerObject.transform), Is.True, "The remote owner requests the wheelbarrow driver role.");
+            yield return Until(() => Get<ulong>(hostWheelbarrowController, "DriverClientId") == owner.LocalClientId,
+                "server accepts remote wheelbarrow driver");
+            yield return Until(() => wheelbarrowNetwork.OwnerClientId == owner.LocalClientId,
+                "wheelbarrow physics ownership transfers to the driver");
             GameObject ball = Object.Instantiate(weedPrefab, new Vector3(5f, 0.65f, 0f), Quaternion.identity);
             scope.Own(ball);
             SetCaptureTiming(ball, 1.4f, 0.4f, 10);
@@ -576,6 +661,8 @@ namespace RageQuitting.Tests.PlayMode
                 "The spawned server ball must be destroyed when its Stage02 scene unloads.");
             Component hostStatus = remotePlayer.GetComponent(TypeByName("PlayerTemporaryStatusController"));
             yield return Until(() => Get<bool>(hostStatus, "IsTumbleweedCaptured"), "server captures remote-owned player");
+            yield return Until(() => Get<ulong>(hostWheelbarrowController, "DriverClientId") == ulong.MaxValue
+                && wheelbarrowNetwork.OwnerClientId == host.LocalClientId, "capture releases driver and reclaims wheelbarrow physics");
             yield return Until(() => Get<bool>(owner.LocalClient.PlayerObject.GetComponent(TypeByName("PlayerTemporaryStatusController")),
                 "IsTumbleweedCaptured"), "remote owner receives capture state");
             NetworkObject ownerBall = null;
@@ -587,7 +674,7 @@ namespace RageQuitting.Tests.PlayMode
             Assert.That(ownerBall.DestroyWithScene, Is.True,
                 "The owner's replica retains the scene-destruction lifecycle flag.");
 
-            lateObserver = CreateManager("Tumbleweed late observer", port, weedPrefab, itemPrefab);
+            lateObserver = CreateManager("Tumbleweed late observer", port, weedPrefab, itemPrefab, wheelbarrowPrefab);
             Assert.That(lateObserver.StartClient(), Is.True);
             lateObserver.SetSingleton();
             yield return Until(() => lateObserver.IsConnectedClient && lateObserver.LocalClient?.PlayerObject != null
@@ -614,17 +701,51 @@ namespace RageQuitting.Tests.PlayMode
             yield return Until(() => !Get<bool>(owner.LocalClient.PlayerObject.GetComponent(TypeByName("PlayerTemporaryStatusController")),
                 "IsTumbleweedCaptured"), "owner timed release");
             Assert.That(remotePlayer.transform.position, Is.Not.EqualTo(new Vector3(5f, 0f, 0f)));
+            Component ownerStatus = owner.LocalClient.PlayerObject.GetComponent(TypeByName("PlayerTemporaryStatusController"));
+            Assert.That(Get<bool>(ownerStatus, "IsTumbleweedImmune"), Is.True,
+                "Timed release publishes immunity with the release pose.");
+            object releaseSnapshot = hostStatus.GetType().GetMethod("CaptureSnapshot", Instance).Invoke(hostStatus, null);
+            Vector3 stagedReleasePosition = (Vector3)releaseSnapshot.GetType().GetField("TumbleweedReleasePosition").GetValue(releaseSnapshot);
+            Assert.That(Vector3.Distance(owner.LocalClient.PlayerObject.transform.position, stagedReleasePosition), Is.LessThan(0.35f),
+                "The owner applies the staged authoritative release pose before observing the capture unlock.");
+            yield return Until(() => Vector3.Distance(remotePlayer.transform.position, stagedReleasePosition) < 0.35f,
+                "host replica converges to the owner-authoritative release pose");
+            hostStatus.GetType().GetMethod("ResetTemporaryStatuses", Instance).Invoke(hostStatus, null);
+            Assert.That(Get<bool>(hostStatus, "IsTumbleweedImmune"), Is.True,
+                "Full respawn status reset preserves the remaining immunity deadline.");
 
             owner.LocalClient.PlayerObject.transform.position = ball.transform.position;
             yield return Until(() => Vector3.Distance(remotePlayer.transform.position, ball.transform.position) < 0.3f,
                 "remote owner returns to ball");
             SetCaptureTiming(ball, 5f, 0.2f, 10);
-            yield return Until(() => Get<bool>(hostStatus, "IsTumbleweedCaptured"), "second capture before disconnect");
+            yield return Until(() => Get<bool>(hostStatus, "IsTumbleweedCaptured"), "second capture before source despawn");
+            Assert.That(owner.IsConnectedClient, Is.True);
+            ballNetwork.Despawn(false);
+            yield return Until(() => !Get<bool>(hostStatus, "IsTumbleweedCaptured"),
+                "source despawn releases server capture while owner stays connected");
+            yield return Until(() => !Get<bool>(ownerStatus, "IsTumbleweedCaptured"),
+                "source despawn releases the remote owner capture");
+            Assert.That(owner.IsConnectedClient, Is.True, "The owner remains connected during source cleanup.");
+            Assert.That(Get<bool>(ownerStatus, "IsTumbleweedImmune"), Is.True,
+                "Source cleanup publishes release immunity.");
+            Assert.That(Get<int>(ball.GetComponent(TypeByName("TumbleweedCaptureController")), "CurrentCaptiveCount"), Is.Zero);
+            Object.Destroy(ball);
+
+            yield return Until(() => !Get<bool>(hostStatus, "IsTumbleweedImmune"), "source-release immunity expires");
+            host.SetSingleton();
+            GameObject secondBall = Object.Instantiate(weedPrefab, new Vector3(5f, 0.65f, 0f), Quaternion.identity);
+            scope.Own(secondBall);
+            SetCaptureTiming(secondBall, 5f, 0.2f, 10);
+            ((Behaviour)secondBall.GetComponent(TypeByName("TumbleweedMovement"))).enabled = false;
+            NetworkObject secondBallNetwork = secondBall.GetComponent<NetworkObject>();
+            secondBallNetwork.Spawn();
+            owner.LocalClient.PlayerObject.transform.position = secondBall.transform.position;
+            yield return Until(() => Get<bool>(hostStatus, "IsTumbleweedCaptured"), "third capture before owner disconnect");
             owner.Shutdown(true);
             yield return Until(() => host.ConnectedClientsIds.Count == 2, "remote owner disconnect");
-            yield return Until(() => Get<int>(ball.GetComponent(TypeByName("TumbleweedCaptureController")), "CurrentCaptiveCount") == 0,
+            yield return Until(() => Get<int>(secondBall.GetComponent(TypeByName("TumbleweedCaptureController")), "CurrentCaptiveCount") == 0,
                 "disconnect clears server capture reservation");
-            Assert.That(Get<int>(ball.GetComponent(TypeByName("TumbleweedCaptureController")), "OccupiedSlotCount"), Is.Zero);
+            Assert.That(Get<int>(secondBall.GetComponent(TypeByName("TumbleweedCaptureController")), "OccupiedSlotCount"), Is.Zero);
 #endif
         }
 
@@ -703,7 +824,8 @@ namespace RageQuitting.Tests.PlayMode
             return prefab;
         }
 
-        private NetworkManager CreateManager(string label, ushort port, GameObject weedPrefab, GameObject itemPrefab)
+        private NetworkManager CreateManager(string label, ushort port, GameObject weedPrefab, GameObject itemPrefab,
+            GameObject wheelbarrowPrefab = null)
         {
             GameObject root = scope.Own(new GameObject(label));
             UnityTransport transport = root.AddComponent<UnityTransport>();
@@ -717,6 +839,7 @@ namespace RageQuitting.Tests.PlayMode
             };
             manager.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = weedPrefab });
             manager.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = itemPrefab });
+            if (wheelbarrowPrefab != null) manager.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = wheelbarrowPrefab });
             scope.OwnManager(manager);
             return manager;
         }

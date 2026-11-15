@@ -59,13 +59,14 @@ public class PlayerInputNew : NetworkBehaviour
             if (!singleCarryPlacementActive || placementController == null || !placementController.IsRequestPending)
                 return false;
             return temporaryStatusController == null || temporaryStatusController
-                .ShouldKeepPendingPlacementMovementBlocked(placementController.PendingRequestStatusRevision);
+                .ShouldKeepPendingPlacementMovementBlocked(placementController.PendingRequestPlacementCommitId);
         }
     }
     public bool IsLocalGameplayInputActive => IsInputActive() && !IsUIOpened;
     public bool IsWorldActionBlocked => temporaryStatusController != null && temporaryStatusController.BlocksActions;
-    public bool IsMovementInputBlocked => temporaryStatusController != null && temporaryStatusController.BlocksControls
+    public bool IsMovementInputBlocked => temporaryStatusController != null && temporaryStatusController.BlocksMovement
         || IsSingleCarryPlacementMovementBlocked;
+    public bool IsLookInputBlocked => temporaryStatusController != null && temporaryStatusController.BlocksLook;
 
     [SerializeField]
     private bool IsUIOpened;
@@ -106,7 +107,7 @@ public class PlayerInputNew : NetworkBehaviour
         if (singleCarryPlacementActive && placementController != null && placementController.IsRequestPending
             && temporaryStatusController != null
             && !temporaryStatusController.ShouldKeepPendingPlacementMovementBlocked(
-                placementController.PendingRequestStatusRevision))
+                placementController.PendingRequestPlacementCommitId))
             OnForcedSingleCarryPlacementExit?.Invoke(this, EventArgs.Empty);
     }
 
@@ -388,8 +389,8 @@ public class PlayerInputNew : NetworkBehaviour
     private void TemporaryStatusChanged(PlayerTemporaryStatusSnapshot snapshot)
     {
         if (singleCarryPlacementActive && placementController != null && placementController.IsRequestPending
-            && snapshot.Revision > placementController.PendingRequestStatusRevision
-            && snapshot.Status != PlayerTemporaryStatusKind.PlacementLock)
+            && snapshot.PlacementCommitId > placementController.PendingRequestPlacementCommitId
+            && temporaryStatusController != null && !temporaryStatusController.IsPlacementLockActive)
             OnForcedSingleCarryPlacementExit?.Invoke(this, EventArgs.Empty);
 
         if (IsWorldActionBlocked)
@@ -399,7 +400,7 @@ public class PlayerInputNew : NetworkBehaviour
             CancelActionAltHold();
         }
 
-        if (IsTemporaryControlBlocked())
+        if (IsTemporaryMovementBlocked())
         {
             OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
             return;
@@ -410,8 +411,11 @@ public class PlayerInputNew : NetworkBehaviour
         OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = sprintHeld });
     }
 
-    private bool IsTemporaryControlBlocked() =>
-        temporaryStatusController != null && temporaryStatusController.BlocksControls;
+    private bool IsTemporaryMovementBlocked() =>
+        temporaryStatusController != null && temporaryStatusController.BlocksMovement;
+
+    private bool IsTemporaryLookBlocked() =>
+        temporaryStatusController != null && temporaryStatusController.BlocksLook;
 
     private void Interact_performed(InputAction.CallbackContext context)
     {
@@ -453,7 +457,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Sprint_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive || IsTemporaryControlBlocked())
+        if (IsUIOpened || singleCarryPlacementActive || IsTemporaryMovementBlocked())
         {
             return;
         }
@@ -466,7 +470,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Jump_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened || singleCarryPlacementActive || IsTemporaryControlBlocked())
+        if (IsUIOpened || singleCarryPlacementActive || IsTemporaryMovementBlocked())
         {
             return;
         }
@@ -556,7 +560,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     public Vector2 GetLookDeltaValue()
     {
-        if (!IsInputActive() || IsUIOpened || IsTemporaryControlBlocked())
+        if (!IsInputActive() || IsUIOpened || IsTemporaryLookBlocked())
         {
             return Vector2.zero;
         }

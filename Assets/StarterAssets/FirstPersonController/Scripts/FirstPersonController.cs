@@ -475,7 +475,7 @@ namespace StarterAssets
 
 		private void CameraRotation()
 		{
-			if (_temporaryStatusController != null && _temporaryStatusController.BlocksControls)
+			if (_temporaryStatusController != null && _temporaryStatusController.BlocksLook)
 			{
 				return;
 			}
@@ -594,14 +594,17 @@ namespace StarterAssets
 				return;
 			}
 
-			if (_temporaryStatusController != null && _temporaryStatusController.BlocksControls)
+			if (_concreteTrapController != null && _concreteTrapController.BlocksGameplayInput)
 			{
 				_isSprinting = false;
 				_isJumpPerformed = false;
 				_horizontalVelocity = Vector3.zero;
-				_controller.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
+				_verticalVelocity = 0f;
+				if (_concreteTrapController.IsInWheelbarrow)
+					_wheelbarrowController?.ApplyAnchoredMovement(Time.deltaTime);
 				return;
 			}
+
 			if (_playerInputNew != null && _playerInputNew.IsSingleCarryPlacementActive)
 			{
 				_isSprinting = false;
@@ -614,14 +617,12 @@ namespace StarterAssets
 				}
 			}
 
-			if (_concreteTrapController != null && _concreteTrapController.BlocksGameplayInput)
+			if (_temporaryStatusController != null && _temporaryStatusController.BlocksControls)
 			{
 				_isSprinting = false;
 				_isJumpPerformed = false;
 				_horizontalVelocity = Vector3.zero;
-				_verticalVelocity = 0f;
-				if (_concreteTrapController.IsInWheelbarrow)
-					_wheelbarrowController?.ApplyAnchoredMovement(Time.deltaTime);
+				_controller.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
 				return;
 			}
 
@@ -675,6 +676,10 @@ namespace StarterAssets
 				targetSpeed *= _playerActionController.ActionMovementMultiplier;
 			}
 			targetSpeed *= GetLooseSoilMovementMultiplier();
+			if (_temporaryStatusController != null)
+			{
+				targetSpeed *= _temporaryStatusController.MovementMultiplier;
+			}
 
 			Vector3 localDesiredVelocity = new Vector3(
 				moveInput.x * strafeSpeedMultiplier,
@@ -768,10 +773,22 @@ namespace StarterAssets
 
 		private void MoveDuringSharedCarry()
 		{
-            Vector2 moveInput = _playerInputNew.GetMoveVectorValue();
+			Vector2 moveInput = _playerInputNew.GetMoveVectorValue();
 			Vector3 worldTranslationInput = GetSharedCarryWorldTranslationInput(moveInput.y);
 			Vector3 worldLateralInput = GetSharedCarryWorldLateralInput(moveInput.x);
-			_playerInteractionNew.PredictSharedCarryOrbit(worldLateralInput, Time.deltaTime);
+			Vector3 predictedTranslationInput = worldTranslationInput;
+			Vector3 predictedLateralInput = worldLateralInput;
+			float predictedYawInput = moveInput.x;
+			bool statusBlocked = _temporaryStatusController != null
+				&& _temporaryStatusController.ApplySharedCarryInputModifiers(
+					ref predictedTranslationInput, ref predictedLateralInput, ref predictedYawInput);
+			if (statusBlocked)
+			{
+				worldTranslationInput = Vector3.zero;
+				worldLateralInput = Vector3.zero;
+				moveInput = Vector2.zero;
+			}
+			_playerInteractionNew.PredictSharedCarryOrbit(predictedLateralInput, Time.deltaTime);
 			SendSharedCarryInputIfNeeded(worldTranslationInput, worldLateralInput, moveInput.x);
 
 			if (_playerInteractionNew.IsPhysicalPointGripActive)
@@ -901,7 +918,7 @@ namespace StarterAssets
 				return;
 			}
 
-			bool canJump = (_temporaryStatusController == null || !_temporaryStatusController.BlocksControls)
+			bool canJump = (_temporaryStatusController == null || !_temporaryStatusController.BlocksMovement)
 				&& !IsDowned() && (_playerInteractionNew == null ||
 				(!_playerInteractionNew.IsSharedCarryMovementActive && !_playerInteractionNew.IsFlexibleSaplingInteractionActive));
 			if (!canJump)

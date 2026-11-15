@@ -147,6 +147,15 @@ public class MountingNailStage1NetworkPlayModeTests
         request.Invoke(ownerPreview, new object[] { ownerSource, 2UL, acceptedPosition, acceptedRotation, aimRay });
         yield return Until(() => (ulong)ownerPreview.GetType().GetProperty("LastCompletedPlacementRequestId").GetValue(ownerPreview) == 2UL, "accepted network placement");
         Assert.That(ownerPreview.GetType().GetProperty("LastPlacementResult").GetValue(ownerPreview).ToString(), Is.EqualTo("Accepted"));
+        System.Type statusType = System.Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp");
+        Component hostStatus = host.ConnectedClients[owner.LocalClientId].PlayerObject.GetComponent(statusType);
+        Component ownerStatus = owner.LocalClient.PlayerObject.GetComponent(statusType);
+        Assert.That(statusType.GetProperty("CurrentStatus").GetValue(hostStatus).ToString(), Is.EqualTo("PlacementLock"),
+            "The host receives the accepted server status state.");
+        Assert.That(statusType.GetProperty("CurrentStatus").GetValue(ownerStatus).ToString(), Is.EqualTo("PlacementLock"),
+            "The remote owner applies the placement response snapshot.");
+        ulong acceptedPlacementCommitId = (ulong)statusType.GetProperty("PlacementCommitId").GetValue(hostStatus);
+        Assert.That(acceptedPlacementCommitId, Is.GreaterThan(0UL));
         NetworkObject ownerMirror = Find(owner, nailNetworkObject.NetworkObjectId);
         Rigidbody ownerMirrorBody = ownerMirror.GetComponent<Rigidbody>();
         float prepareDeadline = Time.realtimeSinceStartup + 5f;
@@ -166,11 +175,25 @@ public class MountingNailStage1NetworkPlayModeTests
         Assert.That(ownerMirror.OwnerClientId, Is.EqualTo(NetworkManager.ServerClientId));
         Assert.That(ownerMirrorBody.isKinematic, Is.True);
         double preparedDeadline = (double)nail.GetType().GetField("preparedDeadline", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(nail);
+        yield return Until(() => !(bool)statusType.GetProperty("IsPlacementLockActive").GetValue(hostStatus),
+            "placement lock expires before duplicate-request validation");
         request.Invoke(ownerPreview, new object[] { ownerSource, 2UL, acceptedPosition, acceptedRotation, aimRay });
-        yield return Until(() => ownerPreview.GetType().GetProperty("LastPlacementResult").GetValue(ownerPreview).ToString() == "StaleRequest",
-            "duplicate request rejected as stale");
+        float duplicateResponseDeadline = Time.realtimeSinceStartup + 3f;
+        while (ownerPreview.GetType().GetProperty("LastPlacementResult").GetValue(ownerPreview).ToString() == "Accepted"
+            && Time.realtimeSinceStartup < duplicateResponseDeadline)
+            yield return null;
+        Assert.That(ownerPreview.GetType().GetProperty("LastPlacementResult").GetValue(ownerPreview).ToString(), Is.EqualTo("StaleRequest"),
+            "The duplicate request must be rejected as stale.");
         Assert.That((double)nail.GetType().GetField("preparedDeadline", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(nail),
             Is.EqualTo(preparedDeadline), "A stale duplicate cannot reset the prepared timer.");
+
+        Assert.That((bool)statusType.GetMethod("BeginPlacementLock").Invoke(hostStatus, null), Is.True);
+        ulong networkInjuryCommitId = (ulong)statusType.GetProperty("PlacementCommitId").GetValue(hostStatus);
+        MethodInfo applyInjury = statusType.GetMethod("TryApplyCrushedHands", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That((bool)applyInjury.Invoke(hostStatus, new object[] { networkInjuryCommitId }), Is.True,
+            "The authoritative server consumes the active placement token once.");
+        yield return Until(() => statusType.GetProperty("CurrentStatus").GetValue(ownerStatus).ToString() == "CrushedHands",
+            "injury status replicated to owner");
 
         nail.GetType().GetMethod("OnSingleCarryPlacementCommitted", BindingFlags.Instance | BindingFlags.Public)
             .Invoke(remoteMirror.GetComponent(nail.GetType()), new object[] { null });
@@ -181,6 +204,13 @@ public class MountingNailStage1NetworkPlayModeTests
         yield return Until(() => lateJoin.IsConnectedClient && lateJoin.LocalClient?.PlayerObject != null
             && host.ConnectedClientsIds.Count == 3, "late join client");
         CapturePlayerCopies();
+        ulong placerPlayerNetworkId = host.ConnectedClients[owner.LocalClientId].PlayerObject.NetworkObjectId;
+        yield return Until(() => Find(lateJoin, placerPlayerNetworkId) != null, "late join placer replica");
+        NetworkObject lateJoinOwnerPlayer = Find(lateJoin, placerPlayerNetworkId);
+        yield return Until(() => statusType.GetProperty("PlacementCommitId").GetValue(
+            lateJoinOwnerPlayer.GetComponent(statusType)).Equals(networkInjuryCommitId)
+            && statusType.GetProperty("CurrentStatus").GetValue(lateJoinOwnerPlayer.GetComponent(statusType)).ToString() == "CrushedHands",
+            "late join injury status snapshot");
         yield return Until(() => Find(lateJoin, nailNetworkObject.NetworkObjectId) != null
             && State(Find(lateJoin, nailNetworkObject.NetworkObjectId).GetComponent(nail.GetType())) == "Prepared",
             "late join prepared state snapshot");
@@ -366,6 +396,7 @@ public class MountingNailStage1NetworkPlayModeTests
         System.Type interactionType = System.Type.GetType("PlayerInteractionNew, Assembly-CSharp");
         Component interaction = prefab.AddComponent(interactionType);
         prefab.AddComponent(System.Type.GetType("PlayerHealth, Assembly-CSharp"));
+        prefab.AddComponent(System.Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp"));
         prefab.AddComponent(System.Type.GetType("PlayerSingleCarryPlacementController, Assembly-CSharp"));
         prefab.AddComponent(System.Type.GetType("PlayerSingleCarryPlacementNetworkPreview, Assembly-CSharp"));
         prefab.AddComponent(System.Type.GetType("ClientNetworkTransform, Assembly-CSharp"));

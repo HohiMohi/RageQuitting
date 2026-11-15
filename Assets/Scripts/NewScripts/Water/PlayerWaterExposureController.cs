@@ -1,13 +1,16 @@
 using StarterAssets;
 using Unity.Netcode;
 using UnityEngine;
+
 [RequireComponent(typeof(PlayerHealth))]
+[RequireComponent(typeof(PlayerTemporaryStatusController))]
 public class PlayerWaterExposureController : NetworkBehaviour
 {
+    private const PlayerDomainStatusKind ExposureStatus = PlayerDomainStatusKind.WaterExposure;
+    private const PlayerDomainStatusKind UnsupportedTimerStatus = PlayerDomainStatusKind.WaterUnsupportedTimer;
+    private const PlayerDomainStatusKind ExhaustionTimerStatus = PlayerDomainStatusKind.WaterExhaustionTimer;
+
     private readonly RaycastHit[] groundProbeHits = new RaycastHit[12];
-    private readonly NetworkVariable<WaterExposureState> stateNetwork = new NetworkVariable<WaterExposureState>();
-    private readonly NetworkVariable<double> unsafeStartedAtNetwork = new NetworkVariable<double>(-1d);
-    private readonly NetworkVariable<double> exhaustionStartedAtNetwork = new NetworkVariable<double>(-1d);
     [SerializeField, Min(0.02f)] private float serverCheckInterval = 0.1f;
     [SerializeField, Min(0.05f)] private float groundProbeRadius = 0.32f;
     [SerializeField, Min(0.1f)] private float groundProbeDistance = 0.7f;
@@ -16,18 +19,41 @@ public class PlayerWaterExposureController : NetworkBehaviour
     private FirstPersonController firstPersonController;
     private DownedPlayerCarryable downedCarryable;
     private PlayerTemporaryStatusController temporaryStatusController;
-    private WaterExposureState localState;
     private float nextServerCheckTime;
-    private WaterBody currentWaterBody;
-    public WaterExposureState CurrentState => IsNetworkStateActive ? stateNetwork.Value : localState;
+    private ulong exposureInstance;
+    private ulong unsupportedTimerInstance;
+    private ulong exhaustionTimerInstance;
+
+    private bool IsNetworkStateActive => IsSpawned && NetworkManager != null && NetworkManager.IsListening;
+    private bool HasAuthority => !IsNetworkStateActive || IsServer;
+    private double CurrentServerTime => IsNetworkStateActive ? NetworkManager.ServerTime.Time : Time.timeAsDouble;
+    private PlayerTemporaryStatusEntry ExposureEntry => temporaryStatusController != null
+        ? temporaryStatusController.GetDomainStatus(ExposureStatus) : default;
+    private PlayerTemporaryStatusEntry UnsafeEntry => temporaryStatusController != null
+        ? temporaryStatusController.GetDomainStatus(UnsupportedTimerStatus) : default;
+    private PlayerTemporaryStatusEntry ExhaustionEntry => temporaryStatusController != null
+        ? temporaryStatusController.GetDomainStatus(ExhaustionTimerStatus) : default;
+
+    public WaterExposureState CurrentState => ExposureEntry.InstanceId == 0
+        ? WaterExposureState.None : (WaterExposureState)ExposureEntry.DomainData;
     public bool IsInWater => CurrentState != WaterExposureState.None;
     public bool IsInUnsafeWater => CurrentState == WaterExposureState.Unsafe || CurrentState == WaterExposureState.Exhausted;
-    public float RemainingUnsupportedTime => GetRemainingTime(unsafeStartedAtNetwork.Value, GetProfileDuration(false));
-    public float RemainingExhaustionGrace => GetRemainingTime(exhaustionStartedAtNetwork.Value, GetProfileDuration(true));
-    private bool IsNetworkStateActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
-    private double CurrentServerTime => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening
-        ? NetworkManager.Singleton.ServerTime.Time
-        : Time.timeAsDouble;
+    public float RemainingUnsupportedTime => GetRemaining(UnsafeEntry);
+    public float RemainingExhaustionGrace => GetRemaining(ExhaustionEntry);
+
+    internal void RefreshAfterRespawn()
+    {
+        if (isActiveAndEnabled && HasAuthority) EvaluateExposureState();
+    }
+
+    internal void PrepareForTumbleweedCapture()
+    {
+        exposureInstance = 0;
+        unsupportedTimerInstance = 0;
+        exhaustionTimerInstance = 0;
+        if (stamina != null) stamina.SetAuthoritativeDrainSource(StaminaDrainSource.Water, 0f);
+    }
+
     private void Awake()
     {
         health = GetComponent<PlayerHealth>();
@@ -36,210 +62,138 @@ public class PlayerWaterExposureController : NetworkBehaviour
         downedCarryable = GetComponent<DownedPlayerCarryable>();
         TryGetComponent(out temporaryStatusController);
     }
+
     private void Update()
     {
+        if (!HasAuthority) return;
         if (IsNetworkStateActive)
         {
-            if (IsServer && Time.time >= nextServerCheckTime)
-            {
-                nextServerCheckTime = Time.time + serverCheckInterval;
-                EvaluateServerExposure();
-            }
-            return;
+            if (Time.time < nextServerCheckTime) return;
+            nextServerCheckTime = Time.time + serverCheckInterval;
         }
-        EvaluateLocalExposure();
+        EvaluateExposureState();
     }
+
     private void LateUpdate()
     {
-        if ((IsNetworkStateActive && !IsOwner) || health == null || !health.IsDowned || !IsInUnsafeWater)
-        {
-            return;
-        }
-        if (downedCarryable != null && downedCarryable.IsCarried)
-        {
-            return;
-        }
-        if (!WaterBody.TryGetContaining(transform.position, out WaterBody body) || body.Profile == null)
-        {
-            return;
-        }
-        firstPersonController?.ApplyWaterFloatHeight(body.SurfaceHeight - body.Profile.DownedFloatDepth);
+        if ((IsNetworkStateActive && !IsOwner) || health == null || !health.IsDowned || !IsInUnsafeWater
+            || downedCarryable != null && downedCarryable.IsCarried) return;
+        if (!WaterBody.TryGetContaining(transform.position, out WaterBody body) || body.Profile == null) return;
+        if (firstPersonController != null)
+            firstPersonController.ApplyWaterFloatHeight(body.SurfaceHeight - body.Profile.DownedFloatDepth);
     }
-    private void EvaluateServerExposure()
+
+    private void EvaluateExposureState()
     {
-        if (temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured)
+        if (temporaryStatusController == null) TryGetComponent(out temporaryStatusController);
+        if (temporaryStatusController == null) return;
+        if (temporaryStatusController.IsTumbleweedCaptured)
         {
-            stateNetwork.Value = WaterExposureState.None;
+            SetExposure(WaterExposureState.None);
+            ClearTimer(UnsupportedTimerStatus, ref unsupportedTimerInstance);
+            ClearTimer(ExhaustionTimerStatus, ref exhaustionTimerInstance);
             if (stamina != null) stamina.SetAuthoritativeDrainSource(StaminaDrainSource.Water, 0f);
-            ResetHazardTimers(true);
             return;
         }
+
         EvaluateExposure(out WaterExposureState state, out WaterBody body);
-        currentWaterBody = body;
-        stateNetwork.Value = state;
-        ApplyHazardState(state, body, true);
-    }
-    private void EvaluateLocalExposure()
-    {
-        if (temporaryStatusController != null && temporaryStatusController.IsTumbleweedCaptured)
+        WaterBodyProfileSO profile = body != null ? body.Profile : null;
+        bool inHazard = profile != null && state != WaterExposureState.None;
+        bool canDown = inHazard && health != null && !health.IsDowned;
+        if (stamina != null) stamina.SetAuthoritativeDrainSource(StaminaDrainSource.Water,
+            canDown ? profile.StaminaDrainPerSecond : 0f);
+        if (!canDown)
         {
-            localState = WaterExposureState.None;
-            if (stamina != null) stamina.SetAuthoritativeDrainSource(StaminaDrainSource.Water, 0f);
-            ResetHazardTimers(false);
+            ClearTimer(UnsupportedTimerStatus, ref unsupportedTimerInstance);
+            ClearTimer(ExhaustionTimerStatus, ref exhaustionTimerInstance);
+            SetExposure(state);
             return;
         }
-        EvaluateExposure(out localState, out WaterBody body);
-        currentWaterBody = body;
-        ApplyHazardState(localState, body, false);
+
+        double now = CurrentServerTime;
+        bool unsafeDowningEnabled = GameplayManager.Instance == null
+            || GameplayManager.Instance.EnableUnsupportedWaterDowning;
+        bool unsupported = state == WaterExposureState.Unsafe && unsafeDowningEnabled;
+        UpdateTimer(UnsupportedTimerStatus, ref unsupportedTimerInstance, unsupported,
+            profile.UnsupportedGraceDuration, now);
+        bool exhausted = stamina != null && stamina.CurrentStamina <= 0.001f;
+        UpdateTimer(ExhaustionTimerStatus, ref exhaustionTimerInstance, exhausted,
+            profile.ExhaustionWarningDuration, now);
+
+        if (unsupported && TimerExpired(UnsafeEntry, now)
+            || exhausted && TimerExpired(ExhaustionEntry, now))
+            DownPlayer();
+        SetExposure(exhausted && state != WaterExposureState.None
+            ? WaterExposureState.Exhausted : state);
     }
+
     private void EvaluateExposure(out WaterExposureState state, out WaterBody body)
     {
         state = WaterExposureState.None;
-        if (!WaterBody.TryGetContaining(transform.position, out body) || body.Profile == null)
-        {
-            return;
-        }
+        if (!WaterBody.TryGetContaining(transform.position, out body) || body.Profile == null) return;
         WaterBodyProfileSO profile = body.Profile;
         bool supported = TryGetSupportingGround(profile, out RaycastHit hit);
         float supportDepth = supported ? Mathf.Max(0f, body.SurfaceHeight - hit.point.y) : float.PositiveInfinity;
         state = supported && supportDepth <= profile.MaximumSafeWadingDepth
-            ? WaterExposureState.Wading
-            : WaterExposureState.Unsafe;
+            ? WaterExposureState.Wading : WaterExposureState.Unsafe;
     }
+
     private bool TryGetSupportingGround(WaterBodyProfileSO profile, out RaycastHit supportHit)
     {
         supportHit = default;
         Vector3 origin = transform.position + Vector3.up * 0.5f;
-        float probeDistance = Mathf.Max(
-            groundProbeDistance,
-            profile.MaximumSafeWadingDepth + groundProbeRadius + 0.5f);
-        int hitCount = Physics.SphereCastNonAlloc(
-            origin,
-            groundProbeRadius,
-            Vector3.down,
-            groundProbeHits,
-            probeDistance,
-            profile.GroundMask,
-            QueryTriggerInteraction.Ignore);
+        float probeDistance = Mathf.Max(groundProbeDistance, profile.MaximumSafeWadingDepth + groundProbeRadius + 0.5f);
+        int hitCount = Physics.SphereCastNonAlloc(origin, groundProbeRadius, Vector3.down, groundProbeHits,
+            probeDistance, profile.GroundMask, QueryTriggerInteraction.Ignore);
         float closestDistance = float.PositiveInfinity;
         for (int i = 0; i < hitCount; i++)
         {
             RaycastHit candidate = groundProbeHits[i];
-            if (candidate.collider == null
-                || candidate.collider.transform.root == transform.root
-                || candidate.distance >= closestDistance)
-            {
-                continue;
-            }
+            if (candidate.collider == null || candidate.collider.transform.root == transform.root
+                || candidate.distance >= closestDistance) continue;
             closestDistance = candidate.distance;
             supportHit = candidate;
         }
         return closestDistance < float.PositiveInfinity;
     }
-    private void ApplyHazardState(WaterExposureState state, WaterBody body, bool networkAuthority)
+
+    private void SetExposure(WaterExposureState state)
     {
-        WaterBodyProfileSO profile = body != null ? body.Profile : null;
-        bool canApplyWaterHazard = profile != null && health != null && !health.IsDowned;
-        stamina?.SetAuthoritativeDrainSource(
-            StaminaDrainSource.Water,
-            canApplyWaterHazard && state != WaterExposureState.None ? profile.StaminaDrainPerSecond : 0f);
-        if (!canApplyWaterHazard)
+        if (temporaryStatusController == null) return;
+        if (state == WaterExposureState.None)
         {
-            ResetHazardTimers(networkAuthority);
+            temporaryStatusController.ClearDomainStatus(ExposureStatus, ref exposureInstance);
             return;
         }
-        double now = CurrentServerTime;
-        bool unsupportedWaterDowningEnabled = GameplayManager.Instance == null
-            || GameplayManager.Instance.EnableUnsupportedWaterDowning;
-        if (state == WaterExposureState.Unsafe && unsupportedWaterDowningEnabled)
-        {
-            SetTimerIfNeeded(unsafeStartedAtNetwork, ref localUnsafeStartedAt, now, networkAuthority);
-            if (GetElapsed(unsafeStartedAtNetwork.Value, localUnsafeStartedAt, now, networkAuthority) >= profile.UnsupportedGraceDuration)
-            {
-                DownPlayer();
-                return;
-            }
-        }
-        else
-        {
-            ClearTimer(unsafeStartedAtNetwork, ref localUnsafeStartedAt, networkAuthority);
-        }
-        if (stamina != null && stamina.CurrentStamina <= 0.001f && state != WaterExposureState.None)
-        {
-            if (networkAuthority)
-            {
-                stateNetwork.Value = WaterExposureState.Exhausted;
-            }
-            else
-            {
-                localState = WaterExposureState.Exhausted;
-            }
-            SetTimerIfNeeded(exhaustionStartedAtNetwork, ref localExhaustionStartedAt, now, networkAuthority);
-            if (GetElapsed(exhaustionStartedAtNetwork.Value, localExhaustionStartedAt, now, networkAuthority) >= profile.ExhaustionWarningDuration)
-            {
-                DownPlayer();
-            }
-        }
-        else
-        {
-            ClearTimer(exhaustionStartedAtNetwork, ref localExhaustionStartedAt, networkAuthority);
-        }
+        temporaryStatusController.SetDomainStatus(ExposureStatus, ref exposureInstance, 0d, 0f, (int)state);
     }
-    private double localUnsafeStartedAt = -1d;
-    private double localExhaustionStartedAt = -1d;
+
+    private void UpdateTimer(PlayerDomainStatusKind kind, ref ulong instance, bool active, float duration, double now)
+    {
+        if (!active) { ClearTimer(kind, ref instance); return; }
+        PlayerTemporaryStatusEntry entry = temporaryStatusController.GetDomainStatus(kind);
+        double startedAt = entry.InstanceId == instance && instance != 0 ? entry.DomainStartedAt : now;
+        temporaryStatusController.SetDomainStatus(kind, ref instance, startedAt, Mathf.Max(0f, duration), 0);
+    }
+
+    private void ClearTimer(PlayerDomainStatusKind kind, ref ulong instance)
+    {
+        if (temporaryStatusController != null) temporaryStatusController.ClearDomainStatus(kind, ref instance);
+    }
+
+    private static bool TimerExpired(PlayerTemporaryStatusEntry entry, double now) =>
+        entry.InstanceId != 0 && now >= entry.DomainStartedAt + Mathf.Max(0f, entry.DomainValue);
+
+    private float GetRemaining(PlayerTemporaryStatusEntry entry) => entry.InstanceId == 0
+        ? 0f : Mathf.Max(0f, entry.DomainValue - (float)(CurrentServerTime - entry.DomainStartedAt));
+
     private void DownPlayer()
     {
-        if (health != null && !health.IsDowned)
-        {
-            health.DamageReceived(Mathf.Max(health.CurrentHealth, health.MaxHealth));
-        }
-    }
-    private void ResetHazardTimers(bool networkAuthority)
-    {
-        ClearTimer(unsafeStartedAtNetwork, ref localUnsafeStartedAt, networkAuthority);
-        ClearTimer(exhaustionStartedAtNetwork, ref localExhaustionStartedAt, networkAuthority);
-    }
-    private void SetTimerIfNeeded(NetworkVariable<double> networkTimer, ref double localTimer, double now, bool networkAuthority)
-    {
-        if (networkAuthority)
-        {
-            if (networkTimer.Value < 0d)
-            {
-                networkTimer.Value = now;
-            }
-        }
-        else if (localTimer < 0d)
-        {
-            localTimer = now;
-        }
-    }
-    private void ClearTimer(NetworkVariable<double> networkTimer, ref double localTimer, bool networkAuthority)
-    {
-        if (networkAuthority)
-        {
-            networkTimer.Value = -1d;
-        }
-        else
-        {
-            localTimer = -1d;
-        }
-    }
-    private static double GetElapsed(double networkTimer, double localTimer, double now, bool networkAuthority)
-    {
-        double startedAt = networkAuthority ? networkTimer : localTimer;
-        return startedAt < 0d ? 0d : now - startedAt;
-    }
-    private float GetRemainingTime(double startedAt, float duration)
-    {
-        return startedAt < 0d ? duration : Mathf.Max(0f, duration - (float)(CurrentServerTime - startedAt));
-    }
-    private float GetProfileDuration(bool exhaustion)
-    {
-        WaterBodyProfileSO profile = currentWaterBody != null ? currentWaterBody.Profile : null;
-        if (profile == null)
-        {
-            return 0f;
-        }
-        return exhaustion ? profile.ExhaustionWarningDuration : profile.UnsupportedGraceDuration;
+        if (health == null || health.IsDowned) return;
+        health.DamageReceived(Mathf.Max(health.CurrentHealth, health.MaxHealth));
+        if (!health.IsDowned) return;
+        ClearTimer(UnsupportedTimerStatus, ref unsupportedTimerInstance);
+        ClearTimer(ExhaustionTimerStatus, ref exhaustionTimerInstance);
+        if (stamina != null) stamina.SetAuthoritativeDrainSource(StaminaDrainSource.Water, 0f);
     }
 }

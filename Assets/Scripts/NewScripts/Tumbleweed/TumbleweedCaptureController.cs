@@ -15,7 +15,7 @@ public sealed class TumbleweedCaptureController : NetworkBehaviour
     private bool[] occupiedSlots;
     private TumbleweedMovement movement;
     private bool IsAuthority => IsSpawned ? IsServer
-        : NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening;
+        : NetworkManager == null || !NetworkManager.IsListening;
     private double Now => IsSpawned && NetworkManager != null && NetworkManager.IsListening
         ? NetworkManager.ServerTime.Time : Time.timeAsDouble;
     public int CurrentCaptiveCount => captives.Count;
@@ -53,6 +53,7 @@ public sealed class TumbleweedCaptureController : NetworkBehaviour
         public Vector3 offset;
         public Quaternion relativeRotation;
         public int slot;
+        public ulong episodeId;
     }
 
     private void Awake()
@@ -69,7 +70,11 @@ public sealed class TumbleweedCaptureController : NetworkBehaviour
         foreach (var pair in captives)
         {
             Captive c = pair.Value;
-            if (c.target == null || Now >= c.releaseAt) { release ??= new(); release.Add(pair.Key); continue; }
+            if (c.target == null) { release ??= new(); release.Add(pair.Key); continue; }
+            if (c.status != null && !c.status.IsTumbleweedCaptureEpisode(c.episodeId))
+            { release ??= new(); release.Add(pair.Key); continue; }
+            double deadline = c.status != null ? c.status.TumbleweedReleaseAt : c.releaseAt;
+            if (Now >= deadline) { release ??= new(); release.Add(pair.Key); continue; }
             Vector3 position = transform.position + transform.rotation * c.offset;
             Quaternion rotation = transform.rotation * c.relativeRotation;
             c.target.SetPositionAndRotation(position, rotation);
@@ -204,11 +209,8 @@ public sealed class TumbleweedCaptureController : NetworkBehaviour
             Restore(c);
             return;
         }
-        if (status != null && !status.BeginTumbleweedCapture(weedId, slot, captureDuration, offset, c.relativeRotation))
-        {
-            Restore(c);
-            return;
-        }
+        if (status != null && !status.BeginTumbleweedCapture(weedId, slot, captureDuration, offset, c.relativeRotation, out c.episodeId))
+        { Restore(c); return; }
         if (tool != null) tool.SetTumbleweedCaptured(true, weedId, slot, c.releaseAt);
         if (c.body != null && !c.body.isKinematic) c.body.isKinematic = true;
         if (health != null && health.IsDowned) health.PauseRespawnTimerForTumbleweedCapture();
@@ -222,6 +224,7 @@ public sealed class TumbleweedCaptureController : NetworkBehaviour
         captives.Remove(key);
         occupiedSlots[c.slot] = false;
         if (c.target == null) return;
+        if (c.status != null && c.status.TumbleweedCaptureEpisodeId != c.episodeId) return;
         Vector3 horizontalRight = Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized;
         if (horizontalRight.sqrMagnitude < 0.01f) horizontalRight = Vector3.right;
         Vector3 desired = transform.position + horizontalRight * 1.2f + Vector3.up * 1.05f;
@@ -229,11 +232,9 @@ public sealed class TumbleweedCaptureController : NetworkBehaviour
         Quaternion releaseRotation = c.lastSafeRotation;
         c.target.SetPositionAndRotation(position, releaseRotation);
         Restore(c);
-        if (c.status != null)
-        {
-            c.status.EndTumbleweedCapture(releaseImmunity);
-            c.status.ApplyTumbleweedReleasePose(position, releaseRotation, Vector3.up * 1.1f);
-        }
+        bool statusCompleted = c.status == null || c.status.CompleteTumbleweedCapture(c.episodeId,
+            releaseImmunity, position, releaseRotation, Vector3.up * 1.1f);
+        if (!statusCompleted) return;
         if (c.health != null) c.health.ResumeRespawnTimerAfterTumbleweedCapture();
         if (c.tool != null) c.tool.SetTumbleweedCaptured(false, ulong.MaxValue, -1, 0d);
         if (c.tool != null) c.tool.SetTumbleweedReleaseImmunity(releaseImmunity);
