@@ -632,6 +632,7 @@ public class PlayerHealth : NetworkBehaviour, IDamageable, IInteractableNew
         }
 
         transform.SetPositionAndRotation(position, rotation);
+        if (TryGetComponent(out PlayerMudStatusController mudStatus)) mudStatus.ResetMudPositionSample();
 
         if (wasCharacterControllerEnabled)
         {

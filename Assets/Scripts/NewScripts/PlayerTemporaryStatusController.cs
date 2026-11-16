@@ -15,6 +15,7 @@ internal enum PlayerDomainStatusKind : int
     WaterExposure = -1001,
     WaterUnsupportedTimer = -1002,
     WaterExhaustionTimer = -1003,
+    MudSoiling = -3001,
     ConcreteTrap = -2001,
     TumbleweedCapture = -2002,
     TumbleweedImmunity = -2003
@@ -224,6 +225,40 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
     public float PlacementLockDurationSeconds => NormalizeDuration(placementLockDurationSeconds);
     public float CrushedHandsDurationSeconds => NormalizeDuration(crushedHandsDurationSeconds);
     public float MovementMultiplier => GetMovementMultiplier();
+    public float MudAmount => Mathf.Clamp01(GetDomainStatus(PlayerDomainStatusKind.MudSoiling).DomainValue);
+    internal bool SetMudAmount(float amount, float movementMultiplier)
+    {
+        if (!HasAuthority()) return false;
+        amount = float.IsNaN(amount) || float.IsInfinity(amount) ? 0f : Mathf.Clamp01(amount);
+        PlayerTemporaryStatusSnapshot current = CurrentSnapshot;
+        int index = FindEntry(current.Entries, (int)PlayerDomainStatusKind.MudSoiling);
+        if (amount <= 0f)
+        {
+            if (index < 0) return true;
+            current.Entries.RemoveAt(index);
+            WriteSnapshotMutation(current);
+            return true;
+        }
+        PlayerTemporaryStatusEntry entry = index >= 0 ? current.Entries[index] : default;
+        if (index < 0)
+        {
+            if (current.Entries.Length >= GetDomainCapacityLimit(current.Entries)) return false;
+            nextStatusInstanceId = Math.Max(nextStatusInstanceId, Math.Max(current.Revision, highestAppliedRevision)) + 1;
+            entry.StatusId = (int)PlayerDomainStatusKind.MudSoiling;
+            entry.InstanceId = nextStatusInstanceId;
+            entry.HasEvent = true;
+        }
+        entry.HasDuration = false;
+        entry.MovementMultiplier = NormalizeMultiplier(movementMultiplier);
+        entry.DomainValue = amount;
+        entry.BlocksControls = false;
+        entry.BlocksActions = false;
+        if (index >= 0 && current.Entries[index].Equals(entry)) return true;
+        if (index >= 0) current.Entries[index] = entry;
+        else current.Entries.Add(entry);
+        WriteSnapshotMutation(current);
+        return true;
+    }
     public ulong PlacementCommitId => CurrentSnapshot.PlacementCommitId;
     private bool HasActiveStatus(PlayerTemporaryStatusKind kind) => IsSnapshotActive(CurrentSnapshot, (int)kind);
     private bool HasActiveStatus(PlayerDomainStatusKind kind) => IsSnapshotActive(CurrentSnapshot, (int)kind);
@@ -345,7 +380,7 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
         }
         else
         {
-            if (entries.Length >= entries.Capacity - 1) return false;
+            if (entries.Length >= GetDomainCapacityLimit(entries)) return false;
             entries.Add(entry);
         }
         current.Entries = entries;
@@ -655,6 +690,7 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
     public bool ResetTemporaryStatuses()
     {
         if (!HasAuthority()) return false;
+        if (TryGetComponent(out PlayerMudStatusController mudStatus)) mudStatus.ResetMudPositionSample();
         PlayerTemporaryStatusSnapshot current = CurrentSnapshot;
         FixedList512Bytes<PlayerTemporaryStatusEntry> entries = current.Entries;
         for (int i = entries.Length - 1; i >= 0; i--)
@@ -694,7 +730,12 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
         return ApplySnapshot(snapshot);
     }
 
-    private bool HasAuthority() => !IsNetworkStateActive || IsServer;
+    private bool HasAuthority()
+    {
+        NetworkManager manager = NetworkManager != null ? NetworkManager : Unity.Netcode.NetworkManager.Singleton;
+        if (IsSpawned) return manager != null && manager.IsListening && IsServer;
+        return manager == null || !manager.IsListening;
+    }
 
     private void ReplicatedStatusChanged(PlayerTemporaryStatusSnapshot previous,
         PlayerTemporaryStatusSnapshot current)
@@ -793,6 +834,13 @@ public sealed class PlayerTemporaryStatusController : NetworkBehaviour
         for (int i = 0; i < entries.Length; i++)
             if (entries[i].StatusId == statusId) return i;
         return -1;
+    }
+
+    private static int GetDomainCapacityLimit(FixedList512Bytes<PlayerTemporaryStatusEntry> entries)
+    {
+        bool hasProductionStatus = FindEntry(entries, (int)PlayerTemporaryStatusKind.PlacementLock) >= 0
+            || FindEntry(entries, (int)PlayerTemporaryStatusKind.CrushedHands) >= 0;
+        return hasProductionStatus ? entries.Capacity : Math.Max(0, entries.Capacity - 1);
     }
 
     private static void RemoveEntry(ref FixedList512Bytes<PlayerTemporaryStatusEntry> entries, int statusId)

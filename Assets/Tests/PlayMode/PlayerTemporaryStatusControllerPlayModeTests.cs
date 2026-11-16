@@ -315,9 +315,14 @@ public class PlayerTemporaryStatusControllerPlayModeTests
             Component controller = player.AddComponent(ControllerType);
             Type healthType = Type.GetType("PlayerHealth, Assembly-CSharp");
             Component health = player.AddComponent(healthType);
+            Type mudType = Type.GetType("PlayerMudStatusController, Assembly-CSharp");
+            Component mud = player.AddComponent(mudType);
+            mudType.GetMethod("SetAmount", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(mud, new object[] { 0.5f });
             ControllerType.GetMethod("BeginPlacementLock").Invoke(controller, null);
             healthType.GetMethod("RestoreFullHealth").Invoke(health, null);
             Assert.That(ControllerType.GetProperty("CurrentStatus").GetValue(controller).ToString(), Is.EqualTo("PlacementLock"));
+            Assert.That((float)mudType.GetProperty("Amount").GetValue(mud), Is.EqualTo(0.5f).Within(0.0001f),
+                "Health restoration during ally revive preserves the independent mud entry.");
 
             ulong placementCommitId = (ulong)ControllerType.GetProperty("PlacementCommitId").GetValue(controller);
             MethodInfo applyInjury = ControllerType.GetMethod("TryApplyCrushedHands", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -328,6 +333,14 @@ public class PlayerTemporaryStatusControllerPlayModeTests
 
             healthType.GetMethod("RespawnLocal", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(health, null);
             Assert.That(ControllerType.GetProperty("CurrentStatus").GetValue(controller).ToString(), Is.EqualTo("None"));
+            Assert.That((float)mudType.GetProperty("Amount").GetValue(mud), Is.Zero,
+                "Full respawn clears mud while a normal health restore leaves it intact.");
+            mudType.GetField("hasSample", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(mud, true);
+            mudType.GetMethod("SetAmount", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(mud, new object[] { 0.2f });
+            healthType.GetMethod("RespawnLocal", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(health, null);
+            Assert.That(mudType.GetField("hasSample", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(mud), Is.EqualTo(false),
+                "Respawn resets the movement baseline so the respawn displacement is not counted.");
+            Assert.That((float)mudType.GetProperty("Amount").GetValue(mud), Is.Zero);
 
             MethodInfo beginCapture = ControllerType.GetMethod("BeginTumbleweedCapture", BindingFlags.Instance | BindingFlags.NonPublic,
                 null, new[] { typeof(ulong), typeof(int), typeof(float), typeof(Vector3), typeof(Quaternion), typeof(ulong).MakeByRefType() }, null);

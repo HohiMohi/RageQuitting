@@ -1,0 +1,3120 @@
+fileFormatVersion: 2
+guid: 07ec51e483c6abf418b58ec339fa10de
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -14939343627687411
+    second: MudScreenOverlay_0
+  - first:
+      213: 6876789024631356236
+    second: MudScreenOverlay_1
+  - first:
+      213: 3514390220116545402
+    second: MudScreenOverlay_2
+  - first:
+      213: 7122683667181906140
+    second: MudScreenOverlay_3
+  - first:
+      213: 726568157970394085
+    second: MudScreenOverlay_4
+  - first:
+      213: -4798908285981538733
+    second: MudScreenOverlay_5
+  - first:
+      213: -6203249060370618654
+    second: MudScreenOverlay_6
+  - first:
+      213: 6597354437572361390
+    second: MudScreenOverlay_7
+  - first:
+      213: -8808685860165892439
+    second: MudScreenOverlay_8
+  - first:
+      213: 3072905757623966504
+    second: MudScreenOverlay_9
+  - first:
+      213: -1596197608403417520
+    second: MudScreenOverlay_10
+  - first:
+      213: -3249434120503857204
+    second: MudScreenOverlay_11
+  - first:
+      213: -9089412773201887786
+    second: MudScreenOverlay_12
+  - first:
+      213: 8695293780436955632
+    second: MudScreenOverlay_13
+  - first:
+      213: -7503870777991505408
+    second: MudScreenOverlay_14
+  - first:
+      213: -8842143907790200311
+    second: MudScreenOverlay_15
+  - first:
+      213: -3185029730607552238
+    second: MudScreenOverlay_16
+  - first:
+      213: -8449693373570355838
+    second: MudScreenOverlay_17
+  - first:
+      213: 261028077680337316
+    second: MudScreenOverlay_18
+  - first:
+      213: 2554648021269885524
+    second: MudScreenOverlay_19
+  - first:
+      213: 6315153475116528867
+    second: MudScreenOverlay_20
+  - first:
+      213: 55380902509802415
+    second: MudScreenOverlay_21
+  - first:
+      213: 2813858875987950241
+    second: MudScreenOverlay_22
+  - first:
+      213: -1539764442524312932
+    second: MudScreenOverlay_23
+  - first:
+      213: -4381058671182049030
+    second: MudScreenOverlay_24
+  - first:
+      213: 9106201991780952934
+    second: MudScreenOverlay_25
+  - first:
+      213: 6697811205225908523
+    second: MudScreenOverlay_26
+  - first:
+      213: -7402763903780659275
+    second: MudScreenOverlay_27
+  - first:
+      213: 8454928561263661741
+    second: MudScreenOverlay_28
+  - first:
+      213: 8494165037070193362
+    second: MudScreenOverlay_29
+  - first:
+      213: 5566773852265647480
+    second: MudScreenOverlay_30
+  - first:
+      213: 162211232437175548
+    second: MudScreenOverlay_31
+  - first:
+      213: -8099485227364026565
+    second: MudScreenOverlay_32
+  - first:
+      213: -1034432451508873309
+    second: MudScreenOverlay_33
+  - first:
+      213: 1615405134823369495
+    second: MudScreenOverlay_34
+  - first:
+      213: 1267371753058339178
+    second: MudScreenOverlay_35
+  - first:
+      213: -1736199395679797296
+    second: MudScreenOverlay_36
+  - first:
+      213: -4823881922495160443
+    second: MudScreenOverlay_37
+  - first:
+      213: 1959898812588648630
+    second: MudScreenOverlay_38
+  - first:
+      213: -4578006338442700502
+    second: MudScreenOverlay_39
+  - first:
+      213: -221366163750883477
+    second: MudScreenOverlay_40
+  - first:
+      213: 5814248453453766751
+    second: MudScreenOverlay_41
+  - first:
+      213: -3337521014952010712
+    second: MudScreenOverlay_42
+  - first:
+      213: 6375255303002996110
+    second: MudScreenOverlay_43
+  - first:
+      213: 5902759034107066737
+    second: MudScreenOverlay_44
+  - first:
+      213: -5007863454490963486
+    second: MudScreenOverlay_45
+  - first:
+      213: 3968462260747212680
+    second: MudScreenOverlay_46
+  - first:
+      213: 4026861154983658208
+    second: MudScreenOverlay_47
+  - first:
+      213: 2284617468663063160
+    second: MudScreenOverlay_48
+  - first:
+      213: 938619877713921285
+    second: MudScreenOverlay_49
+  - first:
+      213: -2829844803276238410
+    second: MudScreenOverlay_50
+  - first:
+      213: -3345458424214971643
+    second: MudScreenOverlay_51
+  - first:
+      213: -2706631428350618598
+    second: MudScreenOverlay_52
+  - first:
+      213: 3907431649188007961
+    second: MudScreenOverlay_53
+  - first:
+      213: -1993660806381579126
+    second: MudScreenOverlay_54
+  - first:
+      213: -472013708141981177
+    second: MudScreenOverlay_55
+  - first:
+      213: -7831806069457423375
+    second: MudScreenOverlay_56
+  - first:
+      213: 563785296117145832
+    second: MudScreenOverlay_57
+  - first:
+      213: 6000984622180043167
+    second: MudScreenOverlay_58
+  - first:
+      213: 518294654855171639
+    second: MudScreenOverlay_59
+  - first:
+      213: -5054727625982840922
+    second: MudScreenOverlay_60
+  - first:
+      213: -4010614782067607637
+    second: MudScreenOverlay_61
+  - first:
+      213: 7379029152458939173
+    second: MudScreenOverlay_62
+  - first:
+      213: -3698176393502713722
+    second: MudScreenOverlay_63
+  - first:
+      213: -1480122467728433330
+    second: MudScreenOverlay_64
+  - first:
+      213: -703557360987881642
+    second: MudScreenOverlay_65
+  - first:
+      213: 7008770805748340797
+    second: MudScreenOverlay_66
+  - first:
+      213: -7064467561583306177
+    second: MudScreenOverlay_67
+  - first:
+      213: -430889498741186845
+    second: MudScreenOverlay_68
+  - first:
+      213: -8126399936000290847
+    second: MudScreenOverlay_69
+  - first:
+      213: 6713237713245443537
+    second: MudScreenOverlay_70
+  - first:
+      213: -1164596299511456092
+    second: MudScreenOverlay_71
+  - first:
+      213: -7104114651931568714
+    second: MudScreenOverlay_72
+  - first:
+      213: -3032616071619006201
+    second: MudScreenOverlay_73
+  - first:
+      213: -3395008699719105691
+    second: MudScreenOverlay_74
+  - first:
+      213: -6368256288322130505
+    second: MudScreenOverlay_75
+  - first:
+      213: 6937367092162794894
+    second: MudScreenOverlay_76
+  - first:
+      213: 2141896228357079159
+    second: MudScreenOverlay_77
+  - first:
+      213: -9064039250549757748
+    second: MudScreenOverlay_78
+  - first:
+      213: -4974681118423216224
+    second: MudScreenOverlay_79
+  - first:
+      213: -8888944892943089610
+    second: MudScreenOverlay_80
+  - first:
+      213: 5906985720198463015
+    second: MudScreenOverlay_81
+  - first:
+      213: 1747950667239796151
+    second: MudScreenOverlay_82
+  - first:
+      213: -1620547115269970868
+    second: MudScreenOverlay_83
+  - first:
+      213: 4187421821086943602
+    second: MudScreenOverlay_84
+  - first:
+      213: 7382014861983571751
+    second: MudScreenOverlay_85
+  - first:
+      213: 4741410750042937710
+    second: MudScreenOverlay_86
+  - first:
+      213: 3084193679782724406
+    second: MudScreenOverlay_87
+  - first:
+      213: 1075573337256558573
+    second: MudScreenOverlay_88
+  - first:
+      213: 3787050483039279706
+    second: MudScreenOverlay_89
+  - first:
+      213: 4692264527946366806
+    second: MudScreenOverlay_90
+  - first:
+      213: -6400443457531686462
+    second: MudScreenOverlay_91
+  - first:
+      213: -671237316996662690
+    second: MudScreenOverlay_92
+  - first:
+      213: -2594423798930908769
+    second: MudScreenOverlay_93
+  - first:
+      213: 2223345028658494394
+    second: MudScreenOverlay_94
+  - first:
+      213: -8896761222663702175
+    second: MudScreenOverlay_95
+  - first:
+      213: 6258702642258595561
+    second: MudScreenOverlay_96
+  - first:
+      213: -40078223935926533
+    second: MudScreenOverlay_97
+  - first:
+      213: -9154915775241287179
+    second: MudScreenOverlay_98
+  - first:
+      213: 3343143376538162381
+    second: MudScreenOverlay_99
+  - first:
+      213: -9064817586590422373
+    second: MudScreenOverlay_100
+  - first:
+      213: -7742144121432133448
+    second: MudScreenOverlay_101
+  - first:
+      213: 7841475861544850305
+    second: MudScreenOverlay_102
+  - first:
+      213: -5412980958096215776
+    second: MudScreenOverlay_103
+  - first:
+      213: -5355615527433712263
+    second: MudScreenOverlay_104
+  - first:
+      213: -6374696148943675933
+    second: MudScreenOverlay_105
+  - first:
+      213: 146385916423400592
+    second: MudScreenOverlay_106
+  - first:
+      213: -5979763290233430218
+    second: MudScreenOverlay_107
+  - first:
+      213: -5719539089471512413
+    second: MudScreenOverlay_108
+  - first:
+      213: -7183303501209058137
+    second: MudScreenOverlay_109
+  - first:
+      213: -8658618888067829741
+    second: MudScreenOverlay_110
+  - first:
+      213: 4559977241992242791
+    second: MudScreenOverlay_111
+  - first:
+      213: -6186031808159831481
+    second: MudScreenOverlay_112
+  - first:
+      213: 7241105241754394263
+    second: MudScreenOverlay_113
+  - first:
+      213: 4148862726727618841
+    second: MudScreenOverlay_114
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: MudScreenOverlay_0
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 818
+        width: 112
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0ae4e10fbceacff0800000000000000
+      internalID: -14939343627687411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_1
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 759
+        width: 114
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4bf470ee234f6f50800000000000000
+      internalID: 6876789024631356236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_2
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 834
+        width: 16
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7f4720094f95c030800000000000000
+      internalID: 3514390220116545402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_3
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 680
+        width: 107
+        height: 117
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd8aad5ce0bd8d260800000000000000
+      internalID: 7122683667181906140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_4
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 779
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5eb6fe0e3e9451a00800000000000000
+      internalID: 726568157970394085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_5
+      rect:
+        serializedVersion: 2
+        x: 215
+        y: 778
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3564460f65ad66db0800000000000000
+      internalID: -4798908285981538733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_6
+      rect:
+        serializedVersion: 2
+        x: 241
+        y: 761
+        width: 136
+        height: 133
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e6655788d1a9e9a0800000000000000
+      internalID: -6203249060370618654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_7
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 0
+        width: 761
+        height: 907
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eacf8dc18e28e8b50800000000000000
+      internalID: 6597354437572361390
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_8
+      rect:
+        serializedVersion: 2
+        x: 951
+        y: 731
+        width: 163
+        height: 202
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a64ece61e241c580800000000000000
+      internalID: -8808685860165892439
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_9
+      rect:
+        serializedVersion: 2
+        x: 1007
+        y: 761
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82bdd6f618725aa20800000000000000
+      internalID: 3072905757623966504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_10
+      rect:
+        serializedVersion: 2
+        x: 1029
+        y: 784
+        width: 13
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05649cf6bba29d9e0800000000000000
+      internalID: -1596197608403417520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_11
+      rect:
+        serializedVersion: 2
+        x: 1067
+        y: 829
+        width: 15
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ccf655632e0b7e2d0800000000000000
+      internalID: -3249434120503857204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_12
+      rect:
+        serializedVersion: 2
+        x: 1115
+        y: 407
+        width: 557
+        height: 534
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dd37649d3bebd180800000000000000
+      internalID: -9089412773201887786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_13
+      rect:
+        serializedVersion: 2
+        x: 1139
+        y: 832
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f1bb98af93eba870800000000000000
+      internalID: 8695293780436955632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_14
+      rect:
+        serializedVersion: 2
+        x: 1170
+        y: 790
+        width: 29
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00ad16dd845ecd790800000000000000
+      internalID: -7503870777991505408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_15
+      rect:
+        serializedVersion: 2
+        x: 309
+        y: 725
+        width: 21
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 902e74ba6f46a4580800000000000000
+      internalID: -8842143907790200311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_16
+      rect:
+        serializedVersion: 2
+        x: 946
+        y: 731
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2192414c5508cc3d0800000000000000
+      internalID: -3185029730607552238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_17
+      rect:
+        serializedVersion: 2
+        x: 1021
+        y: 705
+        width: 25
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28ded5725a8acba80800000000000000
+      internalID: -8449693373570355838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_18
+      rect:
+        serializedVersion: 2
+        x: 1051
+        y: 682
+        width: 55
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a12a8657ab5f9300800000000000000
+      internalID: 261028077680337316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_19
+      rect:
+        serializedVersion: 2
+        x: 1131
+        y: 727
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45232f917dee37320800000000000000
+      internalID: 2554648021269885524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_20
+      rect:
+        serializedVersion: 2
+        x: 1147
+        y: 734
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e4f46260aee3a750800000000000000
+      internalID: 6315153475116528867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_21
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 703
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa3ff6d23a0c4c000800000000000000
+      internalID: 55380902509802415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_22
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 692
+        width: 74
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1aa775f3db5dc0720800000000000000
+      internalID: 2813858875987950241
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_23
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 715
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9a9f85c568a1aae0800000000000000
+      internalID: -1539764442524312932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_24
+      rect:
+        serializedVersion: 2
+        x: 946
+        y: 721
+        width: 6
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af09c04b95a5333c0800000000000000
+      internalID: -4381058671182049030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_25
+      rect:
+        serializedVersion: 2
+        x: 1182
+        y: 713
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66bee0df67abf5e70800000000000000
+      internalID: 9106201991780952934
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_26
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 680
+        width: 56
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b290f1cfdc763fc50800000000000000
+      internalID: 6697811205225908523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_27
+      rect:
+        serializedVersion: 2
+        x: 342
+        y: 697
+        width: 11
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bfd1177379144990800000000000000
+      internalID: -7402763903780659275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_28
+      rect:
+        serializedVersion: 2
+        x: 788
+        y: 705
+        width: 11
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da2dc67fab0f55570800000000000000
+      internalID: 8454928561263661741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_29
+      rect:
+        serializedVersion: 2
+        x: 930
+        y: 591
+        width: 128
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d29c12e81651e570800000000000000
+      internalID: 8494165037070193362
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_30
+      rect:
+        serializedVersion: 2
+        x: 1151
+        y: 682
+        width: 32
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87d0a391357214d40800000000000000
+      internalID: 5566773852265647480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_31
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 593
+        width: 110
+        height: 111
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf40ff7a14a404200800000000000000
+      internalID: 162211232437175548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_32
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 685
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b37717f3919d89f80800000000000000
+      internalID: -8099485227364026565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_33
+      rect:
+        serializedVersion: 2
+        x: 110
+        y: 687
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a75daf7a25f4a1f0800000000000000
+      internalID: -1034432451508873309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_34
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 680
+        width: 13
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71b2d7d49621b6610800000000000000
+      internalID: 1615405134823369495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_35
+      rect:
+        serializedVersion: 2
+        x: 408
+        y: 680
+        width: 9
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a69086305eb969110800000000000000
+      internalID: 1267371753058339178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_36
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 445
+        width: 355
+        height: 239
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0dff14139d7c7e7e0800000000000000
+      internalID: -1736199395679797296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_37
+      rect:
+        serializedVersion: 2
+        x: 426
+        y: 607
+        width: 27
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58f5f3313f02e0db0800000000000000
+      internalID: -4823881922495160443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_38
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 657
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b86e080695f23b10800000000000000
+      internalID: 1959898812588648630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_39
+      rect:
+        serializedVersion: 2
+        x: 1076
+        y: 645
+        width: 36
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a29d2a19d77a770c0800000000000000
+      internalID: -4578006338442700502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_40
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 632
+        width: 16
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6f665c95ac8decf0800000000000000
+      internalID: -221366163750883477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_41
+      rect:
+        serializedVersion: 2
+        x: 514
+        y: 607
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f50e9f7c92c50b050800000000000000
+      internalID: 5814248453453766751
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_42
+      rect:
+        serializedVersion: 2
+        x: 536
+        y: 607
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82c5261e15ebea1d0800000000000000
+      internalID: -3337521014952010712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_43
+      rect:
+        serializedVersion: 2
+        x: 924
+        y: 607
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8d3be7abe4797850800000000000000
+      internalID: 6375255303002996110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_44
+      rect:
+        serializedVersion: 2
+        x: 924
+        y: 599
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 179fdae3110dae150800000000000000
+      internalID: 5902759034107066737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_45
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 583
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e1d76f88be708ab0800000000000000
+      internalID: -5007863454490963486
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_46
+      rect:
+        serializedVersion: 2
+        x: 1139
+        y: 575
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 887916c766fc21730800000000000000
+      internalID: 3968462260747212680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_47
+      rect:
+        serializedVersion: 2
+        x: 1143
+        y: 577
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e2ce9e92e842e730800000000000000
+      internalID: 4026861154983658208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_48
+      rect:
+        serializedVersion: 2
+        x: 969
+        y: 495
+        width: 81
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 872605bbb7794bf10800000000000000
+      internalID: 2284617468663063160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_49
+      rect:
+        serializedVersion: 2
+        x: 1043
+        y: 488
+        width: 63
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50542464ec5a60d00800000000000000
+      internalID: 938619877713921285
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_50
+      rect:
+        serializedVersion: 2
+        x: 1131
+        y: 567
+        width: 12
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b11c33052f5ab8d0800000000000000
+      internalID: -2829844803276238410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_51
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 524
+        width: 35
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50b14d5c94b8291d0800000000000000
+      internalID: -3345458424214971643
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_52
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 542
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a14d0476e0d107ad0800000000000000
+      internalID: -2706631428350618598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_53
+      rect:
+        serializedVersion: 2
+        x: 737
+        y: 532
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91058f9e16cf93630800000000000000
+      internalID: 3907431649188007961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_54
+      rect:
+        serializedVersion: 2
+        x: 742
+        y: 532
+        width: 13
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a84d1093f081554e0800000000000000
+      internalID: -1993660806381579126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_55
+      rect:
+        serializedVersion: 2
+        x: 981
+        y: 534
+        width: 19
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 702151588021379f0800000000000000
+      internalID: -472013708141981177
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_56
+      rect:
+        serializedVersion: 2
+        x: 1021
+        y: 531
+        width: 11
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f3fd30efd5df4390800000000000000
+      internalID: -7831806069457423375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_57
+      rect:
+        serializedVersion: 2
+        x: 1029
+        y: 531
+        width: 9
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e0a6a06db7f2d700800000000000000
+      internalID: 563785296117145832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_58
+      rect:
+        serializedVersion: 2
+        x: 1145
+        y: 540
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f998f9328b7c74350800000000000000
+      internalID: 6000984622180043167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_59
+      rect:
+        serializedVersion: 2
+        x: 1472
+        y: 518
+        width: 44
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73e40a71e3a513700800000000000000
+      internalID: 518294654855171639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_60
+      rect:
+        serializedVersion: 2
+        x: 577
+        y: 478
+        width: 29
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6af60f851000ad9b0800000000000000
+      internalID: -5054727625982840922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_61
+      rect:
+        serializedVersion: 2
+        x: 1091
+        y: 516
+        width: 25
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba7fde7da1f6758c0800000000000000
+      internalID: -4010614782067607637
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_62
+      rect:
+        serializedVersion: 2
+        x: 1123
+        y: 508
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52b119b1be3976660800000000000000
+      internalID: 7379029152458939173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_63
+      rect:
+        serializedVersion: 2
+        x: 1155
+        y: 512
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6881984f9207dacc0800000000000000
+      internalID: -3698176393502713722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_64
+      rect:
+        serializedVersion: 2
+        x: 514
+        y: 453
+        width: 54
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4fd8f6257c857be0800000000000000
+      internalID: -1480122467728433330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_65
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 463
+        width: 35
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65fb43bce467c36f0800000000000000
+      internalID: -703557360987881642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_66
+      rect:
+        serializedVersion: 2
+        x: 1599
+        y: 488
+        width: 10
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3812cce9e7244160800000000000000
+      internalID: 7008770805748340797
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_67
+      rect:
+        serializedVersion: 2
+        x: 279
+        y: 459
+        width: 7
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3a9e809e28f5fd90800000000000000
+      internalID: -7064467561583306177
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_68
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 433
+        width: 31
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3eed51aa84c250af0800000000000000
+      internalID: -430889498741186845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_69
+      rect:
+        serializedVersion: 2
+        x: 979
+        y: 421
+        width: 89
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ef02ff405a393f80800000000000000
+      internalID: -8126399936000290847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_70
+      rect:
+        serializedVersion: 2
+        x: 1147
+        y: 0
+        width: 508
+        height: 481
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d510c6c1263a2d50800000000000000
+      internalID: 6713237713245443537
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_71
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 554
+        height: 453
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ae92ecf5d586dfe0800000000000000
+      internalID: -1164596299511456092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_72
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 443
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b598fffc5d196d90800000000000000
+      internalID: -7104114651931568714
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_73
+      rect:
+        serializedVersion: 2
+        x: 468
+        y: 444
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 701320710cbf9e5d0800000000000000
+      internalID: -3032616071619006201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_74
+      rect:
+        serializedVersion: 2
+        x: 1227
+        y: 428
+        width: 18
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 563c1eb339182e0d0800000000000000
+      internalID: -3395008699719105691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_75
+      rect:
+        serializedVersion: 2
+        x: 619
+        y: 394
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bd69ef65a86f97a0800000000000000
+      internalID: -6368256288322130505
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_76
+      rect:
+        serializedVersion: 2
+        x: 1061
+        y: 265
+        width: 49
+        height: 134
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8519d45d9a764060800000000000000
+      internalID: 6937367092162794894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_77
+      rect:
+        serializedVersion: 2
+        x: 617
+        y: 356
+        width: 11
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77009fc754b89bd10800000000000000
+      internalID: 2141896228357079159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_78
+      rect:
+        serializedVersion: 2
+        x: 1308
+        y: 371
+        width: 9
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc8a8c03350163280800000000000000
+      internalID: -9064039250549757748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_79
+      rect:
+        serializedVersion: 2
+        x: 581
+        y: 341
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0af8a8931e166fab0800000000000000
+      internalID: -4974681118423216224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_80
+      rect:
+        serializedVersion: 2
+        x: 593
+        y: 340
+        width: 9
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 630ca1c27bf14a480800000000000000
+      internalID: -8888944892943089610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_81
+      rect:
+        serializedVersion: 2
+        x: 601
+        y: 337
+        width: 11
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72efbb94734d9f150800000000000000
+      internalID: 5906985720198463015
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_82
+      rect:
+        serializedVersion: 2
+        x: 1204
+        y: 310
+        width: 27
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bd2cbdeed7f14810800000000000000
+      internalID: 1747950667239796151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_83
+      rect:
+        serializedVersion: 2
+        x: 723
+        y: 323
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c44ac841cf8a289e0800000000000000
+      internalID: -1620547115269970868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_84
+      rect:
+        serializedVersion: 2
+        x: 1121
+        y: 299
+        width: 38
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2794b9ad5f5bc1a30800000000000000
+      internalID: 4187421821086943602
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_85
+      rect:
+        serializedVersion: 2
+        x: 643
+        y: 273
+        width: 15
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72f5f27c76f227660800000000000000
+      internalID: 7382014861983571751
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_86
+      rect:
+        serializedVersion: 2
+        x: 1147
+        y: 279
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e691782c4ffdcc140800000000000000
+      internalID: 4741410750042937710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_87
+      rect:
+        serializedVersion: 2
+        x: 1153
+        y: 259
+        width: 16
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63344fd9fc14dca20800000000000000
+      internalID: 3084193679782724406
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_88
+      rect:
+        serializedVersion: 2
+        x: 1276
+        y: 254
+        width: 45
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: deffe0960443dee00800000000000000
+      internalID: 1075573337256558573
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_89
+      rect:
+        serializedVersion: 2
+        x: 677
+        y: 244
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5a1704895e4e8430800000000000000
+      internalID: 3787050483039279706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_90
+      rect:
+        serializedVersion: 2
+        x: 1109
+        y: 129
+        width: 62
+        height: 129
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65fb86c3ab54e1140800000000000000
+      internalID: 4692264527946366806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_91
+      rect:
+        serializedVersion: 2
+        x: 1155
+        y: 256
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c1d9dc169e0d27a0800000000000000
+      internalID: -6400443457531686462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_92
+      rect:
+        serializedVersion: 2
+        x: 705
+        y: 208
+        width: 20
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5a7d6077394fa6f0800000000000000
+      internalID: -671237316996662690
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_93
+      rect:
+        serializedVersion: 2
+        x: 721
+        y: 217
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9957ebfc41cefbd0800000000000000
+      internalID: -2594423798930908769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_94
+      rect:
+        serializedVersion: 2
+        x: 731
+        y: 213
+        width: 6
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: abbf1561688eade10800000000000000
+      internalID: 2223345028658494394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_95
+      rect:
+        serializedVersion: 2
+        x: 922
+        y: 216
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 169f8a71eca588480800000000000000
+      internalID: -8896761222663702175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_96
+      rect:
+        serializedVersion: 2
+        x: 593
+        y: 191
+        width: 35
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ee4f92a4e06bd650800000000000000
+      internalID: 6258702642258595561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_97
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 90
+        width: 94
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfe0213511d917ff0800000000000000
+      internalID: -40078223935926533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_98
+      rect:
+        serializedVersion: 2
+        x: 699
+        y: 177
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f98f147b9433f080800000000000000
+      internalID: -9154915775241287179
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_99
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 177
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc4d1cf203b356e20800000000000000
+      internalID: 3343143376538162381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_100
+      rect:
+        serializedVersion: 2
+        x: 1340
+        y: 171
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9a6095be6c433280800000000000000
+      internalID: -9064817586590422373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_101
+      rect:
+        serializedVersion: 2
+        x: 1590
+        y: 169
+        width: 9
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b0b822f0f06e8490800000000000000
+      internalID: -7742144121432133448
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_102
+      rect:
+        serializedVersion: 2
+        x: 1614
+        y: 175
+        width: 7
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1835e2a00c482dc60800000000000000
+      internalID: 7841475861544850305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_103
+      rect:
+        serializedVersion: 2
+        x: 1614
+        y: 161
+        width: 19
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 021b8b07f7a31e4b0800000000000000
+      internalID: -5412980958096215776
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_104
+      rect:
+        serializedVersion: 2
+        x: 1340
+        y: 167
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97d4fb59d080da5b0800000000000000
+      internalID: -5355615527433712263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_105
+      rect:
+        serializedVersion: 2
+        x: 1342
+        y: 164
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ed592b80a78887a0800000000000000
+      internalID: -6374696148943675933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_106
+      rect:
+        serializedVersion: 2
+        x: 1604
+        y: 129
+        width: 23
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09c69842731180200800000000000000
+      internalID: 146385916423400592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_107
+      rect:
+        serializedVersion: 2
+        x: 1336
+        y: 112
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63f17bc38fc930da0800000000000000
+      internalID: -5979763290233430218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_108
+      rect:
+        serializedVersion: 2
+        x: 1340
+        y: 119
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a0e615608d10a0b0800000000000000
+      internalID: -5719539089471512413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_109
+      rect:
+        serializedVersion: 2
+        x: 723
+        y: 104
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a44d904687cf4c90800000000000000
+      internalID: -7183303501209058137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_110
+      rect:
+        serializedVersion: 2
+        x: 729
+        y: 110
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 310ba332ff766d780800000000000000
+      internalID: -8658618888067829741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_111
+      rect:
+        serializedVersion: 2
+        x: 526
+        y: 46
+        width: 38
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76620dc442b484f30800000000000000
+      internalID: 4559977241992242791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_112
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 44
+        width: 39
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74aad5178dcc62aa0800000000000000
+      internalID: -6186031808159831481
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_113
+      rect:
+        serializedVersion: 2
+        x: 667
+        y: 31
+        width: 11
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79e5df33ad29d7460800000000000000
+      internalID: 7241105241754394263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MudScreenOverlay_114
+      rect:
+        serializedVersion: 2
+        x: 834
+        y: 19
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91155781ba8b39930800000000000000
+      internalID: 4148862726727618841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      MudScreenOverlay_0: -14939343627687411
+      MudScreenOverlay_1: 6876789024631356236
+      MudScreenOverlay_10: -1596197608403417520
+      MudScreenOverlay_100: -9064817586590422373
+      MudScreenOverlay_101: -7742144121432133448
+      MudScreenOverlay_102: 7841475861544850305
+      MudScreenOverlay_103: -5412980958096215776
+      MudScreenOverlay_104: -5355615527433712263
+      MudScreenOverlay_105: -6374696148943675933
+      MudScreenOverlay_106: 146385916423400592
+      MudScreenOverlay_107: -5979763290233430218
+      MudScreenOverlay_108: -5719539089471512413
+      MudScreenOverlay_109: -7183303501209058137
+      MudScreenOverlay_11: -3249434120503857204
+      MudScreenOverlay_110: -8658618888067829741
+      MudScreenOverlay_111: 4559977241992242791
+      MudScreenOverlay_112: -6186031808159831481
+      MudScreenOverlay_113: 7241105241754394263
+      MudScreenOverlay_114: 4148862726727618841
+      MudScreenOverlay_12: -9089412773201887786
+      MudScreenOverlay_13: 8695293780436955632
+      MudScreenOverlay_14: -7503870777991505408
+      MudScreenOverlay_15: -8842143907790200311
+      MudScreenOverlay_16: -3185029730607552238
+      MudScreenOverlay_17: -8449693373570355838
+      MudScreenOverlay_18: 261028077680337316
+      MudScreenOverlay_19: 2554648021269885524
+      MudScreenOverlay_2: 3514390220116545402
+      MudScreenOverlay_20: 6315153475116528867
+      MudScreenOverlay_21: 55380902509802415
+      MudScreenOverlay_22: 2813858875987950241
+      MudScreenOverlay_23: -1539764442524312932
+      MudScreenOverlay_24: -4381058671182049030
+      MudScreenOverlay_25: 9106201991780952934
+      MudScreenOverlay_26: 6697811205225908523
+      MudScreenOverlay_27: -7402763903780659275
+      MudScreenOverlay_28: 8454928561263661741
+      MudScreenOverlay_29: 8494165037070193362
+      MudScreenOverlay_3: 7122683667181906140
+      MudScreenOverlay_30: 5566773852265647480
+      MudScreenOverlay_31: 162211232437175548
+      MudScreenOverlay_32: -8099485227364026565
+      MudScreenOverlay_33: -1034432451508873309
+      MudScreenOverlay_34: 1615405134823369495
+      MudScreenOverlay_35: 1267371753058339178
+      MudScreenOverlay_36: -1736199395679797296
+      MudScreenOverlay_37: -4823881922495160443
+      MudScreenOverlay_38: 1959898812588648630
+      MudScreenOverlay_39: -4578006338442700502
+      MudScreenOverlay_4: 726568157970394085
+      MudScreenOverlay_40: -221366163750883477
+      MudScreenOverlay_41: 5814248453453766751
+      MudScreenOverlay_42: -3337521014952010712
+      MudScreenOverlay_43: 6375255303002996110
+      MudScreenOverlay_44: 5902759034107066737
+      MudScreenOverlay_45: -5007863454490963486
+      MudScreenOverlay_46: 3968462260747212680
+      MudScreenOverlay_47: 4026861154983658208
+      MudScreenOverlay_48: 2284617468663063160
+      MudScreenOverlay_49: 938619877713921285
+      MudScreenOverlay_5: -4798908285981538733
+      MudScreenOverlay_50: -2829844803276238410
+      MudScreenOverlay_51: -3345458424214971643
+      MudScreenOverlay_52: -2706631428350618598
+      MudScreenOverlay_53: 3907431649188007961
+      MudScreenOverlay_54: -1993660806381579126
+      MudScreenOverlay_55: -472013708141981177
+      MudScreenOverlay_56: -7831806069457423375
+      MudScreenOverlay_57: 563785296117145832
+      MudScreenOverlay_58: 6000984622180043167
+      MudScreenOverlay_59: 518294654855171639
+      MudScreenOverlay_6: -6203249060370618654
+      MudScreenOverlay_60: -5054727625982840922
+      MudScreenOverlay_61: -4010614782067607637
+      MudScreenOverlay_62: 7379029152458939173
+      MudScreenOverlay_63: -3698176393502713722
+      MudScreenOverlay_64: -1480122467728433330
+      MudScreenOverlay_65: -703557360987881642
+      MudScreenOverlay_66: 7008770805748340797
+      MudScreenOverlay_67: -7064467561583306177
+      MudScreenOverlay_68: -430889498741186845
+      MudScreenOverlay_69: -8126399936000290847
+      MudScreenOverlay_7: 6597354437572361390
+      MudScreenOverlay_70: 6713237713245443537
+      MudScreenOverlay_71: -1164596299511456092
+      MudScreenOverlay_72: -7104114651931568714
+      MudScreenOverlay_73: -3032616071619006201
+      MudScreenOverlay_74: -3395008699719105691
+      MudScreenOverlay_75: -6368256288322130505
+      MudScreenOverlay_76: 6937367092162794894
+      MudScreenOverlay_77: 2141896228357079159
+      MudScreenOverlay_78: -9064039250549757748
+      MudScreenOverlay_79: -4974681118423216224
+      MudScreenOverlay_8: -8808685860165892439
+      MudScreenOverlay_80: -8888944892943089610
+      MudScreenOverlay_81: 5906985720198463015
+      MudScreenOverlay_82: 1747950667239796151
+      MudScreenOverlay_83: -1620547115269970868
+      MudScreenOverlay_84: 4187421821086943602
+      MudScreenOverlay_85: 7382014861983571751
+      MudScreenOverlay_86: 4741410750042937710
+      MudScreenOverlay_87: 3084193679782724406
+      MudScreenOverlay_88: 1075573337256558573
+      MudScreenOverlay_89: 3787050483039279706
+      MudScreenOverlay_9: 3072905757623966504
+      MudScreenOverlay_90: 4692264527946366806
+      MudScreenOverlay_91: -6400443457531686462
+      MudScreenOverlay_92: -671237316996662690
+      MudScreenOverlay_93: -2594423798930908769
+      MudScreenOverlay_94: 2223345028658494394
+      MudScreenOverlay_95: -8896761222663702175
+      MudScreenOverlay_96: 6258702642258595561
+      MudScreenOverlay_97: -40078223935926533
+      MudScreenOverlay_98: -9154915775241287179
+      MudScreenOverlay_99: 3343143376538162381
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

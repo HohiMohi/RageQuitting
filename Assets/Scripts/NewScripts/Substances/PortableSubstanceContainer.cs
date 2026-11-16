@@ -148,8 +148,10 @@ public class PortableSubstanceContainer : NetworkBehaviour
         // Movement gates collection; elapsed sample time bounds the amount and is not retained.
         float requested = Mathf.Min(looseSoilUnitsPerSecond * elapsed, GetAvailableCapacity(soil));
         if (!SubstanceAmount.IsFinitePositive(requested)) return;
-        site.TryCollectLooseSoil(this, soil, position, Mathf.Max(0.01f, looseSoilBrushRadius),
+        float transferred = site.TryCollectLooseSoil(this, soil, position, Mathf.Max(0.01f, looseSoilBrushRadius),
             requested, looseSoilWholeLayerTailThreshold);
+        if (transferred > 0f && holder.TryGetComponent(out PlayerMudStatusController mudStatus))
+            mudStatus.AddTransferredLooseSoil(transferred);
     }
 
     private bool CanRunAutomaticCollection()

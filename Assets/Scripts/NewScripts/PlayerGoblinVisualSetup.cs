@@ -72,12 +72,16 @@ public class PlayerGoblinVisualSetup : MonoBehaviour
 
     private void RegisterVisual(GameObject visual)
     {
-        if (visual == null || !TryGetComponent(out PlayerNetworkSetup networkSetup))
+        if (visual == null) return;
+        if (TryGetComponent(out PlayerNetworkSetup networkSetup))
         {
-            return;
+            networkSetup.SetPlayerBodyVisual(visual);
         }
 
-        networkSetup.SetPlayerBodyVisual(visual);
+        if (TryGetComponent(out PlayerBodyMudVisual bodyMudVisual))
+        {
+            bodyMudVisual.BindVisual(visual);
+        }
     }
 
     private void DisableGameplayComponents(GameObject visual)

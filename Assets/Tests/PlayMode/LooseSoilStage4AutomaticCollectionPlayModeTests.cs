@@ -151,6 +151,14 @@ public sealed class LooseSoilStage4AutomaticCollectionPlayModeTests
             add.Invoke(container, new object[] { soil, 2.98f });
             Assert.That(Read<float>(container, "CurrentUnits"), Is.EqualTo(2.98f).Within(.00001f),
                 "The corner partial-capacity case starts at the intended 2.98 units.");
+            Type statusType = Type.GetType("PlayerTemporaryStatusController, Assembly-CSharp");
+            Type mudType = Type.GetType("PlayerMudStatusController, Assembly-CSharp");
+            Component statusController = player.GetComponent(statusType);
+            if (statusController == null) statusController = player.AddComponent(statusType);
+            Component mudController = player.GetComponent(mudType);
+            if (mudController == null) mudController = player.AddComponent(mudType);
+            mudType.GetField("minimumMovement", Instance).SetValue(mudController, 10f);
+            mudType.GetMethod("SetAmount", Instance).Invoke(mudController, new object[] { 0f });
             float beforePartialUnits = (float)finalHeightField.GetType().GetProperty("TotalUnits").GetValue(finalHeightField);
             float partialStart = Time.time;
             while (Time.time - partialStart < .5f)
@@ -162,6 +170,9 @@ public sealed class LooseSoilStage4AutomaticCollectionPlayModeTests
             yield return new WaitForSeconds(.15f);
             Assert.That(Read<float>(container, "CurrentUnits"), Is.EqualTo(3f).Within(.0001f),
                 "A moving nearly full bucket accepts only its remaining .02-unit capacity at the corner.");
+            Assert.That((float)mudType.GetProperty("Amount").GetValue(mudController),
+                Is.EqualTo((3f - 2.98f) * .15f).Within(.0001f),
+                "Only the accepted .02-unit soil transfer adds 15 percentage points per unit; explicit contents do not.");
             Assert.That(beforePartialUnits - (float)finalHeightField.GetType().GetProperty("TotalUnits").GetValue(finalHeightField),
                 Is.EqualTo(.02f).Within(.01f),
                 $"A partial bucket removes exactly its accepted corner soil. Before={beforePartialUnits}, after={(float)finalHeightField.GetType().GetProperty("TotalUnits").GetValue(finalHeightField)}, precise={(double)finalHeightField.GetType().GetProperty("TotalUnitsPrecise").GetValue(finalHeightField)}, bucket={Read<float>(container, "CurrentUnits")}");

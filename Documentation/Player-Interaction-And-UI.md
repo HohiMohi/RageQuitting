@@ -62,6 +62,16 @@ Etap 2 używa tego samego rejestru dla statusów wody, uwięzienia w betonie i u
 Uwięzienie trwa od złapania do bezpiecznego uwolnienia po upływie czasu lub usunięcia źródła. Status jest związany z identyfikatorem epizodu i usuwa zagrożenie wodne. Blokuje ruch, rozglądanie i akcje. Pasażerowie są wyłączeni z przechwycenia. Przed złapaniem kierowcy serwer kończy prowadzenie i odzyskuje kontrolę nad fizyką taczki. Klient gracza ustawia pozycję uwolnienia przed przywróceniem sterowania. Ochrona przed ponownym złapaniem zaczyna odliczać przy uwolnieniu. Zachowuje pozostały czas przez ożywienie sojusznika i rzeczywisty respawn, a kończy się przy despawnie.
 
 
+### Obłocenie
+
+Obłocenie ma wartość od 0 do 100%. Każdy metr faktycznie pokonany w aktywnej luźnej ziemi wykopu dodaje 5 p.p. Każda porcja ziemi faktycznie pobrana do wiadra dodaje 15 p.p. Ułamkowe porcje liczą się proporcjonalnie. Ruch pieszy w wodzie zmywa 10 p.p. na sekundę zarówno podczas bezpiecznego brodzenia, jak i w niebezpiecznej wodzie. Wspólne noszenie również liczy się jako ruch pieszy. Postój, jazda taczką i bierny transport zachowują poziom obłocenia. Gdy woda i luźna ziemia pokrywają się, ruch zmywa błoto. Jednoczesny zatwierdzony pobór do wiadra nadal dodaje obłocenie.
+
+Spowolnienie rośnie liniowo do 30% i obejmuje chód, sprint, wkład gracza we wspólne noszenie oraz prowadzenie taczki. Jego mnożnik składa się z karą za zagłębienie w ziemi przez mnożenie. Ożywienie przez gracza zachowuje obłocenie, a rzeczywisty respawn je zeruje.
+
+Brązowe plamy renderują się na lokalnym HUD gracza pod celownikiem i menu. Alfa rośnie liniowo do 60% przy pełnym obłoceniu. Przy 0% warstwa jest ukryta. Parametry obłocenia można stroić w `Assets/ScriptableObjectAssets/New/PlayerStatusCatalog.asset` podpiętym do `PlayerNew`.
+
+Obłocenie widać też z perspektywy trzeciej osoby jako plamy, które narastają od nóg przez tułów i przedramiona, a przy wysokim poziomie pojawiają się również na twarzy. Efekt korzysta z maski UV0 dopasowanej do modelu Goblina, gdzie kanał R określa pokrycie, a G próg plamy. Replikowany poziom obłocenia steruje wyglądem postaci widocznym dla pozostałych graczy. Każda postać ma własną instancję materiału. Kolor, gładkość i miękkość krawędzi można dostroić w `Assets/Meshes/Goblin_AI2_Assets/Materials/GoblinPlayerMud.mat`. Każdy kolejny model wymaga pasującej maski UV.
+
 ## Kamera i obrót ciała
 
 Mysz natychmiast aktualizuje aim yaw/pitch. Root postaci dochodzi do yaw przez
