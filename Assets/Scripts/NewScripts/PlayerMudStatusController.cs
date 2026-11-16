@@ -148,6 +148,13 @@ public sealed class PlayerMudStatusController : MonoBehaviour
         SetAmount(Amount + units * Profile.bucketPercentagePointsPerUnit / 100f);
     }
 
+    /// <summary>Adds a percentage-point mud gain without exposing the status snapshot API.</summary>
+    public bool AddMudPercentagePoints(float percentagePoints)
+    {
+        if (!CanUpdateMud() || !IsFinite(percentagePoints) || percentagePoints <= 0f) return false;
+        return SetAmount(Amount + percentagePoints / 100f);
+    }
+
     internal bool SetAmount(float amount)
     {
         float normalized = Mathf.Clamp01(IsFinite(amount) ? amount : 0f);

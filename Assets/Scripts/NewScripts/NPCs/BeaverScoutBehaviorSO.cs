@@ -42,6 +42,16 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     [SerializeField] private float resourceDestructionAttackInterval = 1f;
     [SerializeField] private float idlePatrolRangeIncrease = 2f;
     [SerializeField] private float maxPatrolRadius = 30f;
+    [Header("Mudball")]
+    [SerializeField] private bool mudballThrowEnabled = true;
+    [SerializeField, Min(0.1f)] private float mudballThrowRange = 10f;
+    [SerializeField] private bool mudballRequireLineOfSight = true;
+    [SerializeField] private LayerMask mudballLineOfSightMask = ~0;
+    [SerializeField, Min(0f)] private float mudballCooldown = 45f;
+    [SerializeField, Min(0f)] private float mudballWindup = 0.4f;
+    [SerializeField, Min(0f)] private float mudballMudGainPercentagePoints = 15f;
+    [SerializeField] private BeaverScoutMudball mudballPrefab;
+    [SerializeField] private ExternalImpulseProfileSO mudballImpulseProfile;
 
     public DeliveryMode Delivery => deliveryMode;
     public NPCInterestProfileSO InterestProfile => interestProfile;
@@ -66,6 +76,15 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
     public float ResourceZoneSweepArrivalDistance => Mathf.Max(0.1f, resourceZoneSweepArrivalDistance);
     public float ResourceDestructionAttackInterval => Mathf.Max(0.05f, resourceDestructionAttackInterval);
     public float IdlePatrolRangeIncrease => Mathf.Max(0f, idlePatrolRangeIncrease);
+    public bool MudballThrowEnabled => mudballThrowEnabled;
+    public float MudballThrowRange => Mathf.Max(0.1f, mudballThrowRange);
+    public bool MudballRequireLineOfSight => mudballRequireLineOfSight;
+    public LayerMask MudballLineOfSightMask => mudballLineOfSightMask;
+    public float MudballCooldown => Mathf.Max(0f, mudballCooldown);
+    public float MudballWindup => Mathf.Max(0f, mudballWindup);
+    public float MudballMudGainPercentagePoints => Mathf.Max(0f, mudballMudGainPercentagePoints);
+    public BeaverScoutMudball MudballPrefab => mudballPrefab;
+    public ExternalImpulseProfileSO MudballImpulseProfile => mudballImpulseProfile;
 
     public float GetMaxPatrolRadius(float basePatrolRadius)
     {
@@ -149,6 +168,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private bool finishStorageSweepAfterReturningToBase;
         private float nextResourceDestructionAttackTime;
         private float currentPatrolRadius;
+        private BeaverScoutMudThrow mudballThrow;
 
         public BeaverScoutController(NPCBrain brain, BeaverScoutBehaviorSO config) : base(brain)
         {
@@ -162,6 +182,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             previousHealth = Brain.Health != null ? Brain.Health.CurrentHealth : 0f;
             animationController = Brain.GetComponent<NPCAnimationController>();
             attackSequenceController = Brain.GetComponent<BeaverAttackSequenceController>();
+            mudballThrow = Brain.GetComponent<BeaverScoutMudThrow>();
             if (Brain.Health != null)
             {
                 Brain.Health.OnDamaged += BrainHealth_OnDamaged;
@@ -172,6 +193,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         public override void Exit()
         {
+            if (mudballThrow != null)
+                mudballThrow.CancelWindup();
             if (Brain.Health != null)
             {
                 Brain.Health.OnDamaged -= BrainHealth_OnDamaged;
@@ -201,6 +224,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         public override void Tick()
         {
+            if (mudballThrow != null && mudballThrow.IsWindingUp)
+            {
+                StopAgent();
+                return;
+            }
             if (Time.time < reactionLockEndTime)
             {
                 StopAgent();
@@ -310,6 +338,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         private void HandleDamageReaction(bool enterRage)
         {
+            if (mudballThrow != null)
+                mudballThrow.CancelWindup();
             StopAgent();
 
             if (Brain.Carrier != null && Brain.Carrier.CarriedObject != null)
@@ -520,6 +550,8 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private bool TryFindAndEnterIdleTarget()
         {
             nextTargetRefreshTime = Time.time + config.TargetRefreshInterval;
+            bool preserveLegacyScan = mudballThrow != null && mudballThrow.ConsumeLegacyScanAfterWindup();
+            if (!preserveLegacyScan && TryBeginMudballThrow()) return true;
             if (TryFindClosestUnencounteredPlayer(
                 out PlayerHealth playerHealth,
                 out Transform playerTransform,
@@ -574,6 +606,44 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             return false;
+        }
+
+        private bool TryBeginMudballThrow()
+        {
+            if (!config.MudballThrowEnabled || mudballThrow == null || mudballThrow.IsWindingUp ||
+                Time.time < mudballThrow.NextThrowAt || config.MudballPrefab == null) return false;
+
+            Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
+            List<(PlayerHealth health, Transform target, float distance)> candidates = new List<(PlayerHealth, Transform, float)>();
+            HashSet<int> considered = new HashSet<int>();
+            foreach (Collider collider in colliders)
+            {
+                GameObject candidate = collider.attachedRigidbody != null ? collider.attachedRigidbody.gameObject : collider.gameObject;
+                if (!TryGetPlayerTarget(candidate, out PlayerHealth health, out Transform targetTransform, out _)) continue;
+                if (!considered.Add(health.GetInstanceID()) || !mudballThrow.CanTarget(health, targetTransform,
+                        config.MudballThrowRange, config.MudballRequireLineOfSight, config.MudballLineOfSightMask)) continue;
+                float distance = (targetTransform.position - Brain.transform.position).sqrMagnitude;
+                candidates.Add((health, targetTransform, distance));
+            }
+
+            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+            foreach (var candidate in candidates)
+            {
+                if (mudballThrow.TryBeginWindup(candidate.health, candidate.target,
+                        config.MudballThrowRange, config.MudballRequireLineOfSight, config.MudballLineOfSightMask,
+                        config.MudballWindup, config.MudballCooldown, config.MudballPrefab,
+                        config.MudballMudGainPercentagePoints, config.MudballImpulseProfile,
+                        IsMudballScanContextValid)) return true;
+            }
+            return false;
+        }
+
+        private bool IsMudballScanContextValid()
+        {
+            if (state == ScoutState.IdleSearching) return true;
+            if (state != ScoutState.SearchingKnownResourceZone) return false;
+            ResourcePopulationZone zone = currentSweepTarget.ResourceZoneInfo.Zone;
+            return zone != null && zone.isActiveAndEnabled;
         }
 
         private void EnterNoticingPlayer(PlayerHealth playerHealth, Transform playerTransform, ulong playerId)

@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2528092438958705743
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4686449624477926242}
+  m_Layer: 0
+  m_Name: MudballReleasePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4686449624477926242
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2528092438958705743}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.15, z: 0.45}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3622094151679886643}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &3438632000393033368
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -166,6 +197,9 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 8055798987437150814, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 100001, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4686449624477926242}
     - targetCorrespondingSourceObject: {fileID: 100011, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7220302142196266805}
@@ -176,6 +210,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 100000, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5672014546646171869}
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 694110974008082262}
   m_SourcePrefab: {fileID: 100100000, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
 --- !u!1 &3622094151679886642 stripped
 GameObject:
@@ -212,6 +249,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeaverAttackSequenceController
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &694110974008082262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3622094151679886642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fde35cc30fdc5d04ea2115cc3b36157a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BeaverScoutMudThrow
+  releasePoint: {fileID: 4686449624477926242}
+  horizontalSpeed: 12
+  minimumFlightTime: 0.25
+  projectileLifetime: 3
+--- !u!4 &3622094151679886643 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 100001, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}
+  m_PrefabInstance: {fileID: 3622094151679984530}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3622094151679886649 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 100011, guid: cf25998f8c2542a2ac8d3e04e06d5c98, type: 3}

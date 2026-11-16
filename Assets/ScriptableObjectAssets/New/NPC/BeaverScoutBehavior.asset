@@ -58,3 +58,14 @@ MonoBehaviour:
   resourceDestructionAttackInterval: 1
   idlePatrolRangeIncrease: 2
   maxPatrolRadius: 30
+  mudballThrowEnabled: 1
+  mudballThrowRange: 10
+  mudballRequireLineOfSight: 1
+  mudballLineOfSightMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  mudballCooldown: 45
+  mudballWindup: 0.4
+  mudballMudGainPercentagePoints: 15
+  mudballPrefab: {fileID: 5285383314786215500, guid: 1acf432c86783644c9cdf030aeb971db, type: 3}
+  mudballImpulseProfile: {fileID: 11400000, guid: 0b09be85ced72ba4b9975b2ed5f3b1d1, type: 2}
