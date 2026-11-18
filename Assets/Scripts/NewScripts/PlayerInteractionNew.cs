@@ -86,6 +86,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         || float.IsInfinity(singleCarryDropThrowMetersPerSecond) ? 0f : Mathf.Max(0f, singleCarryDropThrowMetersPerSecond);
     public float SingleCarryDropSearchDistance => float.IsNaN(interactDistance) || float.IsInfinity(interactDistance)
         ? 0f : Mathf.Max(0f, interactDistance);
+    public float InteractionDistance => float.IsNaN(interactDistance) || float.IsInfinity(interactDistance)
+        ? 0f : Mathf.Max(0f, interactDistance);
     public bool IsFlexibleSaplingInteractionActive => activeFlexibleSapling != null;
     public FlexibleSaplingController ActiveFlexibleSapling => activeFlexibleSapling;
     public FlexibleSaplingGripSide ActiveFlexibleSaplingSide => activeFlexibleSaplingSide;
@@ -1021,7 +1023,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         {
             newTarget = FindTarget(
                 Physics.RaycastAll(aimRay, interactDistance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide),
-                out exactRayBlocked);
+                out exactRayBlocked,
+                allowLooseSoilSupport: true);
         }
 
         if (newTarget == null && !exactRayBlocked && aimAssistRadius > 0f)
@@ -1033,7 +1036,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
                     interactDistance,
                     Physics.DefaultRaycastLayers,
                     QueryTriggerInteraction.Collide),
-                out _);
+                out _,
+                allowLooseSoilSupport: false);
         }
 
         if (newTarget != _currentTarget)
@@ -1042,7 +1046,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         }
     }
 
-    private MonoBehaviour FindTarget(RaycastHit[] hits, out bool blocked)
+    private MonoBehaviour FindTarget(RaycastHit[] hits, out bool blocked, bool allowLooseSoilSupport)
     {
         blocked = false;
         MonoBehaviour fallbackTarget = null;
@@ -1053,6 +1057,14 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             if (hit.transform.root == transform.root)
             {
                 continue;
+            }
+
+            if (allowLooseSoilSupport &&
+                FoundationLooseSoilField.TryResolveTopSupportHit(hit, out BridgeConstructionSite soilSite) &&
+                soilSite.CurrentStage == BridgeConstructionStage.Digging &&
+                soilSite.DiggingSubstage == FoundationDiggingSubstage.Loosening)
+            {
+                return soilSite;
             }
 
             MonoBehaviour target = BridgeTargetResolver.Resolve(hit.collider);

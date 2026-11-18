@@ -56,6 +56,35 @@ public sealed class FoundationLooseSoilField : MonoBehaviour
         ActiveFields.Remove(this);
     }
 
+    public static bool TryResolveTopSupportHit(RaycastHit hit, out BridgeConstructionSite site)
+    {
+        site = null;
+        return TryGetSiteForSupportCollider(hit.collider, out site) &&
+            Vector3.Dot(hit.normal, hit.collider.transform.up) >= 0.999f &&
+            site.CurrentStage == BridgeConstructionStage.Digging &&
+            site.DiggingSubstage == FoundationDiggingSubstage.Loosening;
+    }
+
+    public static bool TryGetSiteForSupportCollider(Collider collider, out BridgeConstructionSite site)
+    {
+        site = null;
+        if (collider == null || collider.isTrigger) return false;
+        for (int i = ActiveFields.Count - 1; i >= 0; i--)
+        {
+            FoundationLooseSoilField field = ActiveFields[i];
+            if (field == null) { ActiveFields.RemoveAt(i); continue; }
+            FoundationExcavationVolume volume = field.GetComponentInParent<FoundationExcavationVolume>();
+            if (volume == null || volume.SoilSupportCollider != collider || volume.LooseSoilField != field ||
+                !volume.UsesLooseSoilHeightField || !volume.HasValidLooseSoilConfiguration || !field.HasHeightField) continue;
+            BridgeConstructionSite candidate = volume.ConstructionSite;
+            if (candidate == null || candidate.ExcavationVolume != volume ||
+                !field.TryGetConstructionSite(out BridgeConstructionSite resolvedSite) || resolvedSite != candidate) continue;
+            site = candidate;
+            return true;
+        }
+        return false;
+    }
+
     /// <summary>Returns the maximum normalized immersion among currently active loose fields.</summary>
     public static float GetMaximumImmersion(Vector3 worldFootPosition)
     {

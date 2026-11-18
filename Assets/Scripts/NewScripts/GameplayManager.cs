@@ -1061,6 +1061,9 @@ public class GameplayManager : MonoBehaviour
             return;
         }
 
+        // Opted-in heightfield pits use the dedicated ray-validated shovel request.
+        if (IsLooseSoilLoosening(bridgeComponent.ConstructionSite)) return;
+
         if (!IsNetworkSessionActive())
         {
             if (bridgeComponent.ConstructionSite != null &&
@@ -1084,6 +1087,43 @@ public class GameplayManager : MonoBehaviour
         writer.WriteValueSafe(workPointId);
         NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RequestConstructionWorkMessageName, NetworkManager.ServerClientId, writer);
     }
+
+    public bool TryApplyFoundationSoilWorkOffline(
+        BridgeComponent bridgeComponent, EquippableItemType requestedTool, float workPower)
+    {
+        if (bridgeComponent == null || IsNetworkSessionActive() || requestedTool != EquippableItemType.Shovel ||
+            !IsLooseSoilLoosening(bridgeComponent.ConstructionSite) ||
+            !bridgeComponent.ConstructionSite.TryApplyToolWork(requestedTool, workPower, -1, 0ul)) return false;
+        ObserveConstructionStage(bridgeComponent.ComponentID);
+        NotifyBridgeRequirementsChanged();
+        return true;
+    }
+
+    public bool TryApplyValidatedFoundationSoilWork(int componentID, ulong senderClientId)
+    {
+        if (!IsNetworkSessionActive() || !NetworkManager.Singleton.IsServer ||
+            !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent) ||
+            !IsLooseSoilLoosening(bridgeComponent.ConstructionSite) ||
+            !TryGetStateIndex(componentID, out int stateIndex) ||
+            !NetworkManager.Singleton.ConnectedClients.TryGetValue(senderClientId, out NetworkClient client) ||
+            client.PlayerObject == null) return false;
+
+        PlayerInventory inventory = client.PlayerObject.GetComponent<PlayerInventory>();
+        PlayerHealth health = client.PlayerObject.GetComponent<PlayerHealth>();
+        PlayerConcreteTrapController trap = client.PlayerObject.GetComponent<PlayerConcreteTrapController>();
+        EquippableItemSO selectedTool = inventory != null ? inventory.GetSelectedItemForServerValidation() : null;
+        if (selectedTool == null || selectedTool.itemType != EquippableItemType.Shovel ||
+            health != null && health.IsDowned || trap != null && trap.IsTrapped ||
+            !bridgeComponent.ConstructionSite.TryApplyToolWork(
+                selectedTool.itemType, selectedTool.ConstructionWorkPower, -1, senderClientId)) return false;
+        ApplyConstructionWorkState(bridgeComponent, stateIndex);
+        return true;
+    }
+
+    private static bool IsLooseSoilLoosening(BridgeConstructionSite site) =>
+        site != null && site.ExcavationVolume != null && site.ExcavationVolume.UsesLooseSoilHeightField &&
+        site.CurrentStage == BridgeConstructionStage.Digging &&
+        site.DiggingSubstage == FoundationDiggingSubstage.Loosening;
 
     public void NotifyConstructionSiteStateChanged(BridgeConstructionSite constructionSite)
     {
@@ -1255,21 +1295,28 @@ public class GameplayManager : MonoBehaviour
         if (!NetworkManager.Singleton.IsServer ||
             !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent) ||
             bridgeComponent.ConstructionSite == null ||
+            IsLooseSoilLoosening(bridgeComponent.ConstructionSite) ||
             !TryGetValidatedPlayerTool(senderClientId, bridgeComponent.ConstructionSite.GetWorkValidationTarget(workPointId), requestedToolType, out EquippableItemSO selectedTool))
         {
             return;
         }
 
-        if (!bridgeComponent.ConstructionSite.TryApplyToolWork(
+        if (!TryGetStateIndex(componentID, out int stateIndex) ||
+            !bridgeComponent.ConstructionSite.TryApplyToolWork(
                 selectedTool.itemType,
                 selectedTool.ConstructionWorkPower,
                 workPointId,
-                senderClientId) ||
-            !TryGetStateIndex(componentID, out int stateIndex))
+                senderClientId))
         {
             return;
         }
 
+        ApplyConstructionWorkState(bridgeComponent, stateIndex);
+    }
+
+    private void ApplyConstructionWorkState(BridgeComponent bridgeComponent, int stateIndex)
+    {
+        int componentID = bridgeComponent.ComponentID;
         BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
         bridgeComponent.ConstructionSite.PopulateNetworkState(ref state);
         state.isAssembled = bridgeComponent.IsAssembled || bridgeComponent.ConstructionSite.CurrentStage == BridgeConstructionStage.Complete;

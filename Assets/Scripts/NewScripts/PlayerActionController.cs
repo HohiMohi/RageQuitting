@@ -264,6 +264,15 @@ public partial class PlayerActionController : NetworkBehaviour
         if (IsSawSelected()) return false;
         if (IsCrowbarExtractionActiveOrPending) return false;
         EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
+        if (TryHandleFoundationSoilImpact(selectedItem, out bool soilAccepted,
+                out BridgeConstructionSite soilSite, out RaycastHit soilHit))
+        {
+            if (!soilAccepted) return false;
+            LocalActionTargetObserved?.Invoke(soilSite);
+            SpawnImpactEffectAt(soilHit.point, soilHit.normal, ActionImpactSurfaceType.Soil);
+            OnActionPerformed?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
         if (TryConsumeAimedMountingNail(selectedItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
         {
             LocalActionTargetObserved?.Invoke(nailCollider);
@@ -378,6 +387,16 @@ public partial class PlayerActionController : NetworkBehaviour
         }
 
         EquippableItemSO selectedItem = _inventory != null ? _inventory.GetItemInSlot(0) : null;
+        if (TryGetFoundationSoilSite(target, out BridgeConstructionSite soilSite))
+        {
+            EquippableItemSO activeItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
+            bool canShovel = activeItem != null && activeItem.itemType == EquippableItemType.Shovel;
+            bool validAim = canShovel && CanResolveFoundationSoilAim(soilSite, activeItem.actionRange, 0f, out _);
+            bool needsShovel = soilSite.CurrentStage == BridgeConstructionStage.Digging &&
+                soilSite.DiggingSubstage == FoundationDiggingSubstage.Loosening;
+            return new ActionAvailability(validAim, canShovel, needsShovel,
+                needsShovel ? EquippableItemType.Shovel : EquippableItemType.None);
+        }
         MountingNail mountingNail = ResolveMountingNail(target);
         if (mountingNail != null && (mountingNail.State == MountingNailState.Prepared || mountingNail.BlocksPickup))
         {
@@ -651,6 +670,7 @@ public partial class PlayerActionController : NetworkBehaviour
         {
             lastServerMountingNailImpactSequence = 0;
             nextServerCombatImpactTime = 0d;
+            nextServerFoundationSoilImpactTime = 0d;
         }
         submittedMountingNailImpactSequence = 0;
         ResetCrowbarExtractionNetworkState();
@@ -658,6 +678,7 @@ public partial class PlayerActionController : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        nextServerFoundationSoilImpactTime = 0d;
         CancelSawCuttingImmediately();
         HandleCrowbarExtractionNetworkDespawn();
     }
@@ -1262,7 +1283,19 @@ public partial class PlayerActionController : NetworkBehaviour
         Component observedTarget = null;
         bool hit = false;
         ActionImpactSurfaceType surfaceType = ActionImpactSurfaceType.Default;
-        if (TryConsumeAimedMountingNail(impactItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
+        if (TryHandleFoundationSoilImpact(impactItem, out bool soilAccepted,
+                out BridgeConstructionSite soilSite, out RaycastHit soilHit))
+        {
+            if (soilAccepted)
+            {
+                hit = true;
+                observedTarget = soilSite;
+                surfaceType = ActionImpactSurfaceType.Soil;
+                SpawnImpactEffectAt(soilHit.point, soilHit.normal, surfaceType);
+                OnActionPerformed?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        else if (TryConsumeAimedMountingNail(impactItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
         {
             hit = true;
             surfaceType = nailSurface;

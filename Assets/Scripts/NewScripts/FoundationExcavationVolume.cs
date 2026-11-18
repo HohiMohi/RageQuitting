@@ -61,6 +61,12 @@ public class FoundationExcavationVolume : MonoBehaviour
     public float ExitRampClearanceMargin => Mathf.Max(0f, exitRampClearanceMargin);
     public bool UsesLooseSoilHeightField => useLooseSoilHeightField;
     public FoundationLooseSoilField LooseSoilField => looseSoilField;
+    public Collider SoilSupportCollider => soilSupportCollider;
+    public bool TryGetSoilSupportCollider(out Collider collider)
+    {
+        collider = soilSupportCollider;
+        return collider != null && collider.enabled && collider.gameObject.activeInHierarchy;
+    }
     public BridgeConstructionSite ConstructionSite => constructionSite;
     public bool HasValidLooseSoilConfiguration => !useLooseSoilHeightField ||
         (soilSurface != null && soilSupportCollider != null && looseSoilField != null &&
