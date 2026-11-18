@@ -751,3 +751,13 @@ Testy używają API i skryptowanego ruchu, nie dowodzą fizycznego sterowania an
 ### Wykopy Stage02 — aktualny status (2026-11-04)
 
 Etap 1 ścian rzecznych został wcześniej zaakceptowany. Połączone Etapy 2–3 (promień zbierania 0,8 m i bezpieczna aktywacja rampy) przeszły końcowy ścisły Gameplay: 14/14 kroków, EditMode 230/230 i PlayMode 251/251 ([raport](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261104T170540Z-16d79c76/summary.json)); oczekują na ręczną akceptację. Wcześniejsze cofnięcie 0,129 m pozostaje nierozstrzygnięte i nie potwierdzono poprawki FPC. Szczegóły i checklista: [notatka poprawek wykopów](Excavation-Fixes-Implementation.md).
+
+## Prowadzenie Stage02 — porady kontekstowe
+
+W produkcyjnej scenie `TutorialTerrainStage02` prywatny katalog 28 angielskich kluczy daje wskazówki dla 6 etapów i 13 części (2/2/2/2/2/3). Różne instancje i etapy można wykonywać współbieżnie; kroki są opisowe i nie wymuszają kolejności. Nie dodano blokad, markerów ani replikacji. Zob. też [przepływ Stage02](Scenes-Tutorial-And-Level-Flow.md#stage02--prowadzenie-tutorialu).
+
+Porady fundamentu zaczynają się przed ukończeniem i opisują transport gotowej partii, załadunek/dokowanie, wylewanie przez dwóch graczy, odzyskanie po krytycznej porażce oraz schnięcie. Nie zawierają pozyskiwania, craftowania ani mieszania materiałów. Ścieżka sypkiej ziemi prowadzi przez trzy cykle chodzenia z wiadrem i zbierania; Stage02 nie używa legacy hardening. Porady przed ukończeniem fizycznego panelu i fundamentu obejmują ustawienie, a po błędnym ustawieniu podają korektę. Dotychczasowe mechaniki i procedury montażu pozostają bez zmian.
+
+Wskazówki są dostarczane z autorytatywnego snapshotu tylko do odczytu; late join otrzymuje aktualny stan, nie tylko zdarzenia historyczne. Istniejące przypisania księgi są uwzględniane, ale checkbox pozostaje oznaczeniem przydziału. HUD wybiera najpierw istotną aktywną pracę lub transport, następnie ostatnio użyty cel w promieniu 6 m, wykonalne przypisanie w bieżącym etapie i pozostałą poradę etapu; relewantna porada o błędzie ma priorytet.
+
+Weryfikacja authoringu/additive, idempotentnego reopen i read-only: `Artifacts/GuidanceFormatting/stage02-authoring.txt`, `Artifacts/GuidanceFormatting/stage02-reopen-validation.txt`. Build runtime, analizatory i kompilacja obu assembly testowych przeszły; testy ukierunkowane w izolowanej kopii trwają. Bez zweryfikowanej ręcznej interakcji host-client ani oceny wizualnej. Strict live Gameplay pozostaje oczekujący z powodu niepowiązanego dirty stanu lobby.

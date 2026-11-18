@@ -227,6 +227,26 @@ public class GameplayManager : MonoBehaviour
 
     public bool IsFullyAssembled => isFullyAsembled;
     public int CurrentBridgeStageIndex => currentBridgeBuildingStageIndex;
+    public bool IsBridgeProgressInitialized => bridgeProgressInitialized || hasAppliedInitialNetworkBridgeState;
+
+    /// <summary>Copies this bridge's cached references, with no scene-wide search.</summary>
+    public void CopyGuidanceComponents(List<BridgeComponent> results)
+    {
+        if (results == null) return;
+        results.Clear();
+        if (bridgeComponents != null) results.AddRange(bridgeComponents);
+    }
+
+    public bool IsComponentInCurrentBridgeStage(int componentId)
+    {
+        if (bridgeBuildingStages == null || bridgeComponentDataArray == null || isFullyAsembled ||
+            currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length) return false;
+        int[] indexes = bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes;
+        if (indexes == null) return false;
+        foreach (int index in indexes)
+            if (index >= 0 && index < bridgeComponentDataArray.Length && index == componentId) return true;
+        return false;
+    }
     public bool EnableRiverBedResourceRemoval => enableRiverBedResourceRemoval;
     public bool EnableUnsupportedWaterDowning => enableUnsupportedWaterDowning;
     public event EventHandler OnBridgeFullyAssembled;

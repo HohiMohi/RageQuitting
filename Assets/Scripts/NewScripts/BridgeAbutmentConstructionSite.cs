@@ -21,6 +21,11 @@ public class BridgeAbutmentConstructionSite : BridgeConstructionSite, ILevelingM
     private Quaternion rampBaseLocalRotation;
 
     public int LengthTilt => lengthTilt;
+    public override void CopyGuidancePrerequisites(List<BridgeComponent> results)
+    {
+        results?.Clear();
+        if (results != null && prerequisiteFoundation != null) results.Add(prerequisiteFoundation);
+    }
     public int WidthTilt => widthTilt;
     public bool IsLevelingCorrect => IsAxisCorrect(lengthTilt) && IsAxisCorrect(widthTilt);
     public bool IsLevelingActive => currentStage == BridgeConstructionStage.Leveling;

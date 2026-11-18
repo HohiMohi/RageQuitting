@@ -17,6 +17,8 @@ public class BridgeRequirementsUI : MonoBehaviour
     [SerializeField] private Vector2 panelSize = new Vector2(380f, 430f);
 
     private TextMeshProUGUI myTasksText;
+    private TextMeshProUGUI tutorialHelpText;
+    private string tutorialHelp = string.Empty;
     private ScrollRect scrollRect;
     private RectTransform contentRoot;
     private GameplayManager subscribedGameplayManager;
@@ -30,6 +32,15 @@ public class BridgeRequirementsUI : MonoBehaviour
 
     public bool IsVisible => isVisible;
     public ScrollRect ScrollRect => scrollRect;
+    public event Action<bool> VisibilityChanged;
+
+    public void SetTutorialHelp(string help)
+    {
+        help = help ?? string.Empty;
+        if (tutorialHelp == help) return;
+        tutorialHelp = help;
+        if (isVisible) Refresh(false);
+    }
 
     private void Awake()
     {
@@ -47,7 +58,9 @@ public class BridgeRequirementsUI : MonoBehaviour
 
     private void OnDisable()
     {
+        bool wasVisible = isVisible;
         isVisible = false;
+        if (wasVisible) VisibilityChanged?.Invoke(false);
         if (panelRoot != null)
         {
             panelRoot.SetActive(false);
@@ -202,6 +215,7 @@ public class BridgeRequirementsUI : MonoBehaviour
     private void SetVisible(bool visible)
     {
         EnsureReferences();
+        bool changed = isVisible != visible;
         isVisible = visible;
         if (panelRoot != null)
         {
@@ -212,6 +226,7 @@ public class BridgeRequirementsUI : MonoBehaviour
         {
             Refresh(true);
         }
+        if (changed) VisibilityChanged?.Invoke(visible);
     }
 
     public void ApplyWheelScroll(Vector2 delta)
@@ -333,6 +348,17 @@ public class BridgeRequirementsUI : MonoBehaviour
         currentStageText.text = currentText;
         myTasksText.text = tasksText;
         remainingStagesText.text = remainingText;
+        if (!string.IsNullOrEmpty(tutorialHelp) && tutorialHelpText == null && contentRoot != null)
+        {
+            tutorialHelpText = CreateText("TutorialHelp", contentRoot, 16f, FontStyles.Normal);
+            ConfigureBodyText(tutorialHelpText, FontStyles.Normal);
+            tutorialHelpText.transform.SetSiblingIndex(myTasksText.transform.GetSiblingIndex());
+        }
+        if (tutorialHelpText != null)
+        {
+            tutorialHelpText.gameObject.SetActive(!string.IsNullOrEmpty(tutorialHelp));
+            if (tutorialHelpText.text != tutorialHelp) tutorialHelpText.text = tutorialHelp;
+        }
     }
 
     private float GetScrollOffset()

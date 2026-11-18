@@ -16,6 +16,10 @@ public class RestartLevelUI : MonoBehaviour
     private const float MinimumPanelHeight = 320f;
 
     private bool isVisible;
+    private Toggle tutorialHudToggle;
+    private BridgeStageInfoManager tutorialPreference;
+
+    public Toggle TutorialHudToggle => tutorialHudToggle;
 
     private void Awake()
     {
@@ -32,6 +36,8 @@ public class RestartLevelUI : MonoBehaviour
 
     private void OnDisable()
     {
+        BindTutorialPreference(null);
+        if (tutorialHudToggle != null) tutorialHudToggle.gameObject.SetActive(false);
         if (playerInput != null)
         {
             playerInput.OnToggleRestartMenu -= PlayerInput_OnToggleRestartMenu;
@@ -110,6 +116,7 @@ public class RestartLevelUI : MonoBehaviour
     private void Refresh()
     {
         EnsureReferences();
+        BindTutorialPreference(BridgeStageInfoManager.GetCurrentGuidance());
         bool canRestart = restartController != null && restartController.CanRequestRestart;
         GameTimerManager timerManager = GameTimerManager.Instance;
         bool canStartTimer = timerManager != null && timerManager.CanStartTimer;
@@ -140,6 +147,69 @@ public class RestartLevelUI : MonoBehaviour
                 ? "The host can start the timer or restart the level."
                 : "Only the host can start the timer or restart the level.";
         }
+    }
+
+    private void BindTutorialPreference(BridgeStageInfoManager value)
+    {
+        if (tutorialPreference != value)
+        {
+            if (tutorialPreference != null) tutorialPreference.PresentationPreferenceChanged -= OnTutorialPreferenceChanged;
+            tutorialPreference = value;
+            if (tutorialPreference != null) tutorialPreference.PresentationPreferenceChanged += OnTutorialPreferenceChanged;
+        }
+        if (tutorialPreference != null && tutorialHudToggle == null && panelRoot != null) CreateTutorialToggle();
+        if (tutorialHudToggle != null)
+        {
+            bool available = tutorialPreference != null && tutorialPreference.UsesBridgeGuidance;
+            tutorialHudToggle.gameObject.SetActive(available);
+            if (available) tutorialHudToggle.SetIsOnWithoutNotify(tutorialPreference.ShowTutorialHud);
+            RectTransform panel = panelRoot != null ? panelRoot.GetComponent<RectTransform>() : null;
+            if (panel != null) panel.sizeDelta = new Vector2(panel.sizeDelta.x,
+                Mathf.Max(panelSize.y, MinimumPanelHeight) + (available ? 58f : 0f));
+        }
+    }
+
+    private void OnTutorialPreferenceChanged() => BindTutorialPreference(tutorialPreference);
+
+    private void CreateTutorialToggle()
+    {
+        GameObject row = new GameObject("ShowTutorialHUD", typeof(RectTransform), typeof(LayoutElement), typeof(Toggle));
+        row.transform.SetParent(panelRoot.transform, false);
+        row.GetComponent<LayoutElement>().minHeight = 44f;
+        tutorialHudToggle = row.GetComponent<Toggle>();
+        tutorialHudToggle.onValueChanged.AddListener(OnTutorialToggleChanged);
+        GameObject box = new GameObject("Checkbox", typeof(RectTransform), typeof(Image));
+        RectTransform boxRect = box.GetComponent<RectTransform>();
+        boxRect.SetParent(row.transform, false);
+        boxRect.anchorMin = new Vector2(0f, .5f);
+        boxRect.anchorMax = new Vector2(0f, .5f);
+        boxRect.pivot = new Vector2(0f, .5f);
+        boxRect.anchoredPosition = Vector2.zero;
+        boxRect.sizeDelta = new Vector2(28f, 28f);
+        Image background = box.GetComponent<Image>();
+        background.color = new Color(.16f, .2f, .24f);
+        GameObject mark = new GameObject("Checkmark", typeof(RectTransform), typeof(Image));
+        RectTransform markRect = mark.GetComponent<RectTransform>();
+        markRect.SetParent(boxRect, false);
+        markRect.anchorMin = Vector2.zero;
+        markRect.anchorMax = Vector2.one;
+        markRect.offsetMin = new Vector2(6f, 6f);
+        markRect.offsetMax = new Vector2(-6f, -6f);
+        Image checkmark = mark.GetComponent<Image>();
+        checkmark.color = new Color(.25f, .8f, .5f);
+        tutorialHudToggle.targetGraphic = background;
+        tutorialHudToggle.graphic = checkmark;
+        TextMeshProUGUI label = CreateText("Label", row.transform, "Show tutorial HUD", 18f, FontStyles.Normal, TextAlignmentOptions.Left);
+        RectTransform labelRect = label.rectTransform;
+        labelRect.anchorMin = Vector2.zero;
+        labelRect.anchorMax = Vector2.one;
+        labelRect.offsetMin = new Vector2(40f, 0f);
+        labelRect.offsetMax = Vector2.zero;
+    }
+
+    private void OnTutorialToggleChanged(bool visible)
+    {
+        if (tutorialPreference != null) tutorialPreference.SetTutorialHudVisible(visible);
     }
 
     private void EnsureReferences()

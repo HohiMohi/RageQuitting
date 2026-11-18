@@ -20,7 +20,7 @@
 
 # Model configuration
 
-- Use `gpt-6.1-sol` as the main agent model, with `xhigh` reasoning for research, planning, and final code review.
+- Use `gpt-6.2-sol` as the main agent model, with `xhigh` reasoning for research, planning, and final code review.
 - Before starting one of these phases, check the current task's model and reasoning setting when that information is available.
 - If the main agent cannot change an incorrect model or reasoning setting, ask the user to change it before continuing that phase.
 - Never claim that a model or reasoning setting was changed without confirmation.
@@ -138,3 +138,7 @@ Run the final command from `D:\Programy\UnityProjects\RageQuitting`:
 ## 2026-10-25
 
 - Switched the main agent model to gpt-6.1-sol, retaining xhigh reasoning for research, planning, and final code review.
+
+## 2026-11-18
+
+- Updated the main agent model guidance to gpt-6.2-sol, retaining xhigh reasoning for research, planning, and final code review.

@@ -17,27 +17,94 @@ MonoBehaviour:
     title: Wooden Foundation
     partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
     steps:
-    - instruction: Clear the marked site
+    - guidanceKey: foundation.clear
+      instruction: Clear the marked foundation site
+      detailedHelp: Use the Axe for wooden obstacles in the marked site. Work together
+        to release any flexible sapling, then clear the area before digging.
       requirements:
       - displayName: Axe
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Loosen all three soil layers
+    - guidanceKey: foundation.soften.1
+      instruction: Soften the next soil layer (cycle 1/3)
+      detailedHelp: Use the Shovel on this foundation until the current layer is
+        loosened, then remove its soil. Alternate softening and collection for all
+        configured cycles.
       requirements:
       - displayName: Shovel
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Remove 6 soil portions from each layer
+    - guidanceKey: foundation.collect.1
+      instruction: Collect the loosened soil (cycle 1/3)
+      detailedHelp: Carry a bucket into the loosened soil; walking through it collects
+        automatically. Hold the alternate action when using the bucket action. When
+        full, leave the excavation and empty it outside, then return. Complete this
+        collection cycle before softening again.
       requirements:
       - displayName: Bucket
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Deliver and pour one prepared concrete batch
+    - guidanceKey: foundation.soften.2
+      instruction: Soften the next soil layer (cycle 2/3)
+      detailedHelp: Use the Shovel on this foundation until the current layer is
+        loosened, then remove its soil. Alternate softening and collection for all
+        configured cycles.
+      requirements:
+      - displayName: Shovel
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: foundation.collect.2
+      instruction: Collect the loosened soil (cycle 2/3)
+      detailedHelp: Carry a bucket into the loosened soil; walking through it collects
+        automatically. Hold the alternate action when using the bucket action. When
+        full, leave the excavation and empty it outside, then return. Complete this
+        collection cycle before softening again.
+      requirements:
+      - displayName: Bucket
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: foundation.soften.3
+      instruction: Soften the next soil layer (cycle 3/3)
+      detailedHelp: Use the Shovel on this foundation until the current layer is
+        loosened, then remove its soil. Alternate softening and collection for all
+        configured cycles.
+      requirements:
+      - displayName: Shovel
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: foundation.collect.3
+      instruction: Collect the loosened soil (cycle 3/3)
+      detailedHelp: Carry a bucket into the loosened soil; walking through it collects
+        automatically. Hold the alternate action when using the bucket action. When
+        full, leave the excavation and empty it outside, then return. Complete this
+        collection cycle before softening again.
+      requirements:
+      - displayName: Bucket
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: foundation.concrete
+      instruction: Bring ready concrete and pour together
+      detailedHelp: Use the provided ready concrete batch. Dock an empty wheelbarrow
+        at the mixer, load it, transport it to this foundation and dock it. Take
+        the two pour slots, wait for a partner and coordinate the pouring controls.
+        No material gathering or mixer recipe is needed. Use the Pickaxe on the hardened
+        failed concrete. After it breaks, move the same trapped wheelbarrow out of
+        the excavation, then reload and retry the pour.
       requirements:
       - displayName: Loaded Concrete Wheelbarrow
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Deliver and mount the foundation
+      - displayName: Pickaxe
+        sprite: {fileID: 6991357674887153452, guid: ebd4285913526c149b0f170953a45087, type: 3}
+    - guidanceKey: foundation.dry
+      instruction: Wait for the concrete to dry
+      detailedHelp: You can help at another site while the concrete dries. Mount
+        the foundation part after it becomes ready.
+      requirements: []
+    - guidanceKey: foundation.mount
+      instruction: Carry the part into its ghost and hold steady
+      detailedHelp: Carry the matching part together when needed. Move it into the
+        ghost, match its position and rotation and keep it still until the socket
+        mounts it.
       requirements:
       - displayName: Wooden Foundation
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Hammer it into place
+    - guidanceKey: foundation.hammer
+      instruction: Hammer the mounted foundation
+      detailedHelp: Use the Industrial Hammer on the mounted foundation until its
+        assembly is complete.
       requirements:
       - displayName: Industrial Hammer
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
@@ -45,19 +112,36 @@ MonoBehaviour:
     title: Wooden Abutment
     partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
     steps:
-    - instruction: Deliver and mount the abutment
-      requirements: []
-    - instruction: Measure and level both axes
+    - guidanceKey: abutment.mount
+      instruction: Carry the part into its ghost and hold steady
+      detailedHelp: Carry the matching part together when needed. Move it into the
+        ghost, match its position and rotation and keep it still until the socket
+        mounts it.
       requirements:
-      - displayName: Industrial Hammer
+      - displayName: Wooden Abutment
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: abutment.level
+      instruction: Measure both axes, adjust, then confirm
+      detailedHelp: Use the Spirit Level at the length and width measurement points.
+        Read its visible result, adjust the appropriate points with the Industrial
+        Hammer and measure again. Confirm leveling with interact when both axes are
+        correct.
+      requirements:
       - displayName: Spirit Level
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Secure all four anchors
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: abutment.anchor
+      instruction: Hammer all four anchors
+      detailedHelp: Work around the abutment and hammer each of its four anchors
+        until every anchor is secure.
       requirements:
       - displayName: Industrial Hammer
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Backfill the site
+    - guidanceKey: abutment.backfill
+      instruction: Backfill the abutment
+      detailedHelp: Use the Shovel at the abutment's backfill points until backfilling
+        is complete.
       requirements:
       - displayName: Shovel
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
@@ -65,15 +149,30 @@ MonoBehaviour:
     title: Wooden Main Girder
     partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
     steps:
-    - instruction: Deliver and mount the girder
-      requirements: []
-    - instruction: Measure and level both axes
+    - guidanceKey: girder.mount
+      instruction: Carry the part into its ghost and hold steady
+      detailedHelp: Carry the matching part together when needed. Move it into the
+        ghost, match its position and rotation and keep it still until the socket
+        mounts it.
       requirements:
-      - displayName: Industrial Hammer
+      - displayName: Wooden Main Girder
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: girder.level
+      instruction: Measure both axes, adjust, then confirm
+      detailedHelp: Use the Spirit Level at the length and width measurement points.
+        Read its visible result, adjust the appropriate points with the Industrial
+        Hammer and measure again. Confirm leveling with interact when both axes are
+        correct.
+      requirements:
       - displayName: Spirit Level
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Fasten all four points in paired order
+      - displayName: Industrial Hammer
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: girder.fasten
+      instruction: Strike the diagonal fastener pairs
+      detailedHelp: Use the Industrial Hammer. After starting a fastener, strike
+        its diagonally opposite partner before the pair timer expires. Coordinate
+        both pairs with your partner.
       requirements:
       - displayName: Industrial Hammer
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
@@ -81,17 +180,32 @@ MonoBehaviour:
     title: Wooden Cross Beam
     partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
     steps:
-    - instruction: Deliver and mount the beam
-      requirements: []
-    - instruction: Align its position
+    - guidanceKey: crossbeam.mount
+      instruction: Carry the part into its ghost and hold steady
+      detailedHelp: Carry the matching part together when needed. Move it into the
+        ghost, match its position and rotation and keep it still until the socket
+        mounts it.
+      requirements:
+      - displayName: Wooden Cross Beam
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: crossbeam.align
+      instruction: Hammer the cross beam into alignment
+      detailedHelp: Strike the indicated alignment points from opposed directions
+        to correct the cross beam's offset. Continue until alignment is accepted.
       requirements:
       - displayName: Industrial Hammer
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Tighten both clamps alternately
+    - guidanceKey: crossbeam.clamp
+      instruction: Alternate between the two clamps
+      detailedHelp: Use the Wrench on the left and right clamps alternately. Keep
+        their progress close; a clamp cannot advance too far ahead of the other.
       requirements:
       - displayName: Wrench
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Secure all four fasteners
+    - guidanceKey: crossbeam.fasten
+      instruction: Tighten the cross beam fasteners
+      detailedHelp: Use the Wrench on every indicated fastener until the cross beam
+        is complete.
       requirements:
       - displayName: Wrench
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
@@ -99,17 +213,32 @@ MonoBehaviour:
     title: Wooden Diagonal Bracing
     partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
     steps:
-    - instruction: Deliver and mount the brace
-      requirements: []
-    - instruction: Align its angle
+    - guidanceKey: brace.mount
+      instruction: Carry the part into its ghost and hold steady
+      detailedHelp: Carry the matching part together when needed. Move it into the
+        ghost, match its position and rotation and keep it still until the socket
+        mounts it.
+      requirements:
+      - displayName: Wooden Diagonal Bracing
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - guidanceKey: brace.align
+      instruction: Hammer the brace to the right angle
+      detailedHelp: Strike the brace's angle adjustment points with the Industrial
+        Hammer until alignment is accepted.
       requirements:
       - displayName: Industrial Hammer
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Temporarily secure both ends
+    - guidanceKey: brace.fix
+      instruction: Temporarily fix both brace ends
+      detailedHelp: Use the Industrial Hammer at the start and end fixing points.
+        Secure both ends before tightening the fasteners.
       requirements:
       - displayName: Industrial Hammer
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Fasten the marked points in order
+    - guidanceKey: brace.fasten
+      instruction: Tighten the brace in the indicated order
+      detailedHelp: 'Use the Wrench and follow the highlighted fastener order: start
+        top, end bottom, start bottom, end top.'
       requirements:
       - displayName: Wrench
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
@@ -117,17 +246,25 @@ MonoBehaviour:
     title: Wooden Deck Panel
     partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
     steps:
-    - instruction: Deliver and mount the deck panel.
-      requirements: []
-    - instruction: Use F / E to position the panel by hand over its marked slot on
-        the main girders.
-      requirements: []
-    - instruction: Keep the panel level and correctly oriented within the marked
-        mounting area.
-      requirements: []
-    - instruction: Place a separate Mounting Nail through the panel into a main girder
-        in each of the four quadrants, then strike each nail three times with the
-        Industrial Hammer.
+    - guidanceKey: panel.place
+      instruction: Place the panel by hand and assess its pose
+      detailedHelp: Pick up the physical panel, use hand placement over its marked
+        slot and release it to assess the pose. Correct its position, height and
+        orientation. For a bad nailed pose, use the Crowbar to remove the nails and
+        reset the panel before trying again.
+      requirements:
+      - displayName: Wooden Deck Panel
+        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+      - displayName: Crowbar
+        sprite: {fileID: 21300000, guid: 78099bae4e543ab4d85aa61eebc7cef5, type: 3}
+    - guidanceKey: panel.nail
+      instruction: Secure all four panel quarters
+      detailedHelp: Place a separate Mounting Nail through the panel into a main
+        girder in each quarter. Each nail must connect both objects and receive its
+        configured number of Industrial Hammer strikes. Nails on the quarter boundaries
+        or into the wrong object do not count. Remove incorrect nails with the Crowbar.
       requirements:
       - displayName: Industrial Hammer
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+      - displayName: Crowbar
+        sprite: {fileID: 21300000, guid: 78099bae4e543ab4d85aa61eebc7cef5, type: 3}

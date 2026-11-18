@@ -27,7 +27,7 @@ public sealed class PlayerSpiritLevelController : NetworkBehaviour
             : SpiritLevelMeasurementAxis.Length;
     public SpiritLevelProfileSO SelectedProfile => IsSpiritLevelSelected() ? GetSelectedProfile() : null;
     private bool IsNetworkActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
-    private int MeasuredComponentId => IsNetworkActive ? measuredComponentIdNetwork.Value : localMeasuredComponentId;
+    public int MeasuredComponentId => IsNetworkActive ? measuredComponentIdNetwork.Value : localMeasuredComponentId;
     private int MeasuredPointIdValue => IsNetworkActive ? measuredPointIdNetwork.Value : localMeasuredPointId;
     private sbyte MeasuredViewSign => IsNetworkActive ? measuredViewSignNetwork.Value : localMeasuredViewSign;
 

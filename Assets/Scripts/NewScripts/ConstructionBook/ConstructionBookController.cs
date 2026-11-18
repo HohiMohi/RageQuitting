@@ -468,6 +468,26 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
         return assignments.Contains(new ConstructionBookAssignment(spreadIndex, stepIndex, clientId));
     }
 
+    /// <summary>Structured read-only task data; display text is never a progress identifier.</summary>
+    public void CopyGuidanceSteps(ulong clientId, List<BridgeGuidanceBookStep> results)
+    {
+        if (results == null) return;
+        results.Clear();
+        if (!initialized || catalog == null) return;
+        for (int spread = 0; spread < spreads.Count; spread++)
+        {
+            BridgeComponentSO component = spreads[spread].Component;
+            if (!catalog.TryGetEntry(component, out ConstructionBookCatalogSO.Entry entry) || entry.steps == null) continue;
+            for (int stepIndex = 0; stepIndex < entry.steps.Length; stepIndex++)
+            {
+                ConstructionBookCatalogSO.Step step = entry.steps[stepIndex];
+                if (step == null) continue;
+                results.Add(new BridgeGuidanceBookStep(component, spread, stepIndex, step.guidanceKey,
+                    step.instruction, step.detailedHelp, IsAssigned(spread, stepIndex, clientId)));
+            }
+        }
+    }
+
     public bool HasBookDataFor(ISet<BridgeComponentSO> componentTypes)
     {
         if (!initialized || catalog == null || componentTypes == null) return false;

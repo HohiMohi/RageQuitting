@@ -225,6 +225,9 @@ public class WheelbarrowController : NetworkBehaviour, IConcreteBatchReceiver, I
     public ulong PassengerClientId => IsSessionActive ? passengerNetwork.Value : localPassenger;
     public int ConcreteLoads => IsSessionActive ? concreteLoadsNetwork.Value : localConcreteLoads;
     public bool HasConcrete => ConcreteLoads > 0;
+    public WheelbarrowDockingStation CurrentDock => activeDock != null ? activeDock
+        : TryGetNetworkObject(dockNetwork.Value, out NetworkObject dockObject)
+            ? dockObject.GetComponent<WheelbarrowDockingStation>() : null;
     public bool HasHardenedPassengerConcrete => TryGetPassengerConcreteTrap(out PlayerConcreteTrapController trap) &&
         trap.IsAttachedToWheelbarrow && trap.IsSourcedBy(this);
     public bool HasPourableConcrete => HasConcrete && !HasHardenedPassengerConcrete;

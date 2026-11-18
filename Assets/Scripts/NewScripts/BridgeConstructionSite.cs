@@ -59,6 +59,21 @@ public class BridgeConstructionSite : MonoBehaviour, IDamageable, IInteractionPr
     public virtual bool CanAcceptMountedComponent => currentStage == BridgeConstructionStage.ReadyForMount;
     public virtual bool AllowsStandardAssemblyWork => currentStage == BridgeConstructionStage.Hammering;
     public BridgeComponent BridgeComponent => bridgeComponent;
+    public virtual void CopyGuidancePrerequisites(List<BridgeComponent> results) => results?.Clear();
+    public int RequiredDiggingCycles => workflow != null ? workflow.DiggingCycleCount : 3;
+    public WheelbarrowController RecoveryWheelbarrow => recoveryWheelbarrow;
+    public float ConcreteDryingDuration => workflow != null ? workflow.ConcreteDryingDuration : 30f;
+    public bool IsGuidanceClearingTarget(Component target)
+    {
+        if (target == null) return false;
+        if (clearingObstacles != null)
+            foreach (BaseResourceNew obstacle in clearingObstacles)
+                if (obstacle != null && (target.transform == obstacle.transform || target.transform.IsChildOf(obstacle.transform))) return true;
+        if (clearingSaplings != null)
+            foreach (FlexibleSaplingController sapling in clearingSaplings)
+                if (sapling != null && (target.transform == sapling.transform || target.transform.IsChildOf(sapling.transform))) return true;
+        return false;
+    }
     public FoundationExcavationVolume ExcavationVolume => excavationVolume;
     public FoundationDiggingSubstage DiggingSubstage => diggingSubstage;
     public int DiggingCycleIndex => diggingCycleIndex;

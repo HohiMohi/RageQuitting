@@ -41,6 +41,7 @@ public partial class PlayerActionController : NetworkBehaviour
     public event EventHandler<ToolActionEventArgs> OnToolActionStarted;
     public event EventHandler<ToolActionEventArgs> OnToolActionImpact;
     public event EventHandler<ToolActionEventArgs> OnToolActionEnded;
+    public event Action<Component> LocalActionTargetObserved;
 
     private PlayerInventory _inventory;
     private PlayerInputNew _playerInputNew;
@@ -265,6 +266,7 @@ public partial class PlayerActionController : NetworkBehaviour
         EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
         if (TryConsumeAimedMountingNail(selectedItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
         {
+            LocalActionTargetObserved?.Invoke(nailCollider);
             SpawnImpactEffect(nailCollider, nailSurface);
             OnActionPerformed?.Invoke(this, EventArgs.Empty);
             return true;
@@ -285,6 +287,8 @@ public partial class PlayerActionController : NetworkBehaviour
         }
         else
         {
+            Component observedTarget = damageable as Component;
+            LocalActionTargetObserved?.Invoke(observedTarget != null ? observedTarget : hitCollider);
             damageable.DamageReceived(selectedItem, actionDamage);
         }
 
@@ -1255,17 +1259,21 @@ public partial class PlayerActionController : NetworkBehaviour
     private void ResolveProfiledImpact()
     {
         EquippableItemSO impactItem = actionItem;
+        Component observedTarget = null;
         bool hit = false;
         ActionImpactSurfaceType surfaceType = ActionImpactSurfaceType.Default;
         if (TryConsumeAimedMountingNail(impactItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
         {
             hit = true;
             surfaceType = nailSurface;
+            observedTarget = nailCollider;
             SpawnImpactEffect(nailCollider, surfaceType);
             OnActionPerformed?.Invoke(this, EventArgs.Empty);
         }
         else if (TryGetSingleActionTarget(actionRange, out IDamageable damageable, out Collider hitCollider))
         {
+            observedTarget = damageable as Component;
+            if (observedTarget == null) observedTarget = hitCollider;
             if (IsCombatTarget(damageable))
             {
                 hit = TrySubmitCombatImpact(damageable, impactItem);
@@ -1290,6 +1298,7 @@ public partial class PlayerActionController : NetworkBehaviour
             EquippableActionPhase.ImpactFreeze,
             hit,
             surfaceType));
+        if (observedTarget != null) LocalActionTargetObserved?.Invoke(observedTarget);
     }
 
     private void CompleteProfiledAction()

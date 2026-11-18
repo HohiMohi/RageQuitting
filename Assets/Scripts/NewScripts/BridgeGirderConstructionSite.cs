@@ -25,6 +25,11 @@ public class BridgeGirderConstructionSite : BridgeConstructionSite, ILevelingMea
     private Quaternion girderBaseLocalRotation;
 
     public int LengthTilt => lengthTilt;
+    public override void CopyGuidancePrerequisites(List<BridgeComponent> results)
+    {
+        results?.Clear();
+        if (results != null && prerequisiteSupports != null) results.AddRange(prerequisiteSupports);
+    }
     public int WidthTilt => widthTilt;
     public bool IsLevelingCorrect => IsAxisCorrect(lengthTilt) && IsAxisCorrect(widthTilt);
     public bool IsLevelingActive => currentStage == BridgeConstructionStage.Leveling;

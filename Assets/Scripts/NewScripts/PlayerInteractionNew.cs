@@ -98,11 +98,15 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
 
     public EventHandler<UpdateHoldedItemMovementSpeedPenaltyEventArgs> UpdateHoldedItemMovementSpeedPenalty;
     public event EventHandler OnInteractionPerformed;
+    /// <summary>Local intent/usage only; never proof of authoritative completion.</summary>
+    public event Action<Component> LocalInteractionTargetObserved;
     public event EventHandler OnHeldObjectChanged;
     public event EventHandler OnHeldObjectForcedRelease;
     public event EventHandler OnCurrentTargetChanged;
     public event Action<SharedCarryPickupRejectedEventArgs> OnSharedCarryPickupRejected;
     public MonoBehaviour CurrentTarget => _currentTarget;
+    public MonoBehaviour BucketActionTarget => activeBucketHold != null ? bucketHoldTarget : null;
+    public PortableSubstanceContainer ActiveBucket => activeBucketHold;
     public bool TryConsumeContextAction(ContextActionKind action)
     {
         IContextActionConsumer consumer = _currentTarget as IContextActionConsumer;
@@ -239,6 +243,7 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
         if (!SetBucketActionIntent(container, true)) return;
         activeBucketHold = container;
         bucketHoldTarget = target;
+        LocalInteractionTargetObserved?.Invoke(target);
         bucketHoldStartedAt = Time.unscaledTime;
         bucketHoldAimedPit = ResolveAimedBucketPit();
         bucketHoldHasSemanticTarget = container.ShouldTrackLooseSoilPitAim(target) && bucketHoldAimedPit != null;
@@ -450,6 +455,8 @@ public class PlayerInteractionNew : MonoBehaviour, ICarriedPlayerAnchorProvider
             TryDropHeldObject();
             return;
         }
+
+        LocalInteractionTargetObserved?.Invoke(target);
 
         if (_pickedUpGameObject == target.gameObject)
         {

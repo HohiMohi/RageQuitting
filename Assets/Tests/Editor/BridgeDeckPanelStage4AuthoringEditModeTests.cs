@@ -133,41 +133,56 @@ public sealed class BridgeDeckPanelStage4AuthoringEditModeTests
             }
             Assert.That(panelEntry, Is.Not.Null, path);
             SerializedProperty steps = panelEntry.FindPropertyRelative("steps");
+            bool keyedTutorial = path.Contains("ConstructionBookCatalogShort");
             string instructions = string.Join(" ", Enumerable.Range(0, steps.arraySize)
-                .Select(i => steps.GetArrayElementAtIndex(i).FindPropertyRelative("instruction").stringValue));
-            Assert.That(instructions, Does.Contain("F / E"), path);
-            Assert.That(instructions, Does.Contain("main girders"), path);
+                .Select(i => steps.GetArrayElementAtIndex(i).FindPropertyRelative("instruction").stringValue + " " +
+                    steps.GetArrayElementAtIndex(i).FindPropertyRelative("detailedHelp").stringValue));
+            if (!keyedTutorial) Assert.That(instructions, Does.Contain("F / E"), path);
+            Assert.That(instructions, Does.Contain("main girder"), path);
             Assert.That(instructions, Does.Contain("separate Mounting Nail"), path);
-            Assert.That(instructions, Does.Contain("four quadrants"), path);
-            Assert.That(instructions, Does.Contain("three times"), path);
-            Assert.That(instructions, Does.Contain("three times"), path);
+            if (!keyedTutorial)
+            {
+                Assert.That(instructions, Does.Contain("four quadrants"), path);
+                Assert.That(instructions, Does.Contain("three times"), path);
+            }
+            else
+            {
+                Assert.That(steps.arraySize, Is.EqualTo(2));
+                Assert.That(steps.GetArrayElementAtIndex(0).FindPropertyRelative("guidanceKey").stringValue, Is.EqualTo("panel.place"));
+                Assert.That(steps.GetArrayElementAtIndex(1).FindPropertyRelative("guidanceKey").stringValue, Is.EqualTo("panel.nail"));
+            }
             Assert.That(instructions, Does.Not.Contain("Set an even gap"), path);
             Assert.That(instructions, Does.Not.Contain("Wrench"), path);
         }
     }
 
     [Test]
-    public void TutorialStageInfoContainsOnePhysicalDeckPanelCompletionMessage()
+    public void BridgeGuidance_TutorialStageInfoUsesGuidanceWithoutCompletionInstructions()
     {
-        UnityEngine.Object panel = AssetDatabase.LoadMainAssetAtPath(
-            "Assets/ScriptableObjectAssets/New/BridgeComponentSO/WoodenDeckPanel.asset");
         Component manager = FindComponent("BridgeStageInfoManager", "BridgeStageInfoManager");
-        SerializedProperty entries = new SerializedObject(manager).FindProperty("entries");
-        int matches = 0;
-        string message = null;
-        for (int i = 0; i < entries.arraySize; i++)
-        {
-            SerializedProperty entry = entries.GetArrayElementAtIndex(i);
-            if (entry.FindPropertyRelative("componentType").objectReferenceValue != panel
-                || entry.FindPropertyRelative("stage").enumValueIndex != (int)Enum.Parse(TypeByName("BridgeConstructionStage"), "Complete")) continue;
-            matches++;
-            message = entry.FindPropertyRelative("message").stringValue;
-        }
-        Assert.That(matches, Is.EqualTo(1), "The live authoring helper is idempotent for the panel completion message.");
-        Assert.That(message, Does.Contain("separate Mounting Nail"));
-        Assert.That(message, Does.Contain("four quadrants"));
-        Assert.That(message, Does.Contain("three times"));
-        Assert.That(message, Does.Contain("Industrial Hammer"));
+        SerializedObject serialized = new SerializedObject(manager);
+        Assert.That(serialized.FindProperty("useBridgeGuidance").boolValue, Is.True);
+        Assert.That(serialized.FindProperty("entries").arraySize, Is.Zero);
+        Type authoring = Type.GetType("BridgeDeckPanelStage4Authoring, Assembly-CSharp-Editor", true);
+        string validation = (string)authoring.GetMethod("ValidateTutorialGuidance").Invoke(null, new object[] { targetScene });
+        StringAssert.Contains("6 stages, 13 parts", validation);
+    }
+
+    [Test]
+    public void BridgeGuidance_AuthoringIsIdempotentAndKeepsTheSharedCatalogUntouched()
+    {
+        const string sharedPath = "Assets/ScriptableObjectAssets/New/ConstructionBook/ConstructionBookCatalog.asset";
+        const string shortPath = "Assets/Experiments/TutorialTerrainStage02/BridgeWidthRevision/ConstructionBookCatalogShort.asset";
+        string shared = System.IO.File.ReadAllText(sharedPath);
+        string authored = System.IO.File.ReadAllText(shortPath);
+        UnityEngine.Object catalog = AssetDatabase.LoadMainAssetAtPath(shortPath);
+        bool wasDirty = EditorUtility.IsDirty(catalog);
+        Type authoring = Type.GetType("BridgeDeckPanelStage4Authoring, Assembly-CSharp-Editor", true);
+        authoring.GetMethod("AuthorTutorialGuidance").Invoke(null, new object[] { targetScene });
+        Assert.That(targetScene.isDirty, Is.EqualTo(targetSceneWasDirty));
+        Assert.That(EditorUtility.IsDirty(catalog), Is.EqualTo(wasDirty));
+        Assert.That(System.IO.File.ReadAllText(sharedPath), Is.EqualTo(shared));
+        Assert.That(System.IO.File.ReadAllText(shortPath), Is.EqualTo(authored));
     }
 
     private Component FindComponent(string path, string typeName)

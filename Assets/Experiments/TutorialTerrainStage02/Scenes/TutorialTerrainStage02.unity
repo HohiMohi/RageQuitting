@@ -15377,31 +15377,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a41889c1cfe2b04bbebe9e056055977, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BridgeStageInfoManager
-  entries:
-  - componentType: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
-    stage: 1
-    title: Area cleared
-    message: Use the Shovel inside the marked area to dig the foundation pit.
-  - componentType: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
-    stage: 2
-    title: Excavation complete
-    message: Bring the Wooden Foundation to the prepared construction site.
-  - componentType: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
-    stage: 3
-    title: Foundation delivered
-    message: Use the Industrial Hammer to secure the foundation in place.
-  - componentType: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
-    stage: 4
-    title: Foundation complete
-    message: The foundation is secured. Construction can continue with the next bridge
-      component.
-  - componentType: {fileID: 11400000, guid: ccf15358972f0704385ec5d608ff91f4, type: 2}
-    stage: 4
-    title: Deck panel secured
-    message: Use F / E to position the panel by hand on the marked main-girder slot.
-      Place a separate Mounting Nail through the panel into a main girder in each
-      of the four quadrants, then strike each nail three times with the Industrial
-      Hammer.
+  entries: []
+  useBridgeGuidance: 1
 --- !u!4 &622250425
 Transform:
   m_ObjectHideFlags: 0

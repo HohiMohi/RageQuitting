@@ -44,6 +44,11 @@ public class BridgeDiagonalBracingConstructionSite : BridgeConstructionSite
     private BridgeMountSocket mountSocket;
 
     public DiagonalBracingOrientation Orientation => orientation;
+    public override void CopyGuidancePrerequisites(List<BridgeComponent> results)
+    {
+        results?.Clear();
+        if (results != null && prerequisiteCrossBeams != null) results.AddRange(prerequisiteCrossBeams);
+    }
     public int AlignmentStep => alignmentStep;
     public float StartTemporaryFixProgress => startTemporaryFixProgress;
     public float EndTemporaryFixProgress => endTemporaryFixProgress;

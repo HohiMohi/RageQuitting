@@ -15,7 +15,10 @@ public sealed class ConstructionBookCatalogSO : ScriptableObject
     [Serializable]
     public sealed class Step
     {
+        [Tooltip("Optional stable tutorial key. Assignment indices and network format are unchanged.")]
+        public string guidanceKey;
         [TextArea] public string instruction;
+        [TextArea(3, 10)] public string detailedHelp;
         public Requirement[] requirements = Array.Empty<Requirement>();
     }
 
@@ -58,6 +61,13 @@ public sealed class ConstructionBookCatalogSO : ScriptableObject
             else for (int s = 0; s < entry.steps.Length; s++)
             {
                 Step step = entry.steps[s];
+                if (step != null && !string.IsNullOrWhiteSpace(step.guidanceKey))
+                    for (int previous = 0; previous < s; previous++)
+                        if (entry.steps[previous] != null && entry.steps[previous].guidanceKey == step.guidanceKey)
+                        {
+                            yield return $"Entry {i + 1}, step {s + 1}: duplicate guidance key '{step.guidanceKey}'.";
+                            break;
+                        }
                 if (step == null || string.IsNullOrWhiteSpace(step.instruction))
                     yield return $"Entry {i + 1}, step {s + 1}: missing instruction.";
                 if (step == null || step.requirements == null) continue;

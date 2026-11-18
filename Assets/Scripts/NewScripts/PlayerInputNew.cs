@@ -618,6 +618,16 @@ public class PlayerInputNew : NetworkBehaviour
         };
     }
 
+    /// <summary>Reads the player's initialized action instance, including current binding overrides.</summary>
+    public string GetInitializedBindingDisplay(string gameActionName)
+    {
+        if (!inputInitialized || playerGameInputActions == null) return string.Empty;
+        InputAction action = playerGameInputActions.asset.FindAction("Game/" + gameActionName, false);
+        if (action == null) return string.Empty;
+        string display = action.GetBindingDisplayString();
+        return string.IsNullOrWhiteSpace(display) ? "Unbound" : display;
+    }
+
     private void OnEnable()
     {
         if (!inputInitialized && ShouldRunAsLocalPlayer())

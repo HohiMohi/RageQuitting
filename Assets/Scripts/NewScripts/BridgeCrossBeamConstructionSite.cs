@@ -27,6 +27,11 @@ public class BridgeCrossBeamConstructionSite : BridgeConstructionSite
     private MaterialPropertyBlock indicatorPropertyBlock;
 
     public int AlignmentStep => alignmentStep;
+    public override void CopyGuidancePrerequisites(List<BridgeComponent> results)
+    {
+        results?.Clear();
+        if (results != null && prerequisiteGirders != null) results.AddRange(prerequisiteGirders);
+    }
     public float LeftClampProgress => leftClampProgress;
     public float RightClampProgress => rightClampProgress;
     public IReadOnlyList<float> FastenerProgress => fastenerProgress;
