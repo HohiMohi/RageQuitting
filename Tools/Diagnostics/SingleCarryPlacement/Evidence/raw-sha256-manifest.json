@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 1,
+  "createdAtUtc": "2026-11-06T18:53:42.8068494Z",
+  "evidence": [
+    {
+      "originalPath": "Artifacts/SingleCarryRpcRepro_20261105/Traces/network-movement-20261105T185252158Z-547bd8c6e0ee4ffbb1298bf467859eb2.json",
+      "archivePath": "HistoricalRefusals/refusal-185252158Z.json",
+      "role": "historical-refusal",
+      "sha256": "12ABAC1056E7D47B3A406A5849709585BC685057FA039CE56EAF0CDBC32A1302",
+      "bytes": 7274
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryRpcRepro_20261105/Traces/network-movement-20261105T191028214Z-cb6722e5528c4cf9b199bc3640cb8eca.json",
+      "archivePath": "HistoricalRefusals/refusal-191028214Z.json",
+      "role": "historical-refusal",
+      "sha256": "AAA27D7F56201D78CB718205B2ABB2FECF0B914C81E3EDBDCC5E728F78A7E4AA",
+      "bytes": 7299
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryRpcRepro_20261105/Findings.json",
+      "archivePath": "OlderRpcContext/Findings.json",
+      "role": "older-two-refusal-summary",
+      "sha256": "892BF5A5E24CF89AE0AF5A7FD34ACF300077B279330C8DA275B33C166B18AB0F",
+      "bytes": 3168
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryRpcRepro_20261105/NaturalRepeats/trial-index.json",
+      "archivePath": "OlderRpcContext/trial-index.json",
+      "role": "older-series-index",
+      "sha256": "B5F7B7883A79B5F2F969311BFBEEA47BECA51B78F0F8F054542F372C0FE63BAD",
+      "bytes": 51874
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryRpcRepro_20261105/NaturalRepeats/source-hashes-before.json",
+      "archivePath": "OlderRpcContext/source-hashes-before.json",
+      "role": "older-source-hashes",
+      "sha256": "C88299A447EF8A77DD4FCF76FEDCFCF11380B21DE74028FD6D2AB9F7AB523ED4",
+      "bytes": 673
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryRpcRepro_20261105/NaturalRepeats/source-hashes-after.json",
+      "archivePath": "OlderRpcContext/source-hashes-after.json",
+      "role": "older-source-hashes",
+      "sha256": "C88299A447EF8A77DD4FCF76FEDCFCF11380B21DE74028FD6D2AB9F7AB523ED4",
+      "bytes": 673
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateDivergence_20261106T150940Z/NaturalRepeats/Findings.json",
+      "archivePath": "Series80/Findings.json",
+      "role": "first-40-trials-20-per-delay-summary",
+      "sha256": "4F4A316B494741C038CE53AD5EA5DD55EF3B6F2F5BB8991A5597040606C86A2D",
+      "bytes": 11174
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateDivergence_20261106T150940Z/NaturalRepeats/trial-index.json",
+      "archivePath": "Series80/trial-index.json",
+      "role": "first-40-trials-20-per-delay-index",
+      "sha256": "BC5D4DC9F51265FEB9BD8E912EE716BC6AC81D15449B2E11B0D0836F4355A781",
+      "bytes": 124416
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateDivergence_20261106T150940Z/NaturalRepeats/series-run-summary.json",
+      "archivePath": "Series80/series-run-summary.json",
+      "role": "series-summary",
+      "sha256": "44CC93D9D97AC0D18563ABB55869C6A6BE96D8594441CEE467A78F3741278AD4",
+      "bytes": 504
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateDivergence_20261106T150940Z/accepted-source-hashes.json",
+      "archivePath": "Series80/accepted-source-hashes.json",
+      "role": "accepted-source-hashes",
+      "sha256": "91F51D57D94A5049E980CBD6B3E12A706F51F5858CB5C9DE629B76947CAA31BC",
+      "bytes": 1072
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateDivergence_20261106T150940Z/Traces/e41d165ad5f24b9d9a89ac44243e19d3.json",
+      "archivePath": "Series80/AcceptedMax/accepted-max-0ms-e41d165ad5f24b9d9a89ac44243e19d3.json",
+      "role": "accepted-max-residual-0ms",
+      "sha256": "DF2B7655F60AF82A86617758D3D2AB0C652B87DB14A8B52F8D5D1C84DA505884",
+      "bytes": 348504
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateDivergence_20261106T150940Z/Traces/403ff050c57b4298b02a8a1480e0cb69.json",
+      "archivePath": "Series80/AcceptedMax/accepted-max-100ms-403ff050c57b4298b02a8a1480e0cb69.json",
+      "role": "accepted-max-residual-100ms",
+      "sha256": "11F2C26A7577B79CBFE7515A8CD2112B3B6B0C39A0E46B3D7D43CB1F2C0F314C",
+      "bytes": 597456
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateData_20261106T172201Z/summary.json",
+      "archivePath": "Series80/DataBatch/summary.json",
+      "role": "second-40-trials-20-per-delay-summary",
+      "sha256": "CE0289D5C625BF7FEF3596C168D3DD6B99B1C2EF59B96D7739524FC276B8177C",
+      "bytes": 77036
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateData_20261106T172201Z/Pairs/batch-index.json",
+      "archivePath": "Series80/DataBatch/batch-index.json",
+      "role": "second-40-trials-20-per-delay-index",
+      "sha256": "DFEF0302F2497EF96E2AC84AB0422F038B7424ADB71AA2F3954D8666D988EE77",
+      "bytes": 130983
+    },
+    {
+      "originalPath": "Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\AcceptedSource\\Assets\\Scripts\\NetworkManagement\\ClientNetworkTransform.cs",
+      "archivePath": "Series80/AcceptedSource/ClientNetworkTransform.cs",
+      "role": "accepted-source-snapshot",
+      "sha256": "A2AE31668E65AC4D86797CF16456CD16476BE3051C41300E6B7A66FD49A85BEE",
+      "bytes": 16345
+    },
+    {
+      "originalPath": "Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\AcceptedSource\\Assets\\Scripts\\NetworkManagement\\SingleCarryStateDivergenceTrace.cs",
+      "archivePath": "Series80/AcceptedSource/SingleCarryStateDivergenceTrace.cs",
+      "role": "accepted-source-snapshot",
+      "sha256": "5EBDC209DC59D533BCA3D502F4AF5B6F6FD773CEB70855A3E32F61B8A443040C",
+      "bytes": 20951
+    },
+    {
+      "originalPath": "Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\AcceptedSource\\Assets\\Scripts\\NewScripts\\PlayerSingleCarryPlacementController.cs",
+      "archivePath": "Series80/AcceptedSource/PlayerSingleCarryPlacementController.cs",
+      "role": "accepted-source-snapshot",
+      "sha256": "71C179EA9832769724EA7FA7B808284694099AA91D8B0E066FA556364AA661C6",
+      "bytes": 36304
+    },
+    {
+      "originalPath": "Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\AcceptedSource\\Assets\\Scripts\\NewScripts\\PlayerSingleCarryPlacementNetworkPreview.cs",
+      "archivePath": "Series80/AcceptedSource/PlayerSingleCarryPlacementNetworkPreview.cs",
+      "role": "accepted-source-snapshot",
+      "sha256": "E394078EF86FE43346A069D14C80F7BBD094E4D51A8C9E185CB4576404BDCC86",
+      "bytes": 37291
+    },
+    {
+      "originalPath": "Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\AcceptedSource\\Assets\\StarterAssets\\FirstPersonController\\Scripts\\FirstPersonController.cs",
+      "archivePath": "Series80/AcceptedSource/FirstPersonController.cs",
+      "role": "accepted-source-snapshot",
+      "sha256": "F23C3FCCADDDAC3D392DCDBE2D93E339D893D181AB22AA35BF95FB056B1CA188",
+      "bytes": 38224
+    },
+    {
+      "originalPath": "Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\AcceptedSource\\Assets\\Tests\\PlayMode\\SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+      "archivePath": "Series80/AcceptedSource/SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+      "role": "accepted-source-snapshot",
+      "sha256": "7018347B49F764843FA8DB39CA0677A4E058793CC3385F359399C626438E4ED6",
+      "bytes": 155355
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateData_20261106T172201Z/accepted-source-hashes.json",
+      "archivePath": "Series80/DataBatch/accepted-source-hashes.json",
+      "role": "data-batch-source-hashes",
+      "sha256": "91F51D57D94A5049E980CBD6B3E12A706F51F5858CB5C9DE629B76947CAA31BC",
+      "bytes": 1072
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateData_20261106T172201Z/batch-start.json",
+      "archivePath": "Series80/DataBatch/batch-start.json",
+      "role": "data-batch-settings-and-package-context",
+      "sha256": "90A7629C048291A6C5BB7C848529454E3B9F5F66E77967E90F40C2C7BAE122E6",
+      "bytes": 2108
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateDivergence_20261106T150940Z/NaturalRepeats/series-start-state.json",
+      "archivePath": "Series80/series-start-state.json",
+      "role": "series-settings-and-source-hashes-start",
+      "sha256": "34A9D19E14E37D2BFEAA4D0D7FB1B583A9F59A504FC255856F6EC76EEF6A8A7B",
+      "bytes": 1474
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryStateDivergence_20261106T150940Z/NaturalRepeats/series-end-state.json",
+      "archivePath": "Series80/series-end-state.json",
+      "role": "series-settings-and-source-hashes-end",
+      "sha256": "09FE33886A26C64BA49E7C05B36902653FC32647C6484900C9F7BBA9F92F31F3",
+      "bytes": 2061
+    },
+    {
+      "originalPath": "Packages/packages-lock.json",
+      "archivePath": "ProjectContext/packages-lock-at-archive.json",
+      "role": "project-package-lock-snapshot-current-at-archive-time",
+      "sha256": "394D3A79137A432E3DD17BBABA5D1E305C372EFA7924952231C6EBBE6E113B9F",
+      "bytes": 23773
+    },
+    {
+      "originalPath": "ProjectSettings/ProjectVersion.txt",
+      "archivePath": "ProjectContext/ProjectVersion.txt",
+      "role": "project-unity-version",
+      "sha256": "D03FCA18D2E511A37F7A81F8709404EBB2A571D3E0E5C854038C91A943AE15DA",
+      "bytes": 85
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyFixed/20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5/Pair-01/Traces/ea00d2dd71d14c5a8c01f45a7bbef4d3.json",
+      "bytes": 514890,
+      "sha256": "F5868BBD10F4164F4C044A359C6D599D0024BF361C480A3CAFCB6BD24E940768",
+      "archivePath": "ValidationFindings/verify-fixed-natural-100ms-refusal-trace.json",
+      "role": "current-nine-case-verify-100ms-residual-exceeded-trace"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyFixed/20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5/Pair-01/Traces/ea00d2dd71d14c5a8c01f45a7bbef4d3-summary.json",
+      "bytes": 7632,
+      "sha256": "3165DF341416F1C88849EE5343725C9DCC4DAC9E0C6AEFA8F6C58FE7FD9BD1E8",
+      "archivePath": "ValidationFindings/verify-fixed-natural-100ms-refusal-legacy-diagnostic.json",
+      "role": "companion-legacy-server-aim-diagnostic-not-separate-trial"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyFixed/20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5/Pair-01/Traces/39f55c8de7294ec880875068fff08101.json",
+      "bytes": 340810,
+      "sha256": "36E9F7D2AC62F454C9D00EDE7297A3D5905166BEEDDF861F69511AB29D485925",
+      "archivePath": "ValidationFindings/verify-fixed-natural-0ms-accepted-trace.json",
+      "role": "current-nine-case-verify-0ms-accepted-comparison"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyFixed/20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5/Pair-01/Traces/39f55c8de7294ec880875068fff08101-summary.json",
+      "bytes": 7682,
+      "sha256": "08AADF86981A10DBA8082E2343F7A0389996CB704011CD8714362C46586A1C1C",
+      "archivePath": "ValidationFindings/verify-fixed-natural-0ms-accepted-legacy-diagnostic.json",
+      "role": "companion-legacy-server-aim-diagnostic-not-separate-trial"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyFixed/20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5/Pair-01/Harness/unity-playmode-tests-report.json",
+      "bytes": 60026,
+      "sha256": "B051210C4171E87AE881A42A19E71202B90EA54491B4CCB75B5E5E1940032345",
+      "archivePath": "ValidationFindings/verify-fixed-harness-report.json",
+      "role": "current-nine-case-verify-harness-report"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyFixed/20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5/01-validation-context.stdout.json",
+      "bytes": 1203,
+      "sha256": "58862E8DF0336B5D2891E848ADE67FADFAD689DEF5B4B7FAD655CB5B2FED3016",
+      "archivePath": "ValidationFindings/verify-fixed-editor-context.json",
+      "role": "current-nine-case-verify-editor-context"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/verify-fixed-trace-index.json",
+      "bytes": 3057,
+      "sha256": "04D52F3B8FB3EB1E7F127E63D30C50A6061C67B87ABDEB38060BC1BAAE0F0856",
+      "archivePath": "ValidationFindings/verify-fixed-trace-index.json",
+      "role": "current-nine-case-verify-trace-index"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/analysis-fixed-new6.json",
+      "bytes": 177080,
+      "sha256": "6C7485FDACE2D44EF7234FA2B224DC77C13329A56BF36D29E05DD32BCF161491",
+      "archivePath": "ValidationFindings/verify-fixed-new-six-analysis-after-reader-fix.json",
+      "role": "analysis-of-current-nine-case-verify-six-timelines-not-separate-trials"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyRetry/finding-index.json",
+      "bytes": 6709,
+      "sha256": "38ADB8D38AD4B22832EEE3A5BE243B2184FBF9E88B5C670B8AC654CA384AB1CE",
+      "archivePath": "ValidationFindings/verify-pathfix-0ms-finding-index.json",
+      "role": "prior-current-nine-case-verify-0ms-unclassified-finding-index"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyRetry/20261106T193238Z-a1a37aee512b48148298e8e97d624d91/Pair-01/Traces/all-directions-turn-61fc843860594d649b6d7b8165cd8ae9.json",
+      "bytes": 29652,
+      "sha256": "F327F6DCA249A30BCC8BD08B598D9E3A820384DD0F83A35A4CC4343D0EF6C34C",
+      "archivePath": "ValidationFindings/verify-pathfix-0ms-all-directions-legacy-diagnostic.json",
+      "role": "prior-current-nine-case-verify-0ms-unclassified-legacy-capture"
+    },
+    {
+      "originalPath": "Artifacts/SingleCarryDiagnosticsIsolation_20261106T180748Z/Batch2/LiveVerifyRetry/20261106T193238Z-a1a37aee512b48148298e8e97d624d91/Pair-01/Harness/unity-playmode-tests-report.json",
+      "bytes": 78035,
+      "sha256": "88AA5A00278E0563ABEFAE6F671B04CCF93D2D5EC71926044CAA19F31B7DEEA1",
+      "archivePath": "ValidationFindings/verify-pathfix-harness-report.json",
+      "role": "prior-current-nine-case-verify-harness-report"
+    },
+    {
+      "originalPath": "current trace metadata sourceHashesJson",
+      "bytes": 2372,
+      "sha256": "E3CBF3C90C08FF0F08A7C8575A61BD3C1F3CCB6197CDC8EE3BDAF23B51492949",
+      "archivePath": "ValidationFindings/verify-fixed-source-hashes.json",
+      "role": "source-hash-manifest-from-refusal-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Scripts/NetworkManagement/ClientNetworkTransform.cs",
+      "bytes": 7127,
+      "sha256": "B86C5A1A2918B61B62E04BDFDD4E95BD381A9747EC4EBD9CDD8864CAB41D0657",
+      "archivePath": "ValidationFindings/verify-fixed-source-01-ClientNetworkTransform.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Scripts/NewScripts/PlayerSingleCarryPlacementController.cs",
+      "bytes": 35144,
+      "sha256": "FD8564AA4D0E515333F61E91E05F3D14779077EE82A53C979C5CEC40A6E474F4",
+      "archivePath": "ValidationFindings/verify-fixed-source-02-PlayerSingleCarryPlacementController.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Scripts/NewScripts/PlayerSingleCarryPlacementNetworkPreview.cs",
+      "bytes": 32297,
+      "sha256": "7C0B2D0058A8FB43E9AE2127F90C76F2E8B469C81807862482842EF705498989",
+      "archivePath": "ValidationFindings/verify-fixed-source-03-PlayerSingleCarryPlacementNetworkPreview.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs",
+      "bytes": 37785,
+      "sha256": "173F2E72BBB54D4B1B2ABA10761B52CD158562A2E603518E0575AE84131D8134",
+      "archivePath": "ValidationFindings/verify-fixed-source-04-FirstPersonController.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Diagnostics/SingleCarryPlacement/SingleCarryStateDivergenceTrace.cs",
+      "bytes": 20982,
+      "sha256": "783B767CECB8D0DCA151A22D0785B4D40CD9C2D5A04D27E24A07E286A71D19FE",
+      "archivePath": "ValidationFindings/verify-fixed-source-05-SingleCarryStateDivergenceTrace.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Diagnostics/SingleCarryPlacement/ClientNetworkTransform.Diagnostics.cs",
+      "bytes": 11144,
+      "sha256": "2A318FC7B751EAFC8005C785CC5A91FF12863181924F0CBA3FC97ACE5A1DFA03",
+      "archivePath": "ValidationFindings/verify-fixed-source-06-ClientNetworkTransform.Diagnostics.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Diagnostics/SingleCarryPlacement/PlayerSingleCarryPlacementController.Diagnostics.cs",
+      "bytes": 2400,
+      "sha256": "E4506EAB99BA8A00B557ABCE98E9B9A9B3929A5DE91E5166697DCF29C5C88321",
+      "archivePath": "ValidationFindings/verify-fixed-source-07-PlayerSingleCarryPlacementController.Diagnostics.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Diagnostics/SingleCarryPlacement/PlayerSingleCarryPlacementNetworkPreview.Diagnostics.cs",
+      "bytes": 8121,
+      "sha256": "3A9EA3A243C09C8BAAB461B94336CBF1E0F44FAD05EC1AC0094760615BBC5856",
+      "archivePath": "ValidationFindings/verify-fixed-source-08-PlayerSingleCarryPlacementNetworkPreview.Diagnostics.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Diagnostics/SingleCarryPlacement/FirstPersonController.Diagnostics.cs",
+      "bytes": 821,
+      "sha256": "64B661BFD91EA017476B6E1116D5540EB40C404F88501D84E4DEEFE573996092",
+      "archivePath": "ValidationFindings/verify-fixed-source-09-FirstPersonController.Diagnostics.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Tests/PlayMode/SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+      "bytes": 125772,
+      "sha256": "9B90FDFA835EA094A594B8A1CA201CA3408F816084B55DF35A56B01977763D30",
+      "archivePath": "ValidationFindings/verify-fixed-source-10-SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "originalPath": "Assets/Tests/PlayMode/Diagnostics/SingleCarryPlacementMovementNetworkPlayModeTests.Diagnostics.cs",
+      "bytes": 34180,
+      "sha256": "7B08A3B0F29151F19A53D486EE8EAC96A41CD4FE1B3029BE15104A5CA28F7978",
+      "archivePath": "ValidationFindings/verify-fixed-source-11-SingleCarryPlacementMovementNetworkPlayModeTests.Diagnostics.cs",
+      "role": "source-snapshot-matching-current-nine-case-verify-trace-metadata"
+    },
+    {
+      "sha256": "36A2F79B333E392EF52FAB4379C9D4793FC703BA2E982F052EDD627208845E38",
+      "role": "supplemental-current-nine-case-validation-summary-not-a-historical-trial",
+      "bytes": 2445,
+      "archivePath": "ValidationFindings/supplemental-validation-index.json",
+      "originalPath": "Current Verify outcome and scope summary"
+    },
+    {
+      "bytes": 10471,
+      "role": "supplemental-validation-file-manifest",
+      "sha256": "1ECFE44EDFED36FD637DD0F31B5C3AA1420C2D14E18DBFD81EF6D400685677CA",
+      "archivePath": "ValidationFindings/validation-evidence-manifest.json",
+      "originalPath": "Batch2 supplemental validation manifest"
+    },
+    {
+      "bytes": 179439,
+      "sha256": "F191804959D01FA735ED336B2E6340182CDE62BEEBAE64B552DE4C715B414953",
+      "originalPath": "Batch1/On-Traces analyzer rerun after reader correction",
+      "archivePath": "ValidationFindings/verify-original-on-six-analysis-after-reader-fix.json",
+      "role": "analysis-of-six-original-on-traces-not-separate-trials"
+    }
+  ],
+  "limitations": [
+    "The older RPC refusals are separate from the later 80-trial dataset.",
+    "The later dataset contains 40 trials per delay (0ms and 100ms), not an estimate of natural in-game frequency.",
+    "Accepted trials are not proof of the historical root cause.",
+    "Historical captures do not contain full handoff and preview history.",
+    "Metadata and snapshots are not independent trials."
+  ],
+  "packageNote": "ProjectContext/packages-lock-at-archive.json records the project package lock copied during Batch 2; trial trace metadata supplies per-run Unity version and transport settings. The copied lockfile is context, not a per-trial measurement.",
+  "combinedDatasetCounts": {
+    "first40": 40,
+    "second40": 40,
+    "total80": 80,
+    "perDelay40": 40
+  },
+  "validationEvidenceCounts": {
+    "priorEvidenceEntries": 26,
+    "currentNineCaseVerifyFailureTraceCount": 1,
+    "currentNineCaseVerifyAcceptedComparisonCount": 1,
+    "priorUnclassifiedZeroMsFindingCount": 1,
+    "currentNineCaseVerifyRunCount": 1,
+    "sourceSnapshotsMatchingCurrentVerifyTraceMetadata": 11,
+    "supplementalValidationManifestEntries": 26,
+    "note": "Supplemental Verify evidence is not part of the historical 80 trial count."
+  }
+}

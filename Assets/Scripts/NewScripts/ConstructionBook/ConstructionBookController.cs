@@ -31,6 +31,7 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
     private string leftPageCache = string.Empty;
     private string rightPageCache = string.Empty;
     private ConstructionBookView worldView;
+    private GameplayManager subscribedRequirementsManager;
     private ConstructionBookCatalogSO.Entry currentEntry;
     private List<ConstructionBookMaterialLine> currentMaterials = new List<ConstructionBookMaterialLine>();
     private bool currentMaterialsAvailable;
@@ -155,12 +156,19 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
 
     private void TryRegisterWithGameplayManager()
     {
-        if (GameplayManager.Instance != null) GameplayManager.Instance.RegisterConstructionBook(this);
+        GameplayManager manager = GameplayManager.Instance;
+        if (manager != null)
+        {
+            SubscribeToRequirementsChanged(manager);
+            manager.RegisterConstructionBook(this);
+        }
         InitializeData();
     }
 
     public void NotifyGameplayManagerAvailable()
     {
+        GameplayManager manager = GameplayManager.Instance;
+        if (manager != null) SubscribeToRequirementsChanged(manager);
         InitializeData();
         RefreshRoster();
         if (initialized) SnapTo(IsSpawned ? currentIndex.Value : 0);
@@ -168,7 +176,30 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
 
     private void UnregisterFromGameplayManager()
     {
-        if (GameplayManager.Instance != null) GameplayManager.Instance.UnregisterConstructionBook(this);
+        if (subscribedRequirementsManager != null)
+        {
+            subscribedRequirementsManager.OnBridgeRequirementsChanged -= GameplayManager_OnBridgeRequirementsChanged;
+            subscribedRequirementsManager = null;
+        }
+        GameplayManager manager = GameplayManager.Instance;
+        if (manager != null) manager.UnregisterConstructionBook(this);
+    }
+
+    private void SubscribeToRequirementsChanged(GameplayManager manager)
+    {
+        if (subscribedRequirementsManager == manager) return;
+        if (subscribedRequirementsManager != null)
+            subscribedRequirementsManager.OnBridgeRequirementsChanged -= GameplayManager_OnBridgeRequirementsChanged;
+        subscribedRequirementsManager = manager;
+        subscribedRequirementsManager.OnBridgeRequirementsChanged += GameplayManager_OnBridgeRequirementsChanged;
+    }
+
+    private void GameplayManager_OnBridgeRequirementsChanged(object sender, EventArgs args)
+    {
+        InitializeData();
+        if (!initialized || spreads.Count == 0) return;
+        Render(displayedIndex, true, false);
+        PresentationChanged?.Invoke();
     }
 
     private void NotifyUnavailable()
@@ -313,6 +344,7 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
 
     private void Render(int index, bool snap = false, bool notifyPageChanged = true)
     {
+        GameplayManager progressManager = GameplayManager.Instance;
         displayedIndex = Mathf.Clamp(index, 0, Mathf.Max(0, spreads.Count - 1));
         if (spreads.Count == 0) { leftPageCache = "CONSTRUCTION BOOK\n\nData unavailable"; rightPageCache = "Data unavailable"; currentEntry = null; currentMaterials.Clear(); currentMaterialsAvailable = false; }
         else
@@ -320,18 +352,38 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
             OrderedBridgeComponentRequirement spread = spreads[displayedIndex];
             ConstructionBookCatalogSO.Entry entry = null;
             if (catalog != null) catalog.TryGetEntry(spread.Component, out entry);
-            currentEntry = entry;
+            BridgeDeckAreaRequirement areaRequirement = progressManager != null ? progressManager.GetAreaRequirement(spread.Component) : null;
+            bool instructionsLocked = areaRequirement != null && progressManager != null
+                && progressManager.IsAreaRequirementFuture(areaRequirement);
+            currentEntry = instructionsLocked && entry != null
+                ? new ConstructionBookCatalogSO.Entry
+                {
+                    component = entry.component,
+                    title = entry.title,
+                    partSprite = entry.partSprite,
+                    steps = new[] { new ConstructionBookCatalogSO.Step { instruction = "Mounting instructions unlock when this deck stage begins." } }
+                }
+                : entry;
+            bool areaStockCost = areaRequirement != null;
             string title = entry != null && !string.IsNullOrWhiteSpace(entry.title) ? entry.title : spread.Component.componentName;
-            StringBuilder left = new StringBuilder().Append(title).Append("  x").Append(spread.RequiredCount).Append("\n\nMATERIALS\n");
+            StringBuilder left = new StringBuilder().Append(title);
+            if (!areaStockCost) left.Append("  x").Append(spread.RequiredCount);
+            left.Append("\n\n").Append(areaStockCost ? "COST PER STOCK PLATE\n" : "MATERIALS\n");
             currentMaterialsAvailable = ConstructionBookData.TryResolveRecipe(spread.Component, spread.RequiredCount, carpenterRecipes, out List<ConstructionBookMaterialLine> materials, out string issue);
             currentMaterials = materials;
             if (!currentMaterialsAvailable)
             { left.Append("Data unavailable"); WarnOnce(issue); }
             else foreach (ConstructionBookMaterialLine material in materials)
-                left.Append("• ").Append(material.Resource.resourceName).Append(": ").Append(material.PerUnit).Append(" each · ").Append(material.Total).Append(" total\n");
+            {
+                left.Append("• ").Append(material.Resource.resourceName).Append(": ").Append(material.PerUnit).Append(" each");
+                if (!areaStockCost) left.Append(" · ").Append(material.Total).Append(" total");
+                left.Append('\n');
+            }
             leftPageCache = left.ToString();
             StringBuilder right = new StringBuilder().Append("STEPS\n\n");
-            if (entry == null || entry.steps == null || entry.steps.Length == 0)
+            if (instructionsLocked)
+            { right.Append("Mounting instructions unlock when this deck stage begins.\n"); }
+            else if (entry == null || entry.steps == null || entry.steps.Length == 0)
             { right.Append("Data unavailable"); WarnOnce($"missing authored steps for '{spread.Component.name}'"); }
             else
             {
@@ -367,12 +419,45 @@ public sealed class ConstructionBookController : NetworkBehaviour, IInteractable
 
     public void PopulateView(ConstructionBookView view, Func<bool> additionalInteractionBlock)
     {
-        if (view == null) return;
+        PopulateView((IConstructionBookView)view, additionalInteractionBlock);
+    }
+
+    public void PopulateView(IConstructionBookView view, Func<bool> additionalInteractionBlock)
+    {
+        if (view == null || view is UnityEngine.Object unityView && unityView == null) return;
         int count = spreads.Count > 0 ? spreads[Mathf.Clamp(displayedIndex, 0, spreads.Count - 1)].RequiredCount : 0;
+        string completionSummary = string.Empty;
+        bool perStockPlate = false;
+        if (spreads.Count > 0)
+        {
+            OrderedBridgeComponentRequirement spread = spreads[Mathf.Clamp(displayedIndex, 0, spreads.Count - 1)];
+            GameplayManager progressManager = GameplayManager.Instance;
+            BridgeDeckAreaRequirement areaRequirement = progressManager != null
+                ? progressManager.GetAreaRequirement(spread.Component) : null;
+            perStockPlate = areaRequirement != null;
+            if (areaRequirement != null)
+            {
+                if (progressManager.IsAreaRequirementFuture(areaRequirement))
+                    completionSummary = "Mounting instructions unlock when this deck stage begins.";
+                else
+                {
+                    BridgeDeckAreaStageResult area = areaRequirement.Reassess();
+                    completionSummary = progressManager.IsAreaRequirementPast(areaRequirement)
+                        ? $"Deck stage completed. Covered {area.CoveredLengthMeters:0.00} m; secured {area.SecuredLengthMeters:0.00} m."
+                        : $"Materials are charged per stock plate. Covered {area.CoveredLengthMeters:0.00} m; secured {area.SecuredLengthMeters:0.00} m. {BridgeDeckAreaRequirement.FormatGapGuidance(area)}";
+                }
+            }
+            if (areaRequirement == null && spread.Component != null && spread.Component.deckPanelConstructionWorkflow != null
+                && spread.Component.deckPanelConstructionWorkflow.UsesPhysicalPanelPlacement && progressManager != null)
+            {
+                completionSummary = $"Secured panels: {progressManager.GetMountedBridgeComponentCount(spread.Component)} / {spread.RequiredCount}";
+            }
+        }
         NetworkManager manager = Unity.Netcode.NetworkManager.Singleton;
         ulong localId = manager != null && manager.IsListening ? manager.LocalClientId : 0;
-        view.Render(currentEntry, count, Mathf.Max(0, displayedIndex), spreads.Count, currentMaterials, currentMaterialsAvailable, roster, localId, IsAssigned,
-            RequestAssignment, () => IsPageTransitioning || additionalInteractionBlock != null && additionalInteractionBlock(), view == worldView);
+        view.RenderWithCompletionSummary(currentEntry, count, Mathf.Max(0, displayedIndex), spreads.Count, currentMaterials, currentMaterialsAvailable, roster, localId, IsAssigned,
+            RequestAssignment, () => IsPageTransitioning || additionalInteractionBlock != null && additionalInteractionBlock(), ReferenceEquals(view, worldView),
+            completionSummary, perStockPlate);
     }
 
     public bool IsPageTransitioning => turnRoutine != null || pendingAnimatedIndices.Count > 0;

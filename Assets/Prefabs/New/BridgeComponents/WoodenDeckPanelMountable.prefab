@@ -41,7 +41,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 336505790147575727, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
       propertyPath: m_Size.x
-      value: 2
+      value: 2.16
       objectReference: {fileID: 0}
     - target: {fileID: 336505790147575727, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
       propertyPath: m_Size.y
@@ -154,7 +154,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2661960933669650755, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6332292818526427752}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3619494238778981573, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1120947564869736706}
   m_SourcePrefab: {fileID: 100100000, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
 --- !u!4 &3187452543888606679 stripped
 Transform:
@@ -166,6 +169,24 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2661960933669650755, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
   m_PrefabInstance: {fileID: 812761260378441203}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &4142331829999909174 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3619494238778981573, guid: b0b8131b16d312346b7ea04406235dbf, type: 3}
+  m_PrefabInstance: {fileID: 812761260378441203}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1120947564869736706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4142331829999909174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8dadd07679f1b646b73cb37dec9b0b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelMounting
+  role: 0
 --- !u!1001 &5794562316112182659
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -178,6 +199,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 0d2a7ead6fff7b742a58899d98abee1f, type: 2}
+    - target: {fileID: -8679921383154817045, guid: 45114db060b910045ae21da3e20f4b40, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.08
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 45114db060b910045ae21da3e20f4b40, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0

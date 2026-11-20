@@ -72,7 +72,7 @@ public static class ConstructionBookSetup
         new[] { ("Deliver and mount the girder", Array.Empty<string>()), ("Measure and level both axes", new[]{"Industrial Hammer","Spirit Level"}), ("Fasten all four points in paired order", new[]{"Industrial Hammer"}) },
         new[] { ("Deliver and mount the beam", Array.Empty<string>()), ("Align its position", new[]{"Industrial Hammer"}), ("Tighten both clamps alternately", new[]{"Wrench"}), ("Secure all four fasteners", new[]{"Wrench"}) },
         new[] { ("Deliver and mount the brace", Array.Empty<string>()), ("Align its angle", new[]{"Industrial Hammer"}), ("Temporarily secure both ends", new[]{"Industrial Hammer"}), ("Fasten the marked points in order", new[]{"Wrench"}) },
-        new[] { ("Deliver and mount the next panel", Array.Empty<string>()), ("Align the panel", new[]{"Industrial Hammer"}), ("Set an even gap", new[]{"Industrial Hammer"}), ("Secure all marked fasteners", new[]{"Wrench"}) }
+        new[] { ("Deliver and mount the deck panel", Array.Empty<string>()), ("Use F / E to position the panel by hand over its marked slot on the main girders", Array.Empty<string>()), ("Keep the panel level and correctly oriented within the marked mounting area", Array.Empty<string>()), ("Place a separate Mounting Nail through the panel into a main girder in each of the four quadrants, then strike each nail three times", new[]{"Industrial Hammer"}) }
     };
 
     private static void PopulateCatalog(ConstructionBookCatalogSO catalog)

@@ -2,7 +2,7 @@
 
 ## Cel i wymagania
 
-Lokalny Agent Validation Harness sprawdza zmiany w otwartym projekcie Unity przed przekazaniem ich do review. Łączy analizatory, kontrolę kompilacji i Console, testy EditMode, szybkie walidatory oraz — w tierze Gameplay — testy PlayMode, scenariusz `TutorialBoot` i host-only `network-smoke`.
+Lokalny Agent Validation Harness sprawdza zmiany w projekcie Unity przed przekazaniem ich do review. Przed jakimkolwiek wywołaniem Unity wykonuje bramkę analizatorów. Następnie łączy kontrolę kompilacji i Console, testy EditMode, szybkie walidatory oraz — w tierze Gameplay — testy PlayMode, scenariusz `TutorialBoot` i host-only `network-smoke`.
 
 Polecenia należy uruchamiać z katalogu projektu:
 
@@ -11,6 +11,30 @@ D:\Programy\UnityProjects\RageQuitting
 ```
 
 Unity Editor powinien być osiągalny przez Pipeline, pozostawać w stabilnym EditMode i nie kompilować ani nie aktualizować assetów. Walidacja nie może zapisywać scen ani assetów. Przed uruchomieniem należy świadomie ocenić istniejący dirty worktree i zachować niezwiązane zmiany innych autorów.
+
+
+## Połączenie Unity CLI z działającym Editorem
+
+Narzędzia harnessu korzystają ze wspólnego modułu `Tools\AgentHarness\UnityConnection.psm1`. Domyślna ścieżka do `unity.exe` jest wyznaczana z rzeczywistego Windows Known Folder `LocalApplicationData`; opcjonalne `RQ_UNITY_CLI_PATH` musi być ścieżką absolutną zakończoną nazwą `unity.exe`. Przed uruchomieniem CLI moduł sprawdza znaczniki projektu, deskryptor Pipeline, jego PID i linię poleceń procesu, aby potwierdzić dokładny katalog projektu. Nieczytelny lub niezgodny deskryptor/PID blokuje wywołanie. Przy brakującym deskryptorze widoczny Editor z pasującą albo nieustaloną tożsamością również blokuje CLI; dopiero czytelna lista procesów bez pasującego Edytora pozwala przejść do odczytowego wywołania discovery przez CLI. Brak dowodu, że Editor nie działa, nie jest traktowany jako dowód jego zatrzymania. Moduł normalizuje `UNITY_PROJECT_PATH` i `LOCALAPPDATA` na czas wywołania, a następnie przywraca poprzednie wartości.
+
+`Invoke-HarnessCommand` oraz pięć skryptów-konsumentów (`Invoke-UnityPreflight.ps1`, `Invoke-UnityCompileCheck.ps1`, `Invoke-UnityQuickValidators.ps1`, `Invoke-UnityConsoleCheck.ps1` i `Invoke-UnityEditModeTests.ps1`) współdzielą te zabezpieczenia. Polecenia Unity CLI i harnessu uruchamiaj z katalogu projektu, w zwykłym PowerShell:
+
+```powershell
+Set-Location 'D:\Programy\UnityProjects\RageQuitting'
+.\Tools\AgentHarness\Invoke-UnityConnectionDoctor.ps1 -Json
+.\Tools\AgentHarness\Invoke-UnityCommand.ps1 -UnityArguments @('command', 'rq_validation_context')
+.\Tools\AgentHarness\Invoke-UnityPreflight.ps1 -Tier Fast -Json
+```
+
+W Codex pierwsze wykonawcze wywołanie Unity CLI, harnessu lub preflightu uruchom przez `exec_command` poza sandboxem, ponieważ sandbox może ukrywać PID Edytora albo ograniczać odczyt deskryptora. To wymaganie dotyczy kontekstu wykonania polecenia; nie oznacza konieczności uruchomienia PowerShell jako Administrator. Nie łącz się bezpośrednio z portem Pipeline przez niezabezpieczone HTTP, nie zakładaj stałego portu i nie kopiuj deskryptora ani tokenu uwierzytelniającego do logów.
+
+`Invoke-UnityConnectionDoctor.ps1 -Json` jest diagnostyczny i tylko do odczytu. Zwraca status oraz `nextAction`; kod `0` oznacza wyłącznie osiągalny, gotowy Editor dla dokładnie tego projektu, a `3` oznacza stan zablokowany lub nieustalony. Nie uruchamia naprawy. Tekst o błędach kompilacji lub Safe Mode znaleziony w historycznych liniach logu oznaczany jest jako niezweryfikowany: sam wpis nie dowodzi, że opisuje bieżącą sesję Edytora.
+
+`Invoke-UnityCommand.ps1` przyjmuje argumenty jako tablicę `-UnityArguments`, dopina katalog projektu i JSON, a następnie zachowuje kod wyjścia Unity CLI. Nie ponawia automatycznie poleceń modyfikujących stan. Przykłady z innymi poleceniami stosuj tylko wtedy, gdy znasz ich skutek; przed uruchomieniem wrapper sprawdza, czy wskazany cel jest dokładnie chronionym projektem.
+
+Jeśli kanał CLI jest jeszcze osiągalny, naprawę można uruchomić poleceniem CLI `rq_repair_unity_connection`. Gdy CLI jest nieosiągalne, użyj jawnie menu Unity `Tools > Agent Harness > Repair Unity CLI Connection`. Naprawa publikuje ponownie wyłącznie deskryptor już działającego serwera Pipeline. Odmawia działania, gdy serwer jest zatrzymany, Editor jest w Play Mode lub zmienia tryb, trwa kompilacja/import albo działają testy. Nie restartuje Edytora, nie zmienia AutoTick, nie zapisuje scen ani assetów, nie aktualizuje pakietów i nie wstrzykuje tymczasowego kodu źródłowego. Dla zatrzymanego serwera użyj świadomie istniejącej komendy Unity `Window > Pipeline > Start Server`. Jeśli Editor jest w Safe Mode, najpierw napraw rzeczywisty błąd kompilacji, a następnie uruchom Editor ponownie.
+
+Weryfikacja połączenia wykazała poprawne działanie doctora i `rq_validation_context`; testowano też ponowną publikację deskryptora bez zatrzymywania serwera. Końcowy Fast dla partii kodu, ścisły i niefiltrowany, przeszedł: kod `0`, 11/11 kroków bez statusów innych niż `passed`, EditMode 219/219; raport: `Artifacts\Validation\20261028T165334Z-049a9981\summary.json`. Główny agent uruchomi osobny końcowy Fast po zmianach dokumentacji. Skupiony zestaw regresji PowerShell 5.1 uruchomiony przez głównego agenta zakończył się kodem `0`: `Tools\AgentHarness\Tests\UnityConnection.Tests.ps1`; podsumowanie sond: `Artifacts\UnityConnection_20261028\root-probes-summary.json`. Wcześniejszy Fast `20261028T165059Z-dcdbd574` zakończył się `not_available` (kod `3`): `console-baseline` nie mógł połączyć się z Pipeline na porcie 7801 mimo poprawnej kompilacji, a EditMode i quick validators nie miały wymaganych warunków wstępnych. Pomiędzy tym przebiegiem a końcowym Fast nie wykonano naprawy połączenia, więc przyczyna wcześniejszego braku połączenia pozostaje nieznana; końcowy sukces nie dowodzi, że ją ustalono. Nie testowano odzyskiwania po Safe Mode ani po zatrzymaniu serwera. Ta zmiana nie wprowadza zmian gameplayu i nie obejmowała PlayMode.
 
 ## Wybór tieru
 
@@ -34,6 +58,11 @@ Unity Editor powinien być osiągalny przez Pipeline, pozostawać w stabilnym Ed
 
 `Auto` wolno używać tylko przy czystym worktree albo wtedy, gdy wszystkie obecne zmiany należą do jednego zadania. W dirty worktree zawierającym pracę z kilku źródeł automatyczny wybór może przypisać tier na podstawie niezwiązanych plików. Główny agent wybiera dokładny tier i końcową komendę w prompcie implementacyjnym, a implementator nie może tego tieru obniżyć.
 
+## Bramka analizatorów
+
+Kontrola analizatorów jest pierwszą bramką preflightu i kończy się przed jakimkolwiek wywołaniem Unity. Błąd lub niepoprawny raport analizatorów blokuje dalsze kontrole, daje status końcowy `failed` i kod `1`, także z `AllowLowerTier`. Gdy ścisła kontrola jest niedostępna, dalsze kroki mają status `not_available`, a cały przebieg kończy się `not_available` z kodem `3`. `AllowLowerTier` może kontynuować wyłącznie diagnostyczny przebieg po niedostępności: zapisuje pominięte kroki jako `skipped` i ostrzeżenia, lecz nie daje podstawy do akceptacji. Kontrole `git-after`, ochrony przed mutacją oraz zapis JSON nadal są wykonywane.
+
+Do wczesnej iteracji można uruchomić `Invoke-AnalyzerCheck.ps1 -Json` po zaimportowaniu zmienionego kodu przez Editor. To osobny szybki check; nie aktualizuje baseline analizatorów.
 ## Iteracja i końcowa walidacja
 
 Podczas implementacji można ograniczać testy parametrami:
@@ -87,6 +116,19 @@ Głównym raportem jest `summary.json`. Zawiera wybrany tier, rozwiązane filtry
 
 Katalog przebiegu może także zawierać raporty podrzędnych runnerów, zachowane stdout/stderr, konteksty Edytora, wyniki testów i dane kontroli mutacji Git. Raport agenta musi podać status, kod wyjścia, ścieżkę `summary.json`, wszystkie kroki inne niż `passed` oraz ograniczenia.
 
+## Podsumowanie Markdown
+
+Każdy preflight zapisuje autorytatywny `summary.json` oraz wygenerowany z niego `summary.md`; wynik JSON zawiera `markdownSummaryPath`. Renderer korzysta z raportów podrzędnych powiązanych ze krokami i zachowuje zarejestrowany status oraz kod, tier, czas UTC, filtry i scenariusz, wszystkie kroki niebędące `passed`, liczniki testów EditMode i PlayMode bez podwójnego liczenia scenariusza i network-smoke, ograniczoną listę błędów testów, odrębne bieżące i nowe diagnostyki analizatorów, kompilację i Console, ograniczenia zależne od hosta, ostrzeżenia oraz braki dowodów. Brakujące albo niepoprawne dane są oznaczane jako niedostępne, nie jako zero lub sukces. W tierze Fast brak kroku PlayMode jest jawnie opisany jako niewymagany. Raport nie oznacza ręcznej akceptacji.
+
+Raport można wyeksportować niezależnie, wskazując dokładny plik źródłowy (nie wybieraj automatycznie najnowszego):
+
+```powershell
+.\Tools\AgentHarness\Export-UnityValidationSummary.ps1 -SummaryPath 'Artifacts\Validation\<run-id>\summary.json' -Json
+.\Tools\AgentHarness\Export-UnityValidationSummary.ps1 -SummaryPath 'Artifacts\Validation\<run-id>\summary.json' -Publish -Json
+```
+
+`-Publish` publikuje wyłącznie `Generated\Latest-Validation.md` w obu korzeniach dokumentacji, przez `Invoke-DocumentationSync.ps1 -Document`, i potwierdza zgodność bajtów. Publikacja chroni treść redakcyjną bez znaczników wygenerowanego obszaru, odrzuca nakładające się ścieżki lub reparse points i nie obejmuje `AGENTS.md`. Zwykły preflight sam nie publikuje raportu. Status i kod eksportera opisują powodzenie generowania/publikacji; `validationStatus` i `validationExitCode` zachowują wynik walidacji źródłowej, więc błąd zapisu nie zmienia nieudanego przebiegu w sukces.
+
 ## Oczekiwanie i czasy wykonania
 
 Preflight uruchamiamy synchronicznie na pierwszym planie. Agent powinien użyć jednego długiego, ograniczonego oczekiwania i ograniczonego outputu zamiast często odpytywać proces.
@@ -113,6 +155,14 @@ Tools/RageQuitting/Validation
 
 ## Samodzielne narzędzia dokumentacji
 
+Do sprawdzenia treści i par lustrzanych kilku dokumentów uruchom:
+
+```powershell
+.\Tools\AgentHarness\Invoke-DocumentationCheck.ps1 -Document Loose-Soil-V1-Implementation.md,Bridge-Construction.md,Deferred-Test-Isolation-Plan.md,Agent-Validation-Harness.md -Json
+```
+
+Kontrola wybranych plików zapisuje raport JSON i porównuje bajty między katalogiem `Documentation` projektu a katalogiem dokumentacji roboczej; nie modyfikuje plików. `-All` sprawdza wszystkie dokumenty Markdown. Po edycji pojedynczego dokumentu parę należy zsynchronizować przed checkiem; `Invoke-DocumentationSync.ps1` zapisuje wyłącznie w kierunku ze źródła autorytatywnego w projekcie do dokumentacji roboczej, więc nie używaj go do niezamienionych lokalnych kopii.
+
 `Invoke-DocumentationCheck.ps1` i `Invoke-DocumentationSync.ps1` są samodzielnymi narzędziami. Nie uruchamiają się automatycznie ani w preflighcie, ani w oknie `Tools/RageQuitting/Validation`.
 
 Dokumentacja w `D:\Programy\UnityProjects\RageQuitting\Documentation` jest źródłem autorytatywnym. Synchronizacja działa wyłącznie w kierunku:
@@ -137,7 +187,7 @@ Synchronizacja wymaga `-Document` albo `-All`; nie przyjmuje obu trybów jednocz
 .\Tools\AgentHarness\Invoke-DocumentationSync.ps1 -Document Agent-Validation-Harness.md -WhatIf -Json
 ```
 
-Check porównuje dokładne bajty plików i zgłasza brakujące lub różne kopie lustrzane jako błąd. Pliki istniejące wyłącznie w mirrorze są raportowane informacyjnie jako `targetOnly` i nie powodują niepowodzenia.
+Check porównuje dokładne bajty wybranych plików i zgłasza brakujące lub różne kopie lustrzane jako błąd. Przy pojedynczych parametrach `-Document` skan obejmuje tylko wskazane pliki i nie enumeruje pozostałych dokumentów ani `targetOnly` (`targetOnlyScope=not_scanned_selected_documents`). Domyślny tryb oraz `-All` skanują całe drzewa Markdown; pliki istniejące wyłącznie w mirrorze są wtedy raportowane informacyjnie jako `targetOnly` (`targetOnlyScope=all`) i nie powodują niepowodzenia.
 
 Sync tworzy lub nadpisuje wybrane pliki w mirrorze, atomowo tam, gdzie jest to praktyczne, oraz tworzy brakujące katalogi docelowe. Nigdy nie usuwa plików istniejących wyłącznie w mirrorze i odmawia synchronizacji `AGENTS.md`.
 
@@ -149,3 +199,43 @@ Artifacts\Validation\DocumentationSync\<run-id>\documentation-sync-report.json
 ```
 
 Raporty są zapisane w JSON. Parametr `-Json` wypisuje na stdout zwartą kopertę z `reportPath`, `status` i `exitCode`. Najważniejsze kody wyjścia są wspólne: `0` oznacza sukces, `1` niezgodność, odrzucone dane wejściowe lub błąd operacji, `2` nieobsłużony błąd skryptu albo zapisu raportu, a `3` niedostępny wymagany root.
+
+## Wspólny zakres testu PlayMode
+
+`Assets/Tests/PlayMode/PlayModeTestScope.cs` to opt-in helper dla etapowej migracji fixture, nie automatyczne globalne sandboxowanie. Zarejestruj każdy utworzony korzeń, `NetworkManager`, tymczasowy asset i dodatkową scenę zaraz po utworzeniu; rejestruj `NetworkManager` przed startem NGO. Nie rejestruj runnera, scen bazowych ani pożyczonych obiektów. Setup inputu zachowuje odpowiedni input-settings scope i asset-hash guard; wytworzone mapy są zwalniane w lifecycle obiektu. Po `yield return scope.Cleanup()` zakończ cleanup, przywróć lokalne pola fixture (np. wskaźnik do bieżącego scope), a następnie wywołaj `scope.AssertCleanupSucceeded()`. Przykład dla fixture NGO:
+
+
+```csharp
+private PlayModeTestScope scope;
+
+[UnitySetUp]
+public IEnumerator SetUp()
+{
+    scope = new PlayModeTestScope(nameof(MyFixture));
+    CaptureInputState();
+    scope.RestoreWith(RestoreInputState);
+    NetworkManager manager = scope.OwnManager(CreateConfiguredNetworkManager());
+    Assert.That(manager.StartHost(), Is.True);
+    yield return null;
+}
+
+[UnityTearDown]
+public IEnumerator TearDown()
+{
+    if (scope == null) yield break;
+    PlayModeTestScope current = scope;
+    yield return current.Cleanup();
+    scope = null;
+    ClearFixtureReferences();
+    current.AssertCleanupSucceeded();
+}
+```
+
+`CaptureInputState`, `RestoreInputState`, `ClearFixtureReferences` i `CreateConfiguredNetworkManager` są placeholderami dla metod danego fixture; menedżer musi być skonfigurowany z transportem przed `StartHost`. Rejestruj callback odtworzenia po przechwyceniu stanu i przed mutacją inputu/sieci. Zakres fixture pozostaje opt-in: scope próbuje wszystkie odtworzenia i zgłasza zebrane błędy; nie resetuje arbitralnie globalnych statyków ani nie tworzy nowego procesu Unity. Nie wyprowadzaj z tego przykładu obowiązku użycia `InputTestFixture` przez każdy test. Nadal migruj fixture etapami i waliduj rzeczywiste sekwencje regresyjne.
+## Izolacja fixture Stage02 — aktualizacja 2026-11-04
+
+`Assets/Tests/PlayMode/ExcavationTestSceneScope.cs` obsługuje trzy klasy PlayMode i jeden przypadek Stage3. Przed cache build zastępuje włączony wiersz sceny Stage02 w `EditorBuildSettings` kopią testową w tym samym indeksie; po pełnym przebiegu przywraca dokładną tablicę. Stała kopia to `Assets/Tests/Fixtures/TutorialTerrainStage02.unity`, canonical basename taki sam jak working scene, lecz jest czasową zamianą, nie dopisaniem drugiej nazwy. Kopia ma wszystkie 13 komponentów Bridge nieukończonych, 126 NGO identities i 64 mounting IDs unikalne/rozłączne z produkcyjną sceną; jej konfiguracja jest utrzymywana ręcznie w Editorze i nie odświeża się automatycznie. Prefaby, ScriptableObjects, materiały i TerrainData są współdzielone. Working source hash `2A9D9CF533CCAF039A915F84FE41962F6E51627E1060775756804F445A995B39` nie zmienił się.
+
+Backup `Library/ExcavationTests/BuildSettingsBackup.json` przetrwa domain reload i jest usuwany po sprawdzonym restore. Restore dopasowuje zarejestrowaną oryginalną scenę i odmawia nadpisania zmian obcych; awaryjne statyczne odtworzenie działa jawnie poza PlayMode. Brak always-on i shipping-build hooka. Normalny Build Settings hash `3E801A1E5982817EC5361D98D967403674125802AF874D2C09C40655345417A9`, fixture jest nieobecny. Nie usuwaj backupu ręcznie. Test `ExistingBridgeDeckArea` chroni działającą scenę hashem przed/po teście, zachowując historyczne edycje użytkownika.
+
+Końcowy ścisły Gameplay [przeszedł](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261104T170540Z-16d79c76/summary.json): 14/14 kroków, EditMode 230/230, PlayMode 251/251, brak skipów/inconclusive/ostrzeżeń; Scenario i Network Smoke przeszły. NGO testowano przez trzy UTP managers w jednym Editorze, nie osobne procesy klient/host. Pełna historia nieudanej próby i test-only poprawki repliki opisana jest w [notatce poprawek wykopów](Excavation-Fixes-Implementation.md). Automatyczna izolacja fixture nie jest ręczną akceptacją promienia wiadra ani zachowania rampy.

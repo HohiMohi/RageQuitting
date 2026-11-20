@@ -18,6 +18,16 @@ public class PlayerInventory : NetworkBehaviour
 
     private PlayerInputNew playerInputNew;
     private PlayerConcreteTrapController concreteTrapController;
+    private NetworkManager disconnectRecoveryManager;
+    private bool isServerPlayerObject;
+    private bool hasDisconnectRecoverySnapshot;
+    private bool disconnectRecoveryProcessed;
+    private int disconnectSnapshotFrame;
+    private ulong disconnectSnapshotClientId;
+    private Vector3 disconnectSnapshotPosition;
+    private Quaternion disconnectSnapshotRotation;
+    private int disconnectSnapshotSlot0 = EmptySlotItemTypeValue;
+    private int disconnectSnapshotSlot1 = EmptySlotItemTypeValue;
     [Header("Inventory Settings")]
     [SerializeField] private EquippableItemSO[] inventoryItems;
     [SerializeField] private EquippableItemSO[] equippableItemCatalog;
@@ -74,8 +84,22 @@ public class PlayerInventory : NetworkBehaviour
         slot0ItemType.OnValueChanged += InventorySlotNetworkValue_OnValueChanged;
         slot1ItemType.OnValueChanged += InventorySlotNetworkValue_OnValueChanged;
 
+        UnsubscribeDisconnectRecovery();
+        disconnectRecoveryManager = null;
+        isServerPlayerObject = false;
+        hasDisconnectRecoverySnapshot = false;
+        disconnectRecoveryProcessed = false;
+
         if (IsServer)
         {
+            disconnectRecoveryManager = NetworkManager;
+            isServerPlayerObject = NetworkObject != null && NetworkObject.IsPlayerObject;
+            if (isServerPlayerObject && disconnectRecoveryManager != null)
+            {
+                disconnectRecoveryManager.OnClientDisconnectCallback -= NetworkManager_OnClientDisconnectCallback;
+                disconnectRecoveryManager.OnClientDisconnectCallback += NetworkManager_OnClientDisconnectCallback;
+            }
+
             SetNetworkSlotValues(GetSlotItemTypeValue(0), GetSlotItemTypeValue(1));
         }
 
@@ -84,12 +108,20 @@ public class PlayerInventory : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        ClearHeldObjectCollisionOverrides(transform);
+        CaptureDisconnectRecoverySnapshot();
         slot0ItemType.OnValueChanged -= InventorySlotNetworkValue_OnValueChanged;
         slot1ItemType.OnValueChanged -= InventorySlotNetworkValue_OnValueChanged;
     }
 
     private void OnDestroy()
     {
+        if (disconnectRecoveryManager != null)
+        {
+            disconnectRecoveryManager.OnClientDisconnectCallback -= NetworkManager_OnClientDisconnectCallback;
+            disconnectRecoveryManager = null;
+        }
+
         if (playerInputNew == null)
         {
             return;
@@ -97,6 +129,141 @@ public class PlayerInventory : NetworkBehaviour
 
         playerInputNew.OnSwapItems -= PlayerInputNew_OnSwapItems;
         playerInputNew.OnDropItem -= PlayerInputNew_OnDropItem;
+    }
+
+    private void CaptureDisconnectRecoverySnapshot()
+    {
+        NetworkManager manager = disconnectRecoveryManager;
+        if (!isServerPlayerObject || !IsServer || manager == null || !manager.IsListening
+            || manager.ShutdownInProgress || NetworkObject == null)
+        {
+            return;
+        }
+
+        hasDisconnectRecoverySnapshot = true;
+        disconnectRecoveryProcessed = false;
+        disconnectSnapshotFrame = Time.frameCount;
+        disconnectSnapshotClientId = NetworkObject.OwnerClientId;
+        disconnectSnapshotPosition = transform.position;
+        disconnectSnapshotRotation = transform.rotation;
+        disconnectSnapshotSlot0 = slot0ItemType.Value;
+        disconnectSnapshotSlot1 = slot1ItemType.Value;
+    }
+
+    private void NetworkManager_OnClientDisconnectCallback(ulong clientId)
+    {
+        NetworkManager manager = disconnectRecoveryManager;
+        if (!hasDisconnectRecoverySnapshot || disconnectRecoveryProcessed
+            || clientId != disconnectSnapshotClientId || disconnectSnapshotFrame != Time.frameCount
+            || !isServerPlayerObject || manager == null || !manager.IsServer || !manager.IsListening
+            || manager.ShutdownInProgress || manager.ConnectedClients.ContainsKey(clientId))
+        {
+            return;
+        }
+
+        disconnectRecoveryProcessed = true;
+        hasDisconnectRecoverySnapshot = false;
+        UnsubscribeDisconnectRecovery();
+        ReleaseDisconnectedPlayerCarry(manager, clientId, transform);
+        DropDisconnectedPlayerInventory(manager, clientId);
+    }
+
+    protected void LateUpdate()
+    {
+        if (hasDisconnectRecoverySnapshot && disconnectSnapshotFrame != Time.frameCount)
+        {
+            hasDisconnectRecoverySnapshot = false;
+            UnsubscribeDisconnectRecovery();
+        }
+    }
+
+    private void UnsubscribeDisconnectRecovery()
+    {
+        if (disconnectRecoveryManager != null)
+        {
+            disconnectRecoveryManager.OnClientDisconnectCallback -= NetworkManager_OnClientDisconnectCallback;
+        }
+    }
+
+    private void ClearHeldObjectCollisionOverrides(Transform holderRoot)
+    {
+        NetworkManager manager = NetworkManager;
+        if (manager == null || manager.SpawnManager == null || holderRoot == null)
+        {
+            return;
+        }
+
+        foreach (NetworkObject spawnedObject in manager.SpawnManager.SpawnedObjectsList)
+        {
+            if (spawnedObject == null)
+            {
+                continue;
+            }
+
+            if (spawnedObject.TryGetComponent(out BaseResourceNew resource))
+            {
+                resource.ClearHolderCollisionOverride(holderRoot);
+            }
+            else if (spawnedObject.TryGetComponent(out MountableBridgeComponent mountable))
+            {
+                mountable.ClearHolderCollisionOverride(holderRoot);
+            }
+        }
+    }
+
+    private static void ReleaseDisconnectedPlayerCarry(NetworkManager manager, ulong clientId, Transform releasedHolderRoot)
+    {
+        if (manager.SpawnManager == null)
+        {
+            return;
+        }
+
+        foreach (NetworkObject spawnedObject in manager.SpawnManager.SpawnedObjectsList)
+        {
+            if (spawnedObject == null)
+            {
+                continue;
+            }
+
+            if (spawnedObject.TryGetComponent(out BaseResourceNew resource))
+            {
+                resource.TryReleaseDisconnectedHolder(clientId, releasedHolderRoot);
+            }
+            else if (spawnedObject.TryGetComponent(out MountableBridgeComponent mountable))
+            {
+                mountable.TryReleaseDisconnectedHolder(clientId, releasedHolderRoot);
+            }
+        }
+    }
+
+    private void DropDisconnectedPlayerInventory(NetworkManager manager, ulong clientId)
+    {
+        if (!manager.IsServer || manager.ShutdownInProgress || NetworkObject == null)
+        {
+            return;
+        }
+
+        SpawnDisconnectedInventorySlot(disconnectSnapshotSlot0, clientId);
+        SpawnDisconnectedInventorySlot(disconnectSnapshotSlot1, clientId);
+        Physics.SyncTransforms();
+    }
+
+    private void SpawnDisconnectedInventorySlot(int itemTypeValue, ulong clientId)
+    {
+        if (itemTypeValue < 0)
+        {
+            return;
+        }
+
+        EquippableItemSO item = GetEquippableItemSO((EquippableItemType)itemTypeValue);
+        if (item == null)
+        {
+            Debug.LogWarning($"PlayerInventory: Could not recover inventory item type {itemTypeValue} for disconnected client {clientId}.");
+            return;
+        }
+
+        EquippableItem.SpawnNetworkedDrop(item, NetworkObject,
+            disconnectSnapshotPosition + Vector3.up, disconnectSnapshotRotation);
     }
 
     private void PlayerInputNew_OnDropItem(object sender, EventArgs e)

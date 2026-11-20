@@ -16,6 +16,17 @@ function Invoke-HarnessCommand {
         error = $null
     }
 
+    # Unity discovery is unsafe when Windows hides the authenticated descriptor's owner.
+    # Keep this gate limited to Unity CLI; ordinary harness children are unaffected.
+    if ([IO.Path]::GetFileName($FilePath) -ieq 'unity.exe') {
+        $connectionModule = Join-Path $PSScriptRoot 'UnityConnection.psm1'
+        if (Test-Path -LiteralPath $connectionModule) {
+            Import-Module $connectionModule -Force
+            $guarded = Invoke-UnityConnectionCli -FilePath $FilePath -Arguments $Arguments -StdOutPath $StdOutPath -StdErrPath $StdErrPath -WorkingDirectory $WorkingDirectory
+            return $guarded
+        }
+    }
+
     try {
         if ($WorkingDirectory) {
             Push-Location -LiteralPath $WorkingDirectory

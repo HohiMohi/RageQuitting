@@ -12,6 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b64af922be5f2046b12b7b4574ca26d, type: 3}
   m_Name: WoodenDeckPanelWorkflow
   m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckPanelConstructionWorkflowSO
+  physicalPanelPlacement: 1
+  physicalPanelDimensions: {x: 2.16, y: 0.2, z: 2.4}
+  physicalPanelMaximumHorizontalOffset: 0.05
+  physicalPanelUsesDirectionalHorizontalTolerance: 1
+  physicalPanelMaximumAlongOffset: 0.05
+  physicalPanelMaximumAcrossOffset: 0.1
+  physicalPanelMaximumHeightError: 0.03
+  physicalPanelMaximumOrientationErrorDegrees: 3
+  physicalPanelNailAxisExclusionHalfWidth: 0.005
+  physicalPanelMaximumNeighborPenetration: 0.001
   alignmentTool: 5
   gapTool: 5
   fasteningTool: 8
@@ -23,3 +33,5 @@ MonoBehaviour:
   maximumInitialGapStep: 2
   gapStepDistance: 0.02
   fastenerProgressNeeded: 40
+  panelResetUpwardDeltaVelocity: 2
+  panelResetAwayDeltaVelocity: 0.5

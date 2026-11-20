@@ -1,0 +1,1653 @@
+{
+  "schemaVersion": 1,
+  "note": "Editor-only instrumentation can affect timing. Owner LocalTime tick and server tick are different clocks and are not compared.",
+  "pairReports": [
+    {
+      "pair": 1,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-01\\unity-playmode-tests-report.json",
+      "tracePaths": [
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184333378Z-c5568547f6c74c8687977abbdc3a583b.json",
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184336241Z-81c7c4ffeb0c46409a59b0a5430f2109.json"
+      ]
+    },
+    {
+      "pair": 2,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-02\\unity-playmode-tests-report.json",
+      "tracePaths": [
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184512420Z-f63611351f024eeaa5d475ba3c56e178.json",
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184515282Z-3ca1a72112ae4da79b084603926cbcef.json"
+      ]
+    },
+    {
+      "pair": 3,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-03\\unity-playmode-tests-report.json",
+      "tracePaths": [
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184611108Z-f031f86a47be453b8807bfaa0a4cfadc.json",
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184613988Z-a7684b3a728c45e99894471e99a38c0f.json"
+      ]
+    },
+    {
+      "pair": 4,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-04\\unity-playmode-tests-report.json",
+      "tracePaths": [
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184709765Z-b0a96be46b5f425f97033c30ba96eea5.json",
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184712627Z-4290375b08af46c280fc63a817e523cd.json"
+      ]
+    },
+    {
+      "pair": 5,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-05\\unity-playmode-tests-report.json",
+      "tracePaths": [
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184806860Z-69a3f487e6794a8ea5437824cdc9780c.json",
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184809750Z-272c407316aa4b458f333e3f1b25e0f4.json"
+      ]
+    },
+    {
+      "pair": 6,
+      "status": "passed",
+      "exitCode": 0,
+      "summary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-06\\unity-playmode-tests-report.json",
+      "tracePaths": [
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185209356Z-f33a5813850f414398c9b9fc1155e5f0.json",
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185212315Z-bb4f301dace846d38234e713679e54ec.json"
+      ]
+    },
+    {
+      "pair": 7,
+      "status": "failed",
+      "exitCode": 1,
+      "summary": {
+        "total": 2,
+        "passed": 1,
+        "failed": 1,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-07\\unity-playmode-tests-report.json",
+      "tracePaths": [
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185252158Z-547bd8c6e0ee4ffbb1298bf467859eb2.json",
+        "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185254991Z-013dc15bafbd4241b018609936c84120.json"
+      ]
+    }
+  ],
+  "trials": [
+    {
+      "pair": 1,
+      "delayMs": 0,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 20.05780029296875,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.27378758788108826
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.1899998188018799,
+        "z": 0.27378758788108826
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485786199569702,
+          "z": 0.47858548164367676
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071068286895752,
+          "z": 0.7071067690849304
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.24481387436389923,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.03168836236000061,
+          "z": 0.031688347458839417
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.00401658657938242,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 373,
+        "lastRealtime": 16.597831406292244,
+        "lastNetworkTick": 25,
+        "lastPositionChangeFrame": 373,
+        "lastPositionChangeRealtime": 16.597833206291398,
+        "lastRotationChangeFrame": 251,
+        "lastRotationChangeRealtime": 15.786278206291172,
+        "positionNetworkTick": 25,
+        "rotationNetworkTick": 1,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.27378758788108826
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 376,
+        "realtime": 16.616105406290444,
+        "deltaTime": 0.006592099089175463,
+        "unscaledDeltaTime": 0.006592099089175463,
+        "networkTick": 27,
+        "receiveAgeSeconds": 0.018273999998200452,
+        "receiveAgeFrames": 3
+      },
+      "ownerE": {
+        "realtime": 16.61038830628968,
+        "frame": 375,
+        "deltaTime": 0.0060609979555010796,
+        "unscaledDeltaTime": 0.0060609979555010796,
+        "localNetworkTick": 26,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.35837769508361816
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-01\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184336241Z-81c7c4ffeb0c46409a59b0a5430f2109.json"
+    },
+    {
+      "pair": 1,
+      "delayMs": 100,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 404.25250244140625,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.2720858156681061
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.1899998188018799,
+        "z": 0.2720858156681061
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485785007476807,
+          "z": 0.48626258969306946
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071069478988647,
+          "z": 0.7071066498756409
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.25144582986831665,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.03637777268886566,
+          "z": 0.03637775778770447
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.005293356720358133,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 178,
+        "lastRealtime": 15.161181906292768,
+        "lastNetworkTick": 61,
+        "lastPositionChangeFrame": 178,
+        "lastPositionChangeRealtime": 15.161182906293106,
+        "lastRotationChangeFrame": 17,
+        "lastRotationChangeRealtime": 13.847154406292248,
+        "positionNetworkTick": 61,
+        "rotationNetworkTick": 26,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.2720858156681061
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 181,
+        "realtime": 15.18222250628969,
+        "deltaTime": 0.00634430255740881,
+        "unscaledDeltaTime": 0.00634430255740881,
+        "networkTick": 70,
+        "receiveAgeSeconds": 0.021040599996922538,
+        "receiveAgeFrames": 3
+      },
+      "ownerE": {
+        "realtime": 14.988012006291683,
+        "frame": 150,
+        "deltaTime": 0.009866305626928806,
+        "unscaledDeltaTime": 0.009866305626928806,
+        "localNetworkTick": 65,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3793734014034271
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-01\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184333378Z-c5568547f6c74c8687977abbdc3a583b.json"
+    },
+    {
+      "pair": 2,
+      "delayMs": 0,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 15.96560001373291,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.29298755526542664
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.1899998188018799,
+        "z": 0.29298755526542664
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485787391662598,
+          "z": 0.4788739085197449
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071068286895752,
+          "z": 0.7071067690849304
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.23144130408763885,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.022232651710510254,
+          "z": 0.02223263680934906
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.0019771363586187363,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 356,
+        "lastRealtime": 17.746041800848616,
+        "lastNetworkTick": 25,
+        "lastPositionChangeFrame": 356,
+        "lastPositionChangeRealtime": 17.746043300849124,
+        "lastRotationChangeFrame": 238,
+        "lastRotationChangeRealtime": 16.946496300850413,
+        "positionNetworkTick": 25,
+        "rotationNetworkTick": 1,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.29298755526542664
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 358,
+        "realtime": 17.758812100848445,
+        "deltaTime": 0.0073232995346188545,
+        "unscaledDeltaTime": 0.0073232995346188545,
+        "networkTick": 27,
+        "receiveAgeSeconds": 0.012770299999829149,
+        "receiveAgeFrames": 2
+      },
+      "ownerE": {
+        "realtime": 17.752548600848968,
+        "frame": 357,
+        "deltaTime": 0.005415504332631826,
+        "unscaledDeltaTime": 0.005415504332631826,
+        "localNetworkTick": 25,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.35640689730644226
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-02\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184515282Z-3ca1a72112ae4da79b084603926cbcef.json"
+    },
+    {
+      "pair": 2,
+      "delayMs": 100,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 408.3381042480469,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.24514609575271606
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.190000057220459,
+        "z": 0.24514609575271606
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485783815383911,
+          "z": 0.48091623187065125
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071070075035095,
+          "z": 0.7071065902709961
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.266714870929718,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.047174274921417236,
+          "z": 0.04717428982257843
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.00890169944614172,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 171,
+        "lastRealtime": 16.290916000849393,
+        "lastNetworkTick": 60,
+        "lastPositionChangeFrame": 171,
+        "lastPositionChangeRealtime": 16.290917600850662,
+        "lastRotationChangeFrame": 17,
+        "lastRotationChangeRealtime": 14.978453100848128,
+        "positionNetworkTick": 60,
+        "rotationNetworkTick": 24,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.24514609575271606
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 176,
+        "realtime": 16.324472200849414,
+        "deltaTime": 0.006011401768773794,
+        "unscaledDeltaTime": 0.006011401768773794,
+        "networkTick": 69,
+        "receiveAgeSeconds": 0.03355620000002091,
+        "receiveAgeFrames": 5
+      },
+      "ownerE": {
+        "realtime": 16.126670500849286,
+        "frame": 144,
+        "deltaTime": 0.009435197338461876,
+        "unscaledDeltaTime": 0.009435197338461876,
+        "localNetworkTick": 65,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3725181818008423
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-02\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184512420Z-f63611351f024eeaa5d475ba3c56e178.json"
+    },
+    {
+      "pair": 3,
+      "delayMs": 0,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 17.445600509643555,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.2572181820869446
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.190000057220459,
+        "z": 0.2572181820869446
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485787391662598,
+          "z": 0.4688335657119751
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071066498756409,
+          "z": 0.7071069478988647
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.24963466823101044,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.035097017884254456,
+          "z": 0.035096973180770874
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.004927198402583599,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 398,
+        "lastRealtime": 13.678242004025378,
+        "lastNetworkTick": 25,
+        "lastPositionChangeFrame": 398,
+        "lastPositionChangeRealtime": 13.678243604026648,
+        "lastRotationChangeFrame": 279,
+        "lastRotationChangeRealtime": 12.871437304023857,
+        "positionNetworkTick": 25,
+        "rotationNetworkTick": 1,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.2572181820869446
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 401,
+        "realtime": 13.699890904026688,
+        "deltaTime": 0.007687804754823446,
+        "unscaledDeltaTime": 0.007687804754823446,
+        "networkTick": 27,
+        "receiveAgeSeconds": 0.021648900001309812,
+        "receiveAgeFrames": 3
+      },
+      "ownerE": {
+        "realtime": 13.693908804023522,
+        "frame": 400,
+        "deltaTime": 0.006780895870178938,
+        "unscaledDeltaTime": 0.006780895870178938,
+        "localNetworkTick": 26,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.35114532709121704
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-03\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184613988Z-a7684b3a728c45e99894471e99a38c0f.json"
+    },
+    {
+      "pair": 3,
+      "delayMs": 100,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 402.056884765625,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.23491385579109192
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.190000057220459,
+        "z": 0.23491385579109192
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485787391662598,
+          "z": 0.4806843400001526
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071069478988647,
+          "z": 0.7071066498756409
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.27378594875335693,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.05217462778091431,
+          "z": 0.05217461287975311
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.010888747870922089,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 199,
+        "lastRealtime": 12.234854504025861,
+        "lastNetworkTick": 61,
+        "lastPositionChangeFrame": 199,
+        "lastPositionChangeRealtime": 12.234855804024846,
+        "lastRotationChangeFrame": 17,
+        "lastRotationChangeRealtime": 10.94071070402424,
+        "positionNetworkTick": 61,
+        "rotationNetworkTick": 26,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.23491385579109192
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 204,
+        "realtime": 12.267642604023422,
+        "deltaTime": 0.005990596488118172,
+        "unscaledDeltaTime": 0.005990596488118172,
+        "networkTick": 70,
+        "receiveAgeSeconds": 0.032788099997560494,
+        "receiveAgeFrames": 5
+      },
+      "ownerE": {
+        "realtime": 12.07555060402592,
+        "frame": 173,
+        "deltaTime": 0.006342601962387562,
+        "unscaledDeltaTime": 0.006342601962387562,
+        "localNetworkTick": 66,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.36146217584609985
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-03\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184611108Z-f031f86a47be453b8807bfaa0a4cfadc.json"
+    },
+    {
+      "pair": 4,
+      "delayMs": 0,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 18.73259925842285,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.2700662314891815
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.1899998188018799,
+        "z": 0.2700662314891815
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485786199569702,
+          "z": 0.4659356474876404
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071070671081543,
+          "z": 0.7071065306663513
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.2385004758834839,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.027224168181419373,
+          "z": 0.027224168181419373
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.0029645971953868866,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 390,
+        "lastRealtime": 16.969745401642285,
+        "lastNetworkTick": 25,
+        "lastPositionChangeFrame": 390,
+        "lastPositionChangeRealtime": 16.969747501643724,
+        "lastRotationChangeFrame": 268,
+        "lastRotationChangeRealtime": 16.16165600164095,
+        "positionNetworkTick": 25,
+        "rotationNetworkTick": 1,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.2700662314891815
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 392,
+        "realtime": 16.98770560164121,
+        "deltaTime": 0.009444196708500385,
+        "unscaledDeltaTime": 0.009444196708500385,
+        "networkTick": 27,
+        "receiveAgeSeconds": 0.01796019999892451,
+        "receiveAgeFrames": 2
+      },
+      "ownerE": {
+        "realtime": 16.98015970164124,
+        "frame": 391,
+        "deltaTime": 0.008630704134702682,
+        "unscaledDeltaTime": 0.008630704134702682,
+        "localNetworkTick": 26,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3547217845916748
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-04\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184712627Z-4290375b08af46c280fc63a817e523cd.json"
+    },
+    {
+      "pair": 4,
+      "delayMs": 100,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 399.80560302734375,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3267815411090851
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.190000057220459,
+        "z": 0.3267815411090851
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485785007476807,
+          "z": 0.4879376292228699
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071065902709961,
+          "z": 0.7071069478988647
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.21395470201969147,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.009867221117019653,
+          "z": 0.009867236018180847
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.00038945802953094244,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 191,
+        "lastRealtime": 15.549234601643548,
+        "lastNetworkTick": 61,
+        "lastPositionChangeFrame": 191,
+        "lastPositionChangeRealtime": 15.549235901642533,
+        "lastRotationChangeFrame": 17,
+        "lastRotationChangeRealtime": 14.235962601644133,
+        "positionNetworkTick": 61,
+        "rotationNetworkTick": 25,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3267815411090851
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 192,
+        "realtime": 15.557269001641544,
+        "deltaTime": 0.005511805415153503,
+        "unscaledDeltaTime": 0.005511805415153503,
+        "networkTick": 70,
+        "receiveAgeSeconds": 0.008034399997995934,
+        "receiveAgeFrames": 1
+      },
+      "ownerE": {
+        "realtime": 15.365183901642013,
+        "frame": 161,
+        "deltaTime": 0.0055208969861269,
+        "unscaledDeltaTime": 0.0055208969861269,
+        "localNetworkTick": 65,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.365839421749115
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-04\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184709765Z-b0a96be46b5f425f97033c30ba96eea5.json"
+    },
+    {
+      "pair": 5,
+      "delayMs": 0,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 14.211700439453125,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.26769113540649414
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.1899998188018799,
+        "z": 0.26769113540649414
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485786199569702,
+          "z": 0.4723525047302246
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071067094802856,
+          "z": 0.7071068286895752
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.2447173297405243,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.03162007033824921,
+          "z": 0.03162007033824921
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.003999296575784683,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 399,
+        "lastRealtime": 13.66949130527064,
+        "lastNetworkTick": 25,
+        "lastPositionChangeFrame": 399,
+        "lastPositionChangeRealtime": 13.66949300527267,
+        "lastRotationChangeFrame": 270,
+        "lastRotationChangeRealtime": 12.862573905273166,
+        "positionNetworkTick": 25,
+        "rotationNetworkTick": 1,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.26769113540649414
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 402,
+        "realtime": 13.687835405271471,
+        "deltaTime": 0.006464895326644182,
+        "unscaledDeltaTime": 0.006464895326644182,
+        "networkTick": 27,
+        "receiveAgeSeconds": 0.01834410000083153,
+        "receiveAgeFrames": 3
+      },
+      "ownerE": {
+        "realtime": 13.682585005270084,
+        "frame": 401,
+        "deltaTime": 0.006121102720499039,
+        "unscaledDeltaTime": 0.006121102720499039,
+        "localNetworkTick": 26,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.352355033159256
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-05\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184809750Z-272c407316aa4b458f333e3f1b25e0f4.json"
+    },
+    {
+      "pair": 5,
+      "delayMs": 100,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 402.5611877441406,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3494063913822174
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.190000057220459,
+        "z": 0.3494063913822174
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485787391662598,
+          "z": 0.4908277988433838
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071067690849304,
+          "z": 0.7071067690849304
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.20000000298023224,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 4.470348358154297E-08,
+          "z": 4.470348358154297E-08
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 3.9968028886505635E-15,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 8,
+        "positionCount": 8,
+        "rotationCount": 1,
+        "lastFrame": 193,
+        "lastRealtime": 12.256441405272199,
+        "lastNetworkTick": 62,
+        "lastPositionChangeFrame": 193,
+        "lastPositionChangeRealtime": 12.256442405272537,
+        "lastRotationChangeFrame": 17,
+        "lastRotationChangeRealtime": 10.927880305272993,
+        "positionNetworkTick": 62,
+        "rotationNetworkTick": 26,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3494063913822174
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 193,
+        "realtime": 12.259217705272022,
+        "deltaTime": 0.00590469827875495,
+        "unscaledDeltaTime": 0.00590469827875495,
+        "networkTick": 70,
+        "receiveAgeSeconds": 0.0027762999998230953,
+        "receiveAgeFrames": 0
+      },
+      "ownerE": {
+        "realtime": 12.065213405272516,
+        "frame": 162,
+        "deltaTime": 0.004448901861906052,
+        "unscaledDeltaTime": 0.004448901861906052,
+        "localNetworkTick": 66,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.36497756838798523
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-05\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T184806860Z-69a3f487e6794a8ea5437824cdc9780c.json"
+    },
+    {
+      "pair": 6,
+      "delayMs": 0,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 18.882099151611328,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.3424547612667084
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.1899998188018799,
+        "z": 0.3424547612667084
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485787391662598,
+          "z": 0.4838760793209076
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071066498756409,
+          "z": 0.70710688829422
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.19999977946281433,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 8.940696716308594E-08,
+          "z": 8.940696716308594E-08
+        },
+        "nearestAllowedForwardOffset": 0.19999977946281433,
+        "residualSquared": 1.5987211554602254E-14,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 322,
+        "lastRealtime": 17.58339240555506,
+        "lastNetworkTick": 26,
+        "lastPositionChangeFrame": 322,
+        "lastPositionChangeRealtime": 17.58339450555286,
+        "lastRotationChangeFrame": 226,
+        "lastRotationChangeRealtime": 16.740547505552968,
+        "positionNetworkTick": 26,
+        "rotationNetworkTick": 1,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.3424547612667084
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 322,
+        "realtime": 17.583419505554048,
+        "deltaTime": 0.009263698011636734,
+        "unscaledDeltaTime": 0.009263698011636734,
+        "networkTick": 28,
+        "receiveAgeSeconds": 2.7099998987978324E-05,
+        "receiveAgeFrames": 0
+      },
+      "ownerE": {
+        "realtime": 17.57549350555564,
+        "frame": 321,
+        "deltaTime": 0.009343700483441353,
+        "unscaledDeltaTime": 0.009343700483441353,
+        "localNetworkTick": 26,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3751577138900757
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-06\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185212315Z-bb4f301dace846d38234e713679e54ec.json"
+    },
+    {
+      "pair": 6,
+      "delayMs": 100,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 401.1097106933594,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.32197657227516174
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.190000057220459,
+        "z": 0.32197657227516174
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485786199569702,
+          "z": 0.48852819204330444
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071070671081543,
+          "z": 0.7071065306663513
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.2177698314189911,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.01256515085697174,
+          "z": 0.01256515085697174
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.0006315328646451235,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 160,
+        "lastRealtime": 16.093016705555783,
+        "lastNetworkTick": 64,
+        "lastPositionChangeFrame": 160,
+        "lastPositionChangeRealtime": 16.09301770555612,
+        "lastRotationChangeFrame": 17,
+        "lastRotationChangeRealtime": 14.74160620555267,
+        "positionNetworkTick": 64,
+        "rotationNetworkTick": 27,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.32197657227516174
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 161,
+        "realtime": 16.0998784055555,
+        "deltaTime": 0.004480201285332441,
+        "unscaledDeltaTime": 0.004480201285332441,
+        "networkTick": 72,
+        "receiveAgeSeconds": 0.00686169999971753,
+        "receiveAgeFrames": 1
+      },
+      "ownerE": {
+        "realtime": 15.911124705555267,
+        "frame": 131,
+        "deltaTime": 0.009192701429128647,
+        "unscaledDeltaTime": 0.009192701429128647,
+        "localNetworkTick": 68,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.3792813718318939
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-06\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185209356Z-f33a5813850f414398c9b9fc1155e5f0.json"
+    },
+    {
+      "pair": 7,
+      "delayMs": 0,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "Accepted",
+      "localValid": true,
+      "responseMs": 31.09280014038086,
+      "pendingDrift": 0.0,
+      "serverBranch": "AimPassed",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.29980194568634033
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.1899998188018799,
+        "z": 0.29980194568634033
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485786199569702,
+          "z": 0.487835556268692
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.7071068286895752,
+          "z": 0.7071067690849304
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.23295973241329193,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.023306220769882202,
+          "z": 0.02330620586872101
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.0021727029234170914,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 7,
+        "positionCount": 7,
+        "rotationCount": 1,
+        "lastFrame": 282,
+        "lastRealtime": 14.925117900114856,
+        "lastNetworkTick": 26,
+        "lastPositionChangeFrame": 282,
+        "lastPositionChangeRealtime": 14.925119400115364,
+        "lastRotationChangeFrame": 190,
+        "lastRotationChangeRealtime": 14.08440540011361,
+        "positionNetworkTick": 26,
+        "rotationNetworkTick": 1,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.08999985456466675,
+          "z": 0.29980194568634033
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 283,
+        "realtime": 14.932802100116533,
+        "deltaTime": 0.007608701940625906,
+        "unscaledDeltaTime": 0.007608701940625906,
+        "networkTick": 28,
+        "receiveAgeSeconds": 0.0076842000016768,
+        "receiveAgeFrames": 1
+      },
+      "ownerE": {
+        "realtime": 14.926478800116456,
+        "frame": 282,
+        "deltaTime": 0.006893898826092482,
+        "unscaledDeltaTime": 0.006893898826092482,
+        "localNetworkTick": 26,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.37054288387298584
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-07\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185254991Z-013dc15bafbd4241b018609936c84120.json"
+    },
+    {
+      "pair": 7,
+      "delayMs": 100,
+      "test": "RemoteOwnerMovesAndConfirms",
+      "result": "InvalidAimOrigin",
+      "localValid": true,
+      "responseMs": 394.2720031738281,
+      "pendingDrift": 0.0,
+      "serverBranch": "ResidualExceeded",
+      "queryAvailable": true,
+      "queryWorldPose": {
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.058098841458559036
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      },
+      "trustedAnchor": {
+        "x": 0.0,
+        "y": 1.190000057220459,
+        "z": 0.058098841458559036
+      },
+      "ray": {
+        "origin": {
+          "x": 0.0,
+          "y": 1.0485785007476807,
+          "z": 0.4509890675544739
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -0.70710688829422,
+          "z": 0.7071067094802856
+        }
+      },
+      "geometry": {
+        "forwardOffset": 0.37781545519828796,
+        "lateralOffset": {
+          "x": 0.0,
+          "y": 0.1257343590259552,
+          "z": 0.1257343590259552
+        },
+        "nearestAllowedForwardOffset": 0.20000000298023224,
+        "residualSquared": 0.06323659420013428,
+        "maximumResidual": 0.15000000596046448
+      },
+      "receive": {
+        "count": 4,
+        "positionCount": 4,
+        "rotationCount": 1,
+        "lastFrame": 153,
+        "lastRealtime": 13.586151200113818,
+        "lastNetworkTick": 63,
+        "lastPositionChangeFrame": 153,
+        "lastPositionChangeRealtime": 13.586152600113564,
+        "lastRotationChangeFrame": 17,
+        "lastRotationChangeRealtime": 12.330541500115942,
+        "positionNetworkTick": 63,
+        "rotationNetworkTick": 30,
+        "sampledPose": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.058098841458559036
+        },
+        "sampledRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "hasComplete": true,
+        "contextMatches": true
+      },
+      "server": {
+        "frame": 159,
+        "realtime": 13.66562060011347,
+        "deltaTime": 0.01137359719723463,
+        "unscaledDeltaTime": 0.01137359719723463,
+        "networkTick": 75,
+        "receiveAgeSeconds": 0.07946939999965252,
+        "receiveAgeFrames": 6
+      },
+      "ownerE": {
+        "realtime": 13.47284290011521,
+        "frame": 142,
+        "deltaTime": 0.014403500594198704,
+        "unscaledDeltaTime": 0.014403500594198704,
+        "localNetworkTick": 64,
+        "position": {
+          "x": 0.0,
+          "y": 0.0899999737739563,
+          "z": 0.359980046749115
+        }
+      },
+      "ids": {
+        "source": 4,
+        "request": 1,
+        "sender": 1,
+        "playerObject": 3,
+        "playerOwner": 1
+      },
+      "reportPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\NaturalRepeats\\Pair-07\\unity-playmode-tests-report.json",
+      "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261105T185252158Z-547bd8c6e0ee4ffbb1298bf467859eb2.json"
+    }
+  ]
+}

@@ -2,11 +2,18 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class PlayerInputNew : NetworkBehaviour
 {
     private PlayerGameInputActions playerGameInputActions;
+    private InputAction singleCarryPlacementToggleAction;
+    private InputAction singleCarryPlacementRotationAction;
+    private InputAction singleCarryPlacementControlModifierAction;
     private bool inputInitialized;
+    private bool singleCarryPlacementActive;
+    private bool actionAltHeld;
+    private PlayerSingleCarryPlacementController placementController;
 
     public EventHandler<OnSprintArgs> OnSprint;
 
@@ -34,6 +41,17 @@ public class PlayerInputNew : NetworkBehaviour
     public EventHandler OnUI_Right;
     public EventHandler OnUI_Back;
     public EventHandler OnDismissInfoOverlay;
+    public event EventHandler OnToggleSingleCarryPlacement;
+    public event EventHandler OnCancelSingleCarryPlacement;
+    public event EventHandler OnConfirmSingleCarryPlacement;
+    public event EventHandler OnGameplayMenuRequested;
+    public event EventHandler OnForcedSingleCarryPlacementExit;
+    public event Action<Vector2, bool, double> OnSingleCarryPlacementRotationChanged;
+
+    public bool IsSingleCarryPlacementActive => singleCarryPlacementActive;
+    public bool IsSingleCarryPlacementMovementBlocked => singleCarryPlacementActive
+        && placementController != null && placementController.IsRequestPending;
+    public bool IsLocalGameplayInputActive => IsInputActive() && !IsUIOpened;
 
     [SerializeField]
     private bool IsUIOpened;
@@ -120,17 +138,59 @@ public class PlayerInputNew : NetworkBehaviour
         playerGameInputActions.UI.Back.performed += UI_Back_performed;
         playerGameInputActions.Game.Enable();
         playerGameInputActions.UI.Enable();
+        singleCarryPlacementToggleAction = playerGameInputActions.Game.ToggleSingleCarryPlacement;
+        singleCarryPlacementToggleAction.performed += SingleCarryPlacementToggle_performed;
+        singleCarryPlacementRotationAction = playerGameInputActions.Game.SingleCarryPlacementRotation;
+        singleCarryPlacementRotationAction.started += SingleCarryPlacementRotation_started;
+        singleCarryPlacementRotationAction.performed += SingleCarryPlacementRotation_performed;
+        singleCarryPlacementRotationAction.canceled += SingleCarryPlacementRotation_canceled;
+        singleCarryPlacementControlModifierAction = playerGameInputActions.Game.SingleCarryPlacementControlModifier;
+        singleCarryPlacementControlModifierAction.started += SingleCarryPlacementControlModifier_changed;
+        singleCarryPlacementControlModifierAction.performed += SingleCarryPlacementControlModifier_changed;
+        singleCarryPlacementControlModifierAction.canceled += SingleCarryPlacementControlModifier_changed;
+        placementController = null;
+        foreach (Component attached in GetComponents<Component>())
+        {
+            if (attached is PlayerSingleCarryPlacementController controller)
+            {
+                placementController = controller;
+                break;
+            }
+        }
+        if (placementController == null) placementController = gameObject.AddComponent<PlayerSingleCarryPlacementController>();
     }
 
     private void DisposeInput()
     {
+        CancelActionAltHold();
+        if (singleCarryPlacementActive)
+            OnForcedSingleCarryPlacementExit?.Invoke(this, EventArgs.Empty);
+        singleCarryPlacementActive = false;
         if (!inputInitialized || playerGameInputActions == null)
         {
             return;
         }
-
         playerGameInputActions.Game.Disable();
         playerGameInputActions.UI.Disable();
+        if (singleCarryPlacementToggleAction != null)
+        {
+            singleCarryPlacementToggleAction.performed -= SingleCarryPlacementToggle_performed;
+            singleCarryPlacementToggleAction = null;
+        }
+        if (singleCarryPlacementRotationAction != null)
+        {
+            singleCarryPlacementRotationAction.started -= SingleCarryPlacementRotation_started;
+            singleCarryPlacementRotationAction.performed -= SingleCarryPlacementRotation_performed;
+            singleCarryPlacementRotationAction.canceled -= SingleCarryPlacementRotation_canceled;
+        }
+        singleCarryPlacementRotationAction = null;
+        if (singleCarryPlacementControlModifierAction != null)
+        {
+            singleCarryPlacementControlModifierAction.started -= SingleCarryPlacementControlModifier_changed;
+            singleCarryPlacementControlModifierAction.performed -= SingleCarryPlacementControlModifier_changed;
+            singleCarryPlacementControlModifierAction.canceled -= SingleCarryPlacementControlModifier_changed;
+        }
+        singleCarryPlacementControlModifierAction = null;
         playerGameInputActions.Dispose();
         playerGameInputActions = null;
         inputInitialized = false;
@@ -153,6 +213,11 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void UI_Back_performed(InputAction.CallbackContext context)
     {
+        if (singleCarryPlacementActive)
+        {
+            OnCancelSingleCarryPlacement?.Invoke(this, EventArgs.Empty);
+            return;
+        }
         if (IsUIOpened)
         {
             OnUI_Back?.Invoke(this, EventArgs.Empty);
@@ -194,7 +259,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void DropItem_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened)
+        if (IsUIOpened || singleCarryPlacementActive)
         {
             return;
         }
@@ -204,7 +269,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void ToggleBridgeRequirements_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened)
+        if (IsUIOpened || singleCarryPlacementActive)
         {
             return;
         }
@@ -214,6 +279,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void BridgeRequirementsScroll_performed(InputAction.CallbackContext context)
     {
+        if (singleCarryPlacementActive) return;
         RouteBridgeRequirementsScroll(context.ReadValue<Vector2>());
     }
 
@@ -228,12 +294,13 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void ToggleRestartMenu_performed(InputAction.CallbackContext context)
     {
+        if (singleCarryPlacementActive) OnGameplayMenuRequested?.Invoke(this, EventArgs.Empty);
         OnToggleRestartMenu?.Invoke(this, EventArgs.Empty);
     }
 
     private void SwapItems_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened)
+        if (IsUIOpened || singleCarryPlacementActive)
         {
             return;
         }
@@ -248,22 +315,30 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void ActionAlt_canceled(InputAction.CallbackContext context)
     {
-        OnActionAltCanceled?.Invoke(this, EventArgs.Empty);
+        CancelActionAltHold();
     }
 
     private void ActionAlt_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened)
+        if (IsUIOpened || singleCarryPlacementActive)
         {
             return;
         }
 
+        actionAltHeld = true;
         OnActionAlt?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void CancelActionAltHold()
+    {
+        if (!actionAltHeld) return;
+        actionAltHeld = false;
+        OnActionAltCanceled?.Invoke(this, EventArgs.Empty);
     }
 
     private void Action_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened)
+        if (IsUIOpened || singleCarryPlacementActive)
         {
             return;
         }
@@ -273,6 +348,11 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Interact_performed(InputAction.CallbackContext context)
     {
+        if (singleCarryPlacementActive)
+        {
+            OnConfirmSingleCarryPlacement?.Invoke(this, EventArgs.Empty);
+            return;
+        }
         if (IsUIOpened)
         {
             OnUI_Interact?.Invoke(this, EventArgs.Empty);
@@ -297,7 +377,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Sprint_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened)
+        if (IsUIOpened || singleCarryPlacementActive)
         {
             return;
         }
@@ -310,7 +390,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void Jump_performed(InputAction.CallbackContext context)
     {
-        if (IsUIOpened)
+        if (IsUIOpened || singleCarryPlacementActive)
         {
             return;
         }
@@ -325,15 +405,75 @@ public class PlayerInputNew : NetworkBehaviour
             return;
         }
 
+        if (isOpen && singleCarryPlacementActive) OnGameplayMenuRequested?.Invoke(this, EventArgs.Empty);
         IsUIOpened = isOpen;
         if (isOpen)
         {
             OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
             OnActionCanceled?.Invoke(this, EventArgs.Empty);
-            OnActionAltCanceled?.Invoke(this, EventArgs.Empty);
+            CancelActionAltHold();
         }
 
         SetCursorState(cursorLocked && !isOpen);
+    }
+
+    private void SingleCarryPlacementToggle_performed(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive() || IsUIOpened) return;
+        OnToggleSingleCarryPlacement?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void SingleCarryPlacementRotation_performed(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive()) return;
+        RaisePlacementRotationChanged();
+    }
+
+    private void SingleCarryPlacementRotation_started(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive()) return;
+        RaisePlacementRotationChanged();
+    }
+
+    private void SingleCarryPlacementRotation_canceled(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive()) return;
+        RaisePlacementRotationChanged();
+    }
+
+    private void SingleCarryPlacementControlModifier_changed(InputAction.CallbackContext context)
+    {
+        if (!isActiveAndEnabled || !IsInputActive()) return;
+        RaisePlacementRotationChanged();
+    }
+
+    private void RaisePlacementRotationChanged()
+    {
+        if (!singleCarryPlacementActive || singleCarryPlacementRotationAction == null) return;
+        bool controlModifier = IsPlacementControlModifierControlPressed();
+        OnSingleCarryPlacementRotationChanged?.Invoke(singleCarryPlacementRotationAction.ReadValue<Vector2>(),
+            controlModifier, Time.realtimeSinceStartupAsDouble);
+    }
+
+    private bool IsPlacementControlModifierControlPressed()
+    {
+        if (singleCarryPlacementControlModifierAction == null) return false;
+        var controls = singleCarryPlacementControlModifierAction.controls;
+        for (int i = 0; i < controls.Count; i++)
+        {
+            if (controls[i] is ButtonControl button && button.isPressed) return true;
+        }
+        return false;
+    }
+
+    public void SetSingleCarryPlacementActive(bool active)
+    {
+        singleCarryPlacementActive = active;
+        if (!active) return;
+        OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = false });
+        OnActionCanceled?.Invoke(this, EventArgs.Empty);
+        CancelActionAltHold();
+        OnInteractCanceled?.Invoke(this, EventArgs.Empty);
     }
 
     public Vector2 GetLookDeltaValue()
@@ -352,6 +492,18 @@ public class PlayerInputNew : NetworkBehaviour
         return new Vector2(inputVector.x, -inputVector.y);
     }
 
+    public Vector2 GetSingleCarryPlacementRotationInput()
+    {
+        return singleCarryPlacementActive && singleCarryPlacementRotationAction != null
+            ? singleCarryPlacementRotationAction.ReadValue<Vector2>() : Vector2.zero;
+    }
+
+    public bool IsSingleCarryPlacementControlModifierPressed()
+    {
+        return singleCarryPlacementActive && singleCarryPlacementControlModifierAction != null
+            && IsPlacementControlModifierControlPressed();
+    }
+
     public Vector2 GetLookDeltaValueForMinigames()
     {
         if (!IsInputActive())
@@ -365,7 +517,7 @@ public class PlayerInputNew : NetworkBehaviour
 
     public Vector2 GetMoveVectorValue()
     {
-        if (!IsInputActive() || IsUIOpened)
+        if (!IsInputActive() || IsUIOpened || IsSingleCarryPlacementMovementBlocked)
         {
             return Vector2.zero;
         }
@@ -386,10 +538,24 @@ public class PlayerInputNew : NetworkBehaviour
 
     private void OnEnable()
     {
+        if (!inputInitialized && ShouldRunAsLocalPlayer())
+        {
+            InitializeInput();
+            SetCursorState(cursorLocked && !IsUIOpened);
+            return;
+        }
         if (inputInitialized && playerGameInputActions != null)
         {
             playerGameInputActions.Game.Enable();
+            playerGameInputActions.UI.Enable();
+            SetCursorState(cursorLocked && !IsUIOpened);
         }
+        singleCarryPlacementToggleAction?.Enable();
+    }
+
+    protected void OnDisable()
+    {
+        DisposeInput();
     }
 
     private void OnApplicationFocus(bool hasFocus)

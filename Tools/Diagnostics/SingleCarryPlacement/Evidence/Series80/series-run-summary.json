@@ -1,0 +1,16 @@
+{
+  "stopReason": "Pair-20 cap reached; required two qualifying natural refusals were not observed.",
+  "completedPairs": 20,
+  "usablePairs": 20,
+  "usableTrials": 40,
+  "accepted0ms": 20,
+  "accepted100ms": 20,
+  "invalidAimOrigin0ms": 0,
+  "invalidAimOrigin100ms": 0,
+  "qualifyingResidualExceeded0ms": 0,
+  "qualifyingResidualExceeded100ms": 0,
+  "otherInvalidAimOrigin0ms": 0,
+  "otherInvalidAimOrigin100ms": 0,
+  "sourceHashesMatchAfterSeries": true,
+  "sceneHashUnchanged": true
+}

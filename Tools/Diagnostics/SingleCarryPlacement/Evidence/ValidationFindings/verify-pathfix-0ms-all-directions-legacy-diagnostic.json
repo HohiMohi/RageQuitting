@@ -1,0 +1,877 @@
+{
+    "trials": [
+        {
+            "kind": "remote-direction-W",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "Accepted",
+            "requestId": "1",
+            "measuredResponseMs": 18.65399932861328,
+            "pendingHorizontalDrift": 0.0,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 1.2989861965179444
+            },
+            "authoritativePose": {
+                "x": 1.2832433782250519e-8,
+                "y": -5.21540641784668e-8,
+                "z": 1.2989863157272339
+            },
+            "movedOwnerPose": {
+                "x": 0.0,
+                "y": 0.0899999737739563,
+                "z": 0.1247774139046669
+            },
+            "ownerAtPendingPose": {
+                "x": 0.0,
+                "y": 0.09000009298324585,
+                "z": 0.12299908697605133
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        },
+        {
+            "kind": "remote-direction-A",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "Accepted",
+            "requestId": "2",
+            "measuredResponseMs": 17.435100555419923,
+            "pendingHorizontalDrift": 0.0,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": -0.11875908076763153,
+                "y": 0.0,
+                "z": 1.3147772550582886
+            },
+            "authoritativePose": {
+                "x": -0.11875906586647034,
+                "y": -5.21540641784668e-8,
+                "z": 1.3147773742675782
+            },
+            "movedOwnerPose": {
+                "x": -0.13402071595191956,
+                "y": 0.0899999737739563,
+                "z": 0.1247774139046669
+            },
+            "ownerAtPendingPose": {
+                "x": -0.13182862102985383,
+                "y": 0.09000009298324585,
+                "z": 0.1247774139046669
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        },
+        {
+            "kind": "remote-direction-S",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "Accepted",
+            "requestId": "3",
+            "measuredResponseMs": 17.49920082092285,
+            "pendingHorizontalDrift": 4.656612873077393e-10,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": -0.13402073085308076,
+                "y": 0.0,
+                "z": 1.2018961906433106
+            },
+            "authoritativePose": {
+                "x": -0.13402071595191956,
+                "y": -5.21540641784668e-8,
+                "z": 1.2018963098526
+            },
+            "movedOwnerPose": {
+                "x": -0.13402071595191956,
+                "y": 0.0899999737739563,
+                "z": -0.008174503222107888
+            },
+            "ownerAtPendingPose": {
+                "x": -0.13402071595191956,
+                "y": 0.0899999737739563,
+                "z": -0.006181767210364342
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        },
+        {
+            "kind": "remote-direction-D",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "Accepted",
+            "requestId": "4",
+            "measuredResponseMs": 20.512800216674806,
+            "pendingHorizontalDrift": 4.656612873077393e-10,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": -0.019259260967373849,
+                "y": 0.0,
+                "z": 1.1818252801895142
+            },
+            "authoritativePose": {
+                "x": -0.019259247928857805,
+                "y": -5.21540641784668e-8,
+                "z": 1.1818253993988038
+            },
+            "movedOwnerPose": {
+                "x": 0.005610302090644836,
+                "y": 0.0899999737739563,
+                "z": -0.008174503222107888
+            },
+            "ownerAtPendingPose": {
+                "x": 0.003151288256049156,
+                "y": 0.0899999737739563,
+                "z": -0.008174503222107888
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        },
+        {
+            "kind": "remote-direction-W+A",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "Accepted",
+            "requestId": "5",
+            "measuredResponseMs": 20.335500717163087,
+            "pendingHorizontalDrift": 0.0,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": -0.06474344432353974,
+                "y": 0.0,
+                "z": 1.2599953413009644
+            },
+            "authoritativePose": {
+                "x": -0.06474342942237854,
+                "y": -5.21540641784668e-8,
+                "z": 1.259995460510254
+            },
+            "movedOwnerPose": {
+                "x": -0.07608354091644287,
+                "y": 0.0899999737739563,
+                "z": 0.08259643614292145
+            },
+            "ownerAtPendingPose": {
+                "x": -0.07479199767112732,
+                "y": 0.0899999737739563,
+                "z": 0.08116138726472855
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        },
+        {
+            "kind": "remote-direction-W+D",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "Accepted",
+            "requestId": "6",
+            "measuredResponseMs": 25.479000091552736,
+            "pendingHorizontalDrift": 0.0,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": -0.0017229934455826879,
+                "y": 0.0,
+                "z": 1.3552192449569703
+            },
+            "authoritativePose": {
+                "x": -0.001722980639897287,
+                "y": -5.21540641784668e-8,
+                "z": 1.3552193641662598
+            },
+            "movedOwnerPose": {
+                "x": 0.01343071460723877,
+                "y": 0.0899999737739563,
+                "z": 0.18205676972866059
+            },
+            "ownerAtPendingPose": {
+                "x": 0.010937722399830819,
+                "y": 0.0899999737739563,
+                "z": 0.17928677797317506
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        },
+        {
+            "kind": "remote-direction-S+A",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "Accepted",
+            "requestId": "7",
+            "measuredResponseMs": 22.92889976501465,
+            "pendingHorizontalDrift": 0.0,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": -0.07503602653741837,
+                "y": 0.0,
+                "z": 1.2934188842773438
+            },
+            "authoritativePose": {
+                "x": -0.07503601163625717,
+                "y": -5.21540641784668e-8,
+                "z": 1.2934190034866334
+            },
+            "movedOwnerPose": {
+                "x": -0.09322555363178253,
+                "y": 0.0899999737739563,
+                "z": 0.08725116401910782
+            },
+            "ownerAtPendingPose": {
+                "x": -0.09068147093057633,
+                "y": 0.08999985456466675,
+                "z": 0.08951257169246674
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        },
+        {
+            "kind": "remote-direction-S+D",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "Accepted",
+            "requestId": "8",
+            "measuredResponseMs": 20.969900131225587,
+            "pendingHorizontalDrift": 5.206251540990081e-10,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": -0.015652673318982126,
+                "y": 0.0,
+                "z": 1.2082973718643189
+            },
+            "authoritativePose": {
+                "x": -0.01565266028046608,
+                "y": -5.21540641784668e-8,
+                "z": 1.2082974910736085
+            },
+            "movedOwnerPose": {
+                "x": 0.00046130840200930834,
+                "y": 0.0899999737739563,
+                "z": 0.003973933402448893
+            },
+            "ownerAtPendingPose": {
+                "x": -0.0014626458287239075,
+                "y": 0.0899999737739563,
+                "z": 0.005684114992618561
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        },
+        {
+            "kind": "remote-all-directions-turn-e",
+            "packetDelayMs": 0,
+            "jitterMs": 0,
+            "lossPercent": 0,
+            "result": "InvalidAimOrigin",
+            "requestId": "9",
+            "measuredResponseMs": 20.582000732421876,
+            "pendingHorizontalDrift": 0.0,
+            "resumedHorizontalDisplacement": 0.0,
+            "previewPose": {
+                "x": 0.22689948976039887,
+                "y": 0.0,
+                "z": 1.4232252836227418
+            },
+            "authoritativePose": {
+                "x": 5.7287373542785648,
+                "y": 2.063570976257324,
+                "z": 6.810506343841553
+            },
+            "movedOwnerPose": {
+                "x": 0.009943324141204358,
+                "y": 0.08999985456466675,
+                "z": 0.2971767485141754
+            },
+            "ownerAtPendingPose": {
+                "x": 0.009665759280323983,
+                "y": 0.08999985456466675,
+                "z": 0.29499921202659609
+            },
+            "networkAim": {
+                "poseSamplePhase": "",
+                "serverPoseSampleSource": "",
+                "ownerPositionAtE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverOwnerRenderedPositionPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "serverRenderedAimAnchorPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayOrigin": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "rayDirection": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "preERenderedServerAimAnchor": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "ownerRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverRenderedRotationPreE": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.0
+                },
+                "serverNetworkTransformType": "",
+                "localValidation": "",
+                "serverNetworkTransformSpawned": false,
+                "serverCanCommit": false,
+                "serverInLocalSpace": false,
+                "preERenderedAimOriginForwardOffset": 0.0,
+                "preERenderedAimOriginResidual": 0.0,
+                "ownerServerHorizontalSeparationPreE": 0.0,
+                "ownerFrameAtCapture": 0,
+                "ownerRealtimeAtCapture": 0.0,
+                "ownerNetworkTickAtCapture": 0,
+                "ownerDeltaTimeAtCapture": 0.0,
+                "ownerUnscaledDeltaTimeAtCapture": 0.0
+            },
+            "serverRpcAimDiagnostic": "",
+            "tracePath": ""
+        }
+    ]
+}

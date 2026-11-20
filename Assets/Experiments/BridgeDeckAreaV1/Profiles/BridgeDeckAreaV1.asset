@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a03a9c63220142239e2825310bd088d2, type: 3}
+  m_Name: BridgeDeckAreaV1
+  m_EditorClassIdentifier: Assembly-CSharp::BridgeDeckAreaProfile
+  areaLengthMeters: 6.56
+  areaWidthMeters: 2.4
+  stockLengthMeters: 2.5
+  stockWidthMeters: 2.4
+  stockThicknessMeters: 0.2
+  minimumFragmentLengthMeters: 0.4
+  maximumJointWidthMeters: 0.2
+  boundaryMarginMeters: 0.2
+  orientationToleranceDegrees: 0.5
+  undersideHeightToleranceMeters: 0.03
+  geometryEpsilonMeters: 0.0005
+  sawKerfMeters: 0.005
+  fullStockMassKilograms: 1
+  presentationLineMaterial: {fileID: 2100000, guid: 0d1f64f6ab4e9034da4e51e324b219e3, type: 2}

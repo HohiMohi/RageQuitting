@@ -289,12 +289,14 @@ public class PlayerEquippableItemVisuals : NetworkBehaviour
     private static bool IsSupportedToolType(EquippableItemType itemType)
     {
         return itemType == EquippableItemType.Axe ||
+               itemType == EquippableItemType.Saw ||
                itemType == EquippableItemType.Pickaxe ||
                itemType == EquippableItemType.Shovel ||
                itemType == EquippableItemType.IndustrialHammer ||
                itemType == EquippableItemType.Wrench ||
                itemType == EquippableItemType.Rope ||
-               itemType == EquippableItemType.SpiritLevel;
+               itemType == EquippableItemType.SpiritLevel ||
+               itemType == EquippableItemType.Crowbar;
     }
 
     private static void ClearVisual(ref GameObject visual)

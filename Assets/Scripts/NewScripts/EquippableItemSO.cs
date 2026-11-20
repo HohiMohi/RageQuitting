@@ -20,6 +20,7 @@ public class EquippableItemSO : ScriptableObject
     public EquippableWorldPhysicsProfileSO worldPhysicsProfile;
     public RopeToolProfileSO ropeProfile;
     public SpiritLevelProfileSO spiritLevelProfile;
+    public SawCutProfileSO sawCutProfile;
 
     public float ResourceDamage => resourceDamage > 0f ? resourceDamage : damage * 2f;
     public float ConstructionWorkPower => constructionWorkPower > 0f ? constructionWorkPower : damage;
@@ -38,5 +39,6 @@ public enum EquippableItemType
     None, // for object-object and object-NPC interaction
     Wrench, // Tightening bridge construction connections
     Rope,
-    SpiritLevel
+    SpiritLevel,
+    Crowbar
 }

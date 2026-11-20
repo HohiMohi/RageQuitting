@@ -1,0 +1,105 @@
+using UnityEngine;
+using UnityEditor;
+using UnityEngine.SceneManagement;
+using System.Linq;
+using System.IO;
+using System.Globalization;
+
+namespace Unity.AI.Assistant.Agent.Dynamic.Extension.Editor
+{
+    internal class CommandScript : IRunCommand
+    {
+        bool ReadVector(string raw, Vector3 current, out Vector3 value)
+        {
+            value = Vector3.zero;
+            string[] v = raw.Split(',');
+            float best = float.MaxValue;
+            bool ok = false;
+            var ci = CultureInfo.GetCultureInfo("pl-PL");
+            for (int a = 1; a <= 2; a++)
+                for (int b = 1; b <= 2; b++)
+                {
+                    int c = v.Length - a - b;
+                    if (c < 1 || c > 2)
+                        continue;
+                    float x, y, z;
+                    if (!float.TryParse(string.Join(",", v.Take(a)), NumberStyles.Float, ci, out x) || !float.TryParse(string.Join(",", v.Skip(a).Take(b)), NumberStyles.Float, ci, out y) || !float.TryParse(string.Join(",", v.Skip(a + b)), NumberStyles.Float, ci, out z))
+                        continue;
+                    float score = 100 * (Mathf.Abs(current.y - y) + Mathf.Abs(current.z - z)) + Mathf.Min(Mathf.Abs(current.x - x), Mathf.Abs(current.x - x + 6));
+                    if (score < best)
+                    {
+                        best = score;
+                        value = new Vector3(x, y, z);
+                        ok = true;
+                    }
+                }
+
+            return ok;
+        }
+
+        public void Execute(ExecutionResult result)
+        {
+            var scene = SceneManager.GetActiveScene();
+            if (scene.path != "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity")
+            {
+                result.Log("Skip preview scene");
+                return;
+            }
+
+            var data = File.ReadAllLines("ArtSource/TutorialTerrainStage02/RiverWidthRevision01/baseline_scene_snapshot.txt").Select(l => l.Split('|')).Where(l => l.Length == 4).GroupBy(l => l[1]).Where(g => g.Count() == 1).ToDictionary(g => g.Key, g => g.First()[3]);
+            int west = 0, east = 0, mid = 0, errors = 0, unparsed = 0;
+            foreach (var t in scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<Transform>(true)))
+            {
+                string p = t.name;
+                var parent = t.parent;
+                while (parent != null)
+                {
+                    p = parent.name + "/" + p;
+                    parent = parent.parent;
+                }
+
+                if (p.StartsWith("TutorialGameplay/Bridge/") || p.StartsWith("Lighting/") || t.GetComponentInParent<Canvas>(true) != null || t.GetComponentInParent<Camera>(true) != null)
+                    continue;
+                if (!data.TryGetValue(p, out var raw))
+                    continue;
+                Vector3 old;
+                if (!ReadVector(raw, t.position, out old))
+                {
+                    unparsed++;
+                    continue;
+                }
+
+                bool pit = p.StartsWith("FoundationExcavationSystem/East_FoundationExcavation");
+                bool bush = p.StartsWith("FoundationClearingBushes/ThornyBush_Foundation2_");
+                float dx = 0;
+                bool check = true;
+                if (pit || bush || old.x >= 14 && old.x <= 42)
+                {
+                    east++;
+                    dx = -6;
+                }
+                else if (old.x <= 2)
+                {
+                    west++;
+                }
+                else
+                {
+                    mid++;
+                    check = false;
+                }
+
+                if (!check)
+                    continue;
+                var expected = old + new Vector3(dx, 0, 0);
+                if (Vector3.Distance(t.position, expected) > .0002f)
+                {
+                    errors++;
+                    if (errors < 25)
+                        result.Log("deltaMismatch " + p + " before=" + old.ToString("F6") + " current=" + t.position.ToString("F6") + " expected=" + expected.ToString("F6"));
+                }
+            }
+
+            result.Log("ParsedDeltaAudit west=" + west + " east=" + east + " riverMidExcluded=" + mid + " mismatch=" + errors + " parseFailed=" + unparsed + " tolerance0.2mm; unchanged path hierarchy compared, bridge/camera/lighting/UI excluded");
+        }
+    }
+}

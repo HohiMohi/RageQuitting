@@ -1,0 +1,11 @@
+Backup and baseline manifest
+- TutorialTerrainStage02.before.unity + .meta: saved baseline scene snapshot before revision edits.
+- TutorialTerrainData.before.asset + .meta: native terrain asset baseline; additionally captured terrain_heights_before.bin, terrain_alphas_before.bin, terrain_holes_before.bin before remap.
+- Main_NavMeshData.before.asset, WestFailedConcrete_NavMeshData.before.asset, EastFailedConcrete_NavMeshData.before.asset: owned navmesh baselines before bake.
+- TutorialTerrain.before.mat.txt: text baseline of Stage02 material reconstructed from the git baseline (captured after material edit; source noted in file).
+- baseline_scene_snapshot.txt: baseline object paths/IDs/transforms and serialized snapshot data; Stage01_SharedSourceFingerprints.json records shared Stage01 asset fingerprints before edits.
+- New copied bridge assets are additive under Assets/Experiments/TutorialTerrainStage02/BridgeWidthRevision/. Original source prefabs, SOs, recipes, Stage01 terrain/road material and road map were retained unchanged.
+- Before PNGs were reconstructed from frozen baseline arrays, original Stage01 road map, baseline scene transforms and original WorldRect90; they were not captured live before the terrain edit. See before-capture-report.txt.
+- Final changed asset list is available from the Unity project working tree; revision outputs/reports are in this directory.
+
+- DefaultNetworkPrefabs.before.asset.txt and NetworkPrefabsList.before.asset.txt: Git HEAD baselines, generated from `git show HEAD:<path>`; both lists were clean at baseline. Final diffs append exactly two required short mountable prefabs to each list. These are text evidence copies, not Unity assets.

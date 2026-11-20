@@ -12,6 +12,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 Import-Module (Join-Path $scriptDirectory 'AgentHarness.psm1') -Force
+Import-Module (Join-Path $scriptDirectory 'UnityConnection.psm1') -Force
 $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptDirectory '..\..'))
 $started = [DateTime]::UtcNow
 $pipelineMode = if ($Mode -eq 'PlayMode') { 'playmode' } else { 'editor' }
@@ -26,7 +27,7 @@ elseif (-not [System.IO.Path]::IsPathRooted($ArtifactDirectory)) {
 $ArtifactDirectory = [System.IO.Path]::GetFullPath($ArtifactDirectory)
 New-Item -ItemType Directory -Path $ArtifactDirectory -Force | Out-Null
 $reportPath = Join-Path $ArtifactDirectory ("unity-" + $modeSlug + "-tests-report.json")
-$unityCli = Join-Path $env:LOCALAPPDATA 'Unity\bin\unity.exe'
+$unityCli = (Resolve-UnityCliPath)
 $sequence = 0
 $artifacts = @()
 $invocations = @()

@@ -2905,6 +2905,9 @@ MonoBehaviour:
   - {fileID: 5262262295494530867}
   - {fileID: 8294812762012785966}
   - {fileID: 2579718956415623410}
+  disabledAfterAssemblyColliders:
+  - {fileID: 8294812762012785966}
+  - {fileID: 2579718956415623410}
 --- !u!65 &5262262295494530867
 BoxCollider:
   m_ObjectHideFlags: 0

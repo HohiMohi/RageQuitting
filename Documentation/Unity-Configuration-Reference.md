@@ -557,10 +557,15 @@ Przy tworzeniu nowego akwenu nalezy przygotowac trigger `WaterBody`, osobny clea
 | `BridgeConstructionWorkflowSO` | `looseningProgressPerCycle` | Progres łopatą wymagany przed wybieraniem |
 | `BridgeConstructionWorkflowSO` | `soilUnitsPerCycle` | Porcje usuwane netto w cyklu |
 | `BridgeConstructionWorkflowSO` | `finalExcavationDepth` | Maksymalne pionowe przesunięcie powierzchni w metrach |
-| `BridgeConstructionWorkflowSO` | `loosenedSoilHardeningDuration` | Czas aktywnego `SoilRemoval` przed ponownym stwardnieniem; tutorial: `15 s` |
+| `BridgeConstructionWorkflowSO` | `loosenedSoilHardeningDuration` | Legacy: czas aktywnego `SoilRemoval` przed ponownym stwardnieniem; tutorial: `15 s`. Nie dotyczy nowej opt-in warstwy Stage02, która się nie utwardza. |
 | `BridgeConstructionSite` | `excavationVolume` | Referencja do geometrii i triggera konkretnego wykopu |
 | `FoundationExcavationVolume` | `soilSurface` | Transform ruchomej powierzchni wraz z colliderem |
 | `FoundationExcavationVolume` | `compact/loosenedSoilMaterial` | Materiały blendowane podczas pracy łopatą |
+| `PortableSubstanceContainer` | `automaticLooseSoilCollection` | Włącza automatyczny pobór sypkiej ziemi przy poziomym ruchu gracza trzymającego wiadro; w prefabie `PortableBucket` domyślnie `true` |
+| `PortableSubstanceContainer` | `looseSoilUnitsPerSecond` | Tempo poboru przy poprawnym poziomym ruchu gracza niosącego wiadro; prefab: `0.5` porcji/s |
+| `PortableSubstanceContainer` | `looseSoilBrushRadius` | Promień pędzla zbierającego; prefab: `0.6 m` |
+| `PortableSubstanceContainer` | `looseSoilWholeLayerTailThreshold` | Próg całej końcówki warstwy pobieranej tylko, gdy mieści się w wiadrze; prefab: `0.05`, `0` wyłącza |
+| `PortableSubstanceContainer` | sample/movement limits | Próbka `0.1 s`; odległość liczona z poziomego ruchu gracza niosącego wiadro, minimalnie `0.01 m` i maksymalnie `1.5 m` na próbkę (odrzuca teleporty) |
 | `PortableSubstanceContainer` | `capacity` | Maksymalna liczba porcji; obecnie `3` |
 | `PortableSubstanceContainer` | `supportedSubstances` | Typy możliwe do przechowywania bez mieszania |
 | `PortableSubstanceContainer` | `loosePilePrefab` | Sieciowy prefab tworzony przy wysypaniu |
@@ -626,3 +631,5 @@ Po konfiguracji uruchom `PlayerConcreteTrapProbe`; sprawdza wiring i podstawowe
 przejścia mechaniki. Nadal zalecany jest rzeczywisty wieloinstancyjny smoke test
 PlayMode obejmujący late join, rozbijanie przez drugiego gracza, tip/carry,
 downed/respawn oraz disconnect.
+
+Ustawienia automatycznego poboru należą do serwerowej instancji wiadra. Strojenie prefabu obowiązuje hosta/serwer; modyfikowanie klienckiej instancji nie zmienia autorytatywnego tempa ani ilości poboru. Etap 4 czeka na ręczną kontrolę Stage02; lokalny zwrot oraz zmiana sterowania RMB należą do Etapu 5 i nie są wdrożone. Szczegóły i checklista: [plan Sypkiej ziemi V1](Loose-Soil-V1-Implementation.md).

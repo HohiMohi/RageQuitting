@@ -8,18 +8,33 @@ public class BridgeDeckSection : MonoBehaviour
     [SerializeField, Min(0.1f)] private float nominalPanelLength = 2f;
     [SerializeField] private BridgeComponent[] prerequisites;
     [SerializeField] private BridgeDeckPanelConstructionSite[] panelSlots;
+    [SerializeField] private BridgeComponent[] mainGirders;
+    [SerializeField] private BridgeDeckPanelSectionNetworkState physicalPanelState;
 
     private int lastUnlockedIndex = -2;
 
     public float SectionLength => sectionLength;
     public float PanelGap => panelGap;
     public IReadOnlyList<BridgeDeckPanelConstructionSite> PanelSlots => panelSlots;
+    public IReadOnlyList<BridgeComponent> MainGirders => mainGirders;
+    public BridgeDeckPanelSectionNetworkState PhysicalPanelState => physicalPanelState;
 
     private void Awake()
     {
+        if (physicalPanelState == null) physicalPanelState = GetComponentInChildren<BridgeDeckPanelSectionNetworkState>(true);
         ConfigureSlots();
         RefreshLayout();
         RefreshUnlockState(true);
+    }
+
+    private void OnValidate()
+    {
+        sectionLength = Mathf.Max(0.1f, sectionLength);
+        panelGap = Mathf.Max(0f, panelGap);
+        nominalPanelLength = Mathf.Max(0.1f, nominalPanelLength);
+        if (physicalPanelState == null) physicalPanelState = GetComponentInChildren<BridgeDeckPanelSectionNetworkState>(true);
+        ConfigureSlots();
+        RefreshLayout();
     }
 
     private void Update()
@@ -29,10 +44,13 @@ public class BridgeDeckSection : MonoBehaviour
 
     public bool IsSlotUnlocked(int index)
     {
-        if (panelSlots == null || index < 0 || index >= panelSlots.Length || !ArePrerequisitesComplete())
+        if (panelSlots == null || index < 0 || index >= panelSlots.Length)
         {
             return false;
         }
+
+        if (panelSlots[index] != null && panelSlots[index].UsesPhysicalPanelPlacement) return true;
+        if (!ArePrerequisitesComplete()) return false;
 
         return index == 0 || (panelSlots[index - 1] != null && panelSlots[index - 1].IsComplete);
     }
@@ -58,7 +76,10 @@ public class BridgeDeckSection : MonoBehaviour
             if (slot == null) continue;
             Transform slotTransform = slot.transform;
             slotTransform.localPosition = new Vector3(start + stride * i, slotTransform.localPosition.y, slotTransform.localPosition.z);
-            slot.SetLayoutLength(panelLength, nominalPanelLength);
+            if (!slot.UsesPhysicalPanelPlacement)
+            {
+                slot.SetLayoutLength(panelLength, nominalPanelLength);
+            }
         }
     }
 
@@ -105,12 +126,4 @@ public class BridgeDeckSection : MonoBehaviour
         return true;
     }
 
-    private void OnValidate()
-    {
-        sectionLength = Mathf.Max(0.1f, sectionLength);
-        panelGap = Mathf.Max(0f, panelGap);
-        nominalPanelLength = Mathf.Max(0.1f, nominalPanelLength);
-        ConfigureSlots();
-        RefreshLayout();
-    }
 }

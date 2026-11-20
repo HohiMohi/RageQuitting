@@ -1,0 +1,68 @@
+[
+  {
+    "residual": 0.019073861690642405,
+    "complete": false,
+    "case": "host-synchronous-acceptance",
+    "delay": 0,
+    "hasRead": true,
+    "runId": "2f58112f4222421f9962479b32e08a76",
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Traces\\2f58112f4222421f9962479b32e08a76.json",
+    "validationResult": 0,
+    "overflow": false
+  },
+  {
+    "residual": 0.026700025133291214,
+    "complete": true,
+    "case": "remote-moving-acceptance",
+    "delay": 0,
+    "hasRead": true,
+    "runId": "39f55c8de7294ec880875068fff08101",
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Traces\\39f55c8de7294ec880875068fff08101.json",
+    "validationResult": 0,
+    "overflow": false
+  },
+  {
+    "residual": 0.00029773487208049345,
+    "complete": true,
+    "case": "stationary-physical-panel-acceptance",
+    "delay": 100,
+    "hasRead": true,
+    "runId": "43c3e3cf73c5455fb894a9c010a78139",
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Traces\\43c3e3cf73c5455fb894a9c010a78139.json",
+    "validationResult": 0,
+    "overflow": false
+  },
+  {
+    "residual": 0.5037905538057277,
+    "complete": true,
+    "case": "residual-exceeded-refusal-control",
+    "delay": 100,
+    "hasRead": true,
+    "runId": "9e30c927ed3c418ca991d5e9af570e4e",
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Traces\\9e30c927ed3c418ca991d5e9af570e4e.json",
+    "validationResult": 5,
+    "overflow": false
+  },
+  {
+    "residual": null,
+    "complete": false,
+    "case": "missing-received-pose-control",
+    "delay": 100,
+    "hasRead": false,
+    "runId": "d52e7e48563f44fb98516218d43e13b5",
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Traces\\d52e7e48563f44fb98516218d43e13b5.json",
+    "validationResult": 5,
+    "overflow": false
+  },
+  {
+    "residual": 0.2938803287292333,
+    "complete": true,
+    "case": "remote-moving-acceptance",
+    "delay": 100,
+    "hasRead": true,
+    "runId": "ea00d2dd71d14c5a8c01f45a7bbef4d3",
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Traces\\ea00d2dd71d14c5a8c01f45a7bbef4d3.json",
+    "validationResult": 5,
+    "overflow": false
+  }
+]

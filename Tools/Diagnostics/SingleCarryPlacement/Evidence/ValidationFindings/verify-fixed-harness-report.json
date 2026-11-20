@@ -1,0 +1,754 @@
+{
+  "schemaVersion": 1,
+  "status": "failed",
+  "exitCode": 1,
+  "startedAtUtc": "2026-11-06T19:46:59.8715238Z",
+  "completedAtUtc": "2026-11-06T19:47:37.1701408Z",
+  "projectRoot": "D:\\Programy\\UnityProjects\\RageQuitting",
+  "unityCli": "C:\\Users\\dunia\\AppData\\Local\\Unity\\bin\\unity.exe",
+  "mode": "PlayMode",
+  "filter": "SingleCarryPlacementMovementNetworkPlayModeTests",
+  "includeExplicit": false,
+  "timeoutSeconds": 180,
+  "precondition": {
+    "schemaVersion": 1,
+    "unityVersion": "6000.3.18f1",
+    "projectPath": "D:\\Programy\\UnityProjects\\RageQuitting",
+    "activeSceneName": "MultiplayerStartScene",
+    "activeScenePath": "Assets/Scenes/MultiplayerStartScene.unity",
+    "activeSceneIsDirty": false,
+    "openScenes": [
+      {
+        "handle": -5393746,
+        "name": "MultiplayerStartScene",
+        "path": "Assets/Scenes/MultiplayerStartScene.unity",
+        "isLoaded": true,
+        "isDirty": false,
+        "isActive": true
+      }
+    ],
+    "isCompiling": false,
+    "isUpdating": false,
+    "playModeState": "Editing",
+    "isPlaying": false,
+    "isPlayingOrWillChangePlaymode": false,
+    "pipelinePackagePresent": true,
+    "pipelinePackageVersion": "0.5.0-exp.1",
+    "hasRelevantUnsavedSceneState": false
+  },
+  "postcondition": {
+    "schemaVersion": 1,
+    "unityVersion": "6000.3.18f1",
+    "projectPath": "D:\\Programy\\UnityProjects\\RageQuitting",
+    "activeSceneName": "MultiplayerStartScene",
+    "activeScenePath": "Assets/Scenes/MultiplayerStartScene.unity",
+    "activeSceneIsDirty": false,
+    "openScenes": [
+      {
+        "handle": -5461308,
+        "name": "MultiplayerStartScene",
+        "path": "Assets/Scenes/MultiplayerStartScene.unity",
+        "isLoaded": true,
+        "isDirty": false,
+        "isActive": true
+      }
+    ],
+    "isCompiling": false,
+    "isUpdating": false,
+    "playModeState": "Editing",
+    "isPlaying": false,
+    "isPlayingOrWillChangePlaymode": false,
+    "pipelinePackagePresent": true,
+    "pipelinePackageVersion": "0.5.0-exp.1",
+    "hasRelevantUnsavedSceneState": false
+  },
+  "sceneRestore": {
+    "required": false,
+    "attempted": false,
+    "succeeded": true
+  },
+  "summary": {
+    "total": 9,
+    "passed": 8,
+    "failed": 1,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "tests": [
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.HostOwnerPlacementAcceptsSynchronouslyWithRealPlayer",
+      "Status": "Passed",
+      "Duration": 1.3314768,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMissingReceivedPoseRefusesValidPreviewAndResumesMovement",
+      "Status": "Passed",
+      "Duration": 1.8787873,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMovingOwnerTurnsAndPlacesActualPhysicalDeckPanelWithHundredMillisecondDelay",
+      "Status": "Passed",
+      "Duration": 2.3127937,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMovingOwnerTurnsAndPlacesActualPhysicalDeckPanelWithNoAddedDelay",
+      "Status": "Passed",
+      "Duration": 1.273929,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerAllWASDDirectionsAndTurningConfirmsImmediatelyWhileMoving",
+      "Status": "Passed",
+      "Duration": 3.3700468,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+      "Status": "Failed",
+      "Duration": 1.8393636,
+      "Message": "  A valid placement rejected under real owner motion is an acceptance failure. delay=100ms; result=InvalidAimOrigin; requestId=1; movedOwner=(0.00, 0.09, 0.39); capturedPreview=(0.00, 0.00, 1.54); serverObject=(0.00, 1.29, 1.79); responseMs=418,1; diagnostics are captured when enabled\r\n  Expected string length 8 but was 16. Strings differ at index 0.\r\n  Expected: \"Accepted\"\r\n  But was:  \"InvalidAimOrigin\"\r\n  -----------^\r\n",
+      "StackTrace": "at SingleCarryPlacementMovementNetworkPlayModeTests+<RunRemoteOwnerMovingTrial>d__69.MoveNext () [0x00bf7] in D:\\Programy\\UnityProjects\\RageQuitting\\Assets\\Tests\\PlayMode\\SingleCarryPlacementMovementNetworkPlayModeTests.cs:379\r\nat UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\\Library\\PackageCache\\com.unity.test-framework@ecf40a72f8c1\\UnityEngine.TestRunner\\NUnitExtensions\\Attributes\\TestEnumerator.cs:44\r\n"
+    },
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+      "Status": "Passed",
+      "Duration": 1.1048691,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerResumesHeldWAfterARealPlacementRefusal",
+      "Status": "Passed",
+      "Duration": 1.7573055,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteStationaryOwnerPlacesActualPhysicalDeckPanelWithHundredMillisecondDelay",
+      "Status": "Passed",
+      "Duration": 1.9726177,
+      "Message": null,
+      "StackTrace": null
+    }
+  ],
+  "result": {
+    "status": "completed",
+    "duration": 16.9,
+    "summary": {
+      "total": 9,
+      "passed": 8,
+      "failed": 1,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "results": [
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.HostOwnerPlacementAcceptsSynchronouslyWithRealPlayer",
+        "Status": "Passed",
+        "Duration": 1.3314768,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMissingReceivedPoseRefusesValidPreviewAndResumesMovement",
+        "Status": "Passed",
+        "Duration": 1.8787873,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMovingOwnerTurnsAndPlacesActualPhysicalDeckPanelWithHundredMillisecondDelay",
+        "Status": "Passed",
+        "Duration": 2.3127937,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMovingOwnerTurnsAndPlacesActualPhysicalDeckPanelWithNoAddedDelay",
+        "Status": "Passed",
+        "Duration": 1.273929,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerAllWASDDirectionsAndTurningConfirmsImmediatelyWhileMoving",
+        "Status": "Passed",
+        "Duration": 3.3700468,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+        "Status": "Failed",
+        "Duration": 1.8393636,
+        "Message": "  A valid placement rejected under real owner motion is an acceptance failure. delay=100ms; result=InvalidAimOrigin; requestId=1; movedOwner=(0.00, 0.09, 0.39); capturedPreview=(0.00, 0.00, 1.54); serverObject=(0.00, 1.29, 1.79); responseMs=418,1; diagnostics are captured when enabled\r\n  Expected string length 8 but was 16. Strings differ at index 0.\r\n  Expected: \"Accepted\"\r\n  But was:  \"InvalidAimOrigin\"\r\n  -----------^\r\n",
+        "StackTrace": "at SingleCarryPlacementMovementNetworkPlayModeTests+<RunRemoteOwnerMovingTrial>d__69.MoveNext () [0x00bf7] in D:\\Programy\\UnityProjects\\RageQuitting\\Assets\\Tests\\PlayMode\\SingleCarryPlacementMovementNetworkPlayModeTests.cs:379\r\nat UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\\Library\\PackageCache\\com.unity.test-framework@ecf40a72f8c1\\UnityEngine.TestRunner\\NUnitExtensions\\Attributes\\TestEnumerator.cs:44\r\n"
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+        "Status": "Passed",
+        "Duration": 1.1048691,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerResumesHeldWAfterARealPlacementRefusal",
+        "Status": "Passed",
+        "Duration": 1.7573055,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteStationaryOwnerPlacesActualPhysicalDeckPanelWithHundredMillisecondDelay",
+        "Status": "Passed",
+        "Duration": 1.9726177,
+        "Message": null,
+        "StackTrace": null
+      }
+    ]
+  },
+  "errors": [
+    "Unity PlayMode tests failed or were inconclusive (failed=1, inconclusive=0)."
+  ],
+  "invocations": [
+    {
+      "name": "status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\001-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\001-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "context-before",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\002-context-before.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\002-context-before.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status-before",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\003-test-status-before.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\003-test-status-before.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "run-tests",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\004-run-tests.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\004-run-tests.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\005-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\005-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\006-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\006-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\007-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\007-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\008-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\008-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\009-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\009-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\010-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\010-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\011-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\011-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\012-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\012-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\013-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\013-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\014-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\014-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\015-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\015-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\016-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\016-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\017-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\017-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\018-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\018-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\019-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\019-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\020-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\020-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\021-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\021-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\022-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\022-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\023-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\023-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\024-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\024-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\025-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\025-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\026-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\026-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\027-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\027-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\028-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\028-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\029-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\029-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\030-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\030-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\031-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\031-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\032-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\032-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\033-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\033-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\034-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\034-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\035-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\035-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "test-status",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\036-test-status.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\036-test-status.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "wait-editmode",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\037-wait-editmode.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\037-wait-editmode.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "wait-editmode",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\038-wait-editmode.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\038-wait-editmode.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "wait-editmode",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\039-wait-editmode.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\039-wait-editmode.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "wait-editmode",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\040-wait-editmode.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\040-wait-editmode.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "wait-editmode",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\041-wait-editmode.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\041-wait-editmode.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "wait-editmode",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\042-wait-editmode.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\042-wait-editmode.stderr.txt",
+      "parseError": null
+    },
+    {
+      "name": "wait-editmode",
+      "exitCode": 0,
+      "available": true,
+      "stdout": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\043-wait-editmode.stdout.txt",
+      "stderr": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\043-wait-editmode.stderr.txt",
+      "parseError": null
+    }
+  ],
+  "artifacts": [
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\001-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\001-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\002-context-before.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\002-context-before.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\003-test-status-before.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\003-test-status-before.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\004-run-tests.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\004-run-tests.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\005-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\005-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\006-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\006-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\007-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\007-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\008-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\008-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\009-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\009-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\010-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\010-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\011-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\011-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\012-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\012-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\013-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\013-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\014-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\014-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\015-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\015-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\016-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\016-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\017-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\017-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\018-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\018-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\019-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\019-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\020-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\020-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\021-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\021-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\022-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\022-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\023-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\023-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\024-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\024-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\025-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\025-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\026-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\026-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\027-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\027-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\028-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\028-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\029-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\029-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\030-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\030-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\031-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\031-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\032-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\032-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\033-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\033-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\034-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\034-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\035-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\035-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\036-test-status.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\036-test-status.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\037-wait-editmode.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\037-wait-editmode.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\038-wait-editmode.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\038-wait-editmode.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\039-wait-editmode.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\039-wait-editmode.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\040-wait-editmode.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\040-wait-editmode.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\041-wait-editmode.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\041-wait-editmode.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\042-wait-editmode.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\042-wait-editmode.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\043-wait-editmode.stderr.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\043-wait-editmode.stdout.txt",
+    "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryDiagnosticsIsolation_20261106T180748Z\\Batch2\\LiveVerifyFixed\\20261106T194552Z-1fe7798ceece49b0b0bf1da7444590b5\\Pair-01\\Harness\\unity-playmode-tests-report.json"
+  ],
+  "startResult": {
+    "Summary": {
+      "Total": 0,
+      "Passed": 0,
+      "Failed": 0,
+      "Skipped": 0,
+      "Inconclusive": 0
+    },
+    "Results": [],
+    "Duration": 0,
+    "StatusPath": "Temp/pipeline_test_status.json",
+    "Mode": "PlayMode",
+    "FilterApplied": "testname: SingleCarryPlacementMovementNetworkPlayModeTests",
+    "success": true,
+    "command": "run_tests",
+    "result": "running",
+    "executionTimeMs": null,
+    "message": "Tests started in async mode. Poll /test-status for results.",
+    "error": null,
+    "errorDetails": null,
+    "executedAt": "2026-11-06T19:47:02.3599093Z"
+  },
+  "lastTestStatus": {
+    "status": "completed",
+    "duration": 16.9,
+    "summary": {
+      "total": 9,
+      "passed": 8,
+      "failed": 1,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "results": [
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.HostOwnerPlacementAcceptsSynchronouslyWithRealPlayer",
+        "Status": "Passed",
+        "Duration": 1.3314768,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMissingReceivedPoseRefusesValidPreviewAndResumesMovement",
+        "Status": "Passed",
+        "Duration": 1.8787873,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMovingOwnerTurnsAndPlacesActualPhysicalDeckPanelWithHundredMillisecondDelay",
+        "Status": "Passed",
+        "Duration": 2.3127937,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteMovingOwnerTurnsAndPlacesActualPhysicalDeckPanelWithNoAddedDelay",
+        "Status": "Passed",
+        "Duration": 1.273929,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerAllWASDDirectionsAndTurningConfirmsImmediatelyWhileMoving",
+        "Status": "Passed",
+        "Duration": 3.3700468,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+        "Status": "Failed",
+        "Duration": 1.8393636,
+        "Message": "  A valid placement rejected under real owner motion is an acceptance failure. delay=100ms; result=InvalidAimOrigin; requestId=1; movedOwner=(0.00, 0.09, 0.39); capturedPreview=(0.00, 0.00, 1.54); serverObject=(0.00, 1.29, 1.79); responseMs=418,1; diagnostics are captured when enabled\r\n  Expected string length 8 but was 16. Strings differ at index 0.\r\n  Expected: \"Accepted\"\r\n  But was:  \"InvalidAimOrigin\"\r\n  -----------^\r\n",
+        "StackTrace": "at SingleCarryPlacementMovementNetworkPlayModeTests+<RunRemoteOwnerMovingTrial>d__69.MoveNext () [0x00bf7] in D:\\Programy\\UnityProjects\\RageQuitting\\Assets\\Tests\\PlayMode\\SingleCarryPlacementMovementNetworkPlayModeTests.cs:379\r\nat UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\\Library\\PackageCache\\com.unity.test-framework@ecf40a72f8c1\\UnityEngine.TestRunner\\NUnitExtensions\\Attributes\\TestEnumerator.cs:44\r\n"
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+        "Status": "Passed",
+        "Duration": 1.1048691,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerResumesHeldWAfterARealPlacementRefusal",
+        "Status": "Passed",
+        "Duration": 1.7573055,
+        "Message": null,
+        "StackTrace": null
+      },
+      {
+        "FullName": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteStationaryOwnerPlacesActualPhysicalDeckPanelWithHundredMillisecondDelay",
+        "Status": "Passed",
+        "Duration": 1.9726177,
+        "Message": null,
+        "StackTrace": null
+      }
+    ]
+  }
+}

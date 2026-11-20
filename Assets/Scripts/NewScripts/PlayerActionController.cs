@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 
-public class PlayerActionController : NetworkBehaviour
+public partial class PlayerActionController : NetworkBehaviour
 {
     public sealed class ToolActionEventArgs : EventArgs
     {
@@ -82,21 +83,26 @@ public class PlayerActionController : NetworkBehaviour
     private float currentActionPhaseDuration;
     private EquippableItemSO actionItem;
     private double nextServerCombatImpactTime;
+    private uint submittedMountingNailImpactSequence;
+    private uint lastServerMountingNailImpactSequence;
 
     public bool IsActionInProgress => currentActionPhase != EquippableActionPhase.None;
     public EquippableActionPhase CurrentActionPhase => currentActionPhase;
     public float CurrentActionPhaseNormalized => currentActionPhaseDuration > 0f
         ? Mathf.Clamp01(1f - currentActionPhaseTimer / currentActionPhaseDuration)
         : 1f;
-    public float ActionMovementMultiplier => IsActionInProgress && actionItem != null && actionItem.actionProfile != null
-        ? Mathf.Clamp01(actionItem.actionProfile.movementMultiplierDuringAction)
-        : 1f;
+    public float ActionMovementMultiplier => IsCrowbarExtractionActiveOrPending
+        ? GetCrowbarExtractionMovementMultiplier()
+        : IsActionInProgress && actionItem != null && actionItem.actionProfile != null
+            ? Mathf.Clamp01(actionItem.actionProfile.movementMultiplierDuringAction)
+            : 1f;
+    public bool IsCrowbarExtractionActiveOrPending => IsCrowbarExtractionHeldOrPending;
     public EquippableItemSO CurrentActionItem => actionItem;
     
 
     private void Awake()
     {
-        _inventory = GetComponent<PlayerInventory>();
+        TryGetComponent(out _inventory);
         _playerInputNew = GetComponent<PlayerInputNew>();
         _networkObject = GetComponent<NetworkObject>();
         _playerHealth = GetComponent<PlayerHealth>();
@@ -105,6 +111,7 @@ public class PlayerActionController : NetworkBehaviour
         _impactEffectSpawner = GetComponent<ActionImpactEffectSpawner>();
         _playerInputNew.OnAction += HandleAction;
         _playerInputNew.OnActionAlt += HandleActionAlt;
+        _playerInputNew.OnActionAltCanceled += HandleActionAltCanceled;
         _playerInputNew.OnActionCanceled += HandleActionCanceled;
         SetActionParameters(null);
     }
@@ -117,12 +124,32 @@ public class PlayerActionController : NetworkBehaviour
     private void OnDisable()
     {
         performAction = false;
+        CancelSawCuttingImmediately();
+        CancelCrowbarExtractionImmediately();
         CancelCurrentAction();
+    }
+
+    public override void OnDestroy()
+    {
+        if (_playerInputNew != null)
+        {
+            _playerInputNew.OnAction -= HandleAction;
+            _playerInputNew.OnActionAlt -= HandleActionAlt;
+            _playerInputNew.OnActionAltCanceled -= HandleActionAltCanceled;
+            _playerInputNew.OnActionCanceled -= HandleActionCanceled;
+        }
+        if (_inventory != null) _inventory.OnSelectedItemChanged -= Inventory_OnSelectedItemChanged;
+        CancelSawCuttingImmediately();
+        CleanupSawCuttingVisuals();
+        CancelCrowbarExtractionImmediately();
+        base.OnDestroy();
     }
 
     private void Inventory_OnSelectedItemChanged(object sender, PlayerInventory.OnSelectedItemChangedEventArgs e)
     {
         Debug.Log("Action parameters changed");
+        CancelSawCuttingImmediately();
+        CancelCrowbarExtractionImmediately();
         CancelCurrentAction();
         SetActionParameters(e.selectedItem);
     }
@@ -134,10 +161,17 @@ public class PlayerActionController : NetworkBehaviour
     private void HandleActionCanceled(object sender, EventArgs e)
     {
         performAction = false;
+        CancelSawCuttingImmediately();
     }
 
     private void HandleActionAlt(object sender, EventArgs e)
     {
+        if (IsSawSelected()) return;
+        if (IsCrowbarSelected())
+        {
+            BeginCrowbarExtractionOnFreshPress();
+            return;
+        }
         if (_playerInteraction != null && _playerInteraction.HasContextActionConsumer)
         {
             performAction = false;
@@ -161,6 +195,18 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleAction(object sender, EventArgs e)
     {
+        if (IsSawSelected())
+        {
+            performAction = false;
+            if (_playerInteraction != null && _playerInteraction.TryConsumeContextAction(ContextActionKind.Primary))
+            {
+                CancelSawCuttingImmediately();
+                return;
+            }
+            BeginSawCutOnFreshPress();
+            return;
+        }
+        if (IsCrowbarExtractionActiveOrPending) return;
         if (_playerInteraction != null && _playerInteraction.TryConsumeContextAction(ContextActionKind.Primary))
         {
             performAction = false;
@@ -190,13 +236,22 @@ public class PlayerActionController : NetworkBehaviour
 
     public bool PerformAction()
     {
+        if (IsSawSelected()) return false;
+        if (IsCrowbarExtractionActiveOrPending) return false;
+        EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
+        if (TryConsumeAimedMountingNail(selectedItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
+        {
+            SpawnImpactEffect(nailCollider, nailSurface);
+            OnActionPerformed?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
         if (!TryGetSingleActionTarget(actionRange, out IDamageable damageable, out Collider hitCollider))
         {
             Debug.Log("No 'Action' objects in range");
             return false;
         }
 
-        EquippableItemSO selectedItem = _inventory != null ? _inventory.GetCurrentSelectedItem() : null;
         if (IsCombatTarget(damageable))
         {
             if (!TrySubmitCombatImpact(damageable, selectedItem))
@@ -295,6 +350,17 @@ public class PlayerActionController : NetworkBehaviour
         }
 
         EquippableItemSO selectedItem = _inventory != null ? _inventory.GetItemInSlot(0) : null;
+        MountingNail mountingNail = ResolveMountingNail(target);
+        if (mountingNail != null && (mountingNail.State == MountingNailState.Prepared || mountingNail.BlocksPickup))
+        {
+            bool required = mountingNail.State == MountingNailState.Prepared || mountingNail.State == MountingNailState.Partial;
+            EquippableItemType requiredItem = required ? EquippableItemType.IndustrialHammer : EquippableItemType.None;
+            bool correct = required && selectedItem != null && selectedItem.itemType == EquippableItemType.IndustrialHammer;
+            float nailRange = selectedItem != null ? selectedItem.actionRange : baseActionRange;
+            return new ActionAvailability(
+                CanPerformActionOn(target, nailRange, 0f), correct, required, requiredItem);
+        }
+
         bool hasRequiredTool = TryGetRequiredTool(target, out EquippableItemType requiredTool);
         bool hasCorrectTool;
 
@@ -415,6 +481,13 @@ public class PlayerActionController : NetworkBehaviour
             return false;
         }
 
+        MountingNail mountingNail = ResolveMountingNail(target);
+        if (mountingNail != null)
+        {
+            return TryFindAimedMountingNail(range + Mathf.Max(0f, tolerance), out MountingNail aimedNail,
+                out _, out _) && aimedNail == mountingNail;
+        }
+
         IDamageable expectedDamageable = ResolveTargetDamageable(target);
         if (expectedDamageable == null)
         {
@@ -460,6 +533,109 @@ public class PlayerActionController : NetworkBehaviour
     {
         return BridgeTargetResolver.ResolveDamageable(BridgeTargetResolver.Resolve(collider));
     }
+
+    private bool TryFindAimedMountingNail(float range, out MountingNail nail, out Collider collider, out Ray aimRay)
+    {
+        nail = null;
+        collider = null;
+        aimRay = default;
+        return _playerInteraction != null && _playerInteraction.TryGetAimRay(out aimRay)
+            && MountingNailAimResolver.TryFindCandidate(aimRay, range, transform, out nail, out collider, out _);
+    }
+
+    private static MountingNail ResolveMountingNail(MonoBehaviour target)
+    {
+        MountingNail directNail = target as MountingNail;
+        if (directNail != null) return directNail;
+        return target != null ? target.GetComponentInParent<MountingNail>() : null;
+    }
+
+    private bool TryConsumeAimedMountingNail(EquippableItemSO selectedItem, out Collider hitCollider,
+        out ActionImpactSurfaceType surfaceType)
+    {
+        hitCollider = null;
+        surfaceType = ActionImpactSurfaceType.Default;
+        float range = selectedItem != null ? selectedItem.actionRange : baseActionRange;
+        Ray aimRay = default;
+        bool hasAimRay = _playerInteraction != null && _playerInteraction.TryGetAimRay(out aimRay);
+        if (hasAimRay && MountingNailAimResolver.TryFindCandidate(aimRay, range, transform,
+                out MountingNail nail, out hitCollider, out _))
+        {
+            // Nails retain priority over every panel or surface candidate, including on rejection.
+            surfaceType = ActionImpactSurfaceType.Metal;
+            if (selectedItem != null && selectedItem.itemType == EquippableItemType.IndustrialHammer)
+            {
+                if (!IsOwnNetworkSessionActive())
+                    nail.TryApplyHammerImpact(selectedItem.itemType, transform.position, transform.forward);
+                else if (nail.NetworkObject != null && nail.NetworkObject.IsSpawned)
+                {
+                    uint sequence = NextSubmittedMountingNailImpactSequence();
+                    if (IsServer)
+                        TryApplyMountingNailImpactServer(OwnerClientId, nail.NetworkObject, aimRay.origin,
+                            aimRay.direction, sequence);
+                    else
+                        RequestMountingNailImpactServerRpc(nail.NetworkObject.NetworkObjectId,
+                            aimRay.origin, aimRay.direction, sequence);
+                }
+            }
+            return true;
+        }
+
+        if (!hasAimRay || !BridgeDeckPanelHammerAimResolver.TryFindVisiblePanel(aimRay, range, transform,
+                out BridgeDeckPanelMounting panelMarker, out hitCollider)) return false;
+
+        surfaceType = ActionImpactSurfaceType.Wood;
+        if (selectedItem != null && selectedItem.itemType == EquippableItemType.IndustrialHammer)
+        {
+            if (!IsOwnNetworkSessionActive())
+                BridgeDeckPanelSectionNetworkState.TryResetPanelWithHammer(panelMarker,
+                    GetPanelResetAwayDirection(panelMarker));
+            else if (panelMarker.TryGetComponent(out NetworkObject panelNetworkObject) && panelNetworkObject.IsSpawned)
+            {
+                uint sequence = NextSubmittedMountingNailImpactSequence();
+                if (IsServer)
+                {
+                    TryApplyPanelHammerImpactServer(OwnerClientId, panelNetworkObject, aimRay.origin,
+                        aimRay.direction, sequence);
+                }
+                else
+                {
+                    RequestPanelHammerImpactServerRpc(panelNetworkObject.NetworkObjectId,
+                        aimRay.origin, aimRay.direction, sequence);
+                }
+            }
+        }
+        return true;
+    }
+
+    private uint NextSubmittedMountingNailImpactSequence()
+    {
+        uint sequence = unchecked(++submittedMountingNailImpactSequence);
+        if (sequence == 0) sequence = unchecked(++submittedMountingNailImpactSequence);
+        return sequence;
+    }
+
+    private bool IsOwnNetworkSessionActive() => IsSpawned && NetworkManager != null && NetworkManager.IsListening;
+
+    public override void OnNetworkSpawn()
+    {
+        if (IsServer)
+        {
+            lastServerMountingNailImpactSequence = 0;
+            nextServerCombatImpactTime = 0d;
+        }
+        submittedMountingNailImpactSequence = 0;
+        ResetCrowbarExtractionNetworkState();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        CancelSawCuttingImmediately();
+        HandleCrowbarExtractionNetworkDespawn();
+    }
+
+    private static bool IsFinite(Vector3 value) => IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
     private void SpawnImpactEffect(Collider hitCollider, ActionImpactSurfaceType surfaceType)
     {
@@ -582,13 +758,150 @@ public class PlayerActionController : NetworkBehaviour
         TryApplyCombatImpactServer(targetNetworkObject, (EquippableItemType)requestedItemTypeValue);
     }
 
+    [ServerRpc]
+    private void RequestMountingNailImpactServerRpc(ulong nailNetworkObjectId, Vector3 aimOrigin,
+        Vector3 aimDirection, uint sequence, ServerRpcParams serverRpcParams = default)
+    {
+        NetworkManager manager = NetworkManager;
+        if (manager == null || !manager.IsServer) return;
+        manager.SpawnManager.SpawnedObjects.TryGetValue(nailNetworkObjectId, out NetworkObject nailNetworkObject);
+        TryApplyMountingNailImpactServer(serverRpcParams.Receive.SenderClientId, nailNetworkObject,
+            aimOrigin, aimDirection, sequence);
+    }
+
+    [ServerRpc]
+    private void RequestPanelHammerImpactServerRpc(ulong panelNetworkObjectId, Vector3 aimOrigin,
+        Vector3 aimDirection, uint sequence, ServerRpcParams serverRpcParams = default)
+    {
+        NetworkManager manager = NetworkManager;
+        if (manager == null || !manager.IsServer) return;
+        manager.SpawnManager.SpawnedObjects.TryGetValue(panelNetworkObjectId, out NetworkObject panelNetworkObject);
+        TryApplyPanelHammerImpactServer(serverRpcParams.Receive.SenderClientId, panelNetworkObject,
+            aimOrigin, aimDirection, sequence);
+    }
+
+    private bool TryApplyPanelHammerImpactServer(ulong senderClientId, NetworkObject panelNetworkObject,
+        Vector3 aimOrigin, Vector3 aimDirection, uint sequence)
+    {
+        NetworkManager manager = NetworkManager;
+        if (manager == null || !manager.IsServer || senderClientId != OwnerClientId
+            || sequence == 0 || !IsNewerRequestSequence(sequence, lastServerMountingNailImpactSequence)) return false;
+        lastServerMountingNailImpactSequence = sequence;
+        if (panelNetworkObject == null || !panelNetworkObject.IsSpawned || panelNetworkObject == NetworkObject
+            || panelNetworkObject.NetworkManager != manager || _inventory == null || _playerInteraction == null
+            || _concreteTrap != null && _concreteTrap.IsTrapped || IsDowned()
+            || serverCrowbarNail != null
+            || !IsFinite(aimOrigin) || !IsFinite(aimDirection)) return false;
+        float directionLength = aimDirection.magnitude;
+        if (directionLength < 0.95f || directionLength > 1.05f
+            || !IsTrustedMountingNailAimOrigin(aimOrigin, aimDirection / directionLength)) return false;
+        aimDirection /= directionLength;
+
+        EquippableItemSO serverItem = _inventory.GetSelectedItemForServerValidation();
+        if (serverItem == null || serverItem.itemType != EquippableItemType.IndustrialHammer
+            || !panelNetworkObject.TryGetComponent(out BridgeDeckPanelMounting marker)) return false;
+        Ray aimRay = new(aimOrigin, aimDirection);
+        if (MountingNailAimResolver.TryFindCandidate(aimRay, serverItem.actionRange, transform,
+                out _, out _, out _)) return false;
+        if (!BridgeDeckPanelHammerAimResolver.TryFindVisiblePanel(aimRay, serverItem.actionRange, transform,
+                out BridgeDeckPanelMounting aimedMarker, out _) || aimedMarker != marker) return false;
+
+        double serverTime = manager.ServerTime.Time;
+        if (serverTime < nextServerCombatImpactTime) return false;
+        if (!BridgeDeckPanelSectionNetworkState.TryResetPanelWithHammer(marker,
+                GetPanelResetAwayDirection(marker))) return false;
+        nextServerCombatImpactTime = serverTime + GetMinimumCombatImpactInterval(serverItem);
+        return true;
+    }
+
+    private Vector3 GetPanelResetAwayDirection(BridgeDeckPanelMounting marker)
+    {
+        Vector3 awayDirection = marker.transform.position - transform.position;
+        awayDirection.y = 0f;
+        if (awayDirection.sqrMagnitude < 0.000001f)
+        {
+            awayDirection = transform.forward;
+            awayDirection.y = 0f;
+        }
+        if (awayDirection.sqrMagnitude < 0.000001f) awayDirection = Vector3.forward;
+        return awayDirection.normalized;
+    }
+
+    private bool TryApplyMountingNailImpactServer(ulong senderClientId, NetworkObject nailNetworkObject,
+        Vector3 aimOrigin, Vector3 aimDirection, uint sequence)
+    {
+        NetworkManager manager = NetworkManager;
+        if (manager == null || !manager.IsServer || senderClientId != OwnerClientId
+            || sequence == 0 || !IsNewerRequestSequence(sequence, lastServerMountingNailImpactSequence)) return false;
+        lastServerMountingNailImpactSequence = sequence;
+        if (nailNetworkObject == null || !nailNetworkObject.IsSpawned || nailNetworkObject == NetworkObject
+            || _inventory == null || _playerInteraction == null
+            || _concreteTrap != null && _concreteTrap.IsTrapped || IsDowned()
+            || serverCrowbarNail != null
+            || !IsFinite(aimOrigin) || !IsFinite(aimDirection)) return false;
+        float directionLength = aimDirection.magnitude;
+        if (directionLength < 0.95f || directionLength > 1.05f
+            || !IsTrustedMountingNailAimOrigin(aimOrigin, aimDirection / directionLength)) return false;
+        aimDirection /= directionLength;
+
+        EquippableItemSO serverItem = _inventory.GetSelectedItemForServerValidation();
+        if (serverItem == null || serverItem.itemType != EquippableItemType.IndustrialHammer
+            || nailNetworkObject.GetComponent<MountingNail>() is not MountingNail nail)
+            return false;
+
+        Ray aimRay = new(aimOrigin, aimDirection);
+        if (!MountingNailAimResolver.TryFindCandidate(aimRay, serverItem.actionRange, transform,
+                out MountingNail aimedNail, out _, out _) || aimedNail != nail)
+            return false;
+
+        double serverTime = manager.ServerTime.Time;
+        if (serverTime < nextServerCombatImpactTime
+            || !nail.TryApplyHammerImpact(EquippableItemType.IndustrialHammer, transform.position, transform.forward))
+            return false;
+
+        nextServerCombatImpactTime = serverTime + GetMinimumCombatImpactInterval(serverItem);
+        return true;
+    }
+
+    private static bool IsNewerRequestSequence(uint candidate, uint previous)
+    {
+        return candidate != previous && unchecked((int)(candidate - previous)) > 0;
+    }
+
+    private bool IsTrustedMountingNailAimOrigin(Vector3 aimOrigin, Vector3 aimDirection)
+    {
+        if (_playerInteraction == null || NetworkObject == null || !NetworkObject.IsSpawned
+            || !NetworkObject.TryGetComponent(out NetworkTransform playerTransform)) return false;
+        Transform anchor = _playerInteraction.SingleCarryPlacementAimAnchor;
+        if (anchor == null) return false;
+
+        Vector3 anchorLocalOffset = NetworkObject.transform.InverseTransformPoint(anchor.position);
+        Vector3 authoritativePosition = playerTransform.GetSpaceRelativePosition(true);
+        Quaternion authoritativeRotation = playerTransform.GetSpaceRelativeRotation(true);
+        if (playerTransform.InLocalSpace && NetworkObject.transform.parent != null)
+        {
+            authoritativePosition = NetworkObject.transform.parent.TransformPoint(authoritativePosition);
+            authoritativeRotation = NetworkObject.transform.parent.rotation * authoritativeRotation;
+        }
+        Vector3 trustedAnchor = authoritativePosition
+            + authoritativeRotation * Vector3.Scale(anchorLocalOffset, NetworkObject.transform.localScale);
+
+        Vector3 offset = aimOrigin - trustedAnchor;
+        float forwardOffset = Vector3.Dot(offset, aimDirection);
+        Vector3 lateralOffset = offset - aimDirection * forwardOffset;
+        float allowedForwardOffset = Mathf.Clamp(forwardOffset, 0f, 0.2f);
+        float residualSqr = lateralOffset.sqrMagnitude + Mathf.Pow(forwardOffset - allowedForwardOffset, 2f);
+        return residualSqr <= 0.15f * 0.15f;
+    }
+
     private bool TryApplyCombatImpactServer(
         NetworkObject targetNetworkObject,
         EquippableItemType requestedItemType)
     {
         if (targetNetworkObject == null ||
             targetNetworkObject == NetworkObject ||
-            _inventory == null || _concreteTrap != null && _concreteTrap.IsTrapped)
+            _inventory == null || _concreteTrap != null && _concreteTrap.IsTrapped
+            || serverCrowbarNail != null)
         {
             return false;
         }
@@ -750,6 +1063,12 @@ public class PlayerActionController : NetworkBehaviour
 
     public void TryPerformAction()
     {
+        if (IsSawSelected())
+        {
+            performAction = false;
+            CancelCurrentAction();
+            return;
+        }
         if (_concreteTrap != null && _concreteTrap.BlocksGameplayInput)
         {
             performAction = false;
@@ -909,7 +1228,14 @@ public class PlayerActionController : NetworkBehaviour
         EquippableItemSO impactItem = actionItem;
         bool hit = false;
         ActionImpactSurfaceType surfaceType = ActionImpactSurfaceType.Default;
-        if (TryGetSingleActionTarget(actionRange, out IDamageable damageable, out Collider hitCollider))
+        if (TryConsumeAimedMountingNail(impactItem, out Collider nailCollider, out ActionImpactSurfaceType nailSurface))
+        {
+            hit = true;
+            surfaceType = nailSurface;
+            SpawnImpactEffect(nailCollider, surfaceType);
+            OnActionPerformed?.Invoke(this, EventArgs.Empty);
+        }
+        else if (TryGetSingleActionTarget(actionRange, out IDamageable damageable, out Collider hitCollider))
         {
             if (IsCombatTarget(damageable))
             {

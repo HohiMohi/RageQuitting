@@ -1,0 +1,2053 @@
+{
+  "maxPairs": 20,
+  "stopRule": "Stop after at least two qualifying natural ResidualExceeded refusals across either tested delay and two usable Accepted 100ms traces, or at Pair-20.",
+  "completedPairs": 20,
+  "usablePairs": 20,
+  "infrastructureOrPairInvalid": 0,
+  "usableTrials": 40,
+  "usableAccepted0ms": 20,
+  "usableAccepted100ms": 20,
+  "usableInvalidAimOrigin0ms": 0,
+  "usable100msInvalidAimOrigin": 0,
+  "qualifyingNaturalRefusals": 0,
+  "qualifyingRefusals0ms": 0,
+  "qualifyingRefusals100ms": 0,
+  "otherInvalidAimOrigin0ms": 0,
+  "otherInvalidAimOrigin100ms": 0,
+  "pairs": [
+    "Pair-01\\pair-summary.json",
+    "Pair-02\\pair-summary.json",
+    "Pair-03\\pair-summary.json",
+    "Pair-04\\pair-summary.json",
+    "Pair-05\\pair-summary.json",
+    "Pair-06\\pair-summary.json",
+    "Pair-07\\pair-summary.json",
+    "Pair-08\\pair-summary.json",
+    "Pair-09\\pair-summary.json",
+    "Pair-10\\pair-summary.json",
+    "Pair-11\\pair-summary.json",
+    "Pair-12\\pair-summary.json",
+    "Pair-13\\pair-summary.json",
+    "Pair-14\\pair-summary.json",
+    "Pair-15\\pair-summary.json",
+    "Pair-16\\pair-summary.json",
+    "Pair-17\\pair-summary.json",
+    "Pair-18\\pair-summary.json",
+    "Pair-19\\pair-summary.json",
+    "Pair-20\\pair-summary.json"
+  ],
+  "pairDetails": [
+    {
+      "pair": "Pair-01",
+      "startedAtUtc": "2026-11-06T16:18:05.1806936Z",
+      "completedAtUtc": "2026-11-06T16:18:25.3687307Z",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "passed": 2,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "newTimelineCount": 2,
+      "newLegacyFileCount": 4,
+      "legacyFiles": [
+        {
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T161817353Z-ca286dc376eb473cb73a78fa731a920a.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-01\\LegacyDiagnostics\\network-checkpoints-20261106T161817353Z-ca286dc376eb473cb73a78fa731a920a.log",
+          "name": "network-checkpoints-20261106T161817353Z-ca286dc376eb473cb73a78fa731a920a.log"
+        },
+        {
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T161819870Z-bf104184c8394316a6dc90d1e62c33f2.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-01\\LegacyDiagnostics\\network-checkpoints-20261106T161819870Z-bf104184c8394316a6dc90d1e62c33f2.log",
+          "name": "network-checkpoints-20261106T161819870Z-bf104184c8394316a6dc90d1e62c33f2.log"
+        },
+        {
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T161817367Z-f1d3b720bfbf4213bcdbcef3fc3a2f5e.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-01\\LegacyDiagnostics\\network-movement-20261106T161817367Z-f1d3b720bfbf4213bcdbcef3fc3a2f5e.json",
+          "name": "network-movement-20261106T161817367Z-f1d3b720bfbf4213bcdbcef3fc3a2f5e.json"
+        },
+        {
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T161819875Z-7763f28e94e943c193717fef67d7eb5e.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-01\\LegacyDiagnostics\\network-movement-20261106T161819875Z-7763f28e94e943c193717fef67d7eb5e.json",
+          "name": "network-movement-20261106T161819875Z-7763f28e94e943c193717fef67d7eb5e.json"
+        }
+      ],
+      "trials": [
+        {
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\ab4a8d3c9e494125bbc582aabe43ef38.json",
+          "runId": "ab4a8d3c9e494125bbc582aabe43ef38",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "result": 0,
+          "requestId": 1,
+          "validationBranchHash": -544137075,
+          "validationResult": 0,
+          "queryAvailable": true,
+          "cacheComplete": true,
+          "cachePoseAvailable": true,
+          "trustedAnchorAvailable": true,
+          "residualAvailable": true,
+          "residualMeters": 0.02547082705307075,
+          "overflow": false,
+          "recordCount": 134,
+          "sourceHashesMatch": true,
+          "traceUsable": true,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "sourceHashesMatchAccepted": true,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "receiveContextMatches": true,
+          "responseObserved": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\f82ba78c5ded4c5ea73cb5b0252c6e7f.json",
+          "runId": "f82ba78c5ded4c5ea73cb5b0252c6e7f",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "result": 0,
+          "requestId": 1,
+          "validationBranchHash": -544137075,
+          "validationResult": 0,
+          "queryAvailable": true,
+          "cacheComplete": true,
+          "cachePoseAvailable": true,
+          "trustedAnchorAvailable": true,
+          "residualAvailable": true,
+          "residualMeters": 6.143906154658885E-08,
+          "overflow": false,
+          "recordCount": 70,
+          "sourceHashesMatch": true,
+          "traceUsable": true,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "sourceHashesMatchAccepted": true,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "receiveContextMatches": true,
+          "responseObserved": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ],
+      "usable": true,
+      "pairUsable": true,
+      "newTimelineTraceCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true
+    },
+    {
+      "pair": "Pair-02",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T162131207Z-2c35a4d91f8d45ad95f9c10b980f4a6b.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162131207Z-2c35a4d91f8d45ad95f9c10b980f4a6b.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-02\\LegacyDiagnostics\\network-checkpoints-20261106T162131207Z-2c35a4d91f8d45ad95f9c10b980f4a6b.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T162133702Z-045d23b4ed7e4d93876aa4b17ba49b4f.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162133702Z-045d23b4ed7e4d93876aa4b17ba49b4f.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-02\\LegacyDiagnostics\\network-checkpoints-20261106T162133702Z-045d23b4ed7e4d93876aa4b17ba49b4f.log"
+        },
+        {
+          "name": "network-movement-20261106T162131220Z-01d69e08596044578d8c96bcc12f693d.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162131220Z-01d69e08596044578d8c96bcc12f693d.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-02\\LegacyDiagnostics\\network-movement-20261106T162131220Z-01d69e08596044578d8c96bcc12f693d.json"
+        },
+        {
+          "name": "network-movement-20261106T162133706Z-18ac56e9aebc438380d00580c2ad82c6.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162133706Z-18ac56e9aebc438380d00580c2ad82c6.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-02\\LegacyDiagnostics\\network-movement-20261106T162133706Z-18ac56e9aebc438380d00580c2ad82c6.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "e279c067206444ce82a53385f26b2635",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\e279c067206444ce82a53385f26b2635.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 1.4901161193847656E-08,
+          "measuredRequestResponseMilliseconds": 417.0871887207031,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162131220Z-01d69e08596044578d8c96bcc12f693d.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-02\\LegacyDiagnostics\\network-movement-20261106T162131220Z-01d69e08596044578d8c96bcc12f693d.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "ea92fa17df3643bfb40725175bcbc507",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\ea92fa17df3643bfb40725175bcbc507.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.06335343009043762,
+          "measuredRequestResponseMilliseconds": 14.816699981689453,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162133706Z-18ac56e9aebc438380d00580c2ad82c6.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-02\\LegacyDiagnostics\\network-movement-20261106T162133706Z-18ac56e9aebc438380d00580c2ad82c6.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-03",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T162417957Z-263a193cfd674660a706de6c253248bd.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162417957Z-263a193cfd674660a706de6c253248bd.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-03\\LegacyDiagnostics\\network-checkpoints-20261106T162417957Z-263a193cfd674660a706de6c253248bd.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T162420526Z-6fa89236a70a4cf4b7886fdb072927b8.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162420526Z-6fa89236a70a4cf4b7886fdb072927b8.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-03\\LegacyDiagnostics\\network-checkpoints-20261106T162420526Z-6fa89236a70a4cf4b7886fdb072927b8.log"
+        },
+        {
+          "name": "network-movement-20261106T162417970Z-be4e6b0c6ea94cad8a13c0026d2651eb.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162417970Z-be4e6b0c6ea94cad8a13c0026d2651eb.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-03\\LegacyDiagnostics\\network-movement-20261106T162417970Z-be4e6b0c6ea94cad8a13c0026d2651eb.json"
+        },
+        {
+          "name": "network-movement-20261106T162420530Z-67ce2afdcace47ee8edec6eaf3ca6c4e.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162420530Z-67ce2afdcace47ee8edec6eaf3ca6c4e.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-03\\LegacyDiagnostics\\network-movement-20261106T162420530Z-67ce2afdcace47ee8edec6eaf3ca6c4e.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "09a503f625cd4ebdac9fe6e3bf76a01b",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\09a503f625cd4ebdac9fe6e3bf76a01b.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 3.332000937312528E-08,
+          "measuredRequestResponseMilliseconds": 16.640300750732422,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162420530Z-67ce2afdcace47ee8edec6eaf3ca6c4e.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-03\\LegacyDiagnostics\\network-movement-20261106T162420530Z-67ce2afdcace47ee8edec6eaf3ca6c4e.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "47a6dbec58bb494ebff73efd90535a22",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\47a6dbec58bb494ebff73efd90535a22.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 5.5755039852469285E-08,
+          "measuredRequestResponseMilliseconds": 427.31658935546875,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162417970Z-be4e6b0c6ea94cad8a13c0026d2651eb.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-03\\LegacyDiagnostics\\network-movement-20261106T162417970Z-be4e6b0c6ea94cad8a13c0026d2651eb.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-04",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T162814084Z-4da412dea84345eda527393e513023ab.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162814084Z-4da412dea84345eda527393e513023ab.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-04\\LegacyDiagnostics\\network-checkpoints-20261106T162814084Z-4da412dea84345eda527393e513023ab.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T162816556Z-4f8fbc3711bb4275bdcbe153e8fcc0be.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162816556Z-4f8fbc3711bb4275bdcbe153e8fcc0be.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-04\\LegacyDiagnostics\\network-checkpoints-20261106T162816556Z-4f8fbc3711bb4275bdcbe153e8fcc0be.log"
+        },
+        {
+          "name": "network-movement-20261106T162814098Z-614c0bbebc414272a474f1b07d9b952e.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162814098Z-614c0bbebc414272a474f1b07d9b952e.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-04\\LegacyDiagnostics\\network-movement-20261106T162814098Z-614c0bbebc414272a474f1b07d9b952e.json"
+        },
+        {
+          "name": "network-movement-20261106T162816559Z-70818b3a4fe34cf7b5a1b340279efeea.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162816559Z-70818b3a4fe34cf7b5a1b340279efeea.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-04\\LegacyDiagnostics\\network-movement-20261106T162816559Z-70818b3a4fe34cf7b5a1b340279efeea.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "84b2cc88be3345aaa5222b5e4eff5ab2",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\84b2cc88be3345aaa5222b5e4eff5ab2.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.026750848466043354,
+          "measuredRequestResponseMilliseconds": 415.8384094238281,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162814098Z-614c0bbebc414272a474f1b07d9b952e.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-04\\LegacyDiagnostics\\network-movement-20261106T162814098Z-614c0bbebc414272a474f1b07d9b952e.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "e2f0022a403240658c4e1e8d7890d9b9",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\e2f0022a403240658c4e1e8d7890d9b9.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.08132292702486964,
+          "measuredRequestResponseMilliseconds": 12.674200057983398,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162816559Z-70818b3a4fe34cf7b5a1b340279efeea.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-04\\LegacyDiagnostics\\network-movement-20261106T162816559Z-70818b3a4fe34cf7b5a1b340279efeea.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-05",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T162833622Z-3fb7c99954e24a2fb5ca03463daae805.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162833622Z-3fb7c99954e24a2fb5ca03463daae805.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-05\\LegacyDiagnostics\\network-checkpoints-20261106T162833622Z-3fb7c99954e24a2fb5ca03463daae805.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T162836180Z-06d7dd26767a4f06b0e44ca61186d9c4.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162836180Z-06d7dd26767a4f06b0e44ca61186d9c4.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-05\\LegacyDiagnostics\\network-checkpoints-20261106T162836180Z-06d7dd26767a4f06b0e44ca61186d9c4.log"
+        },
+        {
+          "name": "network-movement-20261106T162833636Z-2ca8357ce9d44a2687d2649b8e0bad9c.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162833636Z-2ca8357ce9d44a2687d2649b8e0bad9c.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-05\\LegacyDiagnostics\\network-movement-20261106T162833636Z-2ca8357ce9d44a2687d2649b8e0bad9c.json"
+        },
+        {
+          "name": "network-movement-20261106T162836184Z-8a4b789ceed64208adebf397c099db89.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162836184Z-8a4b789ceed64208adebf397c099db89.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-05\\LegacyDiagnostics\\network-movement-20261106T162836184Z-8a4b789ceed64208adebf397c099db89.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "0c3ef3d66f5749c18160ef91a054b6bc",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\0c3ef3d66f5749c18160ef91a054b6bc.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.10249732394185111,
+          "measuredRequestResponseMilliseconds": 18.830699920654297,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162836184Z-8a4b789ceed64208adebf397c099db89.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-05\\LegacyDiagnostics\\network-movement-20261106T162836184Z-8a4b789ceed64208adebf397c099db89.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "7336a64f768d4a218fdb96109146323d",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\7336a64f768d4a218fdb96109146323d.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.06335066267431323,
+          "measuredRequestResponseMilliseconds": 419.5896911621094,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162833636Z-2ca8357ce9d44a2687d2649b8e0bad9c.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-05\\LegacyDiagnostics\\network-movement-20261106T162833636Z-2ca8357ce9d44a2687d2649b8e0bad9c.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-06",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T162853342Z-68c2154876cb4c25925502433429935c.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162853342Z-68c2154876cb4c25925502433429935c.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-06\\LegacyDiagnostics\\network-checkpoints-20261106T162853342Z-68c2154876cb4c25925502433429935c.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T162855881Z-e2e26c82d4104853b43005f59216ddcb.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162855881Z-e2e26c82d4104853b43005f59216ddcb.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-06\\LegacyDiagnostics\\network-checkpoints-20261106T162855881Z-e2e26c82d4104853b43005f59216ddcb.log"
+        },
+        {
+          "name": "network-movement-20261106T162853356Z-fef5d21a4e1f40aa806d24f9d527b5ef.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162853356Z-fef5d21a4e1f40aa806d24f9d527b5ef.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-06\\LegacyDiagnostics\\network-movement-20261106T162853356Z-fef5d21a4e1f40aa806d24f9d527b5ef.json"
+        },
+        {
+          "name": "network-movement-20261106T162855885Z-53e5aec51e4d46ac820e965729fbc5b0.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162855885Z-53e5aec51e4d46ac820e965729fbc5b0.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-06\\LegacyDiagnostics\\network-movement-20261106T162855885Z-53e5aec51e4d46ac820e965729fbc5b0.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "4bdf4483f3474cecaebd0110b274808f",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\4bdf4483f3474cecaebd0110b274808f.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.022144898202466304,
+          "measuredRequestResponseMilliseconds": 420.3122863769531,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162853356Z-fef5d21a4e1f40aa806d24f9d527b5ef.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-06\\LegacyDiagnostics\\network-movement-20261106T162853356Z-fef5d21a4e1f40aa806d24f9d527b5ef.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "aa77076e76e74ef29d5ff46697567dfc",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\aa77076e76e74ef29d5ff46697567dfc.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.08462449302848998,
+          "measuredRequestResponseMilliseconds": 22.241199493408203,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162855885Z-53e5aec51e4d46ac820e965729fbc5b0.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-06\\LegacyDiagnostics\\network-movement-20261106T162855885Z-53e5aec51e4d46ac820e965729fbc5b0.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-07",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T162913468Z-e08e6520fbea4fe19c65ddc804c34c46.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162913468Z-e08e6520fbea4fe19c65ddc804c34c46.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-07\\LegacyDiagnostics\\network-checkpoints-20261106T162913468Z-e08e6520fbea4fe19c65ddc804c34c46.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T162915967Z-901aa1f96493400cbed8354c3bffbe40.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162915967Z-901aa1f96493400cbed8354c3bffbe40.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-07\\LegacyDiagnostics\\network-checkpoints-20261106T162915967Z-901aa1f96493400cbed8354c3bffbe40.log"
+        },
+        {
+          "name": "network-movement-20261106T162913481Z-3b9e1190819e47a39ffd26ffe4019273.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162913481Z-3b9e1190819e47a39ffd26ffe4019273.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-07\\LegacyDiagnostics\\network-movement-20261106T162913481Z-3b9e1190819e47a39ffd26ffe4019273.json"
+        },
+        {
+          "name": "network-movement-20261106T162915971Z-b52ffb13eac94557a45b4674aed6a3fc.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162915971Z-b52ffb13eac94557a45b4674aed6a3fc.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-07\\LegacyDiagnostics\\network-movement-20261106T162915971Z-b52ffb13eac94557a45b4674aed6a3fc.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "0d4b502779d34f4b9463f6787f35b6ea",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\0d4b502779d34f4b9463f6787f35b6ea.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.01870990131113218,
+          "measuredRequestResponseMilliseconds": 424.630615234375,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162913481Z-3b9e1190819e47a39ffd26ffe4019273.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-07\\LegacyDiagnostics\\network-movement-20261106T162913481Z-3b9e1190819e47a39ffd26ffe4019273.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "e41d165ad5f24b9d9a89ac44243e19d3",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\e41d165ad5f24b9d9a89ac44243e19d3.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.10431132305811532,
+          "measuredRequestResponseMilliseconds": 18.735700607299805,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162915971Z-b52ffb13eac94557a45b4674aed6a3fc.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-07\\LegacyDiagnostics\\network-movement-20261106T162915971Z-b52ffb13eac94557a45b4674aed6a3fc.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-08",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T162933103Z-5e225f5352d7449eb7af9e86bb5aa7f4.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162933103Z-5e225f5352d7449eb7af9e86bb5aa7f4.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-08\\LegacyDiagnostics\\network-checkpoints-20261106T162933103Z-5e225f5352d7449eb7af9e86bb5aa7f4.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T162935668Z-63c61d3be10046bfb143fe188658e672.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162935668Z-63c61d3be10046bfb143fe188658e672.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-08\\LegacyDiagnostics\\network-checkpoints-20261106T162935668Z-63c61d3be10046bfb143fe188658e672.log"
+        },
+        {
+          "name": "network-movement-20261106T162933118Z-7e076f59df6a469496b6b212ae939021.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162933118Z-7e076f59df6a469496b6b212ae939021.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-08\\LegacyDiagnostics\\network-movement-20261106T162933118Z-7e076f59df6a469496b6b212ae939021.json"
+        },
+        {
+          "name": "network-movement-20261106T162935672Z-3869856d5d3a463ab63b0a58654656e1.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162935672Z-3869856d5d3a463ab63b0a58654656e1.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-08\\LegacyDiagnostics\\network-movement-20261106T162935672Z-3869856d5d3a463ab63b0a58654656e1.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "a4ba7e8f71c2424bb50f52f715e58530",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\a4ba7e8f71c2424bb50f52f715e58530.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.020072845667562705,
+          "measuredRequestResponseMilliseconds": 417.9671936035156,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162933118Z-7e076f59df6a469496b6b212ae939021.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-08\\LegacyDiagnostics\\network-movement-20261106T162933118Z-7e076f59df6a469496b6b212ae939021.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "d87605268db04852a7ceb19a34609163",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\d87605268db04852a7ceb19a34609163.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 2.1073424255447017E-08,
+          "measuredRequestResponseMilliseconds": 19.708999633789062,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162935672Z-3869856d5d3a463ab63b0a58654656e1.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-08\\LegacyDiagnostics\\network-movement-20261106T162935672Z-3869856d5d3a463ab63b0a58654656e1.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-09",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T162952796Z-720f7c49ae9b49c6931519ef0464add7.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162952796Z-720f7c49ae9b49c6931519ef0464add7.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-09\\LegacyDiagnostics\\network-checkpoints-20261106T162952796Z-720f7c49ae9b49c6931519ef0464add7.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T162955363Z-7a77329d21a4419a8469a74561b0e447.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T162955363Z-7a77329d21a4419a8469a74561b0e447.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-09\\LegacyDiagnostics\\network-checkpoints-20261106T162955363Z-7a77329d21a4419a8469a74561b0e447.log"
+        },
+        {
+          "name": "network-movement-20261106T162952809Z-57e4c50a3e0e4b7eb7132c6f70c3490a.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162952809Z-57e4c50a3e0e4b7eb7132c6f70c3490a.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-09\\LegacyDiagnostics\\network-movement-20261106T162952809Z-57e4c50a3e0e4b7eb7132c6f70c3490a.json"
+        },
+        {
+          "name": "network-movement-20261106T162955375Z-71a3242ee36b4db8827aa05a787b5e02.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162955375Z-71a3242ee36b4db8827aa05a787b5e02.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-09\\LegacyDiagnostics\\network-movement-20261106T162955375Z-71a3242ee36b4db8827aa05a787b5e02.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "35e0f76ada9d41c29fbf87127365a0b7",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\35e0f76ada9d41c29fbf87127365a0b7.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.08351467438915994,
+          "measuredRequestResponseMilliseconds": 12.449399948120117,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162955375Z-71a3242ee36b4db8827aa05a787b5e02.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-09\\LegacyDiagnostics\\network-movement-20261106T162955375Z-71a3242ee36b4db8827aa05a787b5e02.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "403ff050c57b4298b02a8a1480e0cb69",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\403ff050c57b4298b02a8a1480e0cb69.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.11852122939204501,
+          "measuredRequestResponseMilliseconds": 421.1911926269531,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T162952809Z-57e4c50a3e0e4b7eb7132c6f70c3490a.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-09\\LegacyDiagnostics\\network-movement-20261106T162952809Z-57e4c50a3e0e4b7eb7132c6f70c3490a.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-10",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163012282Z-b670c2d76f1e4d27811d5d63ca391951.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163012282Z-b670c2d76f1e4d27811d5d63ca391951.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-10\\LegacyDiagnostics\\network-checkpoints-20261106T163012282Z-b670c2d76f1e4d27811d5d63ca391951.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163014874Z-56e7472bed6c4f7486d7deb68e809c9b.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163014874Z-56e7472bed6c4f7486d7deb68e809c9b.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-10\\LegacyDiagnostics\\network-checkpoints-20261106T163014874Z-56e7472bed6c4f7486d7deb68e809c9b.log"
+        },
+        {
+          "name": "network-movement-20261106T163012295Z-c1d3360460cb4fa495742c36af695b2c.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163012295Z-c1d3360460cb4fa495742c36af695b2c.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-10\\LegacyDiagnostics\\network-movement-20261106T163012295Z-c1d3360460cb4fa495742c36af695b2c.json"
+        },
+        {
+          "name": "network-movement-20261106T163014879Z-f938439f0a3c422782c2de55e7936709.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163014879Z-f938439f0a3c422782c2de55e7936709.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-10\\LegacyDiagnostics\\network-movement-20261106T163014879Z-f938439f0a3c422782c2de55e7936709.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "5247470cdc1c48dfb57ad07aaab50424",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\5247470cdc1c48dfb57ad07aaab50424.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 2.2152168672261396E-07,
+          "measuredRequestResponseMilliseconds": 15.27180004119873,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163014879Z-f938439f0a3c422782c2de55e7936709.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-10\\LegacyDiagnostics\\network-movement-20261106T163014879Z-f938439f0a3c422782c2de55e7936709.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "6b833e991ed04da58b5eadad23a87bc4",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\6b833e991ed04da58b5eadad23a87bc4.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.022693950479660555,
+          "measuredRequestResponseMilliseconds": 418.4731140136719,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163012295Z-c1d3360460cb4fa495742c36af695b2c.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-10\\LegacyDiagnostics\\network-movement-20261106T163012295Z-c1d3360460cb4fa495742c36af695b2c.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-11",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163031743Z-a25b1f44afe84f929a07c47da67124cd.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163031743Z-a25b1f44afe84f929a07c47da67124cd.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-11\\LegacyDiagnostics\\network-checkpoints-20261106T163031743Z-a25b1f44afe84f929a07c47da67124cd.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163034261Z-c86ac8f99e854d1dabc3d6a3cb61f04a.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163034261Z-c86ac8f99e854d1dabc3d6a3cb61f04a.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-11\\LegacyDiagnostics\\network-checkpoints-20261106T163034261Z-c86ac8f99e854d1dabc3d6a3cb61f04a.log"
+        },
+        {
+          "name": "network-movement-20261106T163031757Z-29b4c4f12c524c9eb844ea40f527137b.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163031757Z-29b4c4f12c524c9eb844ea40f527137b.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-11\\LegacyDiagnostics\\network-movement-20261106T163031757Z-29b4c4f12c524c9eb844ea40f527137b.json"
+        },
+        {
+          "name": "network-movement-20261106T163034264Z-b14bda7bb01e4741a74e2bd1ae1f82e0.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163034264Z-b14bda7bb01e4741a74e2bd1ae1f82e0.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-11\\LegacyDiagnostics\\network-movement-20261106T163034264Z-b14bda7bb01e4741a74e2bd1ae1f82e0.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "e96fd12f1ab0474f8a64fac843d72381",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\e96fd12f1ab0474f8a64fac843d72381.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 1.2644054553268208E-07,
+          "measuredRequestResponseMilliseconds": 17.191600799560547,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163034264Z-b14bda7bb01e4741a74e2bd1ae1f82e0.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-11\\LegacyDiagnostics\\network-movement-20261106T163034264Z-b14bda7bb01e4741a74e2bd1ae1f82e0.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "f07eb32625924f6091e12e341f1099f0",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\f07eb32625924f6091e12e341f1099f0.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.022246287496173547,
+          "measuredRequestResponseMilliseconds": 418.12860107421875,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163031757Z-29b4c4f12c524c9eb844ea40f527137b.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-11\\LegacyDiagnostics\\network-movement-20261106T163031757Z-29b4c4f12c524c9eb844ea40f527137b.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-12",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163051204Z-c0436e2c2033484187d889cb4f7c9b53.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163051204Z-c0436e2c2033484187d889cb4f7c9b53.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-12\\LegacyDiagnostics\\network-checkpoints-20261106T163051204Z-c0436e2c2033484187d889cb4f7c9b53.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163053722Z-78a5988b0b68470faa8a7d0979d420c5.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163053722Z-78a5988b0b68470faa8a7d0979d420c5.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-12\\LegacyDiagnostics\\network-checkpoints-20261106T163053722Z-78a5988b0b68470faa8a7d0979d420c5.log"
+        },
+        {
+          "name": "network-movement-20261106T163051219Z-51ea92236fab4a329b361bf9666e60ff.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163051219Z-51ea92236fab4a329b361bf9666e60ff.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-12\\LegacyDiagnostics\\network-movement-20261106T163051219Z-51ea92236fab4a329b361bf9666e60ff.json"
+        },
+        {
+          "name": "network-movement-20261106T163053726Z-59f545d2c8af41879bedd7ab66f4a2c9.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163053726Z-59f545d2c8af41879bedd7ab66f4a2c9.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-12\\LegacyDiagnostics\\network-movement-20261106T163053726Z-59f545d2c8af41879bedd7ab66f4a2c9.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "7deeb1428eb94112a8f8d7e12cc5ac0a",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\7deeb1428eb94112a8f8d7e12cc5ac0a.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 1.0536712127723508E-07,
+          "measuredRequestResponseMilliseconds": 419.572509765625,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163051219Z-51ea92236fab4a329b361bf9666e60ff.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-12\\LegacyDiagnostics\\network-movement-20261106T163051219Z-51ea92236fab4a329b361bf9666e60ff.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "faab559a53514a72bc8829590861bb59",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\faab559a53514a72bc8829590861bb59.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.10251936042060653,
+          "measuredRequestResponseMilliseconds": 23.3125,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163053726Z-59f545d2c8af41879bedd7ab66f4a2c9.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-12\\LegacyDiagnostics\\network-movement-20261106T163053726Z-59f545d2c8af41879bedd7ab66f4a2c9.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-13",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163110706Z-52e277b4e6e3434896b193fd4da8197f.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163110706Z-52e277b4e6e3434896b193fd4da8197f.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-13\\LegacyDiagnostics\\network-checkpoints-20261106T163110706Z-52e277b4e6e3434896b193fd4da8197f.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163113225Z-d1e065bf90f2477aaae5c6c7c873a71e.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163113225Z-d1e065bf90f2477aaae5c6c7c873a71e.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-13\\LegacyDiagnostics\\network-checkpoints-20261106T163113225Z-d1e065bf90f2477aaae5c6c7c873a71e.log"
+        },
+        {
+          "name": "network-movement-20261106T163110722Z-cf49f160cee549f0a1281bac1c717d1a.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163110722Z-cf49f160cee549f0a1281bac1c717d1a.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-13\\LegacyDiagnostics\\network-movement-20261106T163110722Z-cf49f160cee549f0a1281bac1c717d1a.json"
+        },
+        {
+          "name": "network-movement-20261106T163113230Z-08321d70a0d64091b94fdb7686ae03e9.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163113230Z-08321d70a0d64091b94fdb7686ae03e9.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-13\\LegacyDiagnostics\\network-movement-20261106T163113230Z-08321d70a0d64091b94fdb7686ae03e9.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "3994589e07044cf9aecc6ed47ab1c3f5",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\3994589e07044cf9aecc6ed47ab1c3f5.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 1.8966081829902314E-07,
+          "measuredRequestResponseMilliseconds": 18.944900512695312,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163113230Z-08321d70a0d64091b94fdb7686ae03e9.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-13\\LegacyDiagnostics\\network-movement-20261106T163113230Z-08321d70a0d64091b94fdb7686ae03e9.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "df1c60adb31c42c987aa1ee1bf2e4fd8",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\df1c60adb31c42c987aa1ee1bf2e4fd8.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 2.1073424255447017E-08,
+          "measuredRequestResponseMilliseconds": 420.94110107421875,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163110722Z-cf49f160cee549f0a1281bac1c717d1a.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-13\\LegacyDiagnostics\\network-movement-20261106T163110722Z-cf49f160cee549f0a1281bac1c717d1a.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-14",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163131057Z-e950a97fcd794644a386b7ff7ed550bf.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163131057Z-e950a97fcd794644a386b7ff7ed550bf.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-14\\LegacyDiagnostics\\network-checkpoints-20261106T163131057Z-e950a97fcd794644a386b7ff7ed550bf.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163133654Z-52881f1845204306ac6405f91e1ae053.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163133654Z-52881f1845204306ac6405f91e1ae053.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-14\\LegacyDiagnostics\\network-checkpoints-20261106T163133654Z-52881f1845204306ac6405f91e1ae053.log"
+        },
+        {
+          "name": "network-movement-20261106T163131071Z-8261ccd7d76a4f439257f1bc97b5df9b.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163131071Z-8261ccd7d76a4f439257f1bc97b5df9b.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-14\\LegacyDiagnostics\\network-movement-20261106T163131071Z-8261ccd7d76a4f439257f1bc97b5df9b.json"
+        },
+        {
+          "name": "network-movement-20261106T163133658Z-38e0959eb59648f38c980167cf94125b.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163133658Z-38e0959eb59648f38c980167cf94125b.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-14\\LegacyDiagnostics\\network-movement-20261106T163133658Z-38e0959eb59648f38c980167cf94125b.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "35a87493f3cd4057be7e64fe10360cdd",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\35a87493f3cd4057be7e64fe10360cdd.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 1.7504900879369274E-07,
+          "measuredRequestResponseMilliseconds": 19.216999053955078,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163133658Z-38e0959eb59648f38c980167cf94125b.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-14\\LegacyDiagnostics\\network-movement-20261106T163133658Z-38e0959eb59648f38c980167cf94125b.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "4b81c0f8b3184992b3f5521593a869a4",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\4b81c0f8b3184992b3f5521593a869a4.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.022715660930868308,
+          "measuredRequestResponseMilliseconds": 417.2922058105469,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163131071Z-8261ccd7d76a4f439257f1bc97b5df9b.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-14\\LegacyDiagnostics\\network-movement-20261106T163131071Z-8261ccd7d76a4f439257f1bc97b5df9b.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-15",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163151371Z-a71fd31b4f01482481befa7f00c53472.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163151371Z-a71fd31b4f01482481befa7f00c53472.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-15\\LegacyDiagnostics\\network-checkpoints-20261106T163151371Z-a71fd31b4f01482481befa7f00c53472.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163153908Z-09672269e5e14d158c422981bb32f742.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163153908Z-09672269e5e14d158c422981bb32f742.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-15\\LegacyDiagnostics\\network-checkpoints-20261106T163153908Z-09672269e5e14d158c422981bb32f742.log"
+        },
+        {
+          "name": "network-movement-20261106T163151384Z-8e9ec07dda6d4161b4b28d2eade22018.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163151384Z-8e9ec07dda6d4161b4b28d2eade22018.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-15\\LegacyDiagnostics\\network-movement-20261106T163151384Z-8e9ec07dda6d4161b4b28d2eade22018.json"
+        },
+        {
+          "name": "network-movement-20261106T163153912Z-e35e865aa0cd4e0b89a7f8469f4d0778.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163153912Z-e35e865aa0cd4e0b89a7f8469f4d0778.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-15\\LegacyDiagnostics\\network-movement-20261106T163153912Z-e35e865aa0cd4e0b89a7f8469f4d0778.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "1ec5046c894a41cf89f2862a7b1272a5",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\1ec5046c894a41cf89f2862a7b1272a5.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 8.940696716308594E-08,
+          "measuredRequestResponseMilliseconds": 419.7179870605469,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163151384Z-8e9ec07dda6d4161b4b28d2eade22018.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-15\\LegacyDiagnostics\\network-movement-20261106T163151384Z-8e9ec07dda6d4161b4b28d2eade22018.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "cdf0f9a89d904b3e9fd321fd8f7c1856",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\cdf0f9a89d904b3e9fd321fd8f7c1856.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.08383743605937598,
+          "measuredRequestResponseMilliseconds": 18.466100692749023,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163153912Z-e35e865aa0cd4e0b89a7f8469f4d0778.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-15\\LegacyDiagnostics\\network-movement-20261106T163153912Z-e35e865aa0cd4e0b89a7f8469f4d0778.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-16",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163210699Z-5a6790b9a5264002bfcdf553c27e81ba.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163210699Z-5a6790b9a5264002bfcdf553c27e81ba.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-16\\LegacyDiagnostics\\network-checkpoints-20261106T163210699Z-5a6790b9a5264002bfcdf553c27e81ba.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163213233Z-edeb5661ad884efc99c5e1dfa430d7e7.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163213233Z-edeb5661ad884efc99c5e1dfa430d7e7.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-16\\LegacyDiagnostics\\network-checkpoints-20261106T163213233Z-edeb5661ad884efc99c5e1dfa430d7e7.log"
+        },
+        {
+          "name": "network-movement-20261106T163210712Z-009656ec71194a208bc14080f6e1e65c.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163210712Z-009656ec71194a208bc14080f6e1e65c.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-16\\LegacyDiagnostics\\network-movement-20261106T163210712Z-009656ec71194a208bc14080f6e1e65c.json"
+        },
+        {
+          "name": "network-movement-20261106T163213235Z-47fa37c3568549aca3f720bd4134eb60.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163213235Z-47fa37c3568549aca3f720bd4134eb60.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-16\\LegacyDiagnostics\\network-movement-20261106T163213235Z-47fa37c3568549aca3f720bd4134eb60.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "958a7ff5f1624b82a8b6b2d3373544e0",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\958a7ff5f1624b82a8b6b2d3373544e0.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 8.688795409866125E-08,
+          "measuredRequestResponseMilliseconds": 416.6654052734375,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163210712Z-009656ec71194a208bc14080f6e1e65c.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-16\\LegacyDiagnostics\\network-movement-20261106T163210712Z-009656ec71194a208bc14080f6e1e65c.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "d6fd135fbeba4d76ad29e4ebb370019c",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\d6fd135fbeba4d76ad29e4ebb370019c.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.08566256999756489,
+          "measuredRequestResponseMilliseconds": 12.968799591064453,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163213235Z-47fa37c3568549aca3f720bd4134eb60.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-16\\LegacyDiagnostics\\network-movement-20261106T163213235Z-47fa37c3568549aca3f720bd4134eb60.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-17",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163230596Z-bc0abd54314742f48d91a36ace3782a5.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163230596Z-bc0abd54314742f48d91a36ace3782a5.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-17\\LegacyDiagnostics\\network-checkpoints-20261106T163230596Z-bc0abd54314742f48d91a36ace3782a5.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163233154Z-9186e6bfffd64f2eb13fa7056a969e53.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163233154Z-9186e6bfffd64f2eb13fa7056a969e53.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-17\\LegacyDiagnostics\\network-checkpoints-20261106T163233154Z-9186e6bfffd64f2eb13fa7056a969e53.log"
+        },
+        {
+          "name": "network-movement-20261106T163230611Z-375635e0456b4ee5ac3c72f351dc4e54.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163230611Z-375635e0456b4ee5ac3c72f351dc4e54.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-17\\LegacyDiagnostics\\network-movement-20261106T163230611Z-375635e0456b4ee5ac3c72f351dc4e54.json"
+        },
+        {
+          "name": "network-movement-20261106T163233157Z-4e77c3ae815f4ebfb79e1098ebaa72f2.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163233157Z-4e77c3ae815f4ebfb79e1098ebaa72f2.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-17\\LegacyDiagnostics\\network-movement-20261106T163233157Z-4e77c3ae815f4ebfb79e1098ebaa72f2.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "76e484681d584993ad0c66c158bcdce3",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\76e484681d584993ad0c66c158bcdce3.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 1.4901161193847656E-08,
+          "measuredRequestResponseMilliseconds": 417.3492126464844,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163230611Z-375635e0456b4ee5ac3c72f351dc4e54.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-17\\LegacyDiagnostics\\network-movement-20261106T163230611Z-375635e0456b4ee5ac3c72f351dc4e54.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "ae9aa84d1aea4325b14515bf9746898e",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\ae9aa84d1aea4325b14515bf9746898e.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.0630088890726311,
+          "measuredRequestResponseMilliseconds": 18.638399124145508,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163233157Z-4e77c3ae815f4ebfb79e1098ebaa72f2.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-17\\LegacyDiagnostics\\network-movement-20261106T163233157Z-4e77c3ae815f4ebfb79e1098ebaa72f2.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-18",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163250077Z-fdc7cd1ce83640db90213c61063b1906.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163250077Z-fdc7cd1ce83640db90213c61063b1906.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-18\\LegacyDiagnostics\\network-checkpoints-20261106T163250077Z-fdc7cd1ce83640db90213c61063b1906.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163252654Z-43b72b4e3b66426cbe595f321aea7874.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163252654Z-43b72b4e3b66426cbe595f321aea7874.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-18\\LegacyDiagnostics\\network-checkpoints-20261106T163252654Z-43b72b4e3b66426cbe595f321aea7874.log"
+        },
+        {
+          "name": "network-movement-20261106T163250091Z-50cb36ad5499429a9b47c52799d244d1.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163250091Z-50cb36ad5499429a9b47c52799d244d1.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-18\\LegacyDiagnostics\\network-movement-20261106T163250091Z-50cb36ad5499429a9b47c52799d244d1.json"
+        },
+        {
+          "name": "network-movement-20261106T163252658Z-64535f50e0d74d7083eaa8db44fdbb0e.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163252658Z-64535f50e0d74d7083eaa8db44fdbb0e.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-18\\LegacyDiagnostics\\network-movement-20261106T163252658Z-64535f50e0d74d7083eaa8db44fdbb0e.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "3d1b2cc4efe24dcab69d8a3aa51da8a0",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\3d1b2cc4efe24dcab69d8a3aa51da8a0.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.07632533838989415,
+          "measuredRequestResponseMilliseconds": 19.899900436401367,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163252658Z-64535f50e0d74d7083eaa8db44fdbb0e.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-18\\LegacyDiagnostics\\network-movement-20261106T163252658Z-64535f50e0d74d7083eaa8db44fdbb0e.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "6a624453b1614204b98bb1b432f51c25",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\6a624453b1614204b98bb1b432f51c25.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.06120734150663228,
+          "measuredRequestResponseMilliseconds": 425.235107421875,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163250091Z-50cb36ad5499429a9b47c52799d244d1.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-18\\LegacyDiagnostics\\network-movement-20261106T163250091Z-50cb36ad5499429a9b47c52799d244d1.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-19",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163310293Z-e77ee24004ac417fb6f14d44f4b7f550.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163310293Z-e77ee24004ac417fb6f14d44f4b7f550.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-19\\LegacyDiagnostics\\network-checkpoints-20261106T163310293Z-e77ee24004ac417fb6f14d44f4b7f550.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163312859Z-f1b50801a3fe44bf9829f9d3ec63f4e6.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163312859Z-f1b50801a3fe44bf9829f9d3ec63f4e6.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-19\\LegacyDiagnostics\\network-checkpoints-20261106T163312859Z-f1b50801a3fe44bf9829f9d3ec63f4e6.log"
+        },
+        {
+          "name": "network-movement-20261106T163310308Z-27ac43d321094c99b086a131bb71453a.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163310308Z-27ac43d321094c99b086a131bb71453a.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-19\\LegacyDiagnostics\\network-movement-20261106T163310308Z-27ac43d321094c99b086a131bb71453a.json"
+        },
+        {
+          "name": "network-movement-20261106T163312863Z-ab46b9e6ba9c4732b3be43e82f484280.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163312863Z-ab46b9e6ba9c4732b3be43e82f484280.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-19\\LegacyDiagnostics\\network-movement-20261106T163312863Z-ab46b9e6ba9c4732b3be43e82f484280.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "9f88159179aa49199f9ae2aac849b4df",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\9f88159179aa49199f9ae2aac849b4df.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 1.4901161193847656E-08,
+          "measuredRequestResponseMilliseconds": 25.554500579833984,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163312863Z-ab46b9e6ba9c4732b3be43e82f484280.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-19\\LegacyDiagnostics\\network-movement-20261106T163312863Z-ab46b9e6ba9c4732b3be43e82f484280.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "efd4216a53064b7fbd76c308d0b52b01",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\efd4216a53064b7fbd76c308d0b52b01.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.10481773005262193,
+          "measuredRequestResponseMilliseconds": 418.38848876953125,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163310308Z-27ac43d321094c99b086a131bb71453a.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-19\\LegacyDiagnostics\\network-movement-20261106T163310308Z-27ac43d321094c99b086a131bb71453a.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    },
+    {
+      "pair": "Pair-20",
+      "harnessStatus": "passed",
+      "harnessExitCode": 0,
+      "testCount": 2,
+      "testPassed": 2,
+      "testFailed": 0,
+      "exactTwoExpectedCasesSelected": true,
+      "newTimelineTraceCount": 2,
+      "newLegacyFileCount": 4,
+      "pairUsable": true,
+      "tests": [
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithHundredMillisecondDelay",
+          "status": "Passed",
+          "message": null
+        },
+        {
+          "name": "SingleCarryPlacementMovementNetworkPlayModeTests.RemoteOwnerMovesAndConfirmsWithNoAddedDelay",
+          "status": "Passed",
+          "message": null
+        }
+      ],
+      "legacyFiles": [
+        {
+          "name": "network-checkpoints-20261106T163330004Z-e119bce423fc4f66a84e87720d09f7d9.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163330004Z-e119bce423fc4f66a84e87720d09f7d9.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-20\\LegacyDiagnostics\\network-checkpoints-20261106T163330004Z-e119bce423fc4f66a84e87720d09f7d9.log"
+        },
+        {
+          "name": "network-checkpoints-20261106T163332550Z-b2f9d9c78f5944aaa8a13fac54190f43.log",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-checkpoints-20261106T163332550Z-b2f9d9c78f5944aaa8a13fac54190f43.log",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-20\\LegacyDiagnostics\\network-checkpoints-20261106T163332550Z-b2f9d9c78f5944aaa8a13fac54190f43.log"
+        },
+        {
+          "name": "network-movement-20261106T163330018Z-c6d8984eec594ceca3eb4c6bda06280f.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163330018Z-c6d8984eec594ceca3eb4c6bda06280f.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-20\\LegacyDiagnostics\\network-movement-20261106T163330018Z-c6d8984eec594ceca3eb4c6bda06280f.json"
+        },
+        {
+          "name": "network-movement-20261106T163332554Z-a4379cbb91f844c3aaa246d783af9484.json",
+          "originalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163332554Z-a4379cbb91f844c3aaa246d783af9484.json",
+          "pairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-20\\LegacyDiagnostics\\network-movement-20261106T163332554Z-a4379cbb91f844c3aaa246d783af9484.json"
+        }
+      ],
+      "trials": [
+        {
+          "runId": "4d6424fbe6294e7fb1653ce475211235",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\4d6424fbe6294e7fb1653ce475211235.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 0,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.09773805053349514,
+          "measuredRequestResponseMilliseconds": 19.530500411987305,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163332554Z-a4379cbb91f844c3aaa246d783af9484.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-20\\LegacyDiagnostics\\network-movement-20261106T163332554Z-a4379cbb91f844c3aaa246d783af9484.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        },
+        {
+          "runId": "bdb93df7506b442e80b64fc33d015180",
+          "tracePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\Traces\\bdb93df7506b442e80b64fc33d015180.json",
+          "caseName": "remote-moving-acceptance",
+          "delayMs": 100,
+          "requestId": 1,
+          "resultCode": 0,
+          "resultName": "Accepted",
+          "validationBranchHash": -544137075,
+          "validationResultCode": 0,
+          "localValidation": "Valid",
+          "serverDiagnosticBranch": "AimPassed",
+          "authoritativeQueryAvailable": true,
+          "completeCacheAtValidation": true,
+          "receiveContextMatches": true,
+          "residualMeters": 0.08342516267660317,
+          "measuredRequestResponseMilliseconds": 419.44769287109375,
+          "overflow": false,
+          "sourceHashesMatchAccepted": true,
+          "legacyDiagnosticOriginalPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Traces\\network-movement-20261106T163330018Z-c6d8984eec594ceca3eb4c6bda06280f.json",
+          "legacyDiagnosticPairCopyPath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\Pair-20\\LegacyDiagnostics\\network-movement-20261106T163330018Z-c6d8984eec594ceca3eb4c6bda06280f.json",
+          "responseObserved": true,
+          "traceUsable": true,
+          "qualifyingKnownRefusal": false,
+          "testOutcome": "Accepted"
+        }
+      ]
+    }
+  ]
+}

@@ -456,7 +456,10 @@ public class SharedCarryPhysicsBody : MonoBehaviour
             return;
         }
 
-        body.mass = profile != null ? Mathf.Max(0.01f, profile.mass) : defaultMass;
+        if (TryGetComponent(out BridgeDeckAreaPanel deckPanel))
+            body.mass = deckPanel.FragmentMassKilograms(deckPanel.LengthMillimeters);
+        else
+            body.mass = profile != null ? Mathf.Max(0.01f, profile.mass) : defaultMass;
         body.linearDamping = profile != null ? Mathf.Max(0f, profile.linearDrag) : defaultLinearDrag;
         body.angularDamping = profile != null ? Mathf.Max(0f, profile.angularDrag) : defaultAngularDrag;
         body.useGravity = profile == null || profile.useGravity;
@@ -713,7 +716,8 @@ public class SharedCarryPhysicsBody : MonoBehaviour
 
         if (normalPhysicsCaptured)
         {
-            body.mass = normalMass;
+            if (TryGetComponent(out BridgeDeckAreaPanel deckPanel)) body.mass = deckPanel.FragmentMassKilograms(deckPanel.LengthMillimeters);
+            else body.mass = normalMass;
             body.linearDamping = normalLinearDamping;
             body.angularDamping = normalAngularDamping;
         }

@@ -31,6 +31,8 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
     [SerializeField] private Color alignedColor = new Color(0.15f, 0.8f, 0.2f, 1f);
 
     private BridgeDeckPanelConstructionWorkflowSO deckWorkflow;
+    private bool physicalPanelPlacement;
+    private bool physicalPanelPlacementInitialized;
     private BridgeDeckPanelWorkPoint[] workPoints;
     private int lateralAlignmentStep;
     private int rotationAlignmentStep;
@@ -46,9 +48,23 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
     public int LeftGapStep => leftGapStep;
     public int RightGapStep => rightGapStep;
     public bool UsesFullFastening => usesFullFastening;
+    public BridgeDeckSection DeckSection => deckSection;
+    public int SlotIndex => slotIndex;
     public bool IsComplete => currentStage == BridgeConstructionStage.Complete;
+    public bool UsesPhysicalPanelPlacement
+    {
+        get
+        {
+            if (physicalPanelPlacementInitialized) return physicalPanelPlacement;
+            BridgeDeckPanelConstructionWorkflowSO workflow = bridgeComponent != null && bridgeComponent.GetBridgeComponentSO() != null
+                ? bridgeComponent.GetBridgeComponentSO().deckPanelConstructionWorkflow
+                : null;
+            bool hasPhysicalSlotMarker = TryGetComponent(out BridgeDeckPanelMounting marker) && marker.IsPassiveSlot;
+            return hasPhysicalSlotMarker || workflow != null && workflow.UsesPhysicalPanelPlacement;
+        }
+    }
     public override bool CanAcceptMountedComponent =>
-        currentStage == BridgeConstructionStage.ReadyForMount &&
+        !UsesPhysicalPanelPlacement && currentStage == BridgeConstructionStage.ReadyForMount &&
         (deckSection == null || deckSection.IsSlotUnlocked(slotIndex));
 
     protected override void Awake()
@@ -63,11 +79,16 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
         deckWorkflow = bridgeComponent != null && bridgeComponent.GetBridgeComponentSO() != null
             ? bridgeComponent.GetBridgeComponentSO().deckPanelConstructionWorkflow
             : null;
+        bool hasPhysicalSlotMarker = TryGetComponent(out BridgeDeckPanelMounting marker) && marker.IsPassiveSlot;
+        physicalPanelPlacement = hasPhysicalSlotMarker ||
+                                 deckWorkflow != null && deckWorkflow.UsesPhysicalPanelPlacement;
+        physicalPanelPlacementInitialized = true;
         ApplyVisualState();
     }
 
     private void Update()
     {
+        if (UsesPhysicalPanelPlacement) return;
         if (currentStage != BridgeConstructionStage.WaitingForPrevious || !HasAuthority() ||
             (deckSection != null && !deckSection.IsSlotUnlocked(slotIndex)))
         {
@@ -82,6 +103,7 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
 
     protected override BridgeConstructionStage GetInitialStage()
     {
+        if (UsesPhysicalPanelPlacement) return BridgeConstructionStage.ReadyForMount;
         return deckSection == null || deckSection.IsSlotUnlocked(slotIndex)
             ? BridgeConstructionStage.ReadyForMount
             : BridgeConstructionStage.WaitingForPrevious;
@@ -94,8 +116,23 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
         usesFullFastening = fullFastening;
     }
 
+    internal void ApplyPhysicalPanelCompletion()
+    {
+        if (!UsesPhysicalPanelPlacement || currentStage == BridgeConstructionStage.Complete) return;
+        currentStage = BridgeConstructionStage.Complete;
+        currentWorkProgress = 0f;
+        ApplyVisualState();
+        if (bridgeComponent != null) bridgeComponent.RefreshVisualAndColliderState();
+    }
+
     public void RefreshSectionAvailability()
     {
+        if (UsesPhysicalPanelPlacement)
+        {
+            ApplyVisualState();
+            if (bridgeComponent != null) bridgeComponent.RefreshVisualAndColliderState();
+            return;
+        }
         if (currentStage == BridgeConstructionStage.WaitingForPrevious && HasAuthority() &&
             (deckSection == null || deckSection.IsSlotUnlocked(slotIndex)))
         {
@@ -108,7 +145,7 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
 
     public void SetLayoutLength(float panelLength, float nominalLength)
     {
-        if (layoutRoot == null || nominalLength <= 0f) return;
+        if (UsesPhysicalPanelPlacement || layoutRoot == null || nominalLength <= 0f) return;
         Vector3 scale = layoutRoot.localScale;
         scale.x = panelLength / nominalLength;
         layoutRoot.localScale = scale;
@@ -116,6 +153,7 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
 
     public override void NotifyMounted()
     {
+        if (UsesPhysicalPanelPlacement) return;
         if (currentStage != BridgeConstructionStage.ReadyForMount) return;
         BridgeDeckPanelConstructionWorkflowSO settings = GetWorkflow();
         int offset = settings != null ? settings.InitialAlignmentOffset : 2;
@@ -139,6 +177,7 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
 
     public override bool TryApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
     {
+        if (UsesPhysicalPanelPlacement) return false;
         BridgeDeckPanelConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null || workPower <= 0f) return false;
 
@@ -208,6 +247,7 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
 
     public override bool CanApplyToolWork(EquippableItemType toolType, float workPower, int workPointId = -1)
     {
+        if (UsesPhysicalPanelPlacement) return false;
         BridgeDeckPanelConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null || workPower <= 0f) return false;
 
@@ -267,6 +307,7 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
 
     public void GetWorkPointPrompts(BridgeDeckPanelWorkPointId pointId, List<InteractionPrompt> prompts)
     {
+        if (UsesPhysicalPanelPlacement || prompts == null) return;
         BridgeDeckPanelConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null) return;
 
@@ -309,6 +350,37 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
 
     public override void GetInteractionPrompts(Transform interactor, List<InteractionPrompt> prompts)
     {
+        if (prompts == null) return;
+        if (UsesPhysicalPanelPlacement)
+        {
+            BridgeDeckPanelSectionNetworkState sectionState = deckSection != null ? deckSection.PhysicalPanelState : null;
+            if (sectionState == null || !sectionState.TryGetSlotAssessment(slotIndex, out BridgeDeckPanelReplicatedState state))
+            {
+                if (IsComplete || bridgeComponent != null && bridgeComponent.StartFullyCompleted)
+                {
+                    prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information, "Deck panel secured"));
+                    return;
+                }
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information,
+                    "Deck panel: 0/4 - use F / E to place by hand on the marked main-girder slot, then place separate Mounting Nails through the panel into a main girder in each quadrant and strike each three times"));
+                return;
+            }
+            if (state.Complete)
+            {
+                prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information, "Deck panel secured"));
+                return;
+            }
+
+            int count = CountQuarters(state.QuarterMask);
+            string missing = BuildMissingQuarterText(state.QuarterMask);
+            string cause = GetPlacementFailureText((BridgeDeckPanelPlacementFailure)state.Failure);
+            string prompt = $"Deck panel: {count}/4";
+            if (missing.Length > 0) prompt += $" - missing {missing}";
+            if (cause.Length > 0 && cause != "missing fasteners") prompt += $" - {cause}";
+            prompt += " - place by hand on the marked main-girder slot; place a separate Mounting Nail in each quadrant and strike each 3 times";
+            prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information, prompt));
+            return;
+        }
         if (currentStage == BridgeConstructionStage.WaitingForPrevious)
         {
             prompts.Add(new InteractionPrompt(PlayerInputActionKind.Information, "Complete the previous deck panel first"));
@@ -319,8 +391,65 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
         }
     }
 
+    public void RefreshPhysicalPlacementPrompt()
+    {
+        // The existing prompt UI reads this provider every frame; state changes need no extra UI event path.
+    }
+
+    private static int CountQuarters(byte mask)
+    {
+        int count = 0;
+        for (int i = 0; i < 4; i++) if ((mask & (1 << i)) != 0) count++;
+        return count;
+    }
+
+    private static string BuildMissingQuarterText(byte mask)
+    {
+        string missing = string.Empty;
+        AppendMissing(ref missing, mask, BridgeDeckPanelQuarterMask.NegativeXNegativeZ, "back-left");
+        AppendMissing(ref missing, mask, BridgeDeckPanelQuarterMask.PositiveXNegativeZ, "back-right");
+        AppendMissing(ref missing, mask, BridgeDeckPanelQuarterMask.NegativeXPositiveZ, "front-left");
+        AppendMissing(ref missing, mask, BridgeDeckPanelQuarterMask.PositiveXPositiveZ, "front-right");
+        return missing;
+    }
+
+    private static void AppendMissing(ref string text, byte mask, BridgeDeckPanelQuarterMask quarter, string name)
+    {
+        if (((BridgeDeckPanelQuarterMask)mask & quarter) != 0) return;
+        if (text.Length > 0) text += ", ";
+        text += name;
+    }
+
+    private static string GetPlacementFailureText(BridgeDeckPanelPlacementFailure failure) => failure switch
+    {
+        BridgeDeckPanelPlacementFailure.None => string.Empty,
+        BridgeDeckPanelPlacementFailure.MissingQuarters => "missing fasteners",
+        BridgeDeckPanelPlacementFailure.HorizontalOffset => "position out of alignment",
+        BridgeDeckPanelPlacementFailure.HeightOffset => "height out of alignment",
+        BridgeDeckPanelPlacementFailure.Orientation => "incorrect orientation",
+        BridgeDeckPanelPlacementFailure.SlotOccupied => "slot occupied",
+        BridgeDeckPanelPlacementFailure.NeighborPenetration => "overlapping adjacent panel",
+        _ => "mounting area unavailable"
+    };
+
     public override void PopulateNetworkState(ref BridgeComponentNetworkState state)
     {
+        if (UsesPhysicalPanelPlacement && (bridgeComponent == null || !bridgeComponent.StartFullyCompleted)
+            && currentStage != BridgeConstructionStage.Complete)
+        {
+            base.PopulateNetworkState(ref state);
+            state.constructionStage = (int)BridgeConstructionStage.ReadyForMount;
+            state.constructionProgress = 0f;
+            state.constructionValueA = 0;
+            state.constructionValueB = 0;
+            state.constructionAux0 = 0f;
+            state.constructionAux1 = 0f;
+            state.constructionAnchor0 = 0f;
+            state.constructionAnchor1 = 0f;
+            state.constructionAnchor2 = 0f;
+            state.constructionAnchor3 = 0f;
+            return;
+        }
         base.PopulateNetworkState(ref state);
         state.constructionValueA = lateralAlignmentStep;
         state.constructionValueB = rotationAlignmentStep;
@@ -334,6 +463,20 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
 
     public override void ApplyNetworkState(BridgeComponentNetworkState state)
     {
+        if (UsesPhysicalPanelPlacement && (bridgeComponent == null || !bridgeComponent.StartFullyCompleted)
+            && state.constructionStage != (int)BridgeConstructionStage.Complete)
+        {
+            currentStage = BridgeConstructionStage.ReadyForMount;
+            currentWorkProgress = 0f;
+            lateralAlignmentStep = 0;
+            rotationAlignmentStep = 0;
+            leftGapStep = 0;
+            rightGapStep = 0;
+            for (int i = 0; i < fastenerProgress.Length; i++) fastenerProgress[i] = 0f;
+            ApplyVisualState();
+            bridgeComponent.RefreshVisualAndColliderState();
+            return;
+        }
         currentStage = (BridgeConstructionStage)state.constructionStage;
         currentWorkProgress = Mathf.Max(0f, state.constructionProgress);
         lateralAlignmentStep = state.constructionValueA;
@@ -369,6 +512,26 @@ public class BridgeDeckPanelConstructionSite : BridgeConstructionSite
     {
         BridgeDeckPanelConstructionWorkflowSO settings = GetWorkflow();
         if (settings == null) return;
+
+        if (UsesPhysicalPanelPlacement)
+        {
+            bool debugCompletedPanel = bridgeComponent != null && bridgeComponent.StartFullyCompleted;
+            if (panelVisualRoot != null) panelVisualRoot.gameObject.SetActive(debugCompletedPanel);
+            if (alignmentIndicatorRenderer != null) alignmentIndicatorRenderer.gameObject.SetActive(false);
+            if (workPoints != null)
+            {
+                foreach (BridgeDeckPanelWorkPoint point in workPoints)
+                {
+                    if (point == null) continue;
+                    foreach (Collider pointCollider in point.GetComponentsInChildren<Collider>(true))
+                    {
+                        if (pointCollider != null) pointCollider.enabled = false;
+                    }
+                    point.gameObject.SetActive(false);
+                }
+            }
+            return;
+        }
 
         if (panelVisualRoot != null)
         {

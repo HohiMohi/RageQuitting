@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "runId": "ea00d2dd71d14c5a8c01f45a7bbef4d3",
+  "unityVersion": "6000.3.18f1",
+  "sourceHashes": [
+    {
+      "path": "Assets/Scripts/NetworkManagement/ClientNetworkTransform.cs",
+      "sha256": "B86C5A1A2918B61B62E04BDFDD4E95BD381A9747EC4EBD9CDD8864CAB41D0657"
+    },
+    {
+      "path": "Assets/Scripts/NewScripts/PlayerSingleCarryPlacementController.cs",
+      "sha256": "FD8564AA4D0E515333F61E91E05F3D14779077EE82A53C979C5CEC40A6E474F4"
+    },
+    {
+      "path": "Assets/Scripts/NewScripts/PlayerSingleCarryPlacementNetworkPreview.cs",
+      "sha256": "7C0B2D0058A8FB43E9AE2127F90C76F2E8B469C81807862482842EF705498989"
+    },
+    {
+      "path": "Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs",
+      "sha256": "173F2E72BBB54D4B1B2ABA10761B52CD158562A2E603518E0575AE84131D8134"
+    },
+    {
+      "path": "Assets/Diagnostics/SingleCarryPlacement/SingleCarryStateDivergenceTrace.cs",
+      "sha256": "783B767CECB8D0DCA151A22D0785B4D40CD9C2D5A04D27E24A07E286A71D19FE"
+    },
+    {
+      "path": "Assets/Diagnostics/SingleCarryPlacement/ClientNetworkTransform.Diagnostics.cs",
+      "sha256": "2A318FC7B751EAFC8005C785CC5A91FF12863181924F0CBA3FC97ACE5A1DFA03"
+    },
+    {
+      "path": "Assets/Diagnostics/SingleCarryPlacement/PlayerSingleCarryPlacementController.Diagnostics.cs",
+      "sha256": "E4506EAB99BA8A00B557ABCE98E9B9A9B3929A5DE91E5166697DCF29C5C88321"
+    },
+    {
+      "path": "Assets/Diagnostics/SingleCarryPlacement/PlayerSingleCarryPlacementNetworkPreview.Diagnostics.cs",
+      "sha256": "3A9EA3A243C09C8BAAB461B94336CBF1E0F44FAD05EC1AC0094760615BBC5856"
+    },
+    {
+      "path": "Assets/Diagnostics/SingleCarryPlacement/FirstPersonController.Diagnostics.cs",
+      "sha256": "64B661BFD91EA017476B6E1116D5540EB40C404F88501D84E4DEEFE573996092"
+    },
+    {
+      "path": "Assets/Tests/PlayMode/SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+      "sha256": "9B90FDFA835EA094A594B8A1CA201CA3408F816084B55DF35A56B01977763D30"
+    },
+    {
+      "path": "Assets/Tests/PlayMode/Diagnostics/SingleCarryPlacementMovementNetworkPlayModeTests.Diagnostics.cs",
+      "sha256": "7B08A3B0F29151F19A53D486EE8EAC96A41CD4FE1B3029BE15104A5CA28F7978"
+    }
+  ],
+  "note": "Source list and SHA256 values copied from the raw refusal trace metadata."
+}

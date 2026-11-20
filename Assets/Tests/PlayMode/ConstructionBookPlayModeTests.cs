@@ -33,6 +33,191 @@ public class ConstructionBookPlayModeTests
         Type textType=Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro",true);Component[] texts=root.GetComponentsInChildren(textType,true);Component local=Array.Find(texts,text=>(string)textType.GetProperty("text").GetValue(text)=="Player 3"),remote=Array.Find(texts,text=>(string)textType.GetProperty("text").GetValue(text)=="Player 2");Assert.IsNotNull(local);Assert.IsNotNull(remote);Assert.AreNotEqual(textType.GetProperty("color").GetValue(local),textType.GetProperty("color").GetValue(remote));
     }
 
+    [UnityTest]
+    public IEnumerator WorldViewDeduplicatesIdenticalValuesAndRefreshesSemanticChanges()
+    {
+        GameObject root = Track(new GameObject("World book view", typeof(RectTransform)));
+        root.GetComponent<RectTransform>().sizeDelta = new Vector2(2048f, 1400f);
+        Component view = root.AddComponent(T("ConstructionBookView"));
+        M(T("ConstructionBookView"), "Build").Invoke(view, new object[] { new Color(.8f, .7f, .5f), Color.black });
+
+        Texture2D texture = Track(new Texture2D(4, 4));
+        Sprite iconA = Track(Sprite.Create(texture, new Rect(0f, 0f, 4f, 4f), new Vector2(.5f, .5f)));
+        Sprite iconB = Track(Sprite.Create(texture, new Rect(0f, 0f, 4f, 4f), new Vector2(.25f, .25f)));
+        ScriptableObject resource = Track(ScriptableObject.CreateInstance(T("BaseResourceSO")));
+        F(T("BaseResourceSO"), "resourceName").SetValue(resource, "Timber");
+        F(T("BaseResourceSO"), "icon").SetValue(resource, iconA);
+        IList materials = NewList("ConstructionBookMaterialLine");
+        materials.Add(NewMaterialLine(resource, 2, 4));
+        IList roster = NewList("ConstructionBookRosterMember");
+        roster.Add(NewRosterMember(7, "Player Seven"));
+        roster.Add(NewRosterMember(9, "Player Nine"));
+        object entry = Entry("Foundation", 2);
+        Type entryType = T("ConstructionBookCatalogSO+Entry");
+        Type stepType = T("ConstructionBookCatalogSO+Step");
+        Type requirementType = T("ConstructionBookCatalogSO+Requirement");
+        Array entrySteps = (Array)F(entryType, "steps").GetValue(entry);
+        object firstStep = entrySteps.GetValue(0);
+        Array requirements = (Array)F(stepType, "requirements").GetValue(firstStep);
+        object requirement = requirements.GetValue(0);
+        F(entryType, "partSprite").SetValue(entry, iconA);
+        F(requirementType, "sprite").SetValue(requirement, iconA);
+
+        bool firstPlayerAssigned = false;
+        Func<int, int, ulong, bool> isAssigned = (spread, step, clientId) => firstPlayerAssigned && clientId == 7;
+        RenderView(view, entry, 2, 0, 6, materials, true, roster, 7, isAssigned,
+            null, null, true, "Completed 0 / 2", false);
+        Canvas.ForceUpdateCanvases();
+        yield return null;
+
+        Toggle[] originalActiveToggles = root.GetComponentsInChildren<Toggle>(false);
+        Assert.AreEqual(4, originalActiveToggles.Length);
+        RenderView(view, entry, 2, 0, 6,
+            CopyList(materials), true,
+            CopyList(roster), 7,
+            (spread, step, clientId) => firstPlayerAssigned && clientId == 7,
+            null, null, true, "Completed 0 / 2", false);
+        Assert.AreEqual(4, root.GetComponentsInChildren<Toggle>(false).Length);
+        CollectionAssert.AreEqual(originalActiveToggles, root.GetComponentsInChildren<Toggle>(false),
+            "An identical world-view render must keep the active row objects in place.");
+
+        firstPlayerAssigned = true;
+        RenderView(view, entry, 2, 0, 6, materials, true, roster, 7, isAssigned,
+            null, null, true, "Completed 0 / 2", false);
+        Toggle[] assignmentToggles = root.GetComponentsInChildren<Toggle>(false);
+        Assert.AreNotSame(originalActiveToggles[0], assignmentToggles[0],
+            "An assignment change must rebuild world rows so the checkbox state updates.");
+        Assert.IsTrue(assignmentToggles[0].isOn);
+
+        IList reorderedRoster = NewList("ConstructionBookRosterMember");
+        reorderedRoster.Add(NewRosterMember(9, "Nine renamed"));
+        reorderedRoster.Add(NewRosterMember(7, "Seven renamed"));
+        RenderView(view, entry, 2, 0, 6, materials, true, reorderedRoster, 9, isAssigned,
+            null, null, true, "Completed 0 / 2", false);
+        Toggle[] rosterToggles = root.GetComponentsInChildren<Toggle>(false);
+        Assert.AreNotSame(assignmentToggles[0], rosterToggles[0]);
+        Assert.IsFalse(rosterToggles[0].isOn);
+        Assert.IsTrue(rosterToggles[1].isOn);
+        Transform activePlayers = root.GetComponentsInChildren<Transform>(false).First(transform => transform.name == "Players");
+        Color localHighlight = activePlayers.GetChild(0).GetComponent<Image>().color;
+        Assert.AreEqual(new Color(.48f, .16f, .05f, .24f), localHighlight,
+            "The local-client highlight must follow the local id when the roster order changes.");
+        Assert.AreEqual(new Color(0f, 0f, 0f, .08f), activePlayers.GetChild(1).GetComponent<Image>().color,
+            "The other roster member must keep the remote highlight.");
+        Type textType = Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro", true);
+        Component[] labels = root.GetComponentsInChildren(textType, false);
+        StringAssert.Contains("Nine renamed", string.Join("|", labels.Select(label =>
+            (string)textType.GetProperty("text").GetValue(label))));
+        StringAssert.Contains("Seven renamed", string.Join("|", labels.Select(label =>
+            (string)textType.GetProperty("text").GetValue(label))));
+
+        RenderView(view, entry, 2, 0, 6, materials, true, reorderedRoster, 7, isAssigned,
+            null, null, true, "Completed 0 / 2", false);
+        activePlayers = root.GetComponentsInChildren<Transform>(false).First(transform => transform.name == "Players");
+        Assert.AreEqual(new Color(0f, 0f, 0f, .08f), activePlayers.GetChild(0).GetComponent<Image>().color);
+        Assert.AreEqual(new Color(.48f, .16f, .05f, .24f), activePlayers.GetChild(1).GetComponent<Image>().color,
+            "Changing only the local client id must move the highlight without changing roster order.");
+        rosterToggles = root.GetComponentsInChildren<Toggle>(false);
+
+        RenderView(view, entry, 3, 1, 6, materials, true, reorderedRoster, 9, isAssigned,
+            null, null, true, "Completed 1 / 2", true);
+        string currentTitle = (string)textType.GetProperty("text").GetValue(F(T("ConstructionBookView"), "title").GetValue(view));
+        StringAssert.Contains("Foundation", currentTitle);
+        StringAssert.DoesNotContain("x3", currentTitle, "Per-stock-plate title formatting must be represented in the key.");
+        StringAssert.Contains("Page 2 / 6", currentTitle);
+        Component[] completionTexts = root.GetComponentsInChildren(textType, false);
+        Assert.IsTrue(completionTexts.Any(text =>
+            (string)textType.GetProperty("text").GetValue(text) == "Completed 1 / 2"));
+
+        F(entryType, "title").SetValue(entry, "Revised Foundation");
+        F(entryType, "partSprite").SetValue(entry, iconB);
+        F(T("BaseResourceSO"), "resourceName").SetValue(resource, "Stone");
+        F(T("BaseResourceSO"), "icon").SetValue(resource, iconB);
+        materials[0] = NewMaterialLine(resource, 3, 5);
+        F(stepType, "instruction").SetValue(firstStep, "Updated instruction text");
+        F(requirementType, "displayName").SetValue(requirement, "Revised tool");
+        F(requirementType, "sprite").SetValue(requirement, iconB);
+        RenderView(view, entry, 3, 1, 6, materials, true, reorderedRoster, 9, isAssigned,
+            null, null, true, "Completed 1 / 2", false);
+        Assert.AreNotSame(rosterToggles[0], root.GetComponentsInChildren<Toggle>(false)[0]);
+        currentTitle = (string)textType.GetProperty("text").GetValue(F(T("ConstructionBookView"), "title").GetValue(view));
+        StringAssert.Contains("Revised Foundation  x3", currentTitle);
+        Assert.AreSame(iconB, ((Image)F(T("ConstructionBookView"), "partImage").GetValue(view)).sprite);
+        Component[] updatedTexts = root.GetComponentsInChildren(textType, false);
+        string renderedText = string.Join("|", updatedTexts.Select(text =>
+            (string)textType.GetProperty("text").GetValue(text)));
+        StringAssert.Contains("Stone: 3 each · 5 total", renderedText);
+        StringAssert.Contains("Updated instruction text", renderedText);
+        StringAssert.Contains("Revised tool", renderedText);
+        Image[] updatedIcons = root.GetComponentsInChildren<Image>(false).Where(image => image.name == "Icon").ToArray();
+        Assert.IsTrue(updatedIcons.Any(image => image.sprite == iconB), "The changed material and requirement icons must refresh.");
+
+        RenderView(view, entry, 3, 1, 6, materials, false, reorderedRoster, 9, isAssigned,
+            null, null, true, "Completed 1 / 2", false);
+        Component[] unavailableTexts = root.GetComponentsInChildren(textType, false);
+        Assert.IsTrue(unavailableTexts.Any(text => (string)textType.GetProperty("text").GetValue(text) == "Data unavailable"),
+            "Changing material availability must invalidate the cached view.");
+
+        RenderView(view, null, 3, 1, 6, materials, false, reorderedRoster, 9, isAssigned,
+            null, null, true, "Completed 1 / 2", false);
+        Assert.AreEqual("Data unavailable", (string)textType.GetProperty("text").GetValue(F(T("ConstructionBookView"), "title").GetValue(view)));
+        object entryWithoutTitle = Entry(null, 0);
+        RenderView(view, entryWithoutTitle, 3, 1, 6, materials, false, reorderedRoster, 9, isAssigned,
+            null, null, true, "Completed 1 / 2", false);
+        string titleWithNullTitle = (string)textType.GetProperty("text").GetValue(F(T("ConstructionBookView"), "title").GetValue(view));
+        Assert.AreNotEqual("Data unavailable", titleWithNullTitle,
+            "An entry with a null title is still present and must not collide with a missing entry.");
+
+        IList nullResourceMaterial = NewList("ConstructionBookMaterialLine");
+        nullResourceMaterial.Add(NewMaterialLine(null, 3, 5));
+        RenderView(view, entryWithoutTitle, 3, 1, 6, nullResourceMaterial, true, reorderedRoster, 9, isAssigned,
+            null, null, true, "Completed 1 / 2", false);
+        Component[] nullResourceTexts = root.GetComponentsInChildren(textType, false);
+        Assert.IsTrue(nullResourceTexts.Any(text => (string)textType.GetProperty("text").GetValue(text) == "Data unavailable"));
+        ScriptableObject emptyNamedResource = Track(ScriptableObject.CreateInstance(T("BaseResourceSO")));
+        IList presentResourceMaterial = NewList("ConstructionBookMaterialLine");
+        presentResourceMaterial.Add(NewMaterialLine(emptyNamedResource, 3, 5));
+        RenderView(view, entryWithoutTitle, 3, 1, 6, presentResourceMaterial, true, reorderedRoster, 9, isAssigned,
+            null, null, true, "Completed 1 / 2", false);
+        Component[] presentResourceTexts = root.GetComponentsInChildren(textType, false);
+        Assert.IsTrue(presentResourceTexts.Any(text => (string)textType.GetProperty("text").GetValue(text) == ": 3 each · 5 total"),
+            "A present resource with an empty name still renders a material row and must not collide with a null resource.");
+    }
+
+    [UnityTest]
+    public IEnumerator InteractiveScreenRenderStillRebuildsAndRefreshesAssignmentCallbacks()
+    {
+        GameObject root = Track(new GameObject("Interactive screen book view", typeof(RectTransform)));
+        root.GetComponent<RectTransform>().sizeDelta = new Vector2(2048f, 1400f);
+        Component view = root.AddComponent(T("ConstructionBookView"));
+        M(T("ConstructionBookView"), "Build").Invoke(view, new object[] { new Color(.8f, .7f, .5f), Color.black });
+        object entry = Entry("Foundation", 1);
+        IList roster = NewList("ConstructionBookRosterMember");
+        roster.Add(NewRosterMember(7, "Player Seven"));
+        IList materials = NewList("ConstructionBookMaterialLine");
+        int firstCallbackCalls = 0;
+        int secondCallbackCalls = 0;
+        Action<int, int, ulong, bool> firstRequest = (spread, step, clientId, desired) => firstCallbackCalls++;
+        Action<int, int, ulong, bool> secondRequest = (spread, step, clientId, desired) => secondCallbackCalls++;
+
+        RenderView(view, entry, 1, 0, 1, materials, true, roster, 7, (spread, step, clientId) => false,
+            firstRequest, () => false, false, string.Empty, false);
+        Toggle firstToggle = root.GetComponentInChildren<Toggle>(false);
+        Assert.IsTrue(firstToggle.interactable);
+        firstToggle.onValueChanged.Invoke(true);
+        Assert.AreEqual(1, firstCallbackCalls);
+
+        RenderView(view, entry, 1, 0, 1, materials, true, roster, 7, (spread, step, clientId) => false,
+            secondRequest, () => false, false, string.Empty, false);
+        Toggle secondToggle = root.GetComponentInChildren<Toggle>(false);
+        Assert.AreNotSame(firstToggle, secondToggle, "Interactive rendering must not use the world-view object cache.");
+        Assert.IsFalse(firstToggle.gameObject.activeInHierarchy);
+        secondToggle.onValueChanged.Invoke(true);
+        Assert.AreEqual(1, firstCallbackCalls, "The prior Toggle must not retain or invoke its callback after replacement.");
+        Assert.AreEqual(1, secondCallbackCalls, "The latest interactive callback must stay bound to the rebuilt Toggle.");
+        yield return null;
+    }
+
     [UnityTest] public IEnumerator UiLeftAndRightHandlersTurnExactlyOnceWithoutSendMessageCollisionMethods()
     {
         LogAssert.Expect(LogType.Warning,"ConstructionBook: missing direct Carpenter recipe for ''; spread retained with Data unavailable.");Component book=CreateBook("First","Second","Third"),ui=CreatePlayerUi(out Component input,out _);yield return null;T("PlayerConstructionBookUI").GetMethod("Open").Invoke(ui,new object[]{book});
@@ -434,6 +619,34 @@ public class ConstructionBookPlayModeTests
         F(T("GameplayManager"), "currentBridgeBuildingStageIndex").SetValue(manager, 0);
     }
     private Component CreatePlayerUi(out Component input,out Component health){GameObject player=Track(new GameObject("LocalPlayer"));player.SetActive(false);player.AddComponent<NetworkObject>();input=player.AddComponent(T("PlayerInputNew"));health=player.AddComponent(T("PlayerHealth"));Component ui=player.AddComponent(T("PlayerConstructionBookUI"));player.SetActive(true);return ui;}
+    private static void RenderView(Component view, object entry, int count, int pageIndex, int pageCount,
+        object materials, bool materialsAvailable, object roster, ulong localClientId,
+        Func<int, int, ulong, bool> isAssigned, Action<int, int, ulong, bool> requestAssignment,
+        Func<bool> isPageTransitioning, bool worldView, string completionSummary, bool perStockPlate)
+    {
+        M(T("ConstructionBookView"), "RenderWithCompletionSummary").Invoke(view, new object[]
+        {
+            entry, count, pageIndex, pageCount, materials, materialsAvailable, roster, localClientId,
+            isAssigned, requestAssignment, isPageTransitioning, worldView, completionSummary, perStockPlate
+        });
+    }
+
+    private static IList NewList(string runtimeTypeName) =>
+        (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(T(runtimeTypeName)));
+
+    private static IList CopyList(IList source)
+    {
+        IList copy = (IList)Activator.CreateInstance(source.GetType());
+        foreach (object item in source) copy.Add(item);
+        return copy;
+    }
+
+    private static object NewMaterialLine(object resource, int perUnit, int total) =>
+        Activator.CreateInstance(T("ConstructionBookMaterialLine"), new object[] { resource, perUnit, total });
+
+    private static object NewRosterMember(ulong clientId, string label) =>
+        Activator.CreateInstance(T("ConstructionBookRosterMember"), new object[] { clientId, label });
+
     private object Entry(string title,int stepCount){Type entryType=T("ConstructionBookCatalogSO+Entry"),stepType=T("ConstructionBookCatalogSO+Step"),requirementType=T("ConstructionBookCatalogSO+Requirement");object entry=Activator.CreateInstance(entryType);entryType.GetField("title").SetValue(entry,title);Array steps=Array.CreateInstance(stepType,stepCount);for(int i=0;i<stepCount;i++){object step=Activator.CreateInstance(stepType);stepType.GetField("instruction").SetValue(step,"Do the work");object requirement=Activator.CreateInstance(requirementType);requirementType.GetField("displayName").SetValue(requirement,"Hammer");Array requirements=Array.CreateInstance(requirementType,1);requirements.SetValue(requirement,0);stepType.GetField("requirements").SetValue(step,requirements);steps.SetValue(step,i);}entryType.GetField("steps").SetValue(entry,steps);return entry;}
     private TObj Track<TObj>(TObj value) where TObj:UnityEngine.Object{created.Add(value);return value;}
 }

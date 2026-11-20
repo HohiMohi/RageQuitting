@@ -15,7 +15,7 @@ MonoBehaviour:
   entries:
   - component: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
     title: Wooden Foundation
-    partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    partSprite: {fileID: 21300000, guid: e66c85974a2948279eddae77baf0182b, type: 3}
     steps:
     - instruction: Clear the marked site
       requirements:
@@ -117,17 +117,17 @@ MonoBehaviour:
     title: Wooden Deck Panel
     partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
     steps:
-    - instruction: Deliver and mount the next panel
+    - instruction: Deliver and mount the deck panel.
       requirements: []
-    - instruction: Align the panel
+    - instruction: Use F / E to position the panel by hand over its marked slot on
+        the main girders.
+      requirements: []
+    - instruction: Keep the panel level and correctly oriented within the marked
+        mounting area.
+      requirements: []
+    - instruction: Place a separate Mounting Nail through the panel into a main girder
+        in each of the four quadrants, then strike each nail three times with the
+        Industrial Hammer.
       requirements:
       - displayName: Industrial Hammer
-        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Set an even gap
-      requirements:
-      - displayName: Industrial Hammer
-        sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-    - instruction: Secure all marked fasteners
-      requirements:
-      - displayName: Wrench
         sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}

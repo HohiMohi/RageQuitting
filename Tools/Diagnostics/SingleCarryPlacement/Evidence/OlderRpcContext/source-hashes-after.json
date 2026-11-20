@@ -1,0 +1,14 @@
+[
+  {
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Assets\\Scripts\\NetworkManagement\\ClientNetworkTransform.cs",
+    "sha256": "3361BAAEA0E28B436434837760BE0805A2615FF14C617E4593B8501B7B2869A7"
+  },
+  {
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Assets\\Scripts\\NewScripts\\PlayerSingleCarryPlacementNetworkPreview.cs",
+    "sha256": "295F24F14A4E43FC335C99AAA31604CA72556E8B3053B6DBCE14FF592C19C760"
+  },
+  {
+    "path": "D:\\Programy\\UnityProjects\\RageQuitting\\Assets\\Tests\\PlayMode\\SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+    "sha256": "9088E09BD7D0D4529BBF6B744251FCE6CEEF2DB692AFA5294EFF760C2A6152A9"
+  }
+]

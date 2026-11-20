@@ -1,0 +1,246 @@
+{
+  "status": "no_natural_rejection_reproduced_at_20_pair_cap",
+  "series": {
+    "pairs": 20,
+    "usablePairs": 20,
+    "trials": 40,
+    "timelineFiles": 40,
+    "accepted0ms": 20,
+    "accepted100ms": 20,
+    "otherOutcomeCount": 0,
+    "invalidAimOrigin0ms": 0,
+    "invalidAimOrigin100ms": 0,
+    "qualifyingResidualExceeded0ms": 0,
+    "qualifyingResidualExceeded100ms": 0,
+    "overflowCount": 0,
+    "sourceHashMismatchCount": 0,
+    "infrastructureOrPairInvalid": 0,
+    "stopReason": "Maximum 20 pairs reached; no natural refusal met the approved qualifying criteria."
+  },
+  "acceptedResidualMeters": {
+    "delay0msMin": 1.086389727136909E-08,
+    "delay0msMedian": 0.0633534371853155,
+    "delay0msMax": 0.1043113410474021,
+    "delay100msMin": 1.3088734736817182E-08,
+    "delay100msMedian": 0.022144889831623188,
+    "delay100msMax": 0.11852122843284957
+  },
+  "temporalSampling": {
+    "maxPreviewToEBodyDistanceMeters": 0.060267210006831766,
+    "maxPreviewToEHorizontalDistanceMeters": 0.06026721000671387,
+    "previewBodyToLastPush": {
+      "delay0msMax": 0.10431140661246435,
+      "delay0msMean": 0.051435821503425974,
+      "delay100msMax": 0.11852128803736006,
+      "delay100msMean": 0.030606391280929197
+    },
+    "previewBodyToEBody": {
+      "delay0msMax": 0.060267210006831766,
+      "delay0msMean": 0.02872770279652152,
+      "delay100msMax": 0.048491090536117554,
+      "delay100msMean": 0.02825814038517601
+    },
+    "lastPushToValidationQuery": {
+      "exactPoseMatches": 40,
+      "sourceTickMatches": 40,
+      "maxPositionDifferenceMeters": 0.0,
+      "meanPositionDifferenceMeters": 0.0
+    },
+    "countWithOwnerPushBeforeE": 40,
+    "countWithOwnerPushAfterE": 27
+  },
+  "serverOrdering": {
+    "countWithReceiveBeforeValidation": 40,
+    "countWithReceiveAfterValidation": 27,
+    "countWithCacheUpdateAfterValidation": 27,
+    "receiveCallbackBoundaries": {
+      "beforeBaseBoundaryRecords": 229.0,
+      "afterBaseBoundaryRecords": 229.0,
+      "pairedStateBoundaries": 229.0
+    },
+    "receiveAndCacheOrderingByDelay": [
+      {
+        "delayMs": 0,
+        "trials": 20,
+        "withReceiveBeforeValidation": 20,
+        "withReceiveAfterValidation": 7,
+        "withCacheUpdateAfterValidation": 7
+      },
+      {
+        "delayMs": 100,
+        "trials": 20,
+        "withReceiveBeforeValidation": 20,
+        "withReceiveAfterValidation": 20,
+        "withCacheUpdateAfterValidation": 20
+      }
+    ],
+    "uniquelyMatchedPushToReceiveCallbackBeforeBase": 229,
+    "ambiguousRepeatedTickStateMatches": 0,
+    "receiveCallbackBeforeBaseIntervalsMilliseconds": {
+      "delay0ms": {
+        "matches": 107,
+        "min": 5.1354999995965045,
+        "median": 6.696800000099756,
+        "max": 12.08889999998064
+      },
+      "delay100ms": {
+        "matches": 122,
+        "min": 208.46030000029714,
+        "median": 212.90250000038213,
+        "max": 229.1496999996525
+      }
+    },
+    "observedHandoffToCallbackMilliseconds": {
+      "min": 5.1354999995965045,
+      "median": 210.3897999995752,
+      "max": 229.1496999996525
+    },
+    "responseMilliseconds": {
+      "delay0msMin": 12.449399948120117,
+      "delay0msMedian": 18.638399124145508,
+      "delay0msMax": 25.554500579833984,
+      "delay100msMin": 415.8384094238281,
+      "delay100msMedian": 418.4731140136719,
+      "delay100msMax": 427.31658935546875
+    }
+  },
+  "residualVerification": {
+    "maxRecomputedVsRecordedDifferenceMeters": 1.7989286782427172E-08,
+    "residualLimitMeters": 0.15,
+    "cameraNearClipMeters": 0.2,
+    "recomputation": "offset=rayOrigin-trustedAnchor; forward=dot(offset,rayDirection); allowedForward=clamp(forward,0,0.2); residual=offset-rayDirection*allowedForward; magnitude compared against trace residualSquared."
+  },
+  "networkConfigurationByDelay": [
+    {
+      "delayMs": 0,
+      "trialCount": 20,
+      "networkTransport": "Unity.Netcode.Transports.UTP.UnityTransport",
+      "defaultRpcDelivery": "ReliableFragmentedSequenced (NGO default ServerRpc delivery)",
+      "simulatorPresetName": "None",
+      "simulatorConnected": true,
+      "packetDelayMs": 0,
+      "jitterMs": 0,
+      "lossPercent": 0,
+      "lossInterval": 0,
+      "tickRate": 30,
+      "ownerUseUnreliableDeltas": false,
+      "serverUseUnreliableDeltas": false,
+      "ownerPositionThreshold": 0.0010000000474974513,
+      "serverPositionThreshold": 0.0010000000474974513,
+      "ownerRotationThreshold": 0.009999999776482582,
+      "serverRotationThreshold": 0.009999999776482582,
+      "ownerSyncAxes": 63,
+      "serverSyncAxes": 63,
+      "ownerQuaternionSync": false,
+      "serverQuaternionSync": false,
+      "ownerHalfFloat": false,
+      "serverHalfFloat": false,
+      "ownerInterpolate": true,
+      "serverInterpolate": true,
+      "ownerInLocalSpace": false,
+      "serverInLocalSpace": false
+    },
+    {
+      "delayMs": 100,
+      "trialCount": 20,
+      "networkTransport": "Unity.Netcode.Transports.UTP.UnityTransport",
+      "defaultRpcDelivery": "ReliableFragmentedSequenced (NGO default ServerRpc delivery)",
+      "simulatorPresetName": "SingleCarry 100ms",
+      "simulatorConnected": true,
+      "packetDelayMs": 100,
+      "jitterMs": 0,
+      "lossPercent": 0,
+      "lossInterval": 0,
+      "tickRate": 30,
+      "ownerUseUnreliableDeltas": false,
+      "serverUseUnreliableDeltas": false,
+      "ownerPositionThreshold": 0.0010000000474974513,
+      "serverPositionThreshold": 0.0010000000474974513,
+      "ownerRotationThreshold": 0.009999999776482582,
+      "serverRotationThreshold": 0.009999999776482582,
+      "ownerSyncAxes": 63,
+      "serverSyncAxes": 63,
+      "ownerQuaternionSync": false,
+      "serverQuaternionSync": false,
+      "ownerHalfFloat": false,
+      "serverHalfFloat": false,
+      "ownerInterpolate": true,
+      "serverInterpolate": true,
+      "ownerInLocalSpace": false,
+      "serverInLocalSpace": false
+    }
+  ],
+  "integrity": {
+    "acceptedSourceHashesMatchAfterSeries": true,
+    "sceneSha256": "E26BEF381F5E29BBD0BA753E59418FBE4CEE5746EFC9693F201138AEBFBDC115",
+    "sceneHashUnchanged": true,
+    "perFileHashes": [
+      {
+        "path": "Assets/Scripts/NetworkManagement/ClientNetworkTransform.cs",
+        "expected": "A2AE31668E65AC4D86797CF16456CD16476BE3051C41300E6B7A66FD49A85BEE",
+        "actual": "A2AE31668E65AC4D86797CF16456CD16476BE3051C41300E6B7A66FD49A85BEE",
+        "matchesAccepted": true
+      },
+      {
+        "path": "Assets/Scripts/NewScripts/PlayerSingleCarryPlacementController.cs",
+        "expected": "71C179EA9832769724EA7FA7B808284694099AA91D8B0E066FA556364AA661C6",
+        "actual": "71C179EA9832769724EA7FA7B808284694099AA91D8B0E066FA556364AA661C6",
+        "matchesAccepted": true
+      },
+      {
+        "path": "Assets/Scripts/NewScripts/PlayerSingleCarryPlacementNetworkPreview.cs",
+        "expected": "E394078EF86FE43346A069D14C80F7BBD094E4D51A8C9E185CB4576404BDCC86",
+        "actual": "E394078EF86FE43346A069D14C80F7BBD094E4D51A8C9E185CB4576404BDCC86",
+        "matchesAccepted": true
+      },
+      {
+        "path": "Assets/StarterAssets/FirstPersonController/Scripts/FirstPersonController.cs",
+        "expected": "F23C3FCCADDDAC3D392DCDBE2D93E339D893D181AB22AA35BF95FB056B1CA188",
+        "actual": "F23C3FCCADDDAC3D392DCDBE2D93E339D893D181AB22AA35BF95FB056B1CA188",
+        "matchesAccepted": true
+      },
+      {
+        "path": "Assets/Scripts/NetworkManagement/SingleCarryStateDivergenceTrace.cs",
+        "expected": "5EBDC209DC59D533BCA3D502F4AF5B6F6FD773CEB70855A3E32F61B8A443040C",
+        "actual": "5EBDC209DC59D533BCA3D502F4AF5B6F6FD773CEB70855A3E32F61B8A443040C",
+        "matchesAccepted": true
+      },
+      {
+        "path": "Assets/Tests/PlayMode/SingleCarryPlacementMovementNetworkPlayModeTests.cs",
+        "expected": "7018347B49F764843FA8DB39CA0677A4E058793CC3385F359399C626438E4ED6",
+        "actual": "7018347B49F764843FA8DB39CA0677A4E058793CC3385F359399C626438E4ED6",
+        "matchesAccepted": true
+      }
+    ]
+  },
+  "previousKnownFailure": {
+    "evidencePath": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryRpcRepro_20261105\\Findings.json",
+    "status": "diagnostics_implemented_natural_repro_observed",
+    "localValidation": "Valid",
+    "result": "InvalidAimOrigin",
+    "branch": "ResidualExceeded",
+    "queryAvailable": true,
+    "cacheComplete": true,
+    "cacheContextMatches": true,
+    "ownerToQuerySeparationMeters": 0.30188120529055595,
+    "residualMeters": 0.251468873223177,
+    "measuredRequestResponseMilliseconds": 394.2720031738281
+  },
+  "interpretation": "No 0ms or 100ms natural rejection occurred in these 40 trials, so the failure boundary cannot be located from this series. The validation query exactly matched the last ordinary owner authority-push position and source tick before RequestSubmitted in all 40 accepted trials. Accepted ordering and sub-threshold residuals do not prove the cause of the earlier 0.251m ResidualExceeded failure. A public authority-push hook is not UDP-send confirmation, and receive callback observations occur after NGO applied state. Handoff-to-callback intervals cover transport and internal queue/scheduling; they are not one-way network latency.",
+  "limitations": [
+    "Sequential local loopback sample capped at 20 pairs; not a probability estimate.",
+    "No failure traces were generated in BATCH2, so no pairwise failed-versus-accepted causal comparison is available.",
+    "Source ticks can correlate transmitted states only when tick, peer mapping, space, masks, and transmitted values identify a unique match; repeated tick/state matches remain ambiguous.",
+    "Owner LocalTick and server LocalTick are independent clocks and were not compared.",
+    "No private sampling probe, packet decoder, send sequence, WAN/relay, separate process, new Player build, or artificial FPS/load test was used.",
+    "Instrumentation timing may affect scheduling."
+  ],
+  "artifacts": {
+    "trialIndex": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\trial-index.json",
+    "timelineCsv": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\timeline-summary.csv",
+    "matchedHandoffsCsv": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\matched-handoffs.csv",
+    "seriesStartState": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\series-start-state.json",
+    "seriesEndState": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\NaturalRepeats\\series-end-state.json",
+    "independentStageComparison": "D:\\Programy\\UnityProjects\\RageQuitting\\Artifacts\\SingleCarryStateDivergence_20261106T150940Z\\IndependentStageComparison.json"
+  }
+}

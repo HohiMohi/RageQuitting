@@ -2,8 +2,8 @@
 
 ## Status
 
-**Gotowe dla dwóch scen gameplayowych.** `Tutorial_scene` jest blockoutem
-pełnego nowego mostu i zawiera dodatkowe systemy edukacyjne oraz testowe.
+Lobby udostępnia trzy warianty poziomu. `Tutorial_scene` pozostaje źródłową
+sceną blockoutu pełnego nowego mostu.
 
 ## `MultiplayerStartScene`
 
@@ -11,9 +11,17 @@ Zawiera NetworkManager/lobby, lokalny limit FPS i Camera Motion. Host po
 utworzeniu pokoju wybiera:
 
 - `FPP_scene` - wcześniejszy poziom;
-- `Tutorial` - nowy blockout.
+- `Tutorial` - `TutorialTerrainStage02`, eksperymentalna scena oparta na tutorialowym gameplayu.
+- `Tutorial — cięcie płyt` - `TutorialDeckAreaV1`, wariant tutorialu z obszarem cięcia płyt.
 
 Klient widzi stan lobby, ale nie może rozpocząć ładowania.
+
+Etap 0 — 2026-10-25: dwa przyciski miały ten sam prostokąt i nakładały się.
+Rozdzielono je standardowym `VerticalLayoutGroup`: cztery istniejące przyciski
+(`Leave Room`, `FPP_scene`, `Tutorial`, `Tutorial — cięcie płyt`) mają rozmiar
+280×70 i odstęp 12; kolumna znajduje się obok slotów graczy, a panel rozciąga
+się na wysokość. Zachowano źródłowe callbacki oraz ograniczenie startu do hosta.
+Nie wykonano ręcznej oceny UI ani przejścia host–klient.
 
 ## `FPP_scene`
 
@@ -273,21 +281,37 @@ Visual rzeki pozostaje osobny od colliderow gameplayowych. Zmiana jego materialu
 
 W repozytorium znajdują się zapisana scena Stage02, jej bazowe assety oraz wybrane raporty i skrypty tekstowe. Rendery, warianty podglądów i prototypy pozostają w lokalnym archiwum; poniższe wzmianki o nich nie są linkami do plików repozytorium.
 
-`Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity` to zapisana, samodzielna kopia gameplayu tutorialu przeznaczona do dalszej pracy w Editorze. `GameplaySceneRegistry` rozpoznaje ją jako gameplay scene, a włączony wpis Build Settings umożliwia bezpośrednie ładowanie/restart. Lobby nadal wybiera `Tutorial_scene`; Stage02 nie zmienia routingu lobby.
+`Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity` to zapisana, samodzielna kopia gameplayu tutorialu. `GameplaySceneRegistry` rozpoznaje ją jako gameplay scene, a włączony wpis Build Settings umożliwia bezpośrednie ładowanie/restart. Opcja `Tutorial` w lobby wybiera teraz Stage02; `Tutorial_scene` pozostaje dostępna jako scena źródłowa.
 
-Scena zachowuje gameplay, gracza, UI, fabryki, most, wykopy, zasoby i systemy wody, zastępując starą geometrię gruntu i ścieżek własnym TerrainData, materiałem i dwiema TerrainLayers. Wysokości, alphamapy oraz dwa otwory, obejmujące 7400 komórek maski, odpowiadają Stage01. Shader, albedo i mapa współrzędnych drogi Stage01 są używane współdzielone i tylko do odczytu. Props ustawiono na powierzchni Terrain. Leśne wykluczenie respawnu podąża za naturalną drogą 27 obróconymi triggerami. Własne dane NavMesh obejmują powierzchnię główną i dwie proxy wykopów; dodatkowy obszar `Not Walkable` pod dolnym korytem rzeki zapobiega suchym obejściom po zastąpieniu geometrii Terrainem.
+Scena zachowuje gameplay, gracza, UI, fabryki, most, wykopy, zasoby i systemy wody, zastępując starą geometrię gruntu i ścieżek własnym TerrainData, materiałem i dwiema TerrainLayers. Wysokości, alphamapy oraz dwa otwory, obejmujące 7400 komórek maski, to pomiary pierwotnej migracji, a nie bieżącej rewizji. Shader i albedo drogi Stage01 pozostają współdzielone tylko do odczytu; mapa drogi RGFloat jest teraz własnym assetem Stage02. Props ustawiono na powierzchni Terrain. Leśne wykluczenie respawnu podąża za naturalną drogą 27 obróconymi triggerami. Własne dane NavMesh obejmują powierzchnię główną i dwie proxy wykopów; dodatkowy obszar `Not Walkable` pod dolnym korytem rzeki zapobiega suchym obejściom po zastąpieniu geometrii Terrainem.
 
-Ręczna kontrola Editorze wykazała 2624 obiekty / 69 korzeni, brak brakujących skryptów i referencji między scenami, 72 niezerowe i unikalne hashe NGO oraz pięć kompletnych tras zachodnich. Trasa Camp→East pozostaje częściowa do czasu zbudowania mostu; środki obu wykopów i punkty dna rzeki nie próbkowały się jako `Walkable`, a `WaterEntry` działa na obu brzegach. Stage01 i `Tutorial_scene` pozostały bez zmian według bazowych fingerprintów. Pozostało 17 odziedziczonych nierozwiązanych referencji (2 pola prefaba kilofa, 15 materiałów ghost/outline) oraz brak centralnej próbki `WaterSurface` obecny także w źródle.
+Pierwotny pomiar migracji, nie stan po rewizji, odnotował 2624 obiekty / 69 korzeni i 72 hashe NGO. W rewizji szerokości rzeki ponownie otwarta scena ma 2307 obiektów, zero brakujących skryptów i nie jest w Play Mode. Pozostało 17 odziedziczonych nierozwiązanych referencji (2 pola `pickaxeModelPrefab`, 15 materiałów ghost/outline); nie weryfikowano runtime.
 
-Nie wykonano testów, preflightu, buildu, Play Mode ani weryfikacji runtime/multiplayer. Console zawierał błędy diagnostycznego `GetAreaCost` dla nieaktywnych agentów, tymczasowe błędy kompilacji helperów poprawiono; nie zaobserwowano błędów kompilacji projektu. Niezreferencjonowany `TutorialTerrainStage02_Main_NavMeshData_Rebaked.asset` wraz z `.meta` pozostał po odrzuconej próbie usunięcia przez MCP; scena nie odwołuje się do tego artefaktu.
+Nie wykonano testów, preflightu, buildu, Play Mode ani weryfikacji runtime/multiplayer. Console zawiera poprawione diagnostyczne błędy eksploracyjnych helperów `SerializedProperty`; nie zaobserwowano błędów kompilacji projektu ani shaderów, ale Console nie była pusta. Pięć nieużywanych kopii `Back*` pozostało poza sceną, katalogiem i listami NGO po ograniczeniu usuwania w MCP.
 
 Szczegółowy zapis i obrazy: [raport migracji](../ArtSource/TutorialTerrainStage02/verification-report.txt), [rozmieszczenie](../ArtSource/TutorialTerrainStage02/placement-report.txt), [NavMesh](../ArtSource/TutorialTerrainStage02/navmesh-bake-report.txt), [skrypt procedury ponownego bake głównego NavMesh](../ArtSource/TutorialTerrainStage02/RebakeTutorialTerrainStage02NavMesh.cs.txt), `lokalne archiwum: ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_Overview.png`, `lokalne archiwum: ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_Top.png`, `lokalne archiwum: ArtSource/TutorialTerrainStage02/TutorialTerrainStage02_BridgeAndExcavations.png`.
+
+### Rewizja szerokości rzeki 01 — 2026-10-07
+
+Rewizja dotyczy wyłącznie Stage02. Źródłowy opis `Tutorial_scene` pozostaje bez zmian: teren 90×90, rzeka szerokości 12 m i siedem paneli. Stage02 ma własny Terrain 84×90 m z originem (−50, −4, −45), wysokością 8 m, heightmapą 1025 oraz alphamapą i maską otworów 1024. Rzeka ma zakres X=2…8 (6 m), a dno X=4.25…5.75 przy Y=−3. Zachód zachowano, wschód przesunięto o −6 m, Goal jest przy X=20; `East_FoundationExcavation` przesunięto z X=0 do X=−6, a centrum potomków z X=17.25 do X=11.25. Maska otworów ma maksymalny błąd 2.74 cm. Mapa drogi RGFloat 1024² jest własna dla Stage02, rect (−50, −45, 84, 90); shader i albedo pozostają Stage01 read-only, a kierunek smug zachowano.
+
+Most Stage02 ma główną belkę 6.8 m (zakres wizualny z końcami 7.8 m, collider 8 m, chwyt ±4.6 m), pomost 8 m z trzema panelami po 2.64 m i przerwami 0.04 m oraz dwiema poprzeczkami. 13 `BridgeComponents` ma ID 0–12 i etapy [0,1], [2,3], [4,5], [6,7], [8,9], [10,11,12]; nieużywany wpis ID8 i dodatkowe sloty usunięto. Własne kopie belki, krótkiego stężenia, SO, receptur i katalogu są w `Assets/Experiments/TutorialTerrainStage02/BridgeWidthRevision`. Koszt głównej belki zmniejszono z dwóch Wooden Log do jednego Wooden Log, jednej deski i kompletu łączników; czasy i nastawy minigry pozostały bez zmian. Do obu list NGO dopisano po dwa prefaby przenoszonych elementów; oryginalne wpisy zachowano. Pięć kopii `Back*` pozostało nieużywanych poza sceną, katalogiem i NGO.
+
+Po korekcie i ponownym otwarciu niezależny audyt wykazał 747 zachodnich transformacji bez zmian, 214 wschodnich przesuniętych −6 m, 13 centralnych rozpatrzonych osobno, 0 rozbieżności i 0 błędów parsowania. Wszystkie trzy własne powierzchnie NavMesh przebudowano. Camp→Grove/Sawmill/ForgeApproach/Cave oraz EastApproach→Goal są `PathComplete`, Camp→Goal jest `PathPartial`; dno nie ma próbki `Walkable` w promieniu 0.2 m. Scena jest zapisana i czysta, Editor nie był w Play Mode, 2307 obiektów i 0 brakujących skryptów. Niezależny odczyt końcowej sceny wykazał 72 `NetworkObjects`, zero zerowych hashy, zero powtórzeń; odczytano wszystkie wpisy. To nie jest sprawdzenie sesji host–klient. Oryginalne `Tutorial_scene`, Stage01, źródłowe warianty mostu i niezwiązany font zachowały SHA-256. 17 odziedziczonych nierozwiązanych referencji pozostało; runtime nie został sprawdzony.
+
+Podglądy `Before_overview`, `Before_river_detail`, `After_overview`, `After_river_detail` i `Technical_completed_bridge_preview.png` (1536×1024) są lokalnymi obrazami archiwalnymi, nie plikami deklarowanymi jako commitowane. Ujęcia Before odtworzono z zamrożonych danych, nie z live-capture sprzed edycji; techniczny podgląd czasowo aktywuje ukończony most, po czym stan nieukończonej sceny został przywrócony.
+
+Raporty rewizji: [walidacja końcowej sceny](../ArtSource/TutorialTerrainStage02/RiverWidthRevision01/final-scene-validation.txt), [manifest ruchu](../ArtSource/TutorialTerrainStage02/RiverWidthRevision01/position-movement-manifest.txt), [walidacja NavMesh](../ArtSource/TutorialTerrainStage02/RiverWidthRevision01/final-navmesh-validation.txt), [manifest kopii bazowych](../ArtSource/TutorialTerrainStage02/RiverWidthRevision01/baseline-backup-manifest.txt). Procedury dostępne w archiwum: `NativeTerrainAndRoadRemapProcedure.cs.txt`, `FinalEditorCommandBatches.cs.txt`, `IndependentMovementReview.cs.txt` i `IndependentMovementReview.txt`; nie zachowały się pierwotne jednorazowe komendy tworzące pełny zestaw prefabów, więc nie jest to pełny generator. Nie wykonano testów, preflightu, buildu, Play Mode ani walidacji host–klient.
 
 Przed uznaniem sceny za gotową należy ocenić ją wizualnie w Editorze, uzupełnić odziedziczone referencje i sprawdzić zachowanie graczy/NPC/wody oraz sesji host-klient w runtime.
 
 Pełna dokumentacja: [Tutorial Terrain Stage02 — migracja gameplayu](TutorialTerrainStage02-GameplayMigration.md).
 
-Rewizja oświetlenia 01 została zapisana i sprawdzona po ponownym otwarciu sceny; raport oraz obrazy porównawcze znajdują się w [dokumentacji rewizji](../ArtSource/TutorialTerrainStage02/LightingRevision01/LightingRevision01_Report.txt), `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_Before_Detail.png` i `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_After_Detail.png`. Nie wykonano bake ani walidacji runtime/multiplayer. [Szczegóły migracji i oświetlenia](TutorialTerrainStage02-GameplayMigration.md).
+Rewizja oświetlenia 01 (2026-10-06) została zapisana i sprawdzona po ponownym otwarciu sceny. W czasie tej rewizji lobby nadal kierowało do `Tutorial_scene`; późniejsza zmiana routingu jest opisana poniżej. Raport oraz obrazy porównawcze znajdują się w [dokumentacji rewizji](../ArtSource/TutorialTerrainStage02/LightingRevision01/LightingRevision01_Report.txt), `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_Before_Detail.png` i `lokalne archiwum: ArtSource/TutorialTerrainStage02/LightingRevision01/Lighting_After_Detail.png`. Nie wykonano bake ani walidacji runtime/multiplayer. [Szczegóły migracji i oświetlenia](TutorialTerrainStage02-GameplayMigration.md).
+
+## Routing lobby do Stage02 — 2026-10-07
+
+Przycisk hosta `Tutorial` w `MultiplayerStartScene` ładuje teraz `TutorialTerrainStage02` przez `GameplaySceneRegistry.TutorialTerrainStage02SceneName`. Opcja `Tutorial — cięcie płyt` ładuje `TutorialDeckAreaV1`. Ścieżki używają `NetworkManager.SceneManager.LoadScene`; wywołania są host-only, a NGO synchronizuje zmianę sceny klientom. Stage02 jest wpisana i włączona w Build Settings. Po zmianie Editor odświeżył projekt i kompilacja C# zakończyła się bez błędów. Nie wykonano testów, preflightu, buildu, Play Mode ani weryfikacji hosta i klienta w runtime.
 
 ## Przygotowanie betonu w `Tutorial_scene`
 
@@ -308,3 +332,6 @@ partia trafia do skrzyni po przełączeniu betoniarki na `Pouring`. Kooperacyjne
 wylanie uruchamia `30 s` schnięcia, po czym fundament przechodzi do
 `ReadyForMount`. Profile i prefab znajdują się w `GeneratedAssets/Wheelbarrow`
 oraz `Prefabs/New/Wheelbarrow.prefab`.
+### Sypka ziemia V1 — Etapy 2–3 (2026-10-26)
+
+**Aktualizacja 2026-10-26 — poprawka skoku Etapu 3:** Zgłoszenie ujawniło ponawianie startu skoku, bo kontroler nie konsumował `_isJumpPerformed`; naprawiono to po nadaniu prędkości startowej. Nowy test mierzy pełny skok Space→lądowanie w czterech wariantach (ziemia/poza nią, z karami/no penalty). Targeted Etap 3: 2/2, łącznie Etap 2+3: 4/4; końcowy strict Gameplay: [14/14, EditMode 183/183, PlayMode 211/211](D:/Programy/UnityProjects/RageQuitting/Artifacts/Validation/20261026T165529Z-5d519e69/summary.json). Etap 3 nadal czeka na ręczny retest hosta i klienta; brak osobnej sesji sieciowej, pickup/zwrotu, a Etapy 4–6 nie rozpoczęte. Szczegóły, historyczne próby i checklista: [plan Sypkiej ziemi V1](Loose-Soil-V1-Implementation.md).

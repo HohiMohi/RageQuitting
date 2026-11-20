@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "command": "command rq_validation_context",
+  "data": {
+    "command": "rq_validation_context",
+    "parameters": {},
+    "result": {
+      "schemaVersion": 1,
+      "unityVersion": "6000.3.18f1",
+      "projectPath": "D:\\Programy\\UnityProjects\\RageQuitting",
+      "activeSceneName": "MultiplayerStartScene",
+      "activeScenePath": "Assets/Scenes/MultiplayerStartScene.unity",
+      "activeSceneIsDirty": false,
+      "openScenes": [
+        {
+          "handle": -5393746,
+          "name": "MultiplayerStartScene",
+          "path": "Assets/Scenes/MultiplayerStartScene.unity",
+          "isLoaded": true,
+          "isDirty": false,
+          "isActive": true
+        }
+      ],
+      "isCompiling": false,
+      "isUpdating": false,
+      "playModeState": "Editing",
+      "isPlaying": false,
+      "isPlayingOrWillChangePlaymode": false,
+      "pipelinePackagePresent": true,
+      "pipelinePackageVersion": "0.5.0-exp.1",
+      "hasRelevantUnsavedSceneState": false
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7801,
+      "projectPath": "D:\\Programy\\UnityProjects\\RageQuitting"
+    },
+    "success": true
+  },
+  "errors": [],
+  "warnings": []
+}

@@ -1,0 +1,123 @@
+// Final corrective/bake/preview Editor batch archive.
+// This safe rerun equivalent records the executed Stage02 operations; no automated tests or Play Mode.
+// Stored as .cs.txt in ArtSource; it is not imported or compiled as runtime code.
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
+using Unity.AI.Navigation;
+using System.Linq;
+using System.Collections.Generic;
+using System.IO;
+
+internal class CommandScript : IRunCommand
+{
+    const string ScenePath = "Assets/Experiments/TutorialTerrainStage02/Scenes/TutorialTerrainStage02.unity";
+    const string OutputPath = "ArtSource/TutorialTerrainStage02/RiverWidthRevision01/Technical_completed_bridge_preview.png";
+
+    public void Execute(ExecutionResult result)
+    {
+        var scene = SceneManager.GetActiveScene();
+        if (scene.path != ScenePath || EditorApplication.isPlaying)
+            throw new System.InvalidOperationException("Open saved Stage02 in Edit Mode before running this batch.");
+        var all = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<Transform>(true)).ToArray();
+        Transform Find(string path) => all.First(t => PathOf(t) == path);
+
+        // Absolute targets from frozen baseline; moving a subtree root preserves its child-local transforms.
+        var eastRoot = Find("FoundationExcavationSystem/East_FoundationExcavation");
+        var p = eastRoot.position;
+        eastRoot.position = new Vector3(-6f, p.y, p.z); // baseline root X0 -> -6; descendants shift exactly -6
+        SetWorldX("FoundationClearingBushes/ThornyBush_Foundation2_1", 8.8100014f);
+        SetWorldX("FoundationClearingBushes/ThornyBush_Foundation2_2", 10.2500019f);
+        SetWorldX("FoundationClearingBushes/ThornyBush_Foundation2_3", 9.5700016f);
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+
+        // Rebuild main and two pit surfaces, copying each transient bake into its existing owned data asset.
+        foreach (var surface in Object.FindObjectsByType<NavMeshSurface>(FindObjectsSortMode.None).Where(x => x.gameObject.scene == scene))
+        {
+            var ownedData = surface.navMeshData;
+            if (ownedData == null) throw new System.InvalidOperationException("Missing existing owned NavMeshData");
+            surface.BuildNavMesh();
+            var transient = surface.navMeshData;
+            if (transient == null) throw new System.InvalidOperationException("Bake produced no NavMeshData");
+            surface.RemoveData();
+            EditorUtility.CopySerialized(transient, ownedData);
+            ownedData.name = Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(ownedData));
+            EditorUtility.SetDirty(ownedData);
+            surface.navMeshData = ownedData;
+            surface.AddData();
+            EditorUtility.SetDirty(surface);
+        }
+        AssetDatabase.SaveAssets();
+        EditorSceneManager.SaveScene(scene);
+
+        var states = new List<(GameObject go, bool active)>();
+        var seen = new HashSet<int>();
+        void Remember(GameObject g) { if (g && seen.Add(g.GetInstanceID())) states.Add((g, g.activeSelf)); }
+        var camera = Resources.FindObjectsOfTypeAll<Camera>().First(c => c.gameObject.scene == scene && c.name == "TutorialTerrain River Camera");
+        bool cameraActive = camera.gameObject.activeSelf, cameraEnabled = camera.enabled;
+        var originalTarget = camera.targetTexture;
+        float originalAspect = camera.aspect;
+        var originalRenderActive = RenderTexture.active;
+        RenderTexture renderTarget = null;
+        Texture2D image = null;
+        try
+        {
+            // Show mounted visuals by activating ancestors too (PanelMotionRoot contains the deck planks).
+            foreach (var component in Resources.FindObjectsOfTypeAll<BridgeComponent>().Where(x => x.gameObject.scene == scene))
+            {
+                var so = new SerializedObject(component);
+                var ghost = so.FindProperty("readyForMountingVisualsGameObject")?.objectReferenceValue as GameObject;
+                if (ghost) { Remember(ghost); ghost.SetActive(false); }
+                var mounted = so.FindProperty("mountedComponentVisualsGameObject")?.objectReferenceValue as GameObject;
+                if (mounted)
+                    for (var t = mounted.transform; t; t = t.parent)
+                    {
+                        Remember(t.gameObject);
+                        if (t.gameObject != component.gameObject) t.gameObject.SetActive(true);
+                        if (t == component.transform) break;
+                    }
+            }
+            camera.gameObject.SetActive(true);
+            camera.enabled = true;
+            camera.aspect = 1.5f;
+            renderTarget = new RenderTexture(1536, 1024, 24, RenderTextureFormat.ARGB32);
+            renderTarget.Create();
+            camera.targetTexture = renderTarget;
+            camera.Render();
+            RenderTexture.active = renderTarget;
+            image = new Texture2D(1536, 1024, TextureFormat.RGB24, false);
+            image.ReadPixels(new Rect(0, 0, 1536, 1024), 0, 0);
+            image.Apply();
+            File.WriteAllBytes(Path.GetFullPath(OutputPath), image.EncodeToPNG());
+        }
+        finally
+        {
+            camera.targetTexture = originalTarget;
+            camera.aspect = originalAspect;
+            camera.enabled = cameraEnabled;
+            camera.gameObject.SetActive(cameraActive);
+            RenderTexture.active = originalRenderActive;
+            if (image) Object.DestroyImmediate(image);
+            if (renderTarget) { renderTarget.Release(); Object.DestroyImmediate(renderTarget); }
+            foreach (var state in states) if (state.go) state.go.SetActive(state.active);
+            EditorSceneManager.MarkSceneDirty(scene);
+            AssetDatabase.SaveAssets();
+            EditorSceneManager.SaveScene(scene);
+        }
+        result.Log("Absolute correction, existing-data NavMesh bakes, temporary completed-bridge preview and state restoration finished.");
+
+        void SetWorldX(string path, float x)
+        {
+            var t = Find(path); var current = t.position; t.position = new Vector3(x, current.y, current.z);
+        }
+    }
+
+    static string PathOf(Transform t)
+    {
+        var path = t.name;
+        while (t.parent) { t = t.parent; path = t.name + "/" + path; }
+        return path;
+    }
+}

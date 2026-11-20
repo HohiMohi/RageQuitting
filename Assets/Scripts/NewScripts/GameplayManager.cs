@@ -25,6 +25,7 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
     public int mountAlignmentState;
     public ulong mountAlignmentCandidateNetworkObjectId;
     public double mountAlignmentStartedAt;
+    public bool foundationRampClearanceGranted;
 
     public BridgeComponentNetworkState(int componentID)
     {
@@ -46,6 +47,7 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
         mountAlignmentState = (int)BridgeMountAlignmentState.Inactive;
         mountAlignmentCandidateNetworkObjectId = BridgeMountSocket.NoCandidateNetworkObjectId;
         mountAlignmentStartedAt = -1d;
+        foundationRampClearanceGranted = false;
     }
 
     public bool Equals(BridgeComponentNetworkState other)
@@ -67,7 +69,8 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
             && constructionAux1.Equals(other.constructionAux1)
             && mountAlignmentState == other.mountAlignmentState
             && mountAlignmentCandidateNetworkObjectId == other.mountAlignmentCandidateNetworkObjectId
-            && mountAlignmentStartedAt.Equals(other.mountAlignmentStartedAt);
+            && mountAlignmentStartedAt.Equals(other.mountAlignmentStartedAt)
+            && foundationRampClearanceGranted == other.foundationRampClearanceGranted;
     }
 
     public override bool Equals(object obj)
@@ -90,7 +93,8 @@ public struct BridgeComponentNetworkState : IEquatable<BridgeComponentNetworkSta
                 constructionAux1,
                 mountAlignmentState,
                 mountAlignmentCandidateNetworkObjectId,
-                mountAlignmentStartedAt));
+                mountAlignmentStartedAt,
+                foundationRampClearanceGranted));
     }
 }
 
@@ -99,12 +103,16 @@ public readonly struct BridgeRequirementLine
     public readonly string ComponentName;
     public readonly int CurrentAmount;
     public readonly int RequiredAmount;
+    public readonly string Details;
+    public readonly bool IsPercentage;
 
-    public BridgeRequirementLine(string componentName, int currentAmount, int requiredAmount)
+    public BridgeRequirementLine(string componentName, int currentAmount, int requiredAmount, string details = null, bool isPercentage = false)
     {
         ComponentName = componentName;
         CurrentAmount = currentAmount;
         RequiredAmount = requiredAmount;
+        Details = details ?? string.Empty;
+        IsPercentage = isPercentage;
     }
 }
 
@@ -167,7 +175,17 @@ public class GameplayManager : MonoBehaviour
     private const string GirderFasteningWindowMessageName = "GameplayManager_GirderFasteningWindow";
     private const string StateSyncMessageName = "GameplayManager_BridgeState";
     private const int StateMessageBaseSize = sizeof(int) * 2 + sizeof(bool);
-    private const int StateMessageItemSize = sizeof(int) * 5 + sizeof(bool) * 3 + sizeof(float) * 8 + sizeof(ulong) + sizeof(double);
+    private const int StateMessageItemSize = sizeof(int) * 5 + sizeof(bool) * 4 + sizeof(float) * 8 + sizeof(ulong) + sizeof(double);
+    private const int LooseSoilTrailerMagic = 0x4C534631;
+    private const int LooseSoilTrailerVersion = 1;
+    private const int MaximumLooseSoilSnapshotCells = 16384;
+
+    private sealed class LooseSoilSnapshotTarget
+    {
+        public int ComponentId;
+        public FoundationLooseSoilField Field;
+        public LooseSoilHeightField.Snapshot Snapshot;
+    }
     private const int MountRequestMessageSize = sizeof(int) + sizeof(ulong);
     private const int AssembleRequestMessageSize = sizeof(int) * 2;
     private const int ConstructionWorkRequestMessageSize = sizeof(int) * 3;
@@ -198,6 +216,7 @@ public class GameplayManager : MonoBehaviour
     private bool bridgeFullyAssembledEventInvoked;
     private bool networkMessagingRegistered;
     private bool hasAppliedInitialNetworkBridgeState;
+    private bool bridgeProgressInitialized;
 
     public EventHandler<BridgeComponentMountableStatusUpdateEventArgs> BridgeComponentMountableStatusUpdate;
     public class BridgeComponentMountableStatusUpdateEventArgs : EventArgs
@@ -301,6 +320,28 @@ public class GameplayManager : MonoBehaviour
         return result;
     }
 
+    public int GetMountedBridgeComponentCount(BridgeComponentSO component)
+    {
+        if (component == null || bridgeComponentDataArray == null) return 0;
+        int count = 0;
+        for (int i = 0; i < bridgeComponentDataArray.Length; i++)
+        {
+            BridgeComponentData data = bridgeComponentDataArray[i];
+            if (data.bridgeComponentSO == component && data.isMounted) count++;
+        }
+        return count;
+    }
+
+    public BridgeDeckAreaRequirement GetAreaRequirement(BridgeComponentSO componentType)
+    {
+        if (componentType == null) return null;
+        CacheBridgeComponents();
+        for (int i = 0; i < bridgeComponents.Length; i++)
+            if (bridgeComponents[i] != null && bridgeComponents[i].GetBridgeComponentSO() == componentType
+                && bridgeComponents[i].TryGetComponent(out BridgeDeckAreaRequirement area)) return area;
+        return null;
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -335,7 +376,9 @@ public class GameplayManager : MonoBehaviour
         {
             ApplyConfiguredInitialBridgeState();
             AdvancePastInitiallyCompletedStages();
+            if (!IsNetworkSessionActive()) bridgeProgressInitialized = true;
         }
+        ReconcileInitialPhysicalDeckPanels();
         SeedObservedConstructionStages();
         SubscribeBridgeComponentEvents();
         yield return null;
@@ -346,6 +389,8 @@ public class GameplayManager : MonoBehaviour
             if (NetworkManager.Singleton.IsServer)
             {
                 InitializeServerBridgeState();
+                bridgeProgressInitialized = true;
+                ReconcileInitialPhysicalDeckPanels();
                 UpdateComponentsCanBeMountedProperty();
                 NotifyBridgeRequirementsChanged();
                 BroadcastBridgeState();
@@ -539,6 +584,7 @@ public class GameplayManager : MonoBehaviour
                currentBridgeBuildingStageIndex < bridgeBuildingStages.Length &&
                IsStageFullyCompleted(currentBridgeBuildingStageIndex))
         {
+            if (!FinalizeAreaRequirementsForStage(currentBridgeBuildingStageIndex)) break;
             currentBridgeBuildingStageIndex++;
         }
 
@@ -565,13 +611,145 @@ public class GameplayManager : MonoBehaviour
         foreach (int componentIndex in componentIndexes)
         {
             BridgeComponentData componentData = bridgeComponentDataArray[componentIndex];
-            if (!componentData.isMounted || !componentData.isAssembled)
+            BridgeDeckAreaRequirement area = FindAreaRequirement(componentIndex);
+            if (area != null)
             {
-                return false;
+                if (!area.Reassess().IsComplete) return false;
             }
+            else if (!componentData.isMounted || !componentData.isAssembled) return false;
         }
 
         return true;
+    }
+
+    private BridgeDeckAreaRequirement FindAreaRequirement(int componentId)
+    {
+        CacheBridgeComponents();
+        for (int i = 0; i < bridgeComponents.Length; i++)
+        {
+            BridgeComponent component = bridgeComponents[i];
+            if (component != null && component.ComponentID == componentId
+                && component.TryGetComponent(out BridgeDeckAreaRequirement requirement)) return requirement;
+        }
+        return null;
+    }
+
+    private bool FinalizeAreaRequirementsForStage(int stageIndex)
+    {
+        if (!ValidateStageComponentIndexes(stageIndex)) return false;
+        int[] indexes = bridgeBuildingStages[stageIndex].bridgeComponentDataIndexes;
+        if (indexes == null) return true;
+        List<BridgeDeckAreaRequirement> requirements = new();
+        for (int i = 0; i < indexes.Length; i++)
+        {
+            BridgeDeckAreaRequirement area = FindAreaRequirement(indexes[i]);
+            if (area == null) continue;
+            if (!area.TryPrepareFinalization()) return false;
+            requirements.Add(area);
+        }
+        int committedRequirements = 0;
+        for (int i = 0; i < requirements.Count; i++)
+        {
+            if (!requirements[i].CommitFinalization())
+            {
+                for (int rollback = 0; rollback < committedRequirements; rollback++) requirements[rollback].RollbackFinalization();
+                return false;
+            }
+            committedRequirements++;
+        }
+        for (int i = 0; i < indexes.Length; i++)
+        {
+            BridgeDeckAreaRequirement area = FindAreaRequirement(indexes[i]);
+            if (area == null) continue;
+            BridgeComponentData data = bridgeComponentDataArray[indexes[i]];
+            data.isMounted = true;
+            data.isAssembled = true;
+            data.CanBeMounted = false;
+            bridgeComponentDataArray[indexes[i]] = data;
+            if (!IsNetworkSessionActive())
+            {
+                // The adapter represents logical stage completion but has no delivered stock
+                // component to mount. Apply the event-free completed state so offline observers
+                // see the same logical result without recursively advancing the active stage.
+                BridgeComponent adapter = area.GetComponent<BridgeComponent>();
+                if (adapter != null) adapter.ApplyInitialCompletedState();
+            }
+            if (IsNetworkSessionActive() && NetworkManager.Singleton.IsServer && TryGetStateIndex(indexes[i], out int stateIndex))
+            {
+                BridgeComponentNetworkState state = bridgeComponentStates[stateIndex];
+                state.isMounted = true; state.isAssembled = true; state.canBeMounted = false;
+                bridgeComponentStates[stateIndex] = state;
+                ApplyNetworkState(state);
+            }
+        }
+        return true;
+    }
+
+    public bool IsAreaRequirementActive(BridgeDeckAreaRequirement requirement)
+    {
+        if (requirement == null || isFullyAsembled || bridgeBuildingStages == null
+            || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length) return false;
+        if (!bridgeProgressInitialized && !hasAppliedInitialNetworkBridgeState) return false;
+        BridgeComponent component = requirement.GetComponent<BridgeComponent>();
+        if (component == null || !TryGetBridgeComponent(component.ComponentID, out BridgeComponent owned) || owned != component) return false;
+        int[] indexes = bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes;
+        if (indexes == null) return false;
+        for (int i = 0; i < indexes.Length; i++) if (indexes[i] == component.ComponentID) return true;
+        return false;
+    }
+
+    public bool IsAreaRequirementFuture(BridgeDeckAreaRequirement requirement)
+    {
+        if (requirement == null || bridgeBuildingStages == null) return false;
+        BridgeComponent component = requirement.GetComponent<BridgeComponent>();
+        if (component == null) return false;
+        int current = currentBridgeBuildingStageIndex;
+        for (int stage = Math.Max(0, current); stage < bridgeBuildingStages.Length; stage++)
+        {
+            int[] indexes = bridgeBuildingStages[stage].bridgeComponentDataIndexes;
+            if (indexes == null) continue;
+            for (int i = 0; i < indexes.Length; i++) if (indexes[i] == component.ComponentID) return stage > current;
+        }
+        return false;
+    }
+
+    public bool IsAreaRequirementPresented(BridgeDeckAreaRequirement requirement)
+        => IsAreaRequirementActive(requirement) || IsAreaRequirementPast(requirement);
+
+    public bool IsAreaRequirementPast(BridgeDeckAreaRequirement requirement)
+    {
+        if (requirement == null || bridgeBuildingStages == null) return false;
+        BridgeComponent component = requirement.GetComponent<BridgeComponent>();
+        if (component == null) return false;
+        int upper = Math.Min(currentBridgeBuildingStageIndex, bridgeBuildingStages.Length);
+        for (int stage = 0; stage < upper; stage++)
+        {
+            int[] indexes = bridgeBuildingStages[stage].bridgeComponentDataIndexes;
+            if (indexes == null) continue;
+            for (int i = 0; i < indexes.Length; i++) if (indexes[i] == component.ComponentID) return true;
+        }
+        return false;
+    }
+
+    internal void NotifyAreaRequirementChanged(BridgeDeckAreaRequirement requirement)
+    {
+        if (requirement == null || !bridgeProgressInitialized) return;
+        NetworkManager manager = NetworkManager.Singleton;
+        if (manager != null && manager.IsListening && !manager.IsServer) return;
+        BridgeComponent component = requirement.GetComponent<BridgeComponent>();
+        if (component == null || !TryGetBridgeComponent(component.ComponentID, out BridgeComponent owned)
+            || owned != component || requirement.DeckSection == null || !IsMainBridgeDeckSection(requirement.DeckSection)) return;
+        int before = currentBridgeBuildingStageIndex;
+        CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
+        if (manager != null && manager.IsListening && manager.IsServer
+            && (before == currentBridgeBuildingStageIndex || isFullyAsembled))
+            BroadcastBridgeState();
+    }
+
+    public void NotifyLocalAreaPresentationChanged()
+    {
+        OnBridgeRequirementsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void Bridge_OnComponentAssembled(object sender, Bridge.ComponentAssembledEventArgs e)
@@ -645,25 +823,20 @@ public class GameplayManager : MonoBehaviour
 
     private void CheckCurrentStageMountingProgress()
     {
-        if (isFullyAsembled || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
+        if (isFullyAsembled || bridgeBuildingStages == null || currentBridgeBuildingStageIndex < 0 || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
         {
             return;
         }
 
-        if (!ValidateStageComponentIndexes(currentBridgeBuildingStageIndex))
+        int previousStageIndex = currentBridgeBuildingStageIndex;
+        while (currentBridgeBuildingStageIndex < bridgeBuildingStages.Length && IsStageFullyCompleted(currentBridgeBuildingStageIndex))
         {
-            return;
+            if (!FinalizeAreaRequirementsForStage(currentBridgeBuildingStageIndex)) break;
+            currentBridgeBuildingStageIndex++;
         }
 
-        foreach (int componentIndex in bridgeBuildingStages[currentBridgeBuildingStageIndex].bridgeComponentDataIndexes)
-        {
-            if (!bridgeComponentDataArray[componentIndex].isMounted || !bridgeComponentDataArray[componentIndex].isAssembled)
-            {
-                return;
-            }
-        }
+        if (currentBridgeBuildingStageIndex == previousStageIndex) return;
 
-        currentBridgeBuildingStageIndex++;
         if (currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length)
         {
             // The caller broadcasts the state after this method returns. Set the
@@ -678,6 +851,130 @@ public class GameplayManager : MonoBehaviour
         {
             BroadcastBridgeState();
         }
+    }
+
+    internal void RecordPhysicalDeckPanelCompletion(
+        BridgeDeckPanelSectionNetworkState sectionState,
+        BridgeDeckPanelConstructionSite site)
+    {
+        if (sectionState == null || site == null || !site.UsesPhysicalPanelPlacement
+            || site.DeckSection == null || site.DeckSection.PhysicalPanelState != sectionState
+            || !sectionState.IsCompletedSlot(site)) return;
+        if (!bridgeProgressInitialized) return;
+
+        NetworkManager activeNetworkManager = NetworkManager.Singleton;
+        bool networkSession = IsNetworkSessionActive();
+        if (networkSession)
+        {
+            if (activeNetworkManager == null || !activeNetworkManager.IsServer || !sectionState.IsSpawned
+                || !sectionState.IsServer || sectionState.NetworkManager != activeNetworkManager) return;
+        }
+        else if (sectionState.IsSpawned) return;
+        BridgeComponent component = site.GetComponent<BridgeComponent>();
+        if (component == null || !TryGetBridgeComponent(component.ComponentID, out BridgeComponent ownedComponent)
+            || ownedComponent != component || !IsMainBridgeDeckSection(site.DeckSection)) return;
+        int componentID = component.ComponentID;
+        if (!IsValidComponentDataIndex(componentID)) return;
+
+        int stateIndex = -1;
+        if (networkSession && !TryGetStateIndex(componentID, out stateIndex)) return;
+
+        BridgeComponentData componentData = bridgeComponentDataArray[componentID];
+        bool componentDataChanged = !componentData.isMounted || !componentData.isAssembled || componentData.CanBeMounted;
+        bool siteChanged = site.CurrentStage != BridgeConstructionStage.Complete;
+        bool networkStateChanged = false;
+        BridgeComponentNetworkState state = new BridgeComponentNetworkState(componentID)
+        {
+            isMounted = true,
+            isAssembled = true,
+            canBeMounted = false,
+            currentAssemblingProgress = component.GetAssemblingProgressNeeded()
+        };
+        if (networkSession)
+        {
+            state = bridgeComponentStates[stateIndex];
+            networkStateChanged = !state.isMounted || !state.isAssembled || state.canBeMounted
+                || state.currentAssemblingProgress < component.GetAssemblingProgressNeeded()
+                || state.constructionStage != (int)BridgeConstructionStage.Complete;
+        }
+        bool stageProgressNeedsReconciliation = !isFullyAsembled && bridgeBuildingStages != null
+            && currentBridgeBuildingStageIndex >= 0 && currentBridgeBuildingStageIndex < bridgeBuildingStages.Length
+            && IsStageFullyCompleted(currentBridgeBuildingStageIndex);
+        bool completionAlreadyApplied = !componentDataChanged && !siteChanged && !networkStateChanged
+            && !stageProgressNeedsReconciliation;
+        if (completionAlreadyApplied) return;
+
+        componentData.isMounted = true;
+        componentData.isAssembled = true;
+        componentData.CanBeMounted = false;
+        bridgeComponentDataArray[componentID] = componentData;
+        site.ApplyPhysicalPanelCompletion();
+
+        if (networkSession)
+        {
+            state.isMounted = true;
+            state.isAssembled = true;
+            state.canBeMounted = false;
+            state.currentAssemblingProgress = component.GetAssemblingProgressNeeded();
+        }
+        site.PopulateNetworkState(ref state);
+        state.isMounted = true;
+        state.isAssembled = true;
+        state.canBeMounted = false;
+
+        if (networkSession)
+        {
+            bridgeComponentStates[stateIndex] = state;
+        }
+        ApplyNetworkState(state, suppressStageEvent: isReconcilingInitialPhysicalDeckPanels);
+        int stageIndexBeforeCompletion = currentBridgeBuildingStageIndex;
+        CheckCurrentStageMountingProgress();
+        NotifyBridgeRequirementsChanged();
+        if (networkSession && (currentBridgeBuildingStageIndex == stageIndexBeforeCompletion
+            || bridgeBuildingStages == null || currentBridgeBuildingStageIndex >= bridgeBuildingStages.Length))
+        {
+            // CheckCurrentStageMountingProgress broadcasts a nonterminal stage advance itself.
+            // Keep a single snapshot for unchanged progress and for terminal completion.
+            BroadcastBridgeState();
+        }
+    }
+
+    private bool isReconcilingInitialPhysicalDeckPanels;
+
+    private void ReconcileInitialPhysicalDeckPanels()
+    {
+        isReconcilingInitialPhysicalDeckPanels = true;
+        try
+        {
+            BridgeDeckPanelSectionNetworkState.ReconcileAllCompletedSlotsWithGameplayManager();
+        }
+        finally
+        {
+            isReconcilingInitialPhysicalDeckPanels = false;
+        }
+    }
+
+    private bool IsMainBridgeDeckSection(BridgeDeckSection section)
+    {
+        if (bridge == null || section == null || section.MainGirders == null || section.MainGirders.Count == 0)
+            return false;
+
+        CacheBridgeComponents();
+        bool hasMainGirder = false;
+        foreach (BridgeComponent girder in section.MainGirders)
+        {
+            if (girder == null) continue;
+            bool belongsToBridge = false;
+            foreach (BridgeComponent bridgeComponent in bridgeComponents)
+            {
+                if (bridgeComponent != girder) continue;
+                belongsToBridge = true;
+                break;
+            }
+            if (!belongsToBridge) return false;
+            hasMainGirder = true;
+        }
+        return hasMainGirder;
     }
 
     public void RequestMountBridgeComponent(BridgeComponent bridgeComponent, MountableBridgeComponent heldComponent)
@@ -1125,7 +1422,9 @@ public class GameplayManager : MonoBehaviour
 
     private bool CanMountBridgeComponent(BridgeComponent bridgeComponent, MountableBridgeComponent heldComponent)
     {
-        return bridgeComponent.CanBeMounted
+        return !bridgeComponent.UsesPhysicalDeckPanelPlacement
+            && !heldComponent.IsPhysicalDeckPanel
+            && bridgeComponent.CanBeMounted
             && !bridgeComponent.IsMounted
             && heldComponent.GetMountableBridgeComponentSO() != null
             && heldComponent.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponent.GetBridgeComponentSO();
@@ -1223,6 +1522,7 @@ public class GameplayManager : MonoBehaviour
     {
         if (!NetworkManager.Singleton.IsServer ||
             !TryGetBridgeComponent(componentID, out BridgeComponent bridgeComponent) ||
+            bridgeComponent.GetComponent<BridgeDeckAreaRequirement>() != null ||
             !TryGetValidatedPlayerTool(senderClientId, bridgeComponent, equippableItemType, out EquippableItemSO selectedTool))
         {
             return;
@@ -1318,7 +1618,17 @@ public class GameplayManager : MonoBehaviour
 
     private FastBufferWriter CreateBridgeStateWriter()
     {
-        FastBufferWriter writer = new FastBufferWriter(StateMessageBaseSize + bridgeComponentStates.Count * StateMessageItemSize, Allocator.Temp);
+        List<LooseSoilSnapshotTarget> looseTargets = GetLooseSoilSnapshotTargets(captureSnapshots: true);
+        long capacity = StateMessageBaseSize + (long)bridgeComponentStates.Count * StateMessageItemSize;
+        if (looseTargets.Count > 0)
+        {
+            capacity += sizeof(int) * 3;
+            foreach (LooseSoilSnapshotTarget target in looseTargets)
+                capacity += sizeof(int) * 4 + sizeof(float) * 4 + sizeof(double) +
+                            (long)target.Snapshot.CellCount * sizeof(float);
+        }
+        if (capacity > int.MaxValue) throw new InvalidOperationException("Bridge state message exceeds the supported buffer size.");
+        FastBufferWriter writer = new FastBufferWriter((int)capacity, Allocator.Temp);
         writer.WriteValueSafe(bridgeComponentStates.Count);
         writer.WriteValueSafe(currentBridgeBuildingStageIndex);
         writer.WriteValueSafe(isFullyAsembled);
@@ -1326,6 +1636,8 @@ public class GameplayManager : MonoBehaviour
         {
             WriteState(writer, bridgeComponentStates[i]);
         }
+
+        if (looseTargets.Count > 0) WriteLooseSoilTrailer(writer, looseTargets);
 
         return writer;
     }
@@ -1367,6 +1679,10 @@ public class GameplayManager : MonoBehaviour
             receivedStates.Add(ReadState(reader));
         }
 
+        List<LooseSoilSnapshotTarget> looseTargets = GetLooseSoilSnapshotTargets(captureSnapshots: false);
+        if (!TryReadLooseSoilTrailer(reader, looseTargets, out List<LooseSoilSnapshotTarget> receivedLooseSnapshots))
+            return;
+
         bool shouldRaiseCompletedEvent = bridgeComplete && !bridgeFullyAssembledEventInvoked;
         currentBridgeBuildingStageIndex = stageIndex;
         isFullyAsembled = bridgeComplete;
@@ -1379,12 +1695,122 @@ public class GameplayManager : MonoBehaviour
             ApplyNetworkState(state, suppressStageEvents);
         }
 
+        foreach (LooseSoilSnapshotTarget snapshot in receivedLooseSnapshots)
+            snapshot.Field.RestoreSnapshot(snapshot.Snapshot);
+
         hasAppliedInitialNetworkBridgeState = true;
         NotifyBridgeRequirementsChanged();
         if (shouldRaiseCompletedEvent)
         {
             OnBridgeFullyAssembled?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private List<LooseSoilSnapshotTarget> GetLooseSoilSnapshotTargets(bool captureSnapshots)
+    {
+        var targets = new List<LooseSoilSnapshotTarget>();
+        if (bridgeComponents == null) return targets;
+        foreach (BridgeComponent component in bridgeComponents)
+        {
+            BridgeConstructionSite site = component != null ? component.ConstructionSite : null;
+            FoundationExcavationVolume volume = site != null ? site.ExcavationVolume : null;
+            if (volume == null || !volume.UsesLooseSoilHeightField) continue;
+            FoundationLooseSoilField field = volume.LooseSoilField;
+            if (!volume.HasValidLooseSoilConfiguration || field == null || !field.HasHeightField)
+            {
+                if (captureSnapshots)
+                    throw new InvalidOperationException($"Loose-soil field for bridge component {component.ComponentID} is not initialized.");
+                return null;
+            }
+
+            targets.Add(new LooseSoilSnapshotTarget
+            {
+                ComponentId = component.ComponentID,
+                Field = field,
+                Snapshot = captureSnapshots ? field.CaptureSnapshot() : null
+            });
+        }
+        targets.Sort((left, right) => left.ComponentId.CompareTo(right.ComponentId));
+        for (int i = 1; i < targets.Count; i++)
+            if (targets[i - 1].ComponentId == targets[i].ComponentId)
+            {
+                if (captureSnapshots)
+                    throw new InvalidOperationException($"Duplicate loose-soil component id {targets[i].ComponentId}.");
+                return null;
+            }
+        return targets;
+    }
+
+    private static void WriteLooseSoilTrailer(FastBufferWriter writer, List<LooseSoilSnapshotTarget> targets)
+    {
+        writer.WriteValueSafe(LooseSoilTrailerMagic);
+        writer.WriteValueSafe(LooseSoilTrailerVersion);
+        writer.WriteValueSafe(targets.Count);
+        foreach (LooseSoilSnapshotTarget target in targets)
+        {
+            LooseSoilHeightField.Snapshot snapshot = target.Snapshot;
+            if (snapshot == null || snapshot.CellCount > MaximumLooseSoilSnapshotCells)
+                throw new InvalidOperationException("Loose-soil snapshot is missing or exceeds the supported cell limit.");
+            writer.WriteValueSafe(target.ComponentId);
+            writer.WriteValueSafe(snapshot.Width);
+            writer.WriteValueSafe(snapshot.Length);
+            writer.WriteValueSafe(snapshot.CellSize);
+            writer.WriteValueSafe(snapshot.MaximumHeight);
+            writer.WriteValueSafe(snapshot.VolumePerUnit);
+            writer.WriteValueSafe(snapshot.Columns);
+            writer.WriteValueSafe(snapshot.Rows);
+            writer.WriteValueSafe(snapshot.CellCount);
+            for (int i = 0; i < snapshot.CellCount; i++)
+                writer.WriteValueSafe(snapshot.GetHeightAtIndex(i));
+        }
+    }
+
+    private static bool TryReadLooseSoilTrailer(FastBufferReader reader,
+        List<LooseSoilSnapshotTarget> targets,
+        out List<LooseSoilSnapshotTarget> snapshots)
+    {
+        snapshots = new List<LooseSoilSnapshotTarget>();
+        if (targets == null) return false;
+        int remaining = reader.Length - reader.Position;
+        if (remaining == 0) return targets.Count == 0;
+        if (targets.Count == 0 || remaining < sizeof(int) * 3 || !reader.TryBeginRead(sizeof(int) * 3)) return false;
+        reader.ReadValueSafe(out int magic);
+        reader.ReadValueSafe(out int version);
+        reader.ReadValueSafe(out int count);
+        if (magic != LooseSoilTrailerMagic || version != LooseSoilTrailerVersion || count != targets.Count)
+            return false;
+
+        for (int targetIndex = 0; targetIndex < count; targetIndex++)
+        {
+            if (!reader.TryBeginRead(sizeof(int) * 4 + sizeof(float) * 4 + sizeof(double))) return false;
+            reader.ReadValueSafe(out int componentId);
+            reader.ReadValueSafe(out float width);
+            reader.ReadValueSafe(out float length);
+            reader.ReadValueSafe(out float cellSize);
+            reader.ReadValueSafe(out float maximumHeight);
+            reader.ReadValueSafe(out double volumePerUnit);
+            reader.ReadValueSafe(out int columns);
+            reader.ReadValueSafe(out int rows);
+            reader.ReadValueSafe(out int cellCount);
+            LooseSoilSnapshotTarget target = targets[targetIndex];
+            if (componentId != target.ComponentId || cellCount < 1 || cellCount > MaximumLooseSoilSnapshotCells ||
+                columns < 1 || rows < 1 || (long)columns * rows != cellCount ||
+                (long)cellCount * sizeof(float) > int.MaxValue ||
+                !reader.TryBeginRead(cellCount * sizeof(float))) return false;
+
+            float[] heights = new float[cellCount];
+            for (int i = 0; i < cellCount; i++) reader.ReadValueSafe(out heights[i]);
+            if (!LooseSoilHeightField.TryCreateSnapshot(width, length, cellSize, maximumHeight,
+                    volumePerUnit, columns, rows, heights, out LooseSoilHeightField.Snapshot snapshot) ||
+                !target.Field.CanRestoreSnapshot(snapshot)) return false;
+            snapshots.Add(new LooseSoilSnapshotTarget
+            {
+                ComponentId = componentId,
+                Field = target.Field,
+                Snapshot = snapshot
+            });
+        }
+        return reader.Position == reader.Length;
     }
 
     private void WriteState(FastBufferWriter writer, BridgeComponentNetworkState state)
@@ -1407,6 +1833,7 @@ public class GameplayManager : MonoBehaviour
         writer.WriteValueSafe(state.mountAlignmentState);
         writer.WriteValueSafe(state.mountAlignmentCandidateNetworkObjectId);
         writer.WriteValueSafe(state.mountAlignmentStartedAt);
+        writer.WriteValueSafe(state.foundationRampClearanceGranted);
     }
 
     private BridgeComponentNetworkState ReadState(FastBufferReader reader)
@@ -1429,6 +1856,7 @@ public class GameplayManager : MonoBehaviour
         reader.ReadValueSafe(out int mountAlignmentState);
         reader.ReadValueSafe(out ulong mountAlignmentCandidateNetworkObjectId);
         reader.ReadValueSafe(out double mountAlignmentStartedAt);
+        reader.ReadValueSafe(out bool foundationRampClearanceGranted);
 
         return new BridgeComponentNetworkState(componentID)
         {
@@ -1448,7 +1876,8 @@ public class GameplayManager : MonoBehaviour
             constructionAux1 = constructionAux1,
             mountAlignmentState = mountAlignmentState,
             mountAlignmentCandidateNetworkObjectId = mountAlignmentCandidateNetworkObjectId,
-            mountAlignmentStartedAt = mountAlignmentStartedAt
+            mountAlignmentStartedAt = mountAlignmentStartedAt,
+            foundationRampClearanceGranted = foundationRampClearanceGranted
         };
     }
 
@@ -1598,19 +2027,19 @@ public class GameplayManager : MonoBehaviour
         AddStageRequirements(currentBridgeBuildingStageIndex, currentStageCounters, includeMountedProgress: true);
         foreach (KeyValuePair<string, RequirementCounter> pair in currentStageCounters)
         {
-            currentStageRequirements.Add(new BridgeRequirementLine(pair.Key, pair.Value.CurrentAmount, pair.Value.RequiredAmount));
+            currentStageRequirements.Add(new BridgeRequirementLine(pair.Key, pair.Value.CurrentAmount, pair.Value.RequiredAmount, pair.Value.Details, pair.Value.IsPercentage));
         }
         currentStageRequirements.Sort((first, second) => string.Compare(first.ComponentName, second.ComponentName, StringComparison.Ordinal));
 
         Dictionary<string, RequirementCounter> remainingStageCounters = new Dictionary<string, RequirementCounter>();
         for (int stageIndex = currentBridgeBuildingStageIndex + 1; stageIndex < bridgeBuildingStages.Length; stageIndex++)
         {
-            AddStageRequirements(stageIndex, remainingStageCounters, includeMountedProgress: false);
+            AddStageRequirements(stageIndex, remainingStageCounters, includeMountedProgress: true);
         }
 
         foreach (KeyValuePair<string, RequirementCounter> pair in remainingStageCounters)
         {
-            remainingStageRequirements.Add(new BridgeRequirementLine(pair.Key, 0, pair.Value.RequiredAmount));
+            remainingStageRequirements.Add(new BridgeRequirementLine(pair.Key, pair.Value.CurrentAmount, pair.Value.RequiredAmount));
         }
         remainingStageRequirements.Sort((first, second) => string.Compare(first.ComponentName, second.ComponentName, StringComparison.Ordinal));
 
@@ -1637,6 +2066,31 @@ public class GameplayManager : MonoBehaviour
                 : $"Bridge Component {componentIndex}";
 
             counters.TryGetValue(componentName, out RequirementCounter counter);
+            BridgeDeckAreaRequirement areaRequirement = FindAreaRequirement(componentIndex);
+            if (areaRequirement != null)
+            {
+                // Do not expose future area work as global progress before its stage is unlocked.
+                if (stageIndex > currentBridgeBuildingStageIndex) continue;
+                if (stageIndex == currentBridgeBuildingStageIndex && IsAreaRequirementActive(areaRequirement))
+                {
+                    BridgeDeckAreaStageResult area = areaRequirement.Reassess();
+                    float total = areaRequirement.Profile != null ? areaRequirement.Profile.areaLengthMeters : 6.56f;
+                    counter.RequiredAmount = 100;
+                    counter.IsPercentage = true;
+                    counter.CurrentAmount = area.IsComplete ? 100
+                        : Mathf.Clamp(Mathf.RoundToInt(area.SecuredLengthMeters / total * 100f), 0, 100);
+                    counter.Details = $"Covered {area.CoveredLengthMeters:0.00} m; secured {area.SecuredLengthMeters:0.00} m; {BridgeDeckAreaRequirement.FormatGapGuidance(area)}";
+                }
+                else
+                {
+                    counter.RequiredAmount++;
+                    // Physical progress is deliberately hidden until this stage activates.
+                    counter.CurrentAmount = 0;
+                    counter.Details = string.Empty;
+                }
+                counters[componentName] = counter;
+                continue;
+            }
             counter.RequiredAmount++;
             if (includeMountedProgress && componentData.isMounted)
             {
@@ -1696,6 +2150,8 @@ public class GameplayManager : MonoBehaviour
     {
         public int CurrentAmount;
         public int RequiredAmount;
+        public string Details;
+        public bool IsPercentage;
     }
 
     private bool TryGetStateIndex(int componentID, out int stateIndex)

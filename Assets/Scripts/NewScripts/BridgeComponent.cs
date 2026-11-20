@@ -22,12 +22,16 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     [SerializeField] private Material ghostMaterial;
     [Tooltip("Optional explicit list of colliders enabled after mounting. When empty, all colliders outside the ghost visuals are used.")]
     [SerializeField] private Collider[] mountedPhysicalColliders;
+    [Tooltip("Optional physical colliders disabled once this component is fully assembled.")]
+    [SerializeField] private Collider[] disabledAfterAssemblyColliders = Array.Empty<Collider>();
     private float assemblingProgressNeeded;
     private float currentAssemblingProgress;
     private bool needAssembling;
     private Collider[] readyForMountingInteractionColliders = Array.Empty<Collider>();
     private BridgeConstructionSite constructionSite;
     private BridgeMountSocket mountSocket;
+    private bool hasPhysicalDeckPanelMarker;
+    private bool hasAreaDeckRequirement;
 
     public EventHandler<ComponentMountedEventArgs> ComponentMounted;
     public EventHandler<ComponentAsembledEventArgs> ComponentAsembled;
@@ -49,6 +53,11 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void Interact(Transform interactor)
     {
+        if (UsesPhysicalDeckPanelPlacement || hasAreaDeckRequirement || TryGetComponent(out BridgeDeckAreaRequirement _))
+        {
+            return;
+        }
+
         if (constructionSite is ILevelingMeasurementTarget levelingTarget && levelingTarget.IsLevelingActive)
         {
             constructionSite.RequestLevelingConfirmation(
@@ -70,6 +79,11 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
                 GameObject heldGo = playerInteraction.GetPickedUpGameObject();
                 if (heldGo != null && heldGo.TryGetComponent<MountableBridgeComponent>(out MountableBridgeComponent heldComponent))
                 {
+                    if (heldComponent.IsPhysicalDeckPanel)
+                    {
+                        return;
+                    }
+
                     if (heldComponent.GetMountableBridgeComponentSO().bridgeComponentSO == bridgeComponentSO)
                     {
                         GameplayManager.Instance.RequestMountBridgeComponent(this, heldComponent);
@@ -93,11 +107,13 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     public void HandleAssembling(EquippableItemSO equippableItemSO, float damage)
     {
+        if (hasAreaDeckRequirement || TryGetComponent(out BridgeDeckAreaRequirement _)) return;
         GameplayManager.Instance.RequestAssembleBridgeComponent(this, equippableItemSO, damage);
     }
 
     public void HandleAssemblingLocal(EquippableItemSO equippableItemSO, float damage)
     {
+        if (hasAreaDeckRequirement || TryGetComponent(out BridgeDeckAreaRequirement _)) return;
         if (constructionSite != null && !constructionSite.AllowsStandardAssemblyWork)
         {
             return;
@@ -127,6 +143,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     {
         constructionSite = GetComponent<BridgeConstructionSite>();
         mountSocket = GetComponent<BridgeMountSocket>();
+        hasAreaDeckRequirement = GetComponent<BridgeDeckAreaRequirement>() != null;
+        hasPhysicalDeckPanelMarker = TryGetComponent(out BridgeDeckPanelMounting panelMarker) && panelMarker.IsPassiveSlot;
         InitializeDefinitionState();
         constructionSite?.Initialize();
         CacheBridgeComponentColliders();
@@ -255,7 +273,11 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     }
 
     public bool IsMounted => isMounted;
-    public bool CanBeMounted => canBeMounted && (constructionSite == null || constructionSite.CanAcceptMountedComponent);
+    public bool UsesPhysicalDeckPanelPlacement => hasAreaDeckRequirement || TryGetComponent(out BridgeDeckAreaPanel _)
+        || hasPhysicalDeckPanelMarker ||
+        constructionSite is BridgeDeckPanelConstructionSite deckSite && deckSite.UsesPhysicalPanelPlacement;
+    public bool CanBeMounted => !hasAreaDeckRequirement && !TryGetComponent(out BridgeDeckAreaRequirement _)
+        && canBeMounted && (constructionSite == null || constructionSite.CanAcceptMountedComponent);
     public bool IsAssembled => isAssembled;
     public bool NeedAssembling => needAssembling;
     public int ComponentID => componentID;
@@ -449,6 +471,15 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     private void ConfigureReadyForMountingInteractionColliders()
     {
+        if (UsesPhysicalDeckPanelPlacement)
+        {
+            foreach (Collider interactionCollider in readyForMountingInteractionColliders)
+            {
+                if (interactionCollider != null) interactionCollider.enabled = false;
+            }
+            return;
+        }
+
         foreach (Collider interactionCollider in readyForMountingInteractionColliders)
         {
             if (interactionCollider == null)
@@ -463,9 +494,28 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
     private void ApplyVisualAndColliderState()
     {
+        if (hasAreaDeckRequirement || TryGetComponent(out BridgeDeckAreaRequirement _))
+        {
+            if (readyForMountingVisualsGameObject != null) readyForMountingVisualsGameObject.SetActive(false);
+            if (mountedComponentVisualsGameObject != null) mountedComponentVisualsGameObject.SetActive(false);
+            if (mountedPhysicalColliders != null)
+                foreach (Collider collider in mountedPhysicalColliders)
+                    if (collider != null && collider.GetComponentInParent<BridgeDeckAreaPanel>() == null) collider.enabled = false;
+            return;
+        }
+
         if (readyForMountingVisualsGameObject != null)
         {
-            readyForMountingVisualsGameObject.SetActive(CanBeMounted && !isMounted);
+            readyForMountingVisualsGameObject.SetActive(
+                !hasPhysicalDeckPanelMarker && !hasAreaDeckRequirement && (CanBeMounted || UsesPhysicalDeckPanelPlacement) && !isMounted);
+        }
+
+        if (UsesPhysicalDeckPanelPlacement && !startFullyCompleted)
+        {
+            foreach (Collider collider in GetComponentsInChildren<Collider>(true))
+            {
+                if (collider != null) collider.enabled = false;
+            }
         }
 
         if (mountedComponentVisualsGameObject != null)
@@ -484,9 +534,13 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
         {
             if (physicalCollider != null)
             {
-                physicalCollider.enabled = constructionSite != null
+                bool excludedAfterAssembly = isAssembled && disabledAfterAssemblyColliders != null &&
+                    Array.IndexOf(disabledAfterAssemblyColliders, physicalCollider) >= 0;
+                physicalCollider.enabled = !excludedAfterAssembly && (UsesPhysicalDeckPanelPlacement && !startFullyCompleted
+                    ? false
+                    : constructionSite != null
                     ? constructionSite.ShouldEnablePhysicalColliders(isMounted)
-                    : isMounted;
+                    : isMounted);
             }
         }
     }
@@ -494,6 +548,7 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
     public BridgeConstructionSite ConstructionSite => constructionSite;
     public BridgeMountSocket MountSocket => mountSocket;
     public GameObject ReadyForMountingVisualsGameObject => readyForMountingVisualsGameObject;
+    public Material GhostMaterial => ghostMaterial;
 
     public void AddReadyForMountPrompt(List<InteractionPrompt> prompts, string legacyPrompt)
     {
@@ -521,6 +576,8 @@ public class BridgeComponent : MonoBehaviour, IInteractableNew, IDamageable
 
         constructionSite = GetComponent<BridgeConstructionSite>();
         mountSocket = GetComponent<BridgeMountSocket>();
+        hasAreaDeckRequirement = GetComponent<BridgeDeckAreaRequirement>() != null;
+        hasPhysicalDeckPanelMarker = TryGetComponent(out BridgeDeckPanelMounting panelMarker) && panelMarker.IsPassiveSlot;
         InitializeDefinitionState();
         constructionSite?.Initialize();
         CacheBridgeComponentColliders();
