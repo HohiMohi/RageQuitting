@@ -17,6 +17,8 @@ public sealed class PlayerMudStatusPlayModeTests
     private static readonly Type MudControllerType = Type.GetType("PlayerMudStatusController, Assembly-CSharp");
     private static readonly Type DomainKindType = Type.GetType("PlayerDomainStatusKind, Assembly-CSharp");
     private static readonly Type WaterStateType = Type.GetType("WaterExposureState, Assembly-CSharp");
+    private static readonly Type MudPresenterType = Type.GetType("PlayerMudOverlay, Assembly-CSharp");
+    private static readonly Type MudStyleType = Type.GetType("PlayerMudOverlayStyleSO, Assembly-CSharp");
 
     [UnityTearDown]
     public IEnumerator CleanupNetworkFixture()
@@ -124,18 +126,57 @@ public sealed class PlayerMudStatusPlayModeTests
         Assert.That((float)profile.GetType().GetField("bucketPercentagePointsPerUnit").GetValue(profile), Is.EqualTo(15f));
         Assert.That((float)profile.GetType().GetField("waterRemovalPercentagePointsPerSecond").GetValue(profile), Is.EqualTo(10f));
         Assert.That((float)profile.GetType().GetField("maximumMovementPenalty").GetValue(profile), Is.EqualTo(0.3f));
-        Assert.That((float)profile.GetType().GetField("maximumAlpha").GetValue(profile), Is.EqualTo(0.6f));
+        Assert.That((float)profile.GetType().GetField("maximumAlpha").GetValue(profile), Is.EqualTo(1f));
         Assert.That(overlay, Is.Not.Null);
         Assert.That(overlay.interactable, Is.False);
         Assert.That(overlay.blocksRaycasts, Is.False);
+        Assert.That(overlay.gameObject.activeSelf, Is.False);
         Canvas canvas = overlay.GetComponent<Canvas>();
         Assert.That(canvas, Is.Not.Null);
         Assert.That(canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceOverlay));
-        Assert.That(canvas.sortingOrder, Is.LessThan(0));
-        Image image = overlay.GetComponentInChildren<Image>(true);
+        Assert.That(canvas.sortingOrder, Is.EqualTo(-100));
+        Transform textureTransform = overlay.transform.Find("Texture");
+        Image image = textureTransform.GetComponent<Image>();
         Assert.That(image, Is.Not.Null);
         Assert.That(image.raycastTarget, Is.False);
         Assert.That(image.sprite, Is.Not.Null);
+        Assert.That(image.type, Is.EqualTo(Image.Type.Simple));
+        Assert.That(image.preserveAspect, Is.False);
+        Assert.That(image.rectTransform.anchorMin, Is.EqualTo(Vector2.zero));
+        Assert.That(image.rectTransform.anchorMax, Is.EqualTo(Vector2.one));
+        Assert.That(image.rectTransform.offsetMin, Is.EqualTo(Vector2.zero));
+        Assert.That(image.rectTransform.offsetMax, Is.EqualTo(Vector2.zero));
+
+        Component presenter = overlay.GetComponent(MudPresenterType);
+        Assert.That(presenter, Is.Not.Null);
+        object style = MudPresenterType.GetField("style", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(presenter);
+        Assert.That(style, Is.Not.Null);
+        MethodInfo getAssetPath = Array.Find(assetDatabase.GetMethods(BindingFlags.Static | BindingFlags.Public), method =>
+            method.Name == "GetAssetPath" && method.GetParameters().Length == 1 &&
+            method.GetParameters()[0].ParameterType == typeof(UnityEngine.Object));
+        string stylePath = getAssetPath.Invoke(null, new[] { style }) as string;
+        Assert.That(stylePath, Is.EqualTo("Assets/Sprites/PlayerMudOverlay/MudPainterlyStyle.asset"));
+        object styleSprite = MudStyleType.GetField("mudTextureSprite", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(style);
+        object styleThreshold = MudStyleType.GetField("thresholdMap", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(style);
+        object styleDrip = MudStyleType.GetField("dripSprite", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(style);
+        Assert.That(styleSprite, Is.SameAs(image.sprite));
+        Assert.That(styleThreshold, Is.Not.Null);
+        Assert.That(styleDrip, Is.Not.Null);
+        Assert.That(MudPresenterType.GetField("mudTextureImage", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(presenter), Is.SameAs(image));
+        Shader overlayShader = (Shader)assetDatabase.GetMethod("LoadAssetAtPath", BindingFlags.Static | BindingFlags.Public,
+                null, new[] { typeof(string), typeof(Type) }, null)
+            .Invoke(null, new object[] { "Assets/Shaders/PlayerMudOverlay.shader", typeof(Shader) });
+        Assert.That(MudPresenterType.GetField("overlayShader", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(presenter), Is.SameAs(overlayShader));
+        Image dripImage = overlay.transform.Find("Drip").GetComponent<Image>();
+        Assert.That(dripImage, Is.Not.Null);
+        Assert.That(dripImage.gameObject.activeSelf, Is.False);
+        Assert.That(dripImage.raycastTarget, Is.False);
+        Assert.That(dripImage.preserveAspect, Is.True);
+        Assert.That(dripImage.sprite, Is.SameAs(styleDrip));
+        Assert.That(MudPresenterType.GetField("dripImage", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(presenter), Is.SameAs(dripImage));
     }
 
     [Test]
@@ -224,8 +265,9 @@ public sealed class PlayerMudStatusPlayModeTests
                 Is.EqualTo(0.85f).Within(0.0001f));
             Assert.That((float)StatusControllerType.GetProperty("MovementMultiplier").GetValue(owner.LocalClient.PlayerObject.GetComponent(StatusControllerType)),
                 Is.EqualTo(0.775f).Within(0.0001f));
-            Assert.That(GetOverlayAlpha(hostMud), Is.EqualTo(0.3f).Within(0.0001f));
-            Assert.That(GetOverlayAlpha(ownerLocalMud), Is.EqualTo(0.45f).Within(0.0001f));
+            Assert.That(GetOverlayAlpha(hostMud), Is.EqualTo(0.6f).Within(0.0001f),
+                "A configured local presenter uses maximum alpha while its shader reveals the mud amount.");
+            Assert.That(GetOverlayAlpha(ownerLocalMud), Is.EqualTo(0.6f).Within(0.0001f));
             Assert.That(GetOverlayAlpha(remoteHostMud), Is.Zero);
             Assert.That(GetOverlayAlpha(ownerServerMud), Is.Zero);
 
@@ -270,6 +312,7 @@ public sealed class PlayerMudStatusPlayModeTests
         overlayObject.transform.SetParent(prefab.transform, false);
         CanvasGroup overlay = overlayObject.AddComponent<CanvasGroup>();
         overlay.alpha = 0f; overlay.interactable = false; overlay.blocksRaycasts = false;
+        overlayObject.AddComponent(Type.GetType("PlayerMudOverlay, Assembly-CSharp"));
         MudControllerType.GetField("mudOverlay", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(mud, overlay);
         return prefab;
     }

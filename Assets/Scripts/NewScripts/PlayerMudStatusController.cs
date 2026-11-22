@@ -7,6 +7,7 @@ public sealed class PlayerMudStatusController : MonoBehaviour
 {
     [SerializeField] private PlayerStatusCatalogSO catalog;
     [SerializeField] private CanvasGroup mudOverlay;
+    private PlayerMudOverlay mudPresenter;
     [SerializeField, Min(0.02f)] private float sampleInterval = 0.1f;
     [SerializeField, Min(0f)] private float minimumMovement = 0.01f;
     [SerializeField, Min(0.1f)] private float maximumMovementPerSample = 1.5f;
@@ -43,6 +44,7 @@ public sealed class PlayerMudStatusController : MonoBehaviour
         TryGetComponent(out downedCarryable);
         TryGetComponent(out characterController);
         TryGetComponent(out clientTransform);
+        if (mudOverlay != null) mudPresenter = mudOverlay.GetComponent<PlayerMudOverlay>();
     }
 
     private void OnEnable()
@@ -125,14 +127,18 @@ public sealed class PlayerMudStatusController : MonoBehaviour
     private void RefreshMudOverlay()
     {
         if (mudOverlay == null) return;
+        if (mudPresenter == null) mudPresenter = mudOverlay.GetComponent<PlayerMudOverlay>();
         NetworkManager manager = GetNetworkManager();
         bool isSpawned = networkObject != null && networkObject.IsSpawned;
         bool localPresentation = isSpawned ? networkObject.IsOwner : manager == null || !manager.IsListening;
         float amount = localPresentation && statuses != null ? statuses.MudAmount : 0f;
-        mudOverlay.alpha = Mathf.Clamp01(Profile.maximumAlpha) * Mathf.Clamp01(amount);
         mudOverlay.interactable = false;
         mudOverlay.blocksRaycasts = false;
-        mudOverlay.gameObject.SetActive(localPresentation && amount > 0f);
+        float maximumAlpha = Mathf.Clamp01(Profile.maximumAlpha);
+        bool visible = localPresentation && amount > 0f;
+        mudOverlay.gameObject.SetActive(visible);
+        if (mudPresenter != null) mudPresenter.SetMudState(amount, localPresentation, maximumAlpha);
+        else mudOverlay.alpha = Mathf.Clamp01(maximumAlpha * amount);
     }
 
     private void HideMudOverlay()
@@ -140,6 +146,7 @@ public sealed class PlayerMudStatusController : MonoBehaviour
         if (mudOverlay == null) return;
         mudOverlay.alpha = 0f;
         mudOverlay.gameObject.SetActive(false);
+        if (mudPresenter != null) mudPresenter.SetMudState(0f, false, 0f);
     }
 
     public void AddTransferredLooseSoil(float units)

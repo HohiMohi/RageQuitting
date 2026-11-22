@@ -17,4 +17,4 @@ MonoBehaviour:
     bucketPercentagePointsPerUnit: 15
     waterRemovalPercentagePointsPerSecond: 10
     maximumMovementPenalty: 0.3
-    maximumAlpha: 0.6
+    maximumAlpha: 1
