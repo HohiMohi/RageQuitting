@@ -26,7 +26,7 @@ MonoBehaviour:
   followDurationMin: 8
   followDurationMax: 15
   followRefreshInterval: 0.25
-  followStoppingDistance: 1.5
+  followStoppingDistance: 5
   closeCombatAttack:
     name: Scout Strike
     weight: 1
@@ -65,7 +65,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   mudballCooldown: 45
-  mudballWindup: 0.4
+  mudballWindup: 0.7
   mudballMudGainPercentagePoints: 15
   mudballPrefab: {fileID: 5285383314786215500, guid: 1acf432c86783644c9cdf030aeb971db, type: 3}
   mudballImpulseProfile: {fileID: 11400000, guid: 0b09be85ced72ba4b9975b2ed5f3b1d1, type: 2}

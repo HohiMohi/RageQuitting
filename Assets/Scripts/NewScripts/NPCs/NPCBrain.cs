@@ -101,6 +101,8 @@ public class NPCBrain : NetworkBehaviour
             return;
         }
 
+        behaviorController?.TickFrame();
+
         float tickInterval = definition != null ? Mathf.Max(0.05f, definition.decisionTickInterval) : 0.2f;
         tickTimer -= Time.deltaTime;
         if (tickTimer > 0f)

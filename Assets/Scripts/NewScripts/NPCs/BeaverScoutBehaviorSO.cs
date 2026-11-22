@@ -118,6 +118,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
     private class BeaverScoutController : NPCBehaviorController
     {
+        private const float PretendStartAngle = 45f;
+        private const float PretendResumeAngle = 55f;
+        private const float PretendResumeGrace = 0.25f;
+        private const float FollowResumeDeadband = 0.5f;
+
         private enum SweepLocationKind
         {
             Storage,
@@ -132,6 +137,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         }
 
         private readonly BeaverScoutBehaviorSO config;
+        private readonly NavMeshPath followPath = new NavMeshPath();
         private Vector3 homePosition;
         private Vector3 patrolTarget;
         private GameObject targetObject;
@@ -140,7 +146,22 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private BaseResourceNew destructionTarget;
         private PlayerHealth followTargetPlayerHealth;
         private Transform followTargetTransform;
-        private readonly HashSet<ulong> encounteredPlayerIds = new HashSet<ulong>();
+        private enum PlayerVisitState
+        {
+            InitialVisit,
+            Outside,
+            ReturnReady,
+            ReturnAttempted
+        }
+
+        private sealed class PlayerVisitMemory
+        {
+            public Transform TargetTransform;
+            public PlayerVisitState State;
+        }
+
+        private readonly Dictionary<PlayerHealth, PlayerVisitMemory> playerVisitMemory =
+            new Dictionary<PlayerHealth, PlayerVisitMemory>();
         private readonly Dictionary<ulong, NPCStorageEncounterInfo> encounteredStorages = new Dictionary<ulong, NPCStorageEncounterInfo>();
         private readonly List<ulong> encounteredStorageOrder = new List<ulong>();
         private readonly Dictionary<ulong, NPCResourcePopulationZoneEncounterInfo> encounteredResourceZones =
@@ -153,8 +174,15 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private float noticeEndTime;
         private float followEndTime;
         private float nextFollowRefreshTime;
+        private float followRemainingWhenPretending;
+        private float gazeLossStartTime = float.NegativeInfinity;
+        private Quaternion pretendLookRotation;
+        private bool isPretendingToLookAway;
+        private bool isStoppedAtFollowDistance;
         private float previousStoppingDistance;
         private bool hasPreviousStoppingDistance;
+        private bool previousUpdateRotation;
+        private bool hasPreviousUpdateRotation;
         private float reactionLockEndTime;
         private float previousHealth;
         private NetworkObject lastAttacker;
@@ -193,6 +221,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         public override void Exit()
         {
+            ClearFollowTarget();
             if (mudballThrow != null)
                 mudballThrow.CancelWindup();
             if (Brain.Health != null)
@@ -224,6 +253,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
 
         public override void Tick()
         {
+            UpdatePlayerVisitMemory();
             if (mudballThrow != null && mudballThrow.IsWindingUp)
             {
                 StopAgent();
@@ -288,6 +318,19 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
         }
 
+        public override void TickFrame()
+        {
+            if (!isPretendingToLookAway || Brain.Agent == null || !Brain.Agent.isOnNavMesh)
+            {
+                return;
+            }
+
+            Brain.transform.rotation = Quaternion.RotateTowards(
+                Brain.transform.rotation,
+                pretendLookRotation,
+                Brain.Agent.angularSpeed * Time.deltaTime);
+        }
+
         private void BrainHealth_OnDamaged(object sender, NPCHealth.DamageEventArgs e)
         {
             if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && Brain.IsSpawned && !Brain.IsServer)
@@ -303,6 +346,11 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             if (e.CurrentHealth >= e.PreviousHealth || Brain.Health.IsDead)
             {
                 previousHealth = e.CurrentHealth;
+                if (Brain.Health.IsDead)
+                {
+                    StopAgent();
+                    ClearFollowTarget();
+                }
                 return;
             }
 
@@ -375,7 +423,6 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             ClearDestructionTarget();
             ClearStorageTarget();
             ClearFollowTarget();
-            RestoreAgentStoppingDistance();
             RegisterNearbyStorages();
             RegisterNearbyResourceZones();
             idleSearchEndTime = Time.time + config.IdleSearchDuration;
@@ -550,18 +597,15 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
         private bool TryFindAndEnterIdleTarget()
         {
             nextTargetRefreshTime = Time.time + config.TargetRefreshInterval;
-            bool preserveLegacyScan = mudballThrow != null && mudballThrow.ConsumeLegacyScanAfterWindup();
-            if (!preserveLegacyScan && TryBeginMudballThrow()) return true;
-            if (TryFindClosestUnencounteredPlayer(
-                out PlayerHealth playerHealth,
-                out Transform playerTransform,
-                out ulong playerId))
+            if (TryFindClosestUnencounteredPlayer(out PlayerHealth playerHealth, out Transform playerTransform))
             {
                 ResetConsecutivePatrolIdleCount();
                 ClearStorageSweep();
-                EnterNoticingPlayer(playerHealth, playerTransform, playerId);
+                EnterNoticingPlayer(playerHealth, playerTransform);
                 return true;
             }
+
+            if (TryBeginReturnVisitMudballThrow()) return true;
 
             ClearStorageTarget();
             targetObject = null;
@@ -608,19 +652,22 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             return false;
         }
 
-        private bool TryBeginMudballThrow()
+        private bool TryBeginReturnVisitMudballThrow()
         {
             if (!config.MudballThrowEnabled || mudballThrow == null || mudballThrow.IsWindingUp ||
                 Time.time < mudballThrow.NextThrowAt || config.MudballPrefab == null) return false;
 
             Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
             List<(PlayerHealth health, Transform target, float distance)> candidates = new List<(PlayerHealth, Transform, float)>();
-            HashSet<int> considered = new HashSet<int>();
+            HashSet<PlayerHealth> considered = new HashSet<PlayerHealth>();
             foreach (Collider collider in colliders)
             {
                 GameObject candidate = collider.attachedRigidbody != null ? collider.attachedRigidbody.gameObject : collider.gameObject;
-                if (!TryGetPlayerTarget(candidate, out PlayerHealth health, out Transform targetTransform, out _)) continue;
-                if (!considered.Add(health.GetInstanceID()) || !mudballThrow.CanTarget(health, targetTransform,
+                if (!TryGetPlayerTarget(candidate, out PlayerHealth health, out Transform targetTransform)) continue;
+                if (!considered.Add(health) || !playerVisitMemory.TryGetValue(health, out PlayerVisitMemory memory) ||
+                    memory.State != PlayerVisitState.ReturnReady ||
+                    (targetTransform.position - Brain.transform.position).sqrMagnitude > Brain.DetectionRadius * Brain.DetectionRadius ||
+                    !mudballThrow.CanTarget(health, targetTransform,
                         config.MudballThrowRange, config.MudballRequireLineOfSight, config.MudballLineOfSightMask)) continue;
                 float distance = (targetTransform.position - Brain.transform.position).sqrMagnitude;
                 candidates.Add((health, targetTransform, distance));
@@ -633,7 +680,12 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                         config.MudballThrowRange, config.MudballRequireLineOfSight, config.MudballLineOfSightMask,
                         config.MudballWindup, config.MudballCooldown, config.MudballPrefab,
                         config.MudballMudGainPercentagePoints, config.MudballImpulseProfile,
-                        IsMudballScanContextValid)) return true;
+                        IsMudballScanContextValid))
+                {
+                    if (playerVisitMemory.TryGetValue(candidate.health, out PlayerVisitMemory selectedMemory))
+                        selectedMemory.State = PlayerVisitState.ReturnAttempted;
+                    return true;
+                }
             }
             return false;
         }
@@ -646,7 +698,51 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             return zone != null && zone.isActiveAndEnabled;
         }
 
-        private void EnterNoticingPlayer(PlayerHealth playerHealth, Transform playerTransform, ulong playerId)
+        private void UpdatePlayerVisitMemory()
+        {
+            List<PlayerHealth> stalePlayers = null;
+            foreach (KeyValuePair<PlayerHealth, PlayerVisitMemory> pair in playerVisitMemory)
+            {
+                PlayerHealth health = pair.Key;
+                Transform trackedTransform = pair.Value.TargetTransform;
+                if (trackedTransform == null) trackedTransform = ResolvePlayerVisitTransform(health);
+                if (health == null || trackedTransform == null ||
+                    NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening &&
+                    health.NetworkObject != null && !health.NetworkObject.IsSpawned)
+                {
+                    stalePlayers ??= new List<PlayerHealth>();
+                    stalePlayers.Add(health);
+                    continue;
+                }
+
+                pair.Value.TargetTransform = trackedTransform;
+                bool isWithinRange = (trackedTransform.position - Brain.transform.position).sqrMagnitude <=
+                                     Brain.DetectionRadius * Brain.DetectionRadius;
+                if (isWithinRange && pair.Value.State == PlayerVisitState.Outside)
+                    pair.Value.State = PlayerVisitState.ReturnReady;
+                else if (!isWithinRange && pair.Value.State != PlayerVisitState.Outside)
+                    pair.Value.State = PlayerVisitState.Outside;
+            }
+
+            if (stalePlayers != null)
+            {
+                foreach (PlayerHealth stalePlayer in stalePlayers)
+                {
+                    playerVisitMemory.Remove(stalePlayer);
+                }
+            }
+
+        }
+
+        private static Transform ResolvePlayerVisitTransform(PlayerHealth health)
+        {
+            if (health == null) return null;
+            NPCFactionMember factionMember = health.GetComponent<NPCFactionMember>();
+            if (factionMember == null) factionMember = health.GetComponentInParent<NPCFactionMember>();
+            return factionMember != null ? factionMember.TargetTransform : health.transform;
+        }
+
+        private void EnterNoticingPlayer(PlayerHealth playerHealth, Transform playerTransform)
         {
             StopAgent();
             RestoreAgentStoppingDistance();
@@ -654,7 +750,16 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             targetObject = null;
             followTargetPlayerHealth = playerHealth;
             followTargetTransform = playerTransform;
-            encounteredPlayerIds.Add(playerId);
+            if (playerHealth != null)
+            {
+                if (!playerVisitMemory.TryGetValue(playerHealth, out PlayerVisitMemory memory))
+                {
+                    memory = new PlayerVisitMemory { State = PlayerVisitState.InitialVisit };
+                    playerVisitMemory.Add(playerHealth, memory);
+                }
+
+                memory.TargetTransform = playerTransform;
+            }
             noticeEndTime = Time.time + config.NoticePlayerLockDuration;
             state = ScoutState.NoticingPlayer;
 
@@ -696,16 +801,29 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             ResetConsecutivePatrolIdleCount();
             followEndTime = Time.time + Random.Range(config.FollowDurationMin, config.FollowDurationMax);
             nextFollowRefreshTime = 0f;
-            ResumeAgent();
-            SetFollowStoppingDistance();
-            Brain.Agent.SetDestination(followTargetTransform.position);
+            gazeLossStartTime = float.NegativeInfinity;
+            isStoppedAtFollowDistance = false;
+            UpdateFollowingPlayer();
         }
 
         private void UpdateFollowingPlayer()
         {
-            if (Time.time >= followEndTime || !IsFollowTargetAvailable())
+            if ((!isPretendingToLookAway && Time.time >= followEndTime) || !IsFollowTargetAvailable())
             {
                 EnterIdleSearching();
+                return;
+            }
+
+            if (isPretendingToLookAway)
+            {
+                UpdatePretendLookAway();
+                return;
+            }
+
+            if (TryGetGazeObservation(out float horizontalAngle, out float targetDistance) &&
+                targetDistance <= Brain.DetectionRadius && horizontalAngle <= PretendStartAngle)
+            {
+                BeginPretendingToLookAway();
                 return;
             }
 
@@ -715,9 +833,224 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             }
 
             nextFollowRefreshTime = Time.time + config.FollowRefreshInterval;
-            ResumeAgent();
+            UpdateFollowMovement();
+        }
+
+        private void UpdateFollowMovement()
+        {
             SetFollowStoppingDistance();
-            Brain.Agent.SetDestination(followTargetTransform.position);
+            float distance = GetFollowTargetDistance();
+            if (isStoppedAtFollowDistance)
+            {
+                if (distance < config.FollowStoppingDistance + FollowResumeDeadband)
+                {
+                    StopAgent();
+                    return;
+                }
+
+                isStoppedAtFollowDistance = false;
+            }
+
+            if (distance <= config.FollowStoppingDistance)
+            {
+                isStoppedAtFollowDistance = true;
+                StopAgent();
+                return;
+            }
+
+            ResumeAgent();
+            RefreshFollowDestination();
+        }
+
+        private void RefreshFollowDestination()
+        {
+            if (Brain.Agent == null || !Brain.Agent.isOnNavMesh || followTargetTransform == null)
+            {
+                StopAgent();
+                return;
+            }
+
+            if (!Brain.Agent.CalculatePath(followTargetTransform.position, followPath) ||
+                followPath.status != NavMeshPathStatus.PathComplete || !Brain.Agent.SetPath(followPath))
+            {
+                StopAgent();
+            }
+        }
+
+        private float GetFollowTargetDistance()
+        {
+            return followTargetTransform != null
+                ? Vector3.Distance(Brain.transform.position, followTargetTransform.position)
+                : float.PositiveInfinity;
+        }
+
+        private void BeginPretendingToLookAway()
+        {
+            if (isPretendingToLookAway)
+            {
+                return;
+            }
+
+            followRemainingWhenPretending = Mathf.Max(0f, followEndTime - Time.time);
+            isPretendingToLookAway = true;
+            gazeLossStartTime = float.NegativeInfinity;
+            if (Brain.Agent != null && Brain.Agent.isOnNavMesh)
+            {
+                if (!hasPreviousUpdateRotation)
+                {
+                    previousUpdateRotation = Brain.Agent.updateRotation;
+                    hasPreviousUpdateRotation = true;
+                }
+
+                Brain.Agent.updateRotation = false;
+            }
+
+            Vector3 toPlayer = followTargetTransform.position - Brain.transform.position;
+            toPlayer.y = 0f;
+            if (toPlayer.sqrMagnitude < 0.0001f)
+            {
+                toPlayer = Brain.transform.forward;
+                toPlayer.y = 0f;
+            }
+
+            float leftYaw = Mathf.Atan2(toPlayer.x, toPlayer.z) * Mathf.Rad2Deg - 90f;
+            float rightYaw = Mathf.Atan2(toPlayer.x, toPlayer.z) * Mathf.Rad2Deg + 90f;
+            float currentYaw = Brain.transform.eulerAngles.y;
+            float leftDelta = Mathf.Abs(Mathf.DeltaAngle(currentYaw, leftYaw));
+            float rightDelta = Mathf.Abs(Mathf.DeltaAngle(currentYaw, rightYaw));
+            float chosenYaw = leftDelta < rightDelta ? leftYaw : rightYaw;
+            pretendLookRotation = Quaternion.Euler(0f, chosenYaw, 0f);
+            StopAgent();
+        }
+
+        private void UpdatePretendLookAway()
+        {
+            if (TryGetGazeObservation(out float horizontalAngle, out float targetDistance) &&
+                targetDistance <= Brain.DetectionRadius && horizontalAngle <= PretendResumeAngle)
+            {
+                gazeLossStartTime = float.NegativeInfinity;
+                return;
+            }
+
+            if (float.IsNegativeInfinity(gazeLossStartTime))
+            {
+                gazeLossStartTime = Time.time;
+            }
+
+            if (Time.time - gazeLossStartTime >= PretendResumeGrace)
+            {
+                StopPretendingToLookAway(true);
+            }
+        }
+
+        private void StopPretendingToLookAway(bool resumeFollowing)
+        {
+            if (!isPretendingToLookAway)
+            {
+                return;
+            }
+
+            isPretendingToLookAway = false;
+            gazeLossStartTime = float.NegativeInfinity;
+            if (resumeFollowing)
+            {
+                RestoreAgentUpdateRotation();
+            }
+
+            if (resumeFollowing && state == ScoutState.FollowingPlayer)
+            {
+                followEndTime = Time.time + followRemainingWhenPretending;
+                followRemainingWhenPretending = 0f;
+                nextFollowRefreshTime = 0f;
+                if (IsFollowTargetAvailable())
+                {
+                    UpdateFollowMovement();
+                }
+            }
+            else
+            {
+                followRemainingWhenPretending = 0f;
+            }
+        }
+
+        private bool TryGetGazeObservation(out float horizontalAngle, out float targetDistance)
+        {
+            horizontalAngle = 180f;
+            targetDistance = float.PositiveInfinity;
+            if (followTargetPlayerHealth == null || followTargetTransform == null || !IsFollowTargetAvailable())
+            {
+                return false;
+            }
+
+            Vector3 playerPosition = followTargetTransform.position;
+            Quaternion playerRotation = followTargetTransform.rotation;
+            ClientNetworkTransform networkTransform = followTargetTransform.GetComponent<ClientNetworkTransform>();
+            if (networkTransform == null)
+            {
+                networkTransform = followTargetTransform.GetComponentInParent<ClientNetworkTransform>();
+            }
+            if (networkTransform != null && networkTransform.TryGetLatestAuthoritativeWorldPose(
+                    out Vector3 authoritativePosition, out Quaternion authoritativeRotation))
+            {
+                playerPosition = authoritativePosition;
+                playerRotation = authoritativeRotation;
+            }
+
+            Vector3 toScout = Brain.transform.position - playerPosition;
+            toScout.y = 0f;
+            Vector3 bodyForward = playerRotation * Vector3.forward;
+            bodyForward.y = 0f;
+            if (toScout.sqrMagnitude < 0.0001f || bodyForward.sqrMagnitude < 0.0001f)
+            {
+                return false;
+            }
+
+            targetDistance = Vector3.Distance(playerPosition, Brain.transform.position);
+            horizontalAngle = Vector3.Angle(bodyForward.normalized, toScout.normalized);
+            if (targetDistance > Brain.DetectionRadius || horizontalAngle > PretendResumeAngle)
+            {
+                return false;
+            }
+
+            Vector3 eye = playerPosition + Vector3.up * GetPlayerEyeHeight(followTargetTransform);
+            Vector3 scoutCenter = GetScoutCapsuleCenter();
+            Vector3 sight = scoutCenter - eye;
+            float sightDistance = sight.magnitude;
+            if (sightDistance <= 0.001f)
+            {
+                return true;
+            }
+
+            RaycastHit[] hits = Physics.RaycastAll(eye, sight / sightDistance, sightDistance,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            foreach (RaycastHit hit in hits)
+            {
+                Transform hitTransform = hit.collider.transform;
+                if (hitTransform == followTargetPlayerHealth.transform || hitTransform.IsChildOf(followTargetPlayerHealth.transform) ||
+                    followTargetTransform.IsChildOf(hitTransform) ||
+                    hitTransform == Brain.transform || hitTransform.IsChildOf(Brain.transform))
+                {
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private static float GetPlayerEyeHeight(Transform player)
+        {
+            CharacterController controller = player.GetComponent<CharacterController>();
+            if (controller == null) controller = player.GetComponentInChildren<CharacterController>();
+            return controller != null ? Mathf.Max(0.1f, controller.height * 0.9f) : 1.5f;
+        }
+
+        private Vector3 GetScoutCapsuleCenter()
+        {
+            CapsuleCollider capsule = Brain.GetComponent<CapsuleCollider>();
+            return capsule != null ? capsule.bounds.center : Brain.transform.position + Vector3.up;
         }
 
         private void EnterMovingToPatrolPoint()
@@ -1282,9 +1615,9 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 return;
             }
 
-            Brain.Agent.isStopped = true;
             Brain.Agent.ResetPath();
             Brain.Agent.velocity = Vector3.zero;
+            Brain.Agent.isStopped = true;
         }
 
         private void ResumeAgent()
@@ -1323,6 +1656,21 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             Brain.Agent.stoppingDistance = previousStoppingDistance;
             previousStoppingDistance = 0f;
             hasPreviousStoppingDistance = false;
+        }
+
+        private void RestoreAgentFollowingSettings()
+        {
+            RestoreAgentStoppingDistance();
+            RestoreAgentUpdateRotation();
+        }
+
+        private void RestoreAgentUpdateRotation()
+        {
+            if (Brain.Agent != null && hasPreviousUpdateRotation)
+            {
+                Brain.Agent.updateRotation = previousUpdateRotation;
+                hasPreviousUpdateRotation = false;
+            }
         }
 
         private GameObject FindClosestStealableObject()
@@ -1603,11 +1951,10 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             return storage != null ? storage.StorableBaseResources : null;
         }
 
-        private bool TryFindClosestUnencounteredPlayer(out PlayerHealth playerHealth, out Transform playerTransform, out ulong playerId)
+        private bool TryFindClosestUnencounteredPlayer(out PlayerHealth playerHealth, out Transform playerTransform)
         {
             playerHealth = null;
             playerTransform = null;
-            playerId = 0;
 
             Collider[] colliders = Physics.OverlapSphere(Brain.transform.position, Brain.DetectionRadius);
             float closestDistance = float.MaxValue;
@@ -1615,23 +1962,22 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             foreach (Collider collider in colliders)
             {
                 GameObject candidate = collider.attachedRigidbody != null ? collider.attachedRigidbody.gameObject : collider.gameObject;
-                if (!TryGetPlayerTarget(candidate, out PlayerHealth candidateHealth, out Transform candidateTransform, out ulong candidateId))
+                if (!TryGetPlayerTarget(candidate, out PlayerHealth candidateHealth, out Transform candidateTransform))
                 {
                     continue;
                 }
 
-                if (encounteredPlayerIds.Contains(candidateId))
+                if (playerVisitMemory.ContainsKey(candidateHealth))
                 {
                     continue;
                 }
 
                 float distance = Vector3.Distance(Brain.transform.position, candidateTransform.position);
-                if (distance < closestDistance)
+                if (distance <= Brain.DetectionRadius && distance < closestDistance)
                 {
                     closestDistance = distance;
                     playerHealth = candidateHealth;
                     playerTransform = candidateTransform;
-                    playerId = candidateId;
                 }
             }
 
@@ -1644,7 +1990,7 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             foreach (Collider collider in colliders)
             {
                 GameObject candidate = collider.attachedRigidbody != null ? collider.attachedRigidbody.gameObject : collider.gameObject;
-                if (TryGetPlayerTarget(candidate, out _, out _, out _))
+                if (TryGetPlayerTarget(candidate, out _, out _))
                 {
                     return true;
                 }
@@ -1653,11 +1999,10 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             return false;
         }
 
-        private bool TryGetPlayerTarget(GameObject candidate, out PlayerHealth playerHealth, out Transform playerTransform, out ulong playerId)
+        private bool TryGetPlayerTarget(GameObject candidate, out PlayerHealth playerHealth, out Transform playerTransform)
         {
             playerHealth = null;
             playerTransform = null;
-            playerId = 0;
 
             if (candidate == null || candidate.transform.root == Brain.transform.root)
             {
@@ -1687,15 +2032,6 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
             if (playerTransform == null)
             {
                 return false;
-            }
-
-            if (playerHealth.NetworkObject != null && playerHealth.NetworkObject.IsSpawned)
-            {
-                playerId = playerHealth.NetworkObject.NetworkObjectId;
-            }
-            else
-            {
-                playerId = (ulong)playerHealth.GetInstanceID();
             }
 
             return true;
@@ -1728,11 +2064,20 @@ public class BeaverScoutBehaviorSO : NPCBehaviorSO
                 return false;
             }
 
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening &&
+                followTargetPlayerHealth.NetworkObject != null && !followTargetPlayerHealth.NetworkObject.IsSpawned)
+            {
+                return false;
+            }
+
             return followTargetPlayerHealth.gameObject.activeInHierarchy;
         }
 
         private void ClearFollowTarget()
         {
+            StopPretendingToLookAway(false);
+            RestoreAgentFollowingSettings();
+            isStoppedAtFollowDistance = false;
             followTargetPlayerHealth = null;
             followTargetTransform = null;
         }

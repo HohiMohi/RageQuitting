@@ -25,7 +25,7 @@ public sealed class BeaverScoutMudballEditModeTests
         Assert.That(GetField<Transform>(thrower, "releasePoint"), Is.Not.Null);
         Assert.That(GetField<float>(behavior, "mudballThrowRange"), Is.EqualTo(10f));
         Assert.That(GetField<float>(behavior, "mudballCooldown"), Is.EqualTo(45f));
-        Assert.That(GetField<float>(behavior, "mudballWindup"), Is.EqualTo(0.4f));
+        Assert.That(GetField<float>(behavior, "mudballWindup"), Is.EqualTo(0.7f));
         Assert.That(GetField<float>(behavior, "mudballMudGainPercentagePoints"), Is.EqualTo(15f));
         Type mudballType = Type.GetType("BeaverScoutMudball, Assembly-CSharp");
         Assert.That(GetField<UnityEngine.Object>(behavior, "mudballPrefab"), Is.EqualTo(

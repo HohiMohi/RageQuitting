@@ -39,6 +39,13 @@ public struct NPCAnimationTriggerEvent : INetworkSerializable, System.IEquatable
 
 public class NPCAnimationController : NetworkBehaviour
 {
+    private enum OneShotPriority
+    {
+        Normal,
+        ScopedWindup,
+        HitReaction
+    }
+
     public const float MinimumOneShotBlendDuration = 0.01f;
     public const float MaximumOneShotBlendDuration = 1f;
 
@@ -88,6 +95,13 @@ public class NPCAnimationController : NetworkBehaviour
     private float activeOneShotDuration;
     private float oneShotElapsedTime;
     private float oneShotStartWeight;
+    private int nextScopedOneShotToken;
+    private int activeScopedOneShotToken;
+    private OneShotPriority activeOneShotPriority;
+    private bool scopedFadeActive;
+    private float scopedFadeElapsed;
+    private float scopedFadeDuration;
+    private float scopedFadeStartWeight;
     private bool hasPlayableGraph;
 
     private bool IsNetworkSessionActive => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
@@ -110,6 +124,33 @@ public class NPCAnimationController : NetworkBehaviour
     public void PlayHitReaction()
     {
         PlayTrigger(NPCAnimationTrigger.HitReaction);
+    }
+
+    public int PlayScopedOneShot(AnimationClip clip, float playbackSpeed = 1f, float startOffset = 0f)
+    {
+        if (activeOneShotPriority == OneShotPriority.HitReaction && oneShotTimer > 0f)
+        {
+            return 0;
+        }
+
+        int token = ++nextScopedOneShotToken;
+        if (token == 0) token = ++nextScopedOneShotToken;
+        PlayOneShot(clip, playbackSpeed, token, OneShotPriority.ScopedWindup, startOffset);
+        return hasPlayableGraph && clip != null ? token : 0;
+    }
+
+    public void StopScopedOneShot(int token)
+    {
+        if (token == 0 || token != activeScopedOneShotToken || oneShotTimer <= 0f || scopedFadeActive)
+        {
+            return;
+        }
+
+        scopedFadeActive = true;
+        scopedFadeElapsed = 0f;
+        scopedFadeDuration = Mathf.Max(MinimumOneShotBlendDuration, oneShotBlendOutDuration);
+        scopedFadeStartWeight = Mathf.Clamp01(rootMixer.GetInputWeight(1));
+        oneShotTimer = scopedFadeDuration;
     }
 
     public void SetExternalMovementSpeedNormalized(float normalizedSpeed)
@@ -331,7 +372,10 @@ public class NPCAnimationController : NetworkBehaviour
         AnimationClip clip = GetTriggerClip(trigger);
         if (clip != null)
         {
-            PlayOneShot(clip, playbackSpeed);
+            OneShotPriority priority = trigger == NPCAnimationTrigger.HitReaction
+                ? OneShotPriority.HitReaction
+                : OneShotPriority.Normal;
+            PlayOneShot(clip, playbackSpeed, 0, priority, 0f);
             return;
         }
     }
@@ -430,7 +474,24 @@ public class NPCAnimationController : NetworkBehaviour
             locomotionMixer.SetInputWeight(1, walkWeight);
         }
 
-        if (oneShotTimer > 0f)
+        if (scopedFadeActive)
+        {
+            scopedFadeElapsed = Mathf.Min(scopedFadeDuration, scopedFadeElapsed + Time.deltaTime);
+            oneShotTimer = Mathf.Max(0f, scopedFadeDuration - scopedFadeElapsed);
+            float progress = scopedFadeDuration > 0f ? scopedFadeElapsed / scopedFadeDuration : 1f;
+            float weight = scopedFadeStartWeight * (1f - Mathf.SmoothStep(0f, 1f, progress));
+            rootMixer.SetInputWeight(0, 1f - weight);
+            rootMixer.SetInputWeight(1, weight);
+            if (oneShotTimer > 0f)
+            {
+                return;
+            }
+
+            scopedFadeActive = false;
+            activeScopedOneShotToken = 0;
+            activeOneShotPriority = OneShotPriority.Normal;
+        }
+        else if (oneShotTimer > 0f)
         {
             oneShotElapsedTime = Mathf.Min(activeOneShotDuration, oneShotElapsedTime + Time.deltaTime);
             oneShotTimer = Mathf.Max(0f, activeOneShotDuration - oneShotElapsedTime);
@@ -445,6 +506,8 @@ public class NPCAnimationController : NetworkBehaviour
             return;
         }
 
+        activeScopedOneShotToken = 0;
+        activeOneShotPriority = OneShotPriority.Normal;
         rootMixer.SetInputWeight(0, 1f);
         rootMixer.SetInputWeight(1, 0f);
     }
@@ -512,7 +575,7 @@ public class NPCAnimationController : NetworkBehaviour
         playable.SetTime(time % clip.length);
     }
 
-    private void PlayOneShot(AnimationClip clip, float playbackSpeed)
+    private void PlayOneShot(AnimationClip clip, float playbackSpeed, int scopedToken, OneShotPriority priority, float startOffset)
     {
         EnsurePlayableGraph();
         if (!hasPlayableGraph || clip == null)
@@ -531,13 +594,16 @@ public class NPCAnimationController : NetworkBehaviour
 
         float speed = NPCActionTiming.ClampPlaybackSpeed(playbackSpeed);
         activeOneShotDuration = clip.length / speed;
-        oneShotTimer = activeOneShotDuration;
-        oneShotElapsedTime = 0f;
+        oneShotElapsedTime = Mathf.Clamp(startOffset, 0f, Mathf.Max(0f, activeOneShotDuration - MinimumOneShotBlendDuration));
+        oneShotTimer = Mathf.Max(0f, activeOneShotDuration - oneShotElapsedTime);
+        scopedFadeActive = false;
         oneShotStartWeight = currentWeight;
+        activeScopedOneShotToken = scopedToken;
+        activeOneShotPriority = priority;
         oneShotPlayable = AnimationClipPlayable.Create(playableGraph, clip);
         oneShotPlayable.SetApplyFootIK(false);
         oneShotPlayable.SetSpeed(speed);
-        oneShotPlayable.SetTime(0d);
+        oneShotPlayable.SetTime(oneShotElapsedTime * speed);
         playableGraph.Connect(oneShotPlayable, 0, rootMixer, 1);
         rootMixer.SetInputWeight(0, 1f - currentWeight);
         rootMixer.SetInputWeight(1, currentWeight);
@@ -562,5 +628,9 @@ public class NPCAnimationController : NetworkBehaviour
 
         playableGraph.Destroy();
         hasPlayableGraph = false;
+        activeScopedOneShotToken = 0;
+        activeOneShotPriority = OneShotPriority.Normal;
+        scopedFadeActive = false;
+        oneShotTimer = 0f;
     }
 }

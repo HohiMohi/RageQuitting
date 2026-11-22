@@ -3,11 +3,37 @@ using UnityEngine;
 using UnityEngine.AI;
 using System;
 
+public struct BeaverScoutWindupPresentationState : INetworkSerializable, IEquatable<BeaverScoutWindupPresentationState>
+{
+    public double StartServerTime;
+    public double EndServerTime;
+    public int Sequence;
+
+    public bool IsActive => EndServerTime > StartServerTime;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref StartServerTime);
+        serializer.SerializeValue(ref EndServerTime);
+        serializer.SerializeValue(ref Sequence);
+    }
+
+    public bool Equals(BeaverScoutWindupPresentationState other)
+    {
+        return StartServerTime.Equals(other.StartServerTime)
+            && EndServerTime.Equals(other.EndServerTime)
+            && Sequence == other.Sequence;
+    }
+}
+
 /// <summary>Server-only windup and release logic for a Beaver Scout mudball.</summary>
 [DisallowMultipleComponent]
-public sealed class BeaverScoutMudThrow : MonoBehaviour
+public sealed class BeaverScoutMudThrow : NetworkBehaviour
 {
     [SerializeField] private Transform releasePoint;
+    [SerializeField] private AnimationClip windupAnimationClip;
+    [SerializeField] private AudioSource windupAudioSource;
+    [SerializeField] private AudioClip windupCue;
     [SerializeField, Min(0.05f)] private float horizontalSpeed = 12f;
     [SerializeField, Min(0.05f)] private float minimumFlightTime = 0.25f;
     [SerializeField, Min(0.05f)] private float projectileLifetime = 3f;
@@ -27,17 +53,19 @@ public sealed class BeaverScoutMudThrow : MonoBehaviour
     private float mudGainPercentagePoints;
     private ExternalImpulseProfileSO impulseProfile;
     private Func<bool> scanContextValid;
-    private bool needsLegacyScanAfterWindup;
+    private readonly NetworkVariable<BeaverScoutWindupPresentationState> windupPresentationNetwork =
+        new NetworkVariable<BeaverScoutWindupPresentationState>(
+            default,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+    private NPCAnimationController animationController;
+    private int nextLocalPresentationSequence;
+    private int activeAnimationToken;
+    private int lastPresentedSequence;
+    private bool hasActivePresentation;
 
     public bool IsWindingUp => windingUp;
     public float NextThrowAt => nextThrowAt;
-
-    public bool ConsumeLegacyScanAfterWindup()
-    {
-        if (!needsLegacyScanAfterWindup) return false;
-        needsLegacyScanAfterWindup = false;
-        return true;
-    }
 
     public bool CanTarget(PlayerHealth target, Transform targetTransform, float range, bool lineOfSight, LayerMask mask)
     {
@@ -46,8 +74,35 @@ public sealed class BeaverScoutMudThrow : MonoBehaviour
 
     private void Awake()
     {
-        TryGetComponent(out brain);
-        TryGetComponent(out agent);
+        CacheReferences();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        CacheReferences();
+        windupPresentationNetwork.OnValueChanged += WindupPresentationNetwork_OnValueChanged;
+        ApplyWindupPresentation(windupPresentationNetwork.Value, false);
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        windupPresentationNetwork.OnValueChanged -= WindupPresentationNetwork_OnValueChanged;
+        if (IsServer && windingUp)
+        {
+            CancelWindup();
+        }
+        else
+        {
+            StopWindupPresentation();
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (IsNetworkSessionActive)
+        {
+            ApplyWindupPresentation(windupPresentationNetwork.Value, false);
+        }
     }
 
     private void OnDisable() => CancelWindup();
@@ -114,16 +169,17 @@ public sealed class BeaverScoutMudThrow : MonoBehaviour
             agent.ResetPath();
         }
         FaceTarget(targetTransform.position);
+        BeginWindupPresentation(windupDuration);
         return true;
     }
 
     public void CancelWindup()
     {
-        if (windingUp) needsLegacyScanAfterWindup = true;
         windingUp = false;
         lockedTarget = null;
         lockedTargetTransform = null;
         scanContextValid = null;
+        ClearWindupPresentation();
     }
 
     private bool TryLaunch(PlayerHealth target, Transform targetTransform)
@@ -194,10 +250,131 @@ public sealed class BeaverScoutMudThrow : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), 720f * Time.deltaTime);
     }
 
+    private void CacheReferences()
+    {
+        if (brain == null) TryGetComponent(out brain);
+        if (agent == null) TryGetComponent(out agent);
+        if (animationController == null) TryGetComponent(out animationController);
+    }
+
+    private void BeginWindupPresentation(float duration)
+    {
+        double startTime = GetPresentationTime();
+        if (IsNetworkSessionActive)
+        {
+            if (!IsServer) return;
+            BeaverScoutWindupPresentationState current = windupPresentationNetwork.Value;
+            BeaverScoutWindupPresentationState next = new BeaverScoutWindupPresentationState
+            {
+                StartServerTime = startTime,
+                EndServerTime = startTime + Mathf.Max(0.01f, duration),
+                Sequence = current.Sequence + 1
+            };
+            windupPresentationNetwork.Value = next;
+            ApplyWindupPresentation(next, true);
+            return;
+        }
+
+        BeaverScoutWindupPresentationState localPresentation = new BeaverScoutWindupPresentationState
+        {
+            StartServerTime = startTime,
+            EndServerTime = startTime + Mathf.Max(0.01f, duration),
+            Sequence = ++nextLocalPresentationSequence
+        };
+        ApplyWindupPresentation(localPresentation, true);
+    }
+
+    private void ClearWindupPresentation()
+    {
+        if (IsNetworkSessionActive && IsServer)
+        {
+            BeaverScoutWindupPresentationState current = windupPresentationNetwork.Value;
+            if (current.IsActive)
+            {
+                windupPresentationNetwork.Value = new BeaverScoutWindupPresentationState { Sequence = current.Sequence };
+            }
+        }
+        else if (!IsNetworkSessionActive)
+        {
+            nextLocalPresentationSequence++;
+        }
+
+        StopWindupPresentation();
+    }
+
+    private void WindupPresentationNetwork_OnValueChanged(
+        BeaverScoutWindupPresentationState previous,
+        BeaverScoutWindupPresentationState current)
+    {
+        ApplyWindupPresentation(current, current.IsActive);
+    }
+
+    private void ApplyWindupPresentation(BeaverScoutWindupPresentationState state, bool playCue)
+    {
+        if (!state.IsActive)
+        {
+            StopWindupPresentation();
+            return;
+        }
+
+        if (hasActivePresentation && state.Sequence == lastPresentedSequence)
+        {
+            return;
+        }
+
+        double now = GetPresentationTime();
+        float elapsed = Mathf.Max(0f, (float)(now - state.StartServerTime));
+        float phaseDuration = Mathf.Max(0.01f, (float)(state.EndServerTime - state.StartServerTime));
+        float animationSpeed = windupAnimationClip != null
+            ? NPCActionTiming.ClampPlaybackSpeed(windupAnimationClip.length / phaseDuration)
+            : 1f;
+        if (now >= state.EndServerTime)
+        {
+            StopWindupPresentation();
+            return;
+        }
+
+        CacheReferences();
+        hasActivePresentation = true;
+        lastPresentedSequence = state.Sequence;
+        activeAnimationToken = animationController != null && windupAnimationClip != null
+            ? animationController.PlayScopedOneShot(windupAnimationClip, animationSpeed, elapsed)
+            : 0;
+
+        if (playCue && windupAudioSource != null && windupCue != null)
+        {
+            windupAudioSource.Stop();
+            windupAudioSource.clip = windupCue;
+            windupAudioSource.Play();
+        }
+    }
+
+    private void StopWindupPresentation()
+    {
+        if (activeAnimationToken != 0 && animationController != null)
+        {
+            animationController.StopScopedOneShot(activeAnimationToken);
+        }
+
+        activeAnimationToken = 0;
+        hasActivePresentation = false;
+        if (windupAudioSource != null && windupAudioSource.isPlaying)
+        {
+            windupAudioSource.Stop();
+        }
+    }
+
+    private bool IsNetworkSessionActive => IsSpawned && NetworkManager != null && NetworkManager.IsListening;
+
+    private double GetPresentationTime()
+    {
+        return IsNetworkSessionActive ? NetworkManager.ServerTime.Time : Time.timeAsDouble;
+    }
+
     private bool IsServerAuthority()
     {
         TryGetComponent(out NetworkObject netObject);
-        return NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening ||
+        return NetworkManager == null || !NetworkManager.IsListening ||
                brain != null && brain.IsSpawned && brain.IsServer && netObject != null && netObject.IsSpawned;
     }
 }
