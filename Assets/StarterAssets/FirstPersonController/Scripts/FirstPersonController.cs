@@ -105,6 +105,7 @@ namespace StarterAssets
 		private float _mostNegativeAirVelocity;
 		private float _footstepDistanceAccumulator;
 		private bool _isSprinting = false;
+		private bool _sprintBlockedUntilNewPress;
 		private bool _isJumpPerformed = false;
 		private float _verticalVelocity;
 		private float _terminalVelocity = 53.0f;
@@ -167,7 +168,8 @@ namespace StarterAssets
 		public Vector3 HorizontalVelocity => _horizontalVelocity;
 		public float HorizontalSpeed => _horizontalVelocity.magnitude;
 		public bool IsSprinting => _isSprinting
-			&& _currentStamina > 0f
+			&& !_sprintBlockedUntilNewPress
+			&& CurrentStamina > 0f
 			&& !IsDowned()
 			&& (_playerActionController == null || (!_playerActionController.IsActionInProgress
 				&& !_playerActionController.IsCrowbarExtractionActiveOrPending));
@@ -222,6 +224,8 @@ namespace StarterAssets
 			}
 			_downedPlayerCarryable = GetComponent<DownedPlayerCarryable>();
 			_staminaController = GetComponent<PlayerStaminaController>();
+			if (_staminaController != null)
+				_staminaController.OnStaminaChanged += StaminaController_OnStaminaChanged;
 			_ropeConstraintController = GetComponent<PlayerRopeConstraintController>();
 			_wheelbarrowController = GetComponent<PlayerWheelbarrowController>();
 			_concreteTrapController = GetComponent<PlayerConcreteTrapController>();
@@ -252,6 +256,8 @@ namespace StarterAssets
 			{
 				_playerHealth.OnDownedStateChanged -= PlayerHealth_OnDownedStateChanged;
 			}
+			if (_staminaController != null)
+				_staminaController.OnStaminaChanged -= StaminaController_OnStaminaChanged;
 
 			if (_playerInteractionNew != null)
 			{
@@ -306,6 +312,22 @@ namespace StarterAssets
 
         private void PlayerInputNew_OnSprint(object sender, PlayerInputNew.OnSprintArgs e)
         {
+			if (e.IsSprinting)
+			{
+				if (CurrentStamina <= 0f)
+				{
+					CancelSprintForExhaustion();
+					return;
+				}
+
+				if (e.IsStatusRefresh && _sprintBlockedUntilNewPress)
+				{
+					return;
+				}
+
+				_sprintBlockedUntilNewPress = false;
+			}
+
 			if (_playerActionController != null && _playerActionController.IsCrowbarExtractionActiveOrPending)
 			{
 				_isSprinting = false;
@@ -328,6 +350,23 @@ namespace StarterAssets
 			}
 			
         }
+
+		private void StaminaController_OnStaminaChanged(object sender, EventArgs e)
+		{
+			if (CurrentStamina <= 0f)
+				CancelSprintForExhaustion();
+		}
+
+		private void CancelSprintForExhaustion()
+		{
+			if (!_sprintBlockedUntilNewPress)
+			{
+				_sprintBlockedUntilNewPress = true;
+				if (_staminaController == null && !IsDowned() && _holdedItemMovementSpeedPenaltyMultiplier <= 0f)
+					_countStaminaTimeout = true;
+			}
+			_isSprinting = false;
+		}
 
         private void Start()
 		{
@@ -704,6 +743,8 @@ namespace StarterAssets
 				if (_staminaController == null)
 				{
 					_currentStamina = Mathf.Max(0f, _currentStamina - Time.deltaTime);
+					if (_currentStamina <= 0f)
+						CancelSprintForExhaustion();
 				}
 			}
 		}
@@ -1059,6 +1100,8 @@ namespace StarterAssets
 					_currentStamina = 0;
 					Debug.Log("You have been crushed by Holded Item.");
 				}
+				if (_currentStamina <= 0f)
+					CancelSprintForExhaustion();
 			}
 		}
 
@@ -1073,6 +1116,8 @@ namespace StarterAssets
 			if (_staminaController == null)
 			{
 				_currentStamina = Mathf.Max(0f, _currentStamina - _playerInteractionNew.SharedCarryUnderstaffedStaminaDrainPerSecond * Time.deltaTime);
+				if (_currentStamina <= 0f)
+					CancelSprintForExhaustion();
 			}
 			if (CurrentStamina > 0f)
 			{

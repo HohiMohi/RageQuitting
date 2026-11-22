@@ -23,6 +23,7 @@ public class PlayerInputNew : NetworkBehaviour
     public class OnSprintArgs : EventArgs
     {
         public bool IsSprinting;
+        public bool IsStatusRefresh;
     }
 
     public EventHandler OnInteract;
@@ -408,7 +409,7 @@ public class PlayerInputNew : NetworkBehaviour
 
         bool sprintHeld = !IsUIOpened && !singleCarryPlacementActive
             && playerGameInputActions != null && playerGameInputActions.Game.Sprint.IsPressed();
-        OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = sprintHeld });
+        OnSprint?.Invoke(this, new OnSprintArgs { IsSprinting = sprintHeld, IsStatusRefresh = true });
     }
 
     private bool IsTemporaryMovementBlocked() =>
