@@ -114,6 +114,137 @@ public sealed class ExcavationTestSceneEditModeTests
         }
     }
 
+    [Test]
+    public void GameplayAndFixtureUseTheSharedExcavationPrefabWithScopedStaticTargets()
+    {
+        const string prefabPath = "Assets/Prefabs/New/BridgeComponents/FoundationExcavation.prefab";
+        Type volumeType = Type.GetType("FoundationExcavationVolume, Assembly-CSharp");
+        Type identityType = Type.GetType("MountingNailSceneTargetIdentity, Assembly-CSharp");
+        Type failedType = Type.GetType("FoundationFailedConcreteTarget, Assembly-CSharp");
+        Type navSurfaceType = Type.GetType("Unity.AI.Navigation.NavMeshSurface, Unity.AI.Navigation");
+        Type modifierType = Type.GetType("Unity.AI.Navigation.NavMeshModifierVolume, Unity.AI.Navigation");
+        Assert.That(volumeType, Is.Not.Null);
+        Assert.That(identityType, Is.Not.Null);
+        Assert.That(failedType, Is.Not.Null);
+        Assert.That(navSurfaceType, Is.Not.Null);
+        Assert.That(modifierType, Is.Not.Null);
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        Assert.That(prefab, Is.Not.Null);
+        Component prefabVolume = ComponentsInRoot(volumeType, prefab.transform).Single();
+        Assert.That(prefabVolume, Is.Not.Null);
+        SerializedObject prefabData = new(prefabVolume);
+        Assert.That(prefabData.FindProperty("constructionSite").objectReferenceValue, Is.Null,
+            "Prefab defaults must not retain a scene construction site.");
+        Assert.That((prefabData.FindProperty("soilRenderer").objectReferenceValue as Renderer).sharedMaterial,
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Material>("Assets/ScriptableObjectAssets/New/Substances/CompactSoil.mat")));
+        Assert.That((prefabData.FindProperty("concreteRenderer").objectReferenceValue as Renderer).sharedMaterial,
+            Is.SameAs(AssetDatabase.LoadAssetAtPath<Material>("Assets/GeneratedAssets/Wheelbarrow/ConcreteWet.mat")));
+        Assert.That(ComponentsInRoot(identityType, prefab.transform)
+            .All(identity => string.IsNullOrEmpty(new SerializedObject(identity).FindProperty("stableTargetId").stringValue)), Is.True,
+            "Stable target IDs belong to each scene instance, not the shared prefab defaults.");
+        Assert.That(ComponentsInRoot(navSurfaceType, prefab.transform)
+            .All(surface => new SerializedObject(surface).FindProperty("m_NavMeshData").objectReferenceValue == null), Is.True,
+            "Baked scene NavMeshData must not be stored in the prefab defaults.");
+
+        Scene gameplay = EditorSceneManager.OpenPreviewScene(SourcePath);
+        Scene fixture = default;
+        try
+        {
+            fixture = EditorSceneManager.OpenPreviewScene(FixturePath);
+            var allIds = new System.Collections.Generic.List<string>();
+            VerifyPrefabPits(gameplay, prefab, allIds, volumeType, identityType, failedType, navSurfaceType, modifierType);
+            VerifyPrefabPits(fixture, prefab, allIds, volumeType, identityType, failedType, navSurfaceType, modifierType);
+            Assert.That(allIds, Has.Count.EqualTo(36));
+            Assert.That(allIds.Distinct().Count(), Is.EqualTo(36),
+                "Each side and scene must have independent baked stable target IDs.");
+        }
+        finally
+        {
+            if (fixture.IsValid()) EditorSceneManager.ClosePreviewScene(fixture);
+            if (gameplay.IsValid()) EditorSceneManager.ClosePreviewScene(gameplay);
+            Assert.That(ComputeHash(SourcePath), Is.EqualTo(sourceHash),
+                "Inspecting prefab-backed pits must not change the working scene.");
+            Assert.That(EditorBuildSettings.scenes.Any(scene => scene.path == FixturePath), Is.False);
+        }
+    }
+
+    private static void VerifyPrefabPits(Scene scene, GameObject prefab, System.Collections.Generic.List<string> allIds,
+        Type volumeType, Type identityType, Type failedType, Type navSurfaceType, Type modifierType)
+    {
+        foreach (string side in new[] { "West_FoundationExcavation", "East_FoundationExcavation" })
+        {
+            Transform root = Resources.FindObjectsOfTypeAll<Transform>()
+                .FirstOrDefault(t => t != null && t.gameObject.scene == scene && t.name == side &&
+                    PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject) == prefab);
+            Assert.That(root, Is.Not.Null, scene.path + " is missing prefab instance " + side);
+            Assert.That(root.GetComponentsInChildren<Transform>(true), Has.Length.EqualTo(45));
+            BoxCollider pitBottom = root.GetComponentsInChildren<BoxCollider>(true).FirstOrDefault(c => c.name == "PitBottom");
+            Assert.That(pitBottom, Is.Not.Null);
+            float expectedPivotX = side.StartsWith("West", StringComparison.Ordinal) ? -1.25f : 11.25f;
+            Assert.That(root.position.x, Is.EqualTo(expectedPivotX).Within(.001f));
+            Component volume = ComponentsInRoot(volumeType, root).Single();
+            Assert.That(volume, Is.Not.Null);
+            var volumeData = new SerializedObject(volume);
+            Component site = volumeData.FindProperty("constructionSite").objectReferenceValue as Component;
+            Assert.That(site, Is.Not.Null);
+            Assert.That(new SerializedObject(site).FindProperty("excavationVolume").objectReferenceValue, Is.SameAs(volume));
+            foreach (Component failed in ComponentsInRoot(failedType, root))
+                Assert.That(new SerializedObject(failed).FindProperty("constructionSite").objectReferenceValue, Is.SameAs(site));
+
+            Renderer rampRenderer = volumeData.FindProperty("exitRampRenderer").objectReferenceValue as Renderer;
+            Collider rampCollider = volumeData.FindProperty("exitRampCollider").objectReferenceValue as Collider;
+            Assert.That(rampRenderer, Is.Not.Null);
+            Assert.That(rampCollider, Is.Not.Null);
+            Assert.That(rampRenderer.gameObject, Is.SameAs(rampCollider.gameObject),
+                "The authored ExitRamp renderer and collider must remain together on their dedicated object.");
+            Assert.That(rampRenderer.enabled, Is.False);
+            Assert.That(rampCollider.enabled, Is.False);
+            Assert.That(rampCollider.isTrigger, Is.False);
+
+            Transform rampVisual = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "PitWallRampVisual");
+            Assert.That(rampVisual, Is.Not.Null);
+            Assert.That(rampVisual.GetComponent<Renderer>(), Is.Not.Null);
+            Assert.That(rampVisual.GetComponent<Collider>(), Is.Null,
+                "The inherited ramp visual is render-only; collision stays on the authored ramp collider.");
+            Transform riverWall = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "PitWallRiver");
+            Assert.That(riverWall, Is.Not.Null);
+            Assert.That(riverWall.GetComponent<Renderer>(), Is.Not.Null);
+            BoxCollider riverCollider = riverWall.GetComponent<BoxCollider>();
+            Assert.That(riverCollider, Is.Not.Null);
+            Assert.That(riverCollider.enabled && !riverCollider.isTrigger, Is.True);
+
+            Component[] surfaces = ComponentsInRoot(navSurfaceType, root);
+            Assert.That(surfaces, Is.Not.Empty);
+            Assert.That(surfaces.All(surface => new SerializedObject(surface).FindProperty("m_NavMeshData").objectReferenceValue != null), Is.True,
+                "Scene instances must preserve their authored baked NavMeshData references.");
+            Component modifier = ComponentsInRoot(modifierType, root).Single();
+            Assert.That(modifier, Is.Not.Null);
+            Vector3 expectedCenter = side.StartsWith("West", StringComparison.Ordinal)
+                ? new Vector3(1.25f, -.5f, 0f) : new Vector3(-17.25f, -.5f, 0f);
+            Assert.That(new SerializedObject(modifier).FindProperty("m_Center").vector3Value, Is.EqualTo(expectedCenter));
+            Assert.That((modifier as Behaviour).enabled, Is.False, "The authored modifier volume remains disabled.");
+            Vector3 expectedWorldCenter = side.StartsWith("West", StringComparison.Ordinal)
+                ? new Vector3(0f, -.5f, 0f) : new Vector3(-6f, -.5f, 0f);
+            Assert.That(Vector3.Distance(modifier.transform.TransformPoint(expectedCenter), expectedWorldCenter), Is.LessThan(.001f),
+                "Rebasing the prefab pivot must preserve the modifier volume's authored world center.");
+
+            Component[] identities = ComponentsInRoot(identityType, root);
+            Assert.That(identities, Has.Length.EqualTo(9));
+            foreach (Component identity in identities)
+            {
+                string globalId = GlobalObjectId.GetGlobalObjectIdSlow(identity.gameObject).ToString();
+                string stableId = new SerializedObject(identity).FindProperty("stableTargetId").stringValue;
+                Assert.That(stableId, Is.EqualTo(globalId));
+                allIds.Add(stableId);
+            }
+            Transform looseSoilSurface = root.GetComponentsInChildren<Transform>(true).First(t => t.name == "LooseSoilSurface");
+            Assert.That(looseSoilSurface.GetComponent<MeshFilter>().sharedMesh, Is.Null);
+        }
+    }
+
+    private static Component[] ComponentsInRoot(Type type, Transform root) =>
+        root.GetComponentsInChildren<Component>(true).Where(component => component != null && type.IsInstanceOfType(component)).ToArray();
+
     private static Component[] ComponentsInScene(Type type, Scene scene) =>
         Resources.FindObjectsOfTypeAll(type).Cast<Component>()
             .Where(component => component != null && component.gameObject.scene == scene).ToArray();
