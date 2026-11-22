@@ -15,7 +15,7 @@ MonoBehaviour:
   entries:
   - component: {fileID: 11400000, guid: 44f08faeb2ef8124495422dfcefd6d62, type: 2}
     title: Wooden Foundation
-    partSprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    partSprite: {fileID: 21300000, guid: e66c85974a2948279eddae77baf0182b, type: 3}
     steps:
     - instruction: Clear the marked site
       requirements:
